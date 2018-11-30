@@ -67,10 +67,8 @@ public final class ExampleLoggerImplementation: Logger {
         }
     }
     
-    public func _log(level: LogLevel, message: @autoclosure () -> String, file: String, function: String, line: UInt) {
-        if level >= self.logLevel {
-            print("\(self.formatter.string(from: Date())) \(self.formatLevel(level)): \(message())\(self.prettyContext)")
-        }
+    public func _log(level: LogLevel, message: String, file: String, function: String, line: UInt) {
+        print("\(self.formatter.string(from: Date())) \(self.formatLevel(level)): \(message)\(self.prettyContext)")
     }
     
     public subscript(diagnosticKey diagnosticKey: String) -> String? {

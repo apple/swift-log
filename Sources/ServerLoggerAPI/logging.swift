@@ -10,7 +10,7 @@ import Foundation
 ///     }
 public protocol Logger {
     /// not called directly, only by the helper methods like `info(...)`
-    func _log(level: LogLevel, message: @autoclosure () -> String, file: String, function: String, line: UInt)
+    func _log(level: LogLevel, message: String, file: String, function: String, line: UInt)
 
     /// This adds diagnostic context to a place the concrete logger considers appropriate. Some loggers
     /// might not support this feature at all.
@@ -23,27 +23,37 @@ extension Logger {
 
     @inlinable
     public func trace(_ message: @autoclosure () -> String, file: String = #file, function: String = #function, line: UInt = #line) {
-        self._log(level: .trace, message: message, file: file, function: function, line: line)
+        if self.logLevel <= .trace {
+            self._log(level: .trace, message: message(), file: file, function: function, line: line)
+        }
     }
     
     @inlinable
     public func debug(_ message: @autoclosure () -> String, file: String = #file, function: String = #function, line: UInt = #line) {
-        self._log(level: .debug, message: message, file: file, function: function, line: line)
+        if self.logLevel <= .debug {
+            self._log(level: .debug, message: message(), file: file, function: function, line: line)
+        }
     }
     
     @inlinable
     public func info(_ message: @autoclosure () -> String, file: String = #file, function: String = #function, line: UInt = #line) {
-        self._log(level: .info, message: message, file: file, function: function, line: line)
+        if self.logLevel <= .info {
+            self._log(level: .info, message: message(), file: file, function: function, line: line)
+        }
     }
     
     @inlinable
     public func warn(_ message: @autoclosure () -> String, file: String = #file, function: String = #function, line: UInt = #line) {
-        self._log(level: .warn, message: message, file: file, function: function, line: line)
+        if self.logLevel <= .warn {
+            self._log(level: .warn, message: message(), file: file, function: function, line: line)
+        }
     }
     
     @inlinable
     public func error(_ message: @autoclosure () -> String, file: String = #file, function: String = #function, line: UInt = #line) {
-        self._log(level: .error, message: message, file: file, function: function, line: line)
+        if self.logLevel <= .error {
+            self._log(level: .error, message: message(), file: file, function: function, line: line)
+        }
     }
 }
 
@@ -112,9 +122,9 @@ final public class StdoutLogger: Logger {
     public init(identifier: String) {
     }
 
-    public func _log(level: LogLevel, message: @autoclosure () -> String, file: String, function: String, line: UInt) {
+    public func _log(level: LogLevel, message: String, file: String, function: String, line: UInt) {
         if level >= self.logLevel {
-            print("\(message())\(self.prettyContext)")
+            print("\(message)\(self.prettyContext)")
         }
     }
     
