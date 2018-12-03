@@ -1,6 +1,6 @@
-import ServerLoggerAPI
 import ExampleLoggerImpl
 import Foundation
+import ServerLoggerAPI
 
 print("##### explicit logger passing #####")
 ExplicitContextPassingExample.main()
@@ -16,4 +16,3 @@ LoggerPerSubsystemExample.main()
 print()
 print("##### other random examples #####")
 RandomExample.main()
-

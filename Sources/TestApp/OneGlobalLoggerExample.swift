@@ -7,15 +7,15 @@ let logger = LoggerFactory.make(identifier: "com.example.TestApp.OneGlobalLogger
 
 enum OneGlobalLoggerExample {
     static func main() {
-        for _ in 0..<10 {
+        for _ in 0 ..< 10 {
             // NOTE: we can't change the log level per client because we only have one global logger
-            spawnFreshClient(uuid: UUID())
+            self.spawnFreshClient(uuid: UUID())
         }
     }
 
-    static func spawnFreshClient(uuid: UUID) {
+    static func spawnFreshClient(uuid _: UUID) {
         logger.info("we're up and running")
-        randomFunction()
+        self.randomFunction()
     }
 
     static func randomFunction() {

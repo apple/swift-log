@@ -1,0 +1,40 @@
+import Foundation
+@testable import ServerLoggerAPI
+import XCTest
+
+class MDCTest: XCTestCase {
+    func test1() throws {
+        // bootstrap with our test logger
+        let logging = TestLogging()
+        LoggerFactory.factory = logging.make
+        // run the program
+        MDC.global["foo"] = "bar"
+        let group = DispatchGroup()
+        for r in 5 ... 10 {
+            group.enter()
+            DispatchQueue(label: "mdc-test-queue-\(r)").async {
+                let add = Int.random(in: 10 ... 1000)
+                let remove = Int.random(in: 0 ... add - 1)
+                for i in 0 ... add {
+                    MDC.global["key-\(i)"] = "value-\(i)"
+                }
+                for i in 0 ... remove {
+                    MDC.global["key-\(i)"] = nil
+                }
+                XCTAssertEqual(add - remove, MDC.global.metadata?.count ?? 0, "expected number of entries to match")
+                for i in remove + 1 ... add {
+                    XCTAssertNotNil(MDC.global["key-\(i)"], "expecting value for key-\(i)")
+                }
+                for i in 0 ... remove {
+                    XCTAssertNil(MDC.global["key-\(i)"], "not expecting value for key-\(i)")
+                }
+                MDC.global.clear()
+                group.leave()
+            }
+        }
+        group.wait()
+        XCTAssertEqual(MDC.global["foo"], "bar", "expecting to find top items")
+        MDC.global["foo"] = nil
+        XCTAssertTrue(MDC.global.metadata?.isEmpty ?? true, "MDC should be empty")
+    }
+}

@@ -6,8 +6,11 @@ public protocol LogEmitter {
 
     /// This adds diagnostic context to a place the concrete logger considers appropriate. Some loggers
     /// might not support this feature at all.
-    subscript(diagnosticKey diagnosticKey: String) -> String? { get set }
-    
+    subscript(diagnosticKey _: LoggingMetadata.Key) -> LoggingMetadata.Value? { get set }
+
+    // TODO: metadata or context?
+    var metadata: LoggingMetadata? { get set }
+
     var logLevel: LogLevel { get set }
 }
 
@@ -25,7 +28,7 @@ public struct Logger {
             self.emitter.log(level: level, message: message(), file: file, function: function, line: line)
         }
     }
-    
+
     @inlinable
     public func trace(_ message: @autoclosure () -> String, file: String = #file, function: String = #function, line: UInt = #line) {
         self.log(level: .trace, message: message(), file: file, function: function, line: line)
@@ -35,17 +38,17 @@ public struct Logger {
     public func debug(_ message: @autoclosure () -> String, file: String = #file, function: String = #function, line: UInt = #line) {
         self.log(level: .debug, message: message(), file: file, function: function, line: line)
     }
-    
+
     @inlinable
     public func info(_ message: @autoclosure () -> String, file: String = #file, function: String = #function, line: UInt = #line) {
         self.log(level: .info, message: message(), file: file, function: function, line: line)
     }
-    
+
     @inlinable
     public func warn(_ message: @autoclosure () -> String, file: String = #file, function: String = #function, line: UInt = #line) {
         self.log(level: .warn, message: message(), file: file, function: function, line: line)
     }
-    
+
     @inlinable
     public func error(_ message: @autoclosure () -> String, file: String = #file, function: String = #function, line: UInt = #line) {
         self.log(level: .error, message: message(), file: file, function: function, line: line)
@@ -62,6 +65,16 @@ public struct Logger {
     }
 
     @inlinable
+    public var metadata: LoggingMetadata? {
+        get {
+            return self.emitter.metadata
+        }
+        set {
+            self.emitter.metadata = newValue
+        }
+    }
+
+    @inlinable
     public var logLevel: LogLevel {
         get {
             return self.emitter.logLevel
@@ -70,7 +83,6 @@ public struct Logger {
             self.emitter.logLevel = newValue
         }
     }
-
 }
 
 public enum LogLevel: Int {
@@ -80,6 +92,8 @@ public enum LogLevel: Int {
     case warn
     case error
 }
+
+public typealias LoggingMetadata = [String: String]
 
 extension LogLevel: Comparable {
     public static func < (lhs: LogLevel, rhs: LogLevel) -> Bool {
@@ -109,19 +123,11 @@ public enum LoggerFactory {
 }
 
 /// Ships with the logging module, really boring just prints something using the `print` function
-final public class StdoutLogger: LogEmitter {
-    
+public final class StdoutLogger: LogEmitter {
     private let lock = NSLock()
-    private var context: [String: String] = [:] {
-        didSet {
-            if self.context.isEmpty {
-                self.prettyContext = ""
-            } else {
-                self.prettyContext = " \(self.context.description)"
-            }
-        }
-    }
-    private var prettyContext: String = ""
+
+    public init(identifier _: String) {}
+
     private var _logLevel: LogLevel = .info
     public var logLevel: LogLevel {
         get {
@@ -133,23 +139,40 @@ final public class StdoutLogger: LogEmitter {
             }
         }
     }
-    
 
-    public init(identifier: String) {
-    }
-
-    public func log(level: LogLevel, message: String, file: String, function: String, line: UInt) {
-        if level >= self.logLevel {
-            print("\(message)\(self.prettyContext)")
+    private var prettyMetadata: String?
+    private var _metadata: LoggingMetadata? {
+        didSet {
+            self.prettyMetadata = !(self._metadata?.isEmpty ?? true) ? self._metadata!.map { "\($0)=\($1)" }.joined(separator: " ") : nil
         }
     }
-    
-    public subscript(diagnosticKey diagnosticKey: String) -> String? {
+
+    public func log(level: LogLevel, message: String, file _: String, function _: String, line _: UInt) {
+        if level >= self.logLevel {
+            print("\(message)\(self.prettyMetadata.map { " \($0)" } ?? "")")
+        }
+    }
+
+    public var metadata: LoggingMetadata? {
         get {
-            return self.lock.withLock { self.context[diagnosticKey] }
+            return self.lock.withLock { self._metadata }
         }
         set {
-            self.lock.withLock { self.context[diagnosticKey] = newValue }
+            self.lock.withLock { self._metadata = newValue }
+        }
+    }
+
+    public subscript(diagnosticKey diagnosticKey: String) -> String? {
+        get {
+            return self.lock.withLock { self._metadata?[diagnosticKey] }
+        }
+        set {
+            self.lock.withLock {
+                if nil == self._metadata {
+                    self._metadata = [:]
+                }
+                self._metadata![diagnosticKey] = newValue
+            }
         }
     }
 }
