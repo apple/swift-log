@@ -1,16 +1,8 @@
 import Foundation
 
-/// The most important type, the one the users will actually interact with and for example write:
-///
-///     let myModuleLogger = LoggerFactory.make(label: "example.myproject.FooModule")
-///     class MyClass {
-///         func something() {
-///             myModuleLogger.warn("something isn't a great function name")
-///         }
-///     }
-public protocol Logger {
+public protocol LogEmitter {
     /// not called directly, only by the helper methods like `info(...)`
-    func _log(level: LogLevel, message: String, file: String, function: String, line: UInt)
+    func log(level: LogLevel, message: String, file: String, function: String, line: UInt)
 
     /// This adds diagnostic context to a place the concrete logger considers appropriate. Some loggers
     /// might not support this feature at all.
@@ -19,42 +11,66 @@ public protocol Logger {
     var logLevel: LogLevel { get set }
 }
 
-extension Logger {
+public struct Logger {
+    @usableFromInline
+    var emitter: LogEmitter
+
+    internal init(_ emitter: LogEmitter) {
+        self.emitter = emitter
+    }
 
     @inlinable
-    public func trace(_ message: @autoclosure () -> String, file: String = #file, function: String = #function, line: UInt = #line) {
-        if self.logLevel <= .trace {
-            self._log(level: .trace, message: message(), file: file, function: function, line: line)
+    func log(level: LogLevel, message: @autoclosure () -> String, file: String, function: String, line: UInt) {
+        if self.logLevel <= level {
+            self.emitter.log(level: level, message: message(), file: file, function: function, line: line)
         }
     }
     
     @inlinable
+    public func trace(_ message: @autoclosure () -> String, file: String = #file, function: String = #function, line: UInt = #line) {
+        self.log(level: .trace, message: message(), file: file, function: function, line: line)
+    }
+
+    @inlinable
     public func debug(_ message: @autoclosure () -> String, file: String = #file, function: String = #function, line: UInt = #line) {
-        if self.logLevel <= .debug {
-            self._log(level: .debug, message: message(), file: file, function: function, line: line)
-        }
+        self.log(level: .debug, message: message(), file: file, function: function, line: line)
     }
     
     @inlinable
     public func info(_ message: @autoclosure () -> String, file: String = #file, function: String = #function, line: UInt = #line) {
-        if self.logLevel <= .info {
-            self._log(level: .info, message: message(), file: file, function: function, line: line)
-        }
+        self.log(level: .info, message: message(), file: file, function: function, line: line)
     }
     
     @inlinable
     public func warn(_ message: @autoclosure () -> String, file: String = #file, function: String = #function, line: UInt = #line) {
-        if self.logLevel <= .warn {
-            self._log(level: .warn, message: message(), file: file, function: function, line: line)
-        }
+        self.log(level: .warn, message: message(), file: file, function: function, line: line)
     }
     
     @inlinable
     public func error(_ message: @autoclosure () -> String, file: String = #file, function: String = #function, line: UInt = #line) {
-        if self.logLevel <= .error {
-            self._log(level: .error, message: message(), file: file, function: function, line: line)
+        self.log(level: .error, message: message(), file: file, function: function, line: line)
+    }
+
+    @inlinable
+    public subscript(diagnosticKey diagnosticKey: String) -> String? {
+        get {
+            return self.emitter[diagnosticKey: diagnosticKey]
+        }
+        set {
+            self.emitter[diagnosticKey: diagnosticKey] = newValue
         }
     }
+
+    @inlinable
+    public var logLevel: LogLevel {
+        get {
+            return self.emitter.logLevel
+        }
+        set {
+            self.emitter.logLevel = newValue
+        }
+    }
+
 }
 
 public enum LogLevel: Int {
@@ -74,8 +90,8 @@ extension LogLevel: Comparable {
 /// The second most important type, this is where users will get a logger from.
 public enum LoggerFactory {
     private static let lock = NSLock()
-    private static var _factory: (String) -> Logger = StdoutLogger.init
-    public static var factory: (String) -> Logger {
+    private static var _factory: (String) -> LogEmitter = StdoutLogger.init
+    public static var factory: (String) -> LogEmitter {
         get {
             return self.lock.withLock { self._factory }
         }
@@ -88,12 +104,12 @@ public enum LoggerFactory {
 
     // this is used to create a logger for a certain unit which might be a module, file, class/struct, function, whatever works for the concrete application. Systems that pass the logger explicitly would not use this function.
     public static func make(identifier: String) -> Logger {
-        return self.factory(identifier)
+        return Logger(self.factory(identifier))
     }
 }
 
 /// Ships with the logging module, really boring just prints something using the `print` function
-final public class StdoutLogger: Logger {
+final public class StdoutLogger: LogEmitter {
     
     private let lock = NSLock()
     private var context: [String: String] = [:] {
@@ -122,7 +138,7 @@ final public class StdoutLogger: Logger {
     public init(identifier: String) {
     }
 
-    public func _log(level: LogLevel, message: String, file: String, function: String, line: UInt) {
+    public func log(level: LogLevel, message: String, file: String, function: String, line: UInt) {
         if level >= self.logLevel {
             print("\(message)\(self.prettyContext)")
         }

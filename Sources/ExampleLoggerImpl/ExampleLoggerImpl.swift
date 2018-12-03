@@ -15,7 +15,7 @@ private extension NSLock {
     }
 }
 
-public final class ExampleLoggerImplementation: Logger {
+public final class ExampleLoggerImplementation: LogEmitter {
     private let formatter: DateFormatter
     private let identifier: String
     
@@ -67,7 +67,7 @@ public final class ExampleLoggerImplementation: Logger {
         }
     }
     
-    public func _log(level: LogLevel, message: String, file: String, function: String, line: UInt) {
+    public func log(level: LogLevel, message: String, file: String, function: String, line: UInt) {
         print("\(self.formatter.string(from: Date())) \(self.formatLevel(level)): \(message)\(self.prettyContext)")
     }
     
