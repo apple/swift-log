@@ -10,12 +10,19 @@ let package = Package(
         // Targets can depend on other targets in this package, and on products in packages which this package depends on.
         .target(
             name: "ServerLoggerAPI",
-            dependencies: []),
+            dependencies: []
+        ),
         .target(
             name: "TestApp",
-            dependencies: ["ServerLoggerAPI", "ExampleLoggerImpl"]),
+            dependencies: ["ServerLoggerAPI", "ExampleLoggerImpl"]
+        ),
         .target(
             name: "ExampleLoggerImpl",
-            dependencies: ["ServerLoggerAPI"]),
+            dependencies: ["ServerLoggerAPI"]
+        ),
+        .testTarget(
+            name: "LoggerAPITests",
+            dependencies: ["ServerLoggerAPI", "ExampleLoggerImpl"]
+        ),
     ]
 )

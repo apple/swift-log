@@ -18,11 +18,10 @@ private class OtherSubSystem {
     }
 }
 
-
 enum ExplicitContextPassingExample {
     static func main() {
         let logger = LoggerFactory.make(identifier: "com.example.TestApp.ExplicitContextPassingExample.main")
-        for clientID in 0..<10 {
+        for clientID in 0 ..< 10 {
             var clientLogger = logger
             if clientID % 3 == 0 {
                 clientLogger.logLevel = .debug
