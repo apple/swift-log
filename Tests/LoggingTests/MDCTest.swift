@@ -1,12 +1,12 @@
-import Foundation
-@testable import ServerLoggerAPI
+import Dispatch
+@testable import Logging
 import XCTest
 
 class MDCTest: XCTestCase {
     func test1() throws {
         // bootstrap with our test logger
         let logging = TestLogging()
-        LoggerFactory.factory = logging.make
+        Logging.bootstrap(logging.make)
         // run the program
         MDC.global["foo"] = "bar"
         let group = DispatchGroup()

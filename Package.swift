@@ -4,25 +4,21 @@
 import PackageDescription
 
 let package = Package(
-    name: "ServerLoggerAPI",
+    name: "logging",
     targets: [
         // Targets are the basic building blocks of a package. A target can define a module or a test suite.
         // Targets can depend on other targets in this package, and on products in packages which this package depends on.
         .target(
-            name: "ServerLoggerAPI",
+            name: "Logging",
             dependencies: []
         ),
         .target(
-            name: "TestApp",
-            dependencies: ["ServerLoggerAPI", "ExampleLoggerImpl"]
-        ),
-        .target(
-            name: "ExampleLoggerImpl",
-            dependencies: ["ServerLoggerAPI"]
+            name: "Examples",
+            dependencies: ["Logging"]
         ),
         .testTarget(
-            name: "LoggerAPITests",
-            dependencies: ["ServerLoggerAPI", "ExampleLoggerImpl"]
+            name: "LoggingTests",
+            dependencies: ["Logging"]
         ),
     ]
 )

@@ -3,7 +3,7 @@
 //
 
 import Foundation
-import ServerLoggerAPI
+import Logging
 
 private extension NSLock {
     func withLock<T>(_ body: () -> T) -> T {
@@ -15,9 +15,9 @@ private extension NSLock {
     }
 }
 
-public final class ExampleLoggerImplementation: LogEmitter {
+public final class ExampleLoggerImplementation: LogHandler {
     private let formatter: DateFormatter
-    private let identifier: String
+    private let label: String
     private let lock = NSLock()
 
     private var _logLevel: LogLevel = .info
@@ -32,8 +32,8 @@ public final class ExampleLoggerImplementation: LogEmitter {
         }
     }
 
-    public init(identifier: String) {
-        self.identifier = identifier
+    public init(label: String) {
+        self.label = label
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ssZ"
         formatter.locale = Locale(identifier: "en_US")

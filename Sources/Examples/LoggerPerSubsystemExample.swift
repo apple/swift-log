@@ -1,11 +1,11 @@
 import Foundation
-import ServerLoggerAPI
+import Logging
 
 private class Client {
     private let logger: Logger
 
     init(uuid: UUID, logLevel: LogLevel = .info) {
-        var logger = LoggerFactory.make(identifier: "com.example.TestApp.LoggerPerSubsystemExample.Client")
+        var logger = Logging.make("com.example.TestApp.LoggerPerSubsystemExample.Client")
         // NOTE: the log level change below will only affect this `Client` instance which might or might not be what you want.
         logger.logLevel = logLevel
         logger[diagnosticKey: "UUID"] = uuid.description
@@ -21,7 +21,7 @@ private class Client {
 }
 
 private class OtherSubSystem {
-    private let logger: Logger = LoggerFactory.make(identifier: "com.example.TestApp.LoggerPerSubsystemExample.OtherSubSystem")
+    private let logger = Logging.make("com.example.TestApp.LoggerPerSubsystemExample.OtherSubSystem")
 
     func randomFunction() {
         // NOTE: this won't log the UUID as `Client` can't propagate its state to other sub-systems...
@@ -31,7 +31,7 @@ private class OtherSubSystem {
 
 enum LoggerPerSubsystemExample {
     static func main() {
-        let logger = LoggerFactory.make(identifier: "com.example.TestApp.LoggerPerSubsystemExample.main")
+        let logger = Logging.make("com.example.TestApp.LoggerPerSubsystemExample.main")
 
         logger.info("main start")
         for clientID in 0 ..< 10 {

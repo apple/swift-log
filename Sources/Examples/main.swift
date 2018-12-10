@@ -1,7 +1,3 @@
-import ExampleLoggerImpl
-import Foundation
-import ServerLoggerAPI
-
 print("##### explicit logger passing #####")
 ExplicitContextPassingExample.main()
 

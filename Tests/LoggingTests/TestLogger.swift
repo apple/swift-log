@@ -1,33 +1,32 @@
-import ExampleLoggerImpl
 import Foundation
-@testable import ServerLoggerAPI
+@testable import Logging
 import XCTest
 
 internal struct TestLogging {
     private let _config = Config() // shared amonog loggers
     private let recorder = Recorder() // shared amonog loggers
 
-    func make(identifier: String) -> LogEmitter {
-        return TestLoggger(identifier: identifier, config: self.config, recorder: self.recorder)
+    func make(label: String) -> LogHandler {
+        return TestLoggger(label: label, config: self.config, recorder: self.recorder)
     }
 
     var config: Config { return self._config }
     var history: History { return self.recorder }
 }
 
-internal struct TestLoggger: LogEmitter {
+internal struct TestLoggger: LogHandler {
     private let logLevelLock = NSLock()
     private let metadataLock = NSLock()
     private let recorder: Recorder
     private let config: Config
     private var logger: Logger // the actual loggger
 
-    let identifier: String
-    init(identifier: String, config: Config, recorder: Recorder) {
-        self.identifier = identifier
+    let label: String
+    init(label: String, config: Config, recorder: Recorder) {
+        self.label = label
         self.config = config
         self.recorder = recorder
-        self.logger = Logger(ExampleLoggerImplementation(identifier: identifier))
+        self.logger = Logger(StdoutLogger(label: label))
         self.logger.logLevel = .trace
     }
 
@@ -43,14 +42,14 @@ internal struct TestLoggger: LogEmitter {
     var logLevel: LogLevel {
         get {
             // get from config unless set
-            return self.logLevelLock.withLock { self._logLevel } ?? self.config.get(key: self.identifier)
+            return self.logLevelLock.withLock { self._logLevel } ?? self.config.get(key: self.label)
         }
         set {
             self.logLevelLock.withLock { self._logLevel = newValue }
         }
     }
 
-    // TODO: would be nice to deleagte to local copy of logger but ExampleLoggerImplementation is a reference type. why?
+    // TODO: would be nice to deleagte to local copy of logger but StdoutLogger is a reference type. why?
     private var _metadata: LoggingMetadata?
     subscript(diagnosticKey diagnosticKey: LoggingMetadata.Key) -> LoggingMetadata.Value? {
         get {
@@ -252,7 +251,7 @@ internal extension NSLock {
 }
 
 internal struct TestLibrary {
-    private let logger = LoggerFactory.make(identifier: "TestLibrary")
+    private let logger = Logging.make("TestLibrary")
     private let queue = DispatchQueue(label: "TestLibrary")
 
     public init() {}

@@ -1,11 +1,11 @@
-@testable import ServerLoggerAPI
+@testable import Logging
 import XCTest
 
 class GlobalLoggerTest: XCTestCase {
     func test1() throws {
         // bootstrap with our test logging impl
         let logging = TestLogging()
-        LoggerFactory.factory = logging.make
+        Logging.bootstrap(logging.make)
         // change test logging config to log traces and above
         logging.config.set(value: LogLevel.trace)
         // run our program
@@ -31,7 +31,7 @@ class GlobalLoggerTest: XCTestCase {
     func test2() throws {
         // bootstrap with our test logging impl
         let logging = TestLogging()
-        LoggerFactory.factory = logging.make
+        Logging.bootstrap(logging.make)
         // change test logging config to log errors and above
         logging.config.set(value: LogLevel.error)
         // run our program
@@ -53,11 +53,11 @@ class GlobalLoggerTest: XCTestCase {
         logging.history.assertNotExist(level: .trace, metadata: nil, message: "Struct1::doSomethingElse::end")
         logging.history.assertNotExist(level: .trace, metadata: nil, message: "Struct1::doSomething::end")
     }
-    
+
     func test3() throws {
         // bootstrap with our test logging impl
         let logging = TestLogging()
-        LoggerFactory.factory = logging.make
+        Logging.bootstrap(logging.make)
         // change test logging config
         logging.config.set(value: LogLevel.warn)
         logging.config.set(key: "GlobalLoggerTest::Struct2", value: LogLevel.info)
@@ -84,7 +84,7 @@ class GlobalLoggerTest: XCTestCase {
 }
 
 private struct Struct1 {
-    private let logger = LoggerFactory.make(identifier: "GlobalLoggerTest::Struct1")
+    private let logger = Logging.make("GlobalLoggerTest::Struct1")
 
     func doSomething() {
         self.logger.trace("Struct1::doSomething")
@@ -100,7 +100,7 @@ private struct Struct1 {
 }
 
 private struct Struct2 {
-    let logger = LoggerFactory.make(identifier: "GlobalLoggerTest::Struct2")
+    let logger = Logging.make("GlobalLoggerTest::Struct2")
 
     func doSomething() {
         self.logger.info("Struct2::doSomething")
@@ -116,7 +116,7 @@ private struct Struct2 {
 }
 
 private struct Struct3 {
-    private let logger = LoggerFactory.make(identifier: "GlobalLoggerTest::Struct3")
+    private let logger = Logging.make("GlobalLoggerTest::Struct3")
     private let queue = DispatchQueue(label: "GlobalLoggerTest::Struct3")
 
     func doSomething() {

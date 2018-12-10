@@ -1,9 +1,9 @@
 import Foundation
-import ServerLoggerAPI
+import Logging
 
 // this model just uses one global logger. This is similar to what IBM's Logger API uses today (except that the one
 // global thing has static methods.
-let logger = LoggerFactory.make(identifier: "com.example.TestApp.OneGlobalLoggerExample")
+let logger = Logging.make("com.example.TestApp.OneGlobalLoggerExample")
 
 enum OneGlobalLoggerExample {
     static func main() {

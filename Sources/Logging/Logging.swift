@@ -1,6 +1,6 @@
 import Foundation
 
-public protocol LogEmitter {
+public protocol LogHandler {
     /// not called directly, only by the helper methods like `info(...)`
     func log(level: LogLevel, message: String, file: String, function: String, line: UInt)
 
@@ -8,7 +8,6 @@ public protocol LogEmitter {
     /// might not support this feature at all.
     subscript(diagnosticKey _: LoggingMetadata.Key) -> LoggingMetadata.Value? { get set }
 
-    // TODO: metadata or context?
     var metadata: LoggingMetadata? { get set }
 
     var logLevel: LogLevel { get set }
@@ -16,16 +15,16 @@ public protocol LogEmitter {
 
 public struct Logger {
     @usableFromInline
-    var emitter: LogEmitter
+    var handler: LogHandler
 
-    internal init(_ emitter: LogEmitter) {
-        self.emitter = emitter
+    internal init(_ handler: LogHandler) {
+        self.handler = handler
     }
 
     @inlinable
     func log(level: LogLevel, message: @autoclosure () -> String, file: String, function: String, line: UInt) {
         if self.logLevel <= level {
-            self.emitter.log(level: level, message: message(), file: file, function: function, line: line)
+            self.handler.log(level: level, message: message(), file: file, function: function, line: line)
         }
     }
 
@@ -57,30 +56,30 @@ public struct Logger {
     @inlinable
     public subscript(diagnosticKey diagnosticKey: String) -> String? {
         get {
-            return self.emitter[diagnosticKey: diagnosticKey]
+            return self.handler[diagnosticKey: diagnosticKey]
         }
         set {
-            self.emitter[diagnosticKey: diagnosticKey] = newValue
+            self.handler[diagnosticKey: diagnosticKey] = newValue
         }
     }
 
     @inlinable
     public var metadata: LoggingMetadata? {
         get {
-            return self.emitter.metadata
+            return self.handler.metadata
         }
         set {
-            self.emitter.metadata = newValue
+            self.handler.metadata = newValue
         }
     }
 
     @inlinable
     public var logLevel: LogLevel {
         get {
-            return self.emitter.logLevel
+            return self.handler.logLevel
         }
         set {
-            self.emitter.logLevel = newValue
+            self.handler.logLevel = newValue
         }
     }
 }
@@ -102,31 +101,31 @@ extension LogLevel: Comparable {
 }
 
 /// The second most important type, this is where users will get a logger from.
-public enum LoggerFactory {
+public enum Logging {
     private static let lock = NSLock()
-    private static var _factory: (String) -> LogEmitter = StdoutLogger.init
-    public static var factory: (String) -> LogEmitter {
-        get {
-            return self.lock.withLock { self._factory }
-        }
-        set {
-            self.lock.withLock {
-                self._factory = newValue
-            }
+    private static var _factory: (String) -> LogHandler = StdoutLogger.init
+
+    public static func bootstrap(_ factory: @escaping (String) -> LogHandler) {
+        self.lock.withLock {
+            self._factory = factory
         }
     }
 
     // this is used to create a logger for a certain unit which might be a module, file, class/struct, function, whatever works for the concrete application. Systems that pass the logger explicitly would not use this function.
-    public static func make(identifier: String) -> Logger {
-        return Logger(self.factory(identifier))
+    public static func make(for object: Any.Type) -> Logger {
+        return self.make(String(describing: object))
+    }
+
+    public static func make(_ label: String) -> Logger {
+        return self.lock.withLock { Logger(self._factory(label)) }
     }
 }
 
 /// Ships with the logging module, really boring just prints something using the `print` function
-public final class StdoutLogger: LogEmitter {
+public final class StdoutLogger: LogHandler {
     private let lock = NSLock()
 
-    public init(identifier _: String) {}
+    public init(label _: String) {}
 
     private var _logLevel: LogLevel = .info
     public var logLevel: LogLevel {
@@ -149,7 +148,7 @@ public final class StdoutLogger: LogEmitter {
 
     public func log(level: LogLevel, message: String, file _: String, function _: String, line _: UInt) {
         if level >= self.logLevel {
-            print("\(message)\(self.prettyMetadata.map { " \($0)" } ?? "")")
+            print("\(Date()) \(level)\(self.prettyMetadata.map { " \($0)" } ?? "") \(message)")
         }
     }
 

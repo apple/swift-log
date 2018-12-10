@@ -1,11 +1,11 @@
-@testable import ServerLoggerAPI
+@testable import Logging
 import XCTest
 
 class LocalLoggerTest: XCTestCase {
     func test1() throws {
         // bootstrap with our test logging impl
         let logging = TestLogging()
-        LoggerFactory.factory = logging.make
+        Logging.bootstrap(logging.make)
         // change test logging config to log traces and above
         logging.config.set(value: LogLevel.trace)
         // run our program
@@ -32,7 +32,7 @@ class LocalLoggerTest: XCTestCase {
     func test2() throws {
         // bootstrap with our test logging impl
         let logging = TestLogging()
-        LoggerFactory.factory = logging.make
+        Logging.bootstrap(logging.make)
         // change test logging config to log errors and above
         logging.config.set(value: LogLevel.error)
         // run our program
@@ -59,7 +59,7 @@ class LocalLoggerTest: XCTestCase {
 
 //  systems that follow the context pattern  need to implement something like this
 private struct Context {
-    var logger = LoggerFactory.make(identifier: "LocalLoggerTest::ContextLogger")
+    var logger = Logging.make("LocalLoggerTest::ContextLogger")
 
     // since logger is a value type, we can reuse our copy to manage logLevel
     var logLevel: LogLevel {
