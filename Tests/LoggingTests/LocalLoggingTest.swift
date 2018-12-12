@@ -68,9 +68,9 @@ private struct Context {
     }
 
     // since logger is a value type, we can reuse our copy to manage metadata
-    subscript(diagnosticKey: String) -> String? {
-        get { return self.logger[diagnosticKey: diagnosticKey] }
-        set { self.logger[diagnosticKey: diagnosticKey] = newValue }
+    subscript(metadataKey: String) -> String? {
+        get { return self.logger[metadataKey: metadataKey] }
+        set { self.logger[metadataKey: metadataKey] = newValue }
     }
 }
 
@@ -132,7 +132,7 @@ private struct Struct3 {
         group.wait()
         // only effects the logger instance
         var l = context.logger
-        l[diagnosticKey: "baz"] = "qux"
+        l[metadataKey: "baz"] = "qux"
         l.trace("Struct3::doSomethingElse::Local")
         context.logger.trace("Struct3::doSomethingElse::end")
     }

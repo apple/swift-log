@@ -51,18 +51,18 @@ internal struct TestLoggger: LogHandler {
 
     // TODO: would be nice to deleagte to local copy of logger but StdoutLogger is a reference type. why?
     private var _metadata: LoggingMetadata?
-    subscript(diagnosticKey diagnosticKey: LoggingMetadata.Key) -> LoggingMetadata.Value? {
+    subscript(metadataKey metadataKey: LoggingMetadata.Key) -> LoggingMetadata.Value? {
         get {
-            // return self.logger[diagnosticKey: diagnosticKey]
-            return self.metadataLock.withLock { self._metadata?[diagnosticKey] }
+            // return self.logger[metadataKey: metadataKey]
+            return self.metadataLock.withLock { self._metadata?[metadataKey] }
         }
         set {
-            // return logger[diagnosticKey: diagnosticKey] = newValue
+            // return logger[metadataKey: metadataKey] = newValue
             self.metadataLock.withLock {
                 if nil == self._metadata {
                     self._metadata = LoggingMetadata()
                 }
-                self._metadata![diagnosticKey] = newValue
+                self._metadata![metadataKey] = newValue
             }
         }
     }
@@ -184,10 +184,10 @@ public class MDC {
 
     private init() {}
 
-    public subscript(diagnosticKey: LoggingMetadata.Key) -> LoggingMetadata.Value? {
+    public subscript(metadataKey: LoggingMetadata.Key) -> LoggingMetadata.Value? {
         get {
             return self.lock.withLock {
-                self.storage[self.threadId]?[diagnosticKey]
+                self.storage[self.threadId]?[metadataKey]
             }
         }
         set {
@@ -195,7 +195,7 @@ public class MDC {
                 if nil == self.storage[self.threadId] {
                     self.storage[self.threadId] = LoggingMetadata()
                 }
-                self.storage[self.threadId]![diagnosticKey] = newValue
+                self.storage[self.threadId]![metadataKey] = newValue
             }
         }
     }

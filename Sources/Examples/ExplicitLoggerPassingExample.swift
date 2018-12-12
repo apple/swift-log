@@ -4,7 +4,7 @@ import Logging
 private class Client {
     func spawnFreshClient(uuid: UUID, logger: Logger) {
         var logger = logger
-        logger[diagnosticKey: "UUID"] = uuid.description
+        logger[metadataKey: "UUID"] = uuid.description
         logger.info("we're up and running")
         let otherSubSystem = OtherSubSystem()
         otherSubSystem.randomFunction(logger: logger)
@@ -20,6 +20,7 @@ private class OtherSubSystem {
 
 enum ExplicitContextPassingExample {
     static func main() {
+        Logging.bootstrap(ExampleValueLoggerImplementation.init)
         let logger = Logging.make("com.example.TestApp.ExplicitContextPassingExample.main")
         for clientID in 0 ..< 10 {
             var clientLogger = logger

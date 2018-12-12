@@ -145,7 +145,7 @@ private struct Struct3 {
         MDC.global["foo"] = nil
         // only effects the logger instance
         var l = logger
-        l[diagnosticKey: "baz"] = "qux"
+        l[metadataKey: "baz"] = "qux"
         l.trace("Struct3::doSomethingElse::Local")
         logger.trace("Struct3::doSomethingElse::end")
     }

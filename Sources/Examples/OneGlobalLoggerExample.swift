@@ -7,6 +7,7 @@ let logger = Logging.make("com.example.TestApp.OneGlobalLoggerExample")
 
 enum OneGlobalLoggerExample {
     static func main() {
+        Logging.bootstrap(ExampleLoggerImplementation.init)
         for _ in 0 ..< 10 {
             // NOTE: we can't change the log level per client because we only have one global logger
             self.spawnFreshClient(uuid: UUID())

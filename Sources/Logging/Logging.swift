@@ -1,18 +1,26 @@
 import Foundation
 
+/// This is the protocol a custom logger implements.
 public protocol LogHandler {
-    /// not called directly, only by the helper methods like `info(...)`
+    // This is the custom logger implementation's log function. A user would not invoke this but rather go through
+    // `Logger`'s `info`, `error`, or `warning` functions.
+    //
+    // An implementation does not need to check the log level because that has been done before by `Logger` itself.
     func log(level: LogLevel, message: String, file: String, function: String, line: UInt)
 
-    /// This adds diagnostic context to a place the concrete logger considers appropriate. Some loggers
-    /// might not support this feature at all.
-    subscript(diagnosticKey _: LoggingMetadata.Key) -> LoggingMetadata.Value? { get set }
+    // This adds metadata to a place the concrete logger considers appropriate. Some loggers
+    // might not support this feature at all.
+    subscript(metadataKey _: LoggingMetadata.Key) -> LoggingMetadata.Value? { get set }
 
+    // All available metatdata
     var metadata: LoggingMetadata? { get set }
 
+    // The log level
     var logLevel: LogLevel { get set }
 }
 
+// This is the logger itself. It can either have value or reference semantics, depending on the `LogHandler`
+// implementation.
 public struct Logger {
     @usableFromInline
     var handler: LogHandler
@@ -54,12 +62,12 @@ public struct Logger {
     }
 
     @inlinable
-    public subscript(diagnosticKey diagnosticKey: String) -> String? {
+    public subscript(metadataKey metadataKey: String) -> String? {
         get {
-            return self.handler[diagnosticKey: diagnosticKey]
+            return self.handler[metadataKey: metadataKey]
         }
         set {
-            self.handler[diagnosticKey: diagnosticKey] = newValue
+            self.handler[metadataKey: metadataKey] = newValue
         }
     }
 
@@ -100,20 +108,17 @@ extension LogLevel: Comparable {
     }
 }
 
-/// The second most important type, this is where users will get a logger from.
+// This is the logging system itself, it's mostly used to obtain loggers and to set the type of the `LogHandler`
+// implementation.
 public enum Logging {
     private static let lock = NSLock()
     private static var _factory: (String) -> LogHandler = StdoutLogger.init
 
+    // Configures which `LogHandler` to use in the application.
     public static func bootstrap(_ factory: @escaping (String) -> LogHandler) {
         self.lock.withLock {
             self._factory = factory
         }
-    }
-
-    // this is used to create a logger for a certain unit which might be a module, file, class/struct, function, whatever works for the concrete application. Systems that pass the logger explicitly would not use this function.
-    public static func make(for object: Any.Type) -> Logger {
-        return self.make(String(describing: object))
     }
 
     public static func make(_ label: String) -> Logger {
@@ -161,16 +166,16 @@ public final class StdoutLogger: LogHandler {
         }
     }
 
-    public subscript(diagnosticKey diagnosticKey: String) -> String? {
+    public subscript(metadataKey metadataKey: String) -> String? {
         get {
-            return self.lock.withLock { self._metadata?[diagnosticKey] }
+            return self.lock.withLock { self._metadata?[metadataKey] }
         }
         set {
             self.lock.withLock {
                 if nil == self._metadata {
                     self._metadata = [:]
                 }
-                self._metadata![diagnosticKey] = newValue
+                self._metadata![metadataKey] = newValue
             }
         }
     }

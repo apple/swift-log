@@ -8,7 +8,7 @@ private class Client {
         var logger = Logging.make("com.example.TestApp.LoggerPerSubsystemExample.Client")
         // NOTE: the log level change below will only affect this `Client` instance which might or might not be what you want.
         logger.logLevel = logLevel
-        logger[diagnosticKey: "UUID"] = uuid.description
+        logger[metadataKey: "UUID"] = uuid.description
         self.logger = logger
     }
 
@@ -31,6 +31,7 @@ private class OtherSubSystem {
 
 enum LoggerPerSubsystemExample {
     static func main() {
+        Logging.bootstrap(ExampleLoggerImplementation.init)
         let logger = Logging.make("com.example.TestApp.LoggerPerSubsystemExample.main")
 
         logger.info("main start")

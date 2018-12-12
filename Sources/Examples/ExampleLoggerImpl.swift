@@ -15,6 +15,56 @@ private extension NSLock {
     }
 }
 
+public struct ExampleValueLoggerImplementation: LogHandler {
+    private var _metadata: LoggingMetadata = [:]
+
+    public init(label: String) {
+    }
+
+    public func log(level: LogLevel, message: String, file: String, function: String, line: UInt) {
+        print("\(self.formatLevel(level)): \(message) \(self.metadata?.description ?? "")")
+    }
+
+    private func formatLevel(_ level: LogLevel) -> String {
+        switch level {
+        case .error:
+            return "ERRO"
+        case .warn:
+            return "WARN"
+        case .info:
+            return "info"
+        case .debug:
+            return "dbug"
+        case .trace:
+            return "trce"
+        }
+    }
+
+    public subscript(metadataKey metadataKey: LoggingMetadata.Key) -> LoggingMetadata.Value? {
+        get {
+            return self._metadata[metadataKey]
+        }
+        set(newValue) {
+            self._metadata[metadataKey] = newValue
+        }
+    }
+
+    public var metadata: LoggingMetadata? {
+        get {
+            return self._metadata
+        }
+        set {
+            if let newValue = newValue {
+                self._metadata = newValue
+            } else {
+                self._metadata.removeAll()
+            }
+        }
+    }
+
+    public var logLevel: LogLevel = .info
+}
+
 public final class ExampleLoggerImplementation: LogHandler {
     private let formatter: DateFormatter
     private let label: String
@@ -76,16 +126,16 @@ public final class ExampleLoggerImplementation: LogHandler {
         }
     }
 
-    public subscript(diagnosticKey diagnosticKey: String) -> String? {
+    public subscript(metadataKey metadataKey: String) -> String? {
         get {
-            return self.lock.withLock { self._metadata?[diagnosticKey] }
+            return self.lock.withLock { self._metadata?[metadataKey] }
         }
         set {
             self.lock.withLock {
                 if nil == self._metadata {
                     self._metadata = [:]
                 }
-                self._metadata![diagnosticKey] = newValue
+                self._metadata![metadataKey] = newValue
             }
         }
     }

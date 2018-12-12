@@ -12,8 +12,8 @@ enum RandomExample {
         logger.warn("default, warn, no context")
         logger.error("default, error, no context")
 
-        logger[diagnosticKey: "foo"] = "bar"
-        logger[diagnosticKey: "UUID"] = UUID().description
+        logger[metadataKey: "foo"] = "bar"
+        logger[metadataKey: "UUID"] = UUID().description
 
         logger.trace("trace, not logged")
         logger.debug("debug, not logged")
@@ -35,8 +35,8 @@ enum RandomExample {
         logger.warn("warn, no context")
         logger.error("error, no context")
 
-        logger[diagnosticKey: "bar"] = "buz"
-        logger[diagnosticKey: "UUID"] = UUID().description
+        logger[metadataKey: "bar"] = "buz"
+        logger[metadataKey: "UUID"] = UUID().description
 
         logger.trace("trace, not logged")
         logger.debug("debug, not logged")
@@ -54,8 +54,8 @@ enum RandomExample {
         logger.warn("warn, no context")
         logger.error("error, no context")
 
-        logger[diagnosticKey: "buz"] = "cux"
-        logger[diagnosticKey: "UUID"] = UUID().description
+        logger[metadataKey: "buz"] = "cux"
+        logger[metadataKey: "UUID"] = UUID().description
 
         logger.trace("trace, not logged")
         logger.debug("debug, not logged")
