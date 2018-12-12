@@ -159,14 +159,14 @@ internal struct LogEntry {
 }
 
 extension History {
-    func assertExist(level: LogLevel, metadata: LoggingMetadata?, message: String) {
+    func assertExist(level: LogLevel, metadata: LoggingMetadata?, message: String, file: StaticString = #file, line: UInt = #line) {
         let entry = self.find(level: level, metadata: metadata, message: message)
-        XCTAssertNotNil(entry, "entry not found: \(level), \(String(describing: metadata)), \(message)")
+        XCTAssertNotNil(entry, "entry not found: \(level), \(String(describing: metadata)), \(message)", file: file, line: line)
     }
 
-    func assertNotExist(level: LogLevel, metadata: LoggingMetadata?, message: String) {
+    func assertNotExist(level: LogLevel, metadata: LoggingMetadata?, message: String, file: StaticString = #file, line: UInt = #line) {
         let entry = self.find(level: level, metadata: metadata, message: message)
-        XCTAssertNil(entry, "entry was found: \(level), \(String(describing: metadata)), \(message)]")
+        XCTAssertNil(entry, "entry was found: \(level), \(String(describing: metadata)), \(message)]", file: file, line: line)
     }
 
     func find(level: LogLevel, metadata: LoggingMetadata?, message: String) -> LogEntry? {

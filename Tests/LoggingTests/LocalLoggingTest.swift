@@ -13,7 +13,7 @@ class LocalLoggerTest: XCTestCase {
         Struct1().doSomething(context: context)
         // test results
         logging.history.assertExist(level: .trace, metadata: nil, message: "Struct1::doSomething")
-        logging.history.assertExist(level: .trace, metadata: nil, message: "Struct1::doSomethingElse")
+        logging.history.assertNotExist(level: .trace, metadata: nil, message: "Struct1::doSomethingElse")
         logging.history.assertExist(level: .info, metadata: nil, message: "Struct2::doSomething")
         logging.history.assertExist(level: .info, metadata: nil, message: "Struct2::doSomethingElse")
         logging.history.assertExist(level: .error, metadata: ["bar": "baz"], message: "Struct3::doSomething")
@@ -82,9 +82,12 @@ private struct Struct1 {
     }
 
     private func doSomethingElse(context: Context) {
+        let originalContext = context
+        var context = context
+        context.logger.logLevel = .warn
         context.logger.trace("Struct1::doSomethingElse")
         Struct2().doSomething(context: context)
-        context.logger.trace("Struct1::doSomethingElse::end")
+        originalContext.logger.trace("Struct1::doSomethingElse::end")
     }
 }
 
