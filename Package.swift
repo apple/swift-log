@@ -4,7 +4,10 @@
 import PackageDescription
 
 let package = Package(
-    name: "logging",
+    name: "swift-server-logging-api-proposal",
+    products: [
+        .library(name: "Logging", targets: ["Logging"]),
+    ],
     targets: [
         // Targets are the basic building blocks of a package. A target can define a module or a test suite.
         // Targets can depend on other targets in this package, and on products in packages which this package depends on.

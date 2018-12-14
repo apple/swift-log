@@ -148,9 +148,9 @@ which can be installed using
 
     Logging.bootstrap(ShortestPossibleLogHandler.init)
 
-### Supported models
+### Supported logging models / examples
 
-This is SSWG proposal about a logger API that intends to support a number programming models:
+This API intends to support a number programming models:
 
 - explicit logger passing (see `ExplicitLoggerPassingExample.swift`)
 - one global logger (see `OneGlobalLoggerExample.swift`)
