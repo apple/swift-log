@@ -2,30 +2,32 @@
 
 * Proposal: SSWG-xxxx
 * Authors: [Johannes Weiss](https://github.com/weissi) & [Tomer Doron](https://github.com/tomerd)
-* Status: **Implemented**
+* Status: [Implemented](https://github.com/weissi/swift-server-logging-api-proposal)
 * Pitch: [Server: Pitches/Logging](https://forums.swift.org/t/logging/16027)
 
 ## Introduction
 
 Almost all production server software needs logging that works with a variety of packages. So, there have been a number of different ecosystems (e.g. Vapor, Kitura, Perfect, ...) that came up with their own solutions for logging, tracing, metrics, etc.
-The SSWG however aims to provide a number of packages that can be shared across within the whole Swift on Server ecosystem so we need some amount of standardisation . Because it's unlikely that all parties can agree on one full logging implementation this is proposing to establish a SSWG logging API that can be implemented by various logging backends (called `LogHandler`) which then write the log messages to disk, database, etc.
+The SSWG however aims to provide a number of packages that can be shared across within the whole Swift on Server ecosystem so we need some amount of standardisation. Because different applications have different requirements on what logging should exactly do, we're proposing to establish a SSWG logging API that can be implemented by various logging backends (called `LogHandler`).
+`LogHandler`s are responsible to format the log messages and to deliver them on. The delivery might simply go to `stdout`, might be saved to disk or a database, or might be sent off to another machine to aggregate logs for multiple services. The implementation of `LogHandler`s is out of scope of this proposal and also doesn't need to be standardised across all applications. What matters is a standard API libraries can use without needing to know where the log will end up eventually.
+
 
 ## Motivation
 
-As outlined above we should standardise on an API that if well adopted and applications should allow users to mix and match libraries from different vendors with a consistent logging solution.
+As outlined above we should standardise on an API that if well adopted and applications should allow users to mix and match libraries from different vendors while still maintaining a consistent logging.
 The aim is to support all widely used logging models such as:
 
-- one global logger, similar to what IBM's [LoggerAPI](https://github.com/IBM-Swift/LoggerAPI) offers
+- one global logger, ie. one application-wise global that's always accessible
 - a scoped logger for example one per class/sub-system
 - a local logger that is always explicitly passed around where the logger itself can be a value type
 
 There are also a number of features that most agreed we will need to support, most importantly:
 
 - log levels
-- attaching meta-data (such as a request ID to the logger which will then log it with all log messages)
-- being able to make up a logger out of thin air; because we don't have one true way of dependency injection and it's better to log in a slightly different configuration than just reverting to `print(...)`
+- attaching meta-data (such as a request ID) to the logger
+- being able to 'make up a logger out of thin air'; because we don't have one true way of dependency injection and it's better to log in a slightly different configuration than just reverting to `print(...)`
 
-Another idea was that we try that at least not logging a message can be relatively fast.
+On top of the hard requirements the aim is to make the logging calls as fast as possible if nothing will be logged. If a log message is emitted, it will be mostly up to the `LogHandler`s to do so in a fast enough way. How fast 'fast enough' is depends on the requirements, some will optimise for never losing a log message and others might optimise for the lowest possible latency even if that might not guarantee log message delivery.
 
 ## Proposed solution
 
@@ -38,9 +40,9 @@ This now raises the question: Where does `logger` come from? To this question th
     let logger = Logging.make("com.example.example-app")
     logger.info("hi again")
 
-To get the best logging experience and performance, it is advisable not to `.make` new `Logger`s all time but rather pass them around, store them in a global/instance variable, etc.
+To get the best logging experience and performance, it is advisable to use `.make` to pass `Logger`s around or store them in a global/instance variable rather than `.make`ing new `Logger`s whenever one needs to log a message.
 
-Apart from knowing where I can obtain a logger it would be good to know what we can do with such a logger:
+Apart from knowing where one obtains a `Logger` from, it should be interesting to see what one can do with one:
 
 ```swift
 public struct Logger {
@@ -98,13 +100,15 @@ and from then on a simple
 
 is enough because the logger has been decorated with the request UUID already and from now on carries this information around.
 
-### Custom log handlers
+### Custom `LogHandler`s
 
-But for now let's put the logging meta-data aside and focus on the how we can create and configure a custom logging backend. As seen before, `Logging.make` is what gives us a fresh logger but that raises the question what kind of logging backend will I actually get when calling `Logging.make`? The answer: It's configurable _per application_. The application, likely in the `main` function sets up the logging backend it wishes the whole application to use, libraries should never change the logging implementation as that is something owned by the application. Configuring the logging backend is also straightforward:
+Now, let's put the logging meta-data aside and focus on the how we can create and configure a custom logging backend. As seen before, `Logging.make` is what gives us a fresh logger but that raises the question what kind of logging backend will I actually get when calling `Logging.make`? The answer: It's configurable _per application_. The application -- likely in its main function -- sets up the logging backend it wishes the whole application to use. Libraries should never change the logging implementation as that should owned by the application. Setting up the `LogHandler` to be used is straightforward:
 
     Logging.bootstrap(MyFavouriteLoggingImplementation.init)
     
-This instructs the `Logging` system to install `MyFavouriteLoggingImplementation` as the logging backend (`LogHandler`) to use. This should only be done once at the beginning of the program. Is it hard to implement `MyFavouriteLoggingImplementation`? No, you just need to conform to `protocol LogHandler`:
+This instructs the `Logging` system to install `MyFavouriteLoggingImplementation` as the `LogHandler` to use. This should only be done once at the start of day and is usually left alone thereafter.
+
+Next we should discuss how one would implement `MyFavouriteLoggingImplementation`. It's enough to conform to the following protocol:
 
 ```swift
 public protocol LogHandler {
@@ -118,9 +122,9 @@ public protocol LogHandler {
 }
 ```
 
-`log` and `logLevel` need to always be implemented. Logging meta-data can in theory be implemented by always returning `nil` and ignoring all metadata that is being attached to a logger but it's highly recommended to store them in an appropriate way with the `LogHandler`, for example in a dictionary.
+`log` and `logLevel` need to always be implemented. Logging meta-data can be implemented by always returning `nil` and ignoring all metadata that is being attached to a logger but it is highly recommended to store the metadata in an appropriate way with the `LogHandler` and emit it with all log messages.
 
-The implementation of the `log` function itself is also pretty straightforward: If `log` is invoked, `Logger` itself already decided that given the current `logLevel`, `message` should be logged. In other words, `LogHandler` does not even need to compare `level` to the currently configured level. That makes the shortest possible `LogHandler` implementation really quite short:
+The implementation of the `log` function itself is rather straightforward: If `log` is invoked, `Logger` itself already decided that given the current `logLevel`, `message` should be logged. In other words, `LogHandler` does not even need to compare `level` to the currently configured level. That makes the shortest possible `LogHandler` implementation really quite short:
 
 ```swift
 public struct ShortestPossibleLogHandler: LogHandler {
@@ -133,11 +137,13 @@ public struct ShortestPossibleLogHandler: LogHandler {
     }
     
     public subscript(metadataKey metadataKey: String) -> String? {
+        // ignore all metadata, not recommended
         get { return nil }
         set { }
     }
     
     public var metadata: [String: String] {
+        // ignore all metadata, not recommended
         get { return nil }
         set { }
     }
@@ -148,21 +154,22 @@ which can be installed using
 
     Logging.bootstrap(ShortestPossibleLogHandler.init)
 
-### Supported logging models / examples
+### Supported logging models
 
 This API intends to support a number programming models:
 
-- explicit logger passing (see `ExplicitLoggerPassingExample.swift`)
-- one global logger (see `OneGlobalLoggerExample.swift`)
-- one logger per sub-system (see `LoggerPerSubsystem.swift`)
+1. explicit logger passing (see [`ExplicitLoggerPassingExample.swift`](https://github.com/weissi/swift-server-logging-api-proposal/blob/master/Sources/Examples/ExplicitLoggerPassingExample.swift))
+2. one global logger (see [`OneGlobalLoggerExample.swift`](https://github.com/weissi/swift-server-logging-api-proposal/blob/master/Sources/Examples/OneGlobalLoggerExample.swift))
+3. one logger per sub-system (see [`LoggerPerSubsystemExample.swift`](https://github.com/weissi/swift-server-logging-api-proposal/blob/master/Sources/Examples/LoggerPerSubsystemExample.swift))
 
-The file `RandomExample.swift` contains demoes of some other things that you may want to do.
+Because there are fundamental differences with those models it is not mandated whether the `LogHandler` holds the logging configuration (log level and meta-data) as a value or as a reference. Both systems make sense and it depends on the architecture of the application and the requirements to decide what is more appropriate.
 
-## State
+Certain systems will also want to store the logging meta-data in a thread/queue-local variable, some may even want try to automatically forward the meta-data across thread switches together with the control flow. In the Java-world this model is called MDC, your mileage in Swift may vary and again hugely depends on the architecture of the system.
 
-This is an early proposal so there are still plenty of things to decide and tweak and I'd invite everybody to participate.
+I believe designing a [MDC (mapped diagnostic context)](https://logback.qos.ch/manual/mdc.html) solution is out of scope for this proposal but the proposed API can work with such a system (see [examples](https://github.com/weissi/swift-server-logging-api-proposal/blob/50a8c8fdaceef62f1035d02ce0c8c5aa62252ff0/Tests/LoggingTests/MDCTest.swift)).
 
-### Feedback Wishes
+
+## Seeking feedback
 
 Feedback that would really be great is:
 
@@ -170,13 +177,11 @@ Feedback that would really be great is:
 - if anything, what could we remove from this and still be happy?
 - API-wise: what do you like, what don't you like?
 
-Feel free to post this as message on the SSWG forum and/or github issues in this repo.
 
 ### Open Questions
 
-Very many. But here a couple that come to my mind:
+A couple of questions come to mind:
 
-- currently attaching metadata to a logger is done through `subscript(metadataKey metadataKey: String) -> String? { get set }`
-  clearly setting and deleting extra metadata is necessary. But reading it is really not. Should we make it `addContext(key: String, value: String)` and `removeContext(key:String)` instead?  
-- should the logging metadata values be `String`?
-- should this library include an [MDC](https://logback.qos.ch/manual/mdc.html) API? should it be a seperate module? or a seperate library? [SLF4J](https://www.slf4j.org/manual.html#mdc) which is the moral equivilant of this API in the JVM ecosystem does include one
+- Currently, attaching metadata to a logger is done through `subscript(metadataKey metadataKey: String) -> String? { get set }`. In code it would be `logger[metadataKey: "request_uuid"] = "..."`, is this a good use of a subscript?
+- Should the logging metadata values be `String`?
+- Should this library include an [MDC](https://logback.qos.ch/manual/mdc.html) API? Should it be a separate module? or a separate library? [SLF4J](https://www.slf4j.org/manual.html#mdc) which is the moral equivalent of this API in the Java ecosystem does include one.
