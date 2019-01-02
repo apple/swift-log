@@ -18,10 +18,9 @@ private extension NSLock {
 public struct ExampleValueLoggerImplementation: LogHandler {
     private var _metadata: LoggingMetadata = [:]
 
-    public init(label: String) {
-    }
+    public init(label _: String) {}
 
-    public func log(level: LogLevel, message: String, file: String, function: String, line: UInt) {
+    public func log(level: LogLevel, message: String, file _: String, function _: String, line _: UInt) {
         print("\(self.formatLevel(level)): \(message) \(self.metadata?.description ?? "")")
     }
 

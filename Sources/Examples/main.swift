@@ -12,3 +12,7 @@ LoggerPerSubsystemExample.main()
 print()
 print("##### other random examples #####")
 RandomExample.main()
+
+print()
+print("##### mux examples #####")
+MUXExample.main()
