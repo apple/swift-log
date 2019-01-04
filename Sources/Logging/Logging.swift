@@ -126,6 +126,72 @@ public enum Logging {
     }
 }
 
+/// Ships with the logging module, used to multiplex to multiple logging handlers
+public final class MultiplexLogging {
+    private let factories: [(String) -> LogHandler]
+
+    public init(_ factories: [(String) -> LogHandler]) {
+        self.factories = factories
+    }
+
+    public func make(label: String) -> LogHandler {
+        return MUXLogHandler(handlers: self.factories.map { $0(label) })
+    }
+}
+
+private class MUXLogHandler: LogHandler {
+    private let lock = NSLock()
+    private var handlers: [LogHandler]
+
+    public init(handlers: [LogHandler]) {
+        assert(handlers.count > 0)
+        self.handlers = handlers
+    }
+
+    public var logLevel: LogLevel {
+        get {
+            return self.handlers[0].logLevel
+        }
+        set {
+            self.mutateHandlers { $0.logLevel = newValue }
+        }
+    }
+
+    public func log(level: LogLevel, message: String, file: String, function: String, line: UInt) {
+        self.handlers.forEach { handler in
+            handler.log(level: level, message: message, file: file, function: function, line: line)
+        }
+    }
+
+    public var metadata: LoggingMetadata? {
+        get {
+            return self.handlers[0].metadata
+        }
+        set {
+            self.mutateHandlers { $0.metadata = newValue }
+        }
+    }
+
+    public subscript(metadataKey metadataKey: String) -> String? {
+        get {
+            return self.handlers[0].metadata?[metadataKey]
+        }
+        set {
+            self.mutateHandlers { $0[metadataKey: metadataKey] = newValue }
+        }
+    }
+
+    private func mutateHandlers(mutator: (inout LogHandler) -> Void) {
+        var newHandlers = [LogHandler]()
+        self.handlers.forEach {
+            var handler = $0
+            mutator(&handler)
+            newHandlers.append(handler)
+        }
+        self.lock.withLock { self.handlers = newHandlers }
+    }
+}
+
 /// Ships with the logging module, really boring just prints something using the `print` function
 public final class StdoutLogger: LogHandler {
     private let lock = NSLock()
