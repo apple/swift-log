@@ -46,21 +46,21 @@ Apart from knowing where one obtains a `Logger` from, it should be interesting t
 
 ```swift
 public struct Logger {
-    public var logLevel: LogLevel
+    public var logLevel: Logging.Level
 
-    public func trace(_ message: @autoclosure () -> String, file: String = #file, function: String = #function, line: UInt = #line)
+    public func trace(_ message: @autoclosure () -> String, file: StaticString = #file, function: StaticString = #function, line: UInt = #line)
     
-    public func debug(_ message: @autoclosure () -> String, file: String = #file, function: String = #function, line: UInt = #line)
+    public func debug(_ message: @autoclosure () -> String, file: StaticString = #file, function: StaticString = #function, line: UInt = #line)
     
-    public func info(_ message: @autoclosure () -> String, file: String = #file, function: String = #function, line: UInt = #line)
+    public func info(_ message: @autoclosure () -> String, file: StaticString = #file, function: StaticString = #function, line: UInt = #line)
     
-    public func warn(_ message: @autoclosure () -> String, file: String = #file, function: String = #function, line: UInt = #line)
+    public func warn(_ message: @autoclosure () -> String, file: StaticString = #file, function: StaticString = #function, line: UInt = #line)
     
-    public func error(_ message: @autoclosure () -> String, file: String = #file, function: String = #function, line: UInt = #line)
+    public func error(_ message: @autoclosure () -> String, file: StaticString = #file, function: StaticString = #function, line: UInt = #line)
     
     public subscript(metadataKey metadataKey: String) -> String? { get set }
     
-    public var metadata: LoggingMetadata? { get set }
+    public var metadata: Logging.Metadata? { get set }
 }
 ```
 
@@ -112,9 +112,9 @@ Next we should discuss how one would implement `MyFavouriteLoggingImplementation
 
 ```swift
 public protocol LogHandler {
-    func log(level: LogLevel, message: String, file: String, function: String, line: UInt)
+    func log(level: Logging.Level, message: String, file: StaticString, function: StaticString, line: UInt)
     
-    var logLevel: LogLevel { get set }
+    var logLevel: Logging.Level { get set }
     
     subscript(metadataKey metadataKey: String) -> String? { get set }
     
@@ -128,11 +128,11 @@ The implementation of the `log` function itself is rather straightforward: If `l
 
 ```swift
 public struct ShortestPossibleLogHandler: LogHandler {
-    public var logLevel: LogLevel = .info 
+    public var logLevel: Logging.Level = .info
     
     public init(_ id: String) {}
 
-    public func log(level: LogLevel, message: String, file: String, function: String, line: UInt) {
+    public func log(level: Logging.Level, message: String, file: StaticString, function: StaticString, line: UInt) {
         print(message)
     }
     

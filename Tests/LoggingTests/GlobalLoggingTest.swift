@@ -7,7 +7,7 @@ class GlobalLoggerTest: XCTestCase {
         let logging = TestLogging()
         Logging.bootstrap(logging.make)
         // change test logging config to log traces and above
-        logging.config.set(value: LogLevel.trace)
+        logging.config.set(value: Logging.Level.trace)
         // run our program
         Struct1().doSomething()
         // test results
@@ -33,7 +33,7 @@ class GlobalLoggerTest: XCTestCase {
         let logging = TestLogging()
         Logging.bootstrap(logging.make)
         // change test logging config to log errors and above
-        logging.config.set(value: LogLevel.error)
+        logging.config.set(value: Logging.Level.error)
         // run our program
         Struct1().doSomething()
         // test results
@@ -59,9 +59,9 @@ class GlobalLoggerTest: XCTestCase {
         let logging = TestLogging()
         Logging.bootstrap(logging.make)
         // change test logging config
-        logging.config.set(value: LogLevel.warning)
-        logging.config.set(key: "GlobalLoggerTest::Struct2", value: LogLevel.info)
-        logging.config.set(key: "TestLibrary", value: LogLevel.trace)
+        logging.config.set(value: .warning)
+        logging.config.set(key: "GlobalLoggerTest::Struct2", value: .info)
+        logging.config.set(key: "TestLibrary", value: .trace)
         // run our program
         Struct1().doSomething()
         // test results

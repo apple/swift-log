@@ -8,7 +8,7 @@ import Logging
 // helper class to keep things DRY
 internal final class SimpleLogger {
     let label: String
-    private var _logLevel: LogLevel?
+    private var _logLevel: Logging.Level?
     private let formatter: DateFormatter
     private let lock = NSLock()
 
@@ -21,11 +21,11 @@ internal final class SimpleLogger {
         self.formatter = formatter
     }
 
-    public func log(level: LogLevel, message: String, printer: (String) -> Void) {
+    public func log(level: Logging.Level, message: String, printer: (String) -> Void) {
         printer("[\(self.label)] \(self.formatter.string(from: Date()))\(self.prettyMetadata.map { " \($0)" } ?? "") \(level): \(message)")
     }
 
-    public var logLevel: LogLevel? {
+    public var logLevel: Logging.Level? {
         get {
             return self.lock.withLock { self._logLevel }
         }
@@ -37,13 +37,13 @@ internal final class SimpleLogger {
     }
 
     private var prettyMetadata: String?
-    private var _metadata: LoggingMetadata? {
+    private var _metadata: Logging.Metadata? {
         didSet {
             self.prettyMetadata = !(self._metadata?.isEmpty ?? true) ? self._metadata!.map { "\($0)=\($1)" }.joined(separator: " ") : nil
         }
     }
 
-    public var metadata: LoggingMetadata? {
+    public var metadata: Logging.Metadata? {
         get {
             return self.lock.withLock { self._metadata }
         }
@@ -52,7 +52,7 @@ internal final class SimpleLogger {
         }
     }
 
-    public subscript(metadataKey metadataKey: String) -> String? {
+    public subscript(metadataKey metadataKey: String) -> Logging.Metadata.Value? {
         get {
             return self.lock.withLock { self._metadata?[metadataKey] }
         }

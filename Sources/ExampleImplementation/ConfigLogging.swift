@@ -9,7 +9,7 @@ import Logging
 // this example uses a simplistic in-memory config which can be changed at runtime via code
 // real implementations could use external config files that can be changed outside the running program
 public final class ConfigLogging {
-    public var config = Config(defaultLogLevel: LogLevel.info)
+    public var config = Config(defaultLogLevel: .info)
 
     public init() {}
 
@@ -26,23 +26,23 @@ public final class ConfigLogging {
             self.config = config
         }
 
-        public func log(level: LogLevel, message: String, file _: String, function _: String, line _: UInt) {
+        public func log(level: Logging.Level, message: String, file: StaticString, function: StaticString, line _: UInt) {
             self.logger.log(level: level, message: message) { text in
                 print(text)
             }
         }
 
-        public var logLevel: LogLevel {
+        public var logLevel: Logging.Level {
             get { return self.logger.logLevel ?? self.config.get(key: self.logger.label) }
             set { self.logger.logLevel = newValue }
         }
 
-        public var metadata: LoggingMetadata? {
+        public var metadata: Logging.Metadata? {
             get { return self.logger.metadata }
             set { self.logger.metadata = newValue }
         }
 
-        public subscript(metadataKey metadataKey: String) -> String? {
+        public subscript(metadataKey metadataKey: String) -> Logging.Metadata.Value? {
             get { return self.logger[metadataKey: metadataKey] }
             set { self.logger[metadataKey: metadataKey] = newValue }
         }
@@ -52,26 +52,26 @@ public final class ConfigLogging {
         private static let ALL = "*"
 
         private let lock = NSLock()
-        private var storage = [String: LogLevel]()
-        private var defaultLogLevel: LogLevel
+        private var storage = [String: Logging.Level]()
+        private var defaultLogLevel: Logging.Level
 
-        init(defaultLogLevel: LogLevel) {
+        init(defaultLogLevel: Logging.Level) {
             self.defaultLogLevel = defaultLogLevel
         }
 
-        func get(key: String) -> LogLevel {
+        func get(key: String) -> Logging.Level {
             return self.get(key) ?? self.get(Config.ALL) ?? self.defaultLogLevel
         }
 
-        func get(_ key: String) -> LogLevel? {
+        func get(_ key: String) -> Logging.Level? {
             return self.lock.withLock { self.storage[key] }
         }
 
-        public func set(key: String, value: LogLevel) {
+        public func set(key: String, value: Logging.Level) {
             self.lock.withLock { self.storage[key] = value }
         }
 
-        public func set(value: LogLevel) {
+        public func set(value: Logging.Level) {
             self.lock.withLock { self.storage[Config.ALL] = value }
         }
 

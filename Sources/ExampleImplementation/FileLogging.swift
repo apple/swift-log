@@ -12,7 +12,7 @@ import Logging
 
 // this is a contrived example of a logging library implementation that writes logs to files
 public final class FileLogging {
-    private let defaultLogLevel = LogLevel.info
+    private let defaultLogLevel: Logging.Level = .info
     private let fileHandler = FileHandler()
 
     public init() {}
@@ -23,32 +23,32 @@ public final class FileLogging {
 
     private struct Logger: LogHandler {
         private var logger: SimpleLogger
-        private let defaultLogLevel: LogLevel
+        private let defaultLogLevel: Logging.Level
         private let fileHandler: FileHandler
 
-        public init(label: String, defaultLogLevel: LogLevel, fileHandler: FileHandler) {
+        public init(label: String, defaultLogLevel: Logging.Level, fileHandler: FileHandler) {
             self.logger = SimpleLogger(label: label)
             self.defaultLogLevel = defaultLogLevel
             self.fileHandler = fileHandler
         }
 
-        public func log(level: LogLevel, message: String, file _: String, function _: String, line _: UInt) {
+        public func log(level: Logging.Level, message: String, file: StaticString, function: StaticString, line _: UInt) {
             self.logger.log(level: level, message: message) { text in
                 self.fileHandler._write(text)
             }
         }
 
-        public var logLevel: LogLevel {
+        public var logLevel: Logging.Level {
             get { return self.logger.logLevel ?? self.defaultLogLevel }
             set { self.logger.logLevel = newValue }
         }
 
-        public var metadata: LoggingMetadata? {
+        public var metadata: Logging.Metadata? {
             get { return self.logger.metadata }
             set { self.logger.metadata = newValue }
         }
 
-        public subscript(metadataKey metadataKey: String) -> String? {
+        public subscript(metadataKey metadataKey: String) -> Logging.Metadata.Value? {
             get { return self.logger[metadataKey: metadataKey] }
             set { self.logger[metadataKey: metadataKey] = newValue }
         }
