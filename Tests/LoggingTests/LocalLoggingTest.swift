@@ -18,7 +18,7 @@ class LocalLoggerTest: XCTestCase {
         logging.history.assertExist(level: .info, metadata: nil, message: "Struct2::doSomethingElse")
         logging.history.assertExist(level: .error, metadata: ["bar": "baz"], message: "Struct3::doSomething")
         logging.history.assertExist(level: .error, metadata: ["bar": "baz"], message: "Struct3::doSomethingElse")
-        logging.history.assertExist(level: .warn, metadata: ["bar": "baz"], message: "Struct3::doSomethingElseAsync")
+        logging.history.assertExist(level: .warning, metadata: ["bar": "baz"], message: "Struct3::doSomethingElseAsync")
         logging.history.assertExist(level: .info, metadata: nil, message: "TestLibrary::doSomething")
         logging.history.assertExist(level: .info, metadata: nil, message: "TestLibrary::doSomethingAsync")
         logging.history.assertExist(level: .trace, metadata: ["bar": "baz", "baz": "qux"], message: "Struct3::doSomethingElse::Local")
@@ -45,7 +45,7 @@ class LocalLoggerTest: XCTestCase {
         logging.history.assertExist(level: .info, metadata: nil, message: "Struct2::doSomethingElse") // local context
         logging.history.assertExist(level: .error, metadata: ["bar": "baz"], message: "Struct3::doSomething") // local context
         logging.history.assertExist(level: .error, metadata: ["bar": "baz"], message: "Struct3::doSomethingElse") // local context
-        logging.history.assertExist(level: .warn, metadata: ["bar": "baz"], message: "Struct3::doSomethingElseAsync") // local context
+        logging.history.assertExist(level: .warning, metadata: ["bar": "baz"], message: "Struct3::doSomethingElseAsync") // local context
         logging.history.assertNotExist(level: .info, metadata: nil, message: "TestLibrary::doSomething") // global context
         logging.history.assertNotExist(level: .info, metadata: nil, message: "TestLibrary::doSomethingAsync") // global context
         logging.history.assertExist(level: .trace, metadata: ["bar": "baz", "baz": "qux"], message: "Struct3::doSomethingElse::Local") // hyper local context
@@ -84,7 +84,7 @@ private struct Struct1 {
     private func doSomethingElse(context: Context) {
         let originalContext = context
         var context = context
-        context.logger.logLevel = .warn
+        context.logger.logLevel = .warning
         context.logger.trace("Struct1::doSomethingElse")
         Struct2().doSomething(context: context)
         originalContext.logger.trace("Struct1::doSomethingElse::end")
@@ -125,7 +125,7 @@ private struct Struct3 {
         let group = DispatchGroup()
         group.enter()
         queue.async {
-            context.logger.warn("Struct3::doSomethingElseAsync")
+            context.logger.warning("Struct3::doSomethingElseAsync")
             let library = TestLibrary()
             library.doSomething()
             library.doSomethingAsync {
