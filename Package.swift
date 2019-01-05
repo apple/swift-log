@@ -16,8 +16,12 @@ let package = Package(
             dependencies: []
         ),
         .target(
-            name: "Examples",
+            name: "ExampleImplementation",
             dependencies: ["Logging"]
+        ),
+        .target(
+            name: "ExampleUsage",
+            dependencies: ["Logging", "ExampleImplementation"]
         ),
         .testTarget(
             name: "LoggingTests",

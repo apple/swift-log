@@ -143,8 +143,8 @@ internal extension History {
         return self.atLevel(level: .info)
     }
 
-    var warn: [LogEntry] {
-        return self.atLevel(level: .warn)
+    var warning: [LogEntry] {
+        return self.atLevel(level: .warning)
     }
 
     var error: [LogEntry] {

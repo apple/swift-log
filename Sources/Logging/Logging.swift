@@ -1,4 +1,8 @@
-import Foundation
+#if os(macOS) || os(iOS) || os(tvOS) || os(watchOS)
+    import Darwin
+#else
+    import Glibc
+#endif
 
 /// This is the protocol a custom logger implements.
 public protocol LogHandler {
@@ -52,8 +56,8 @@ public struct Logger {
     }
 
     @inlinable
-    public func warn(_ message: @autoclosure () -> String, file: String = #file, function: String = #function, line: UInt = #line) {
-        self.log(level: .warn, message: message(), file: file, function: function, line: line)
+    public func warning(_ message: @autoclosure () -> String, file: String = #file, function: String = #function, line: UInt = #line) {
+        self.log(level: .warning, message: message(), file: file, function: function, line: line)
     }
 
     @inlinable
@@ -96,7 +100,7 @@ public enum LogLevel: Int {
     case trace
     case debug
     case info
-    case warn
+    case warning
     case error
 }
 
@@ -111,18 +115,18 @@ extension LogLevel: Comparable {
 // This is the logging system itself, it's mostly used to obtain loggers and to set the type of the `LogHandler`
 // implementation.
 public enum Logging {
-    private static let lock = NSLock()
+    private static let lock = ReadWriteLock()
     private static var _factory: (String) -> LogHandler = StdoutLogger.init
 
     // Configures which `LogHandler` to use in the application.
     public static func bootstrap(_ factory: @escaping (String) -> LogHandler) {
-        self.lock.withLock {
+        self.lock.withWriterLock {
             self._factory = factory
         }
     }
 
     public static func make(_ label: String) -> Logger {
-        return self.lock.withLock { Logger(self._factory(label)) }
+        return self.lock.withReaderLock { Logger(self._factory(label)) }
     }
 }
 
@@ -140,7 +144,7 @@ public final class MultiplexLogging {
 }
 
 private class MUXLogHandler: LogHandler {
-    private let lock = NSLock()
+    private let lock = Lock()
     private var handlers: [LogHandler]
 
     public init(handlers: [LogHandler]) {
@@ -193,8 +197,8 @@ private class MUXLogHandler: LogHandler {
 }
 
 /// Ships with the logging module, really boring just prints something using the `print` function
-public final class StdoutLogger: LogHandler {
-    private let lock = NSLock()
+internal final class StdoutLogger: LogHandler {
+    private let lock = Lock()
 
     public init(label _: String) {}
 
@@ -219,7 +223,7 @@ public final class StdoutLogger: LogHandler {
 
     public func log(level: LogLevel, message: String, file _: String, function _: String, line _: UInt) {
         if level >= self.logLevel {
-            print("\(Date()) \(level)\(self.prettyMetadata.map { " \($0)" } ?? "") \(message)")
+            print("\(self.timestamp()) \(level)\(self.prettyMetadata.map { " \($0)" } ?? "") \(message)")
         }
     }
 
@@ -245,14 +249,14 @@ public final class StdoutLogger: LogHandler {
             }
         }
     }
-}
 
-private extension NSLock {
-    func withLock<T>(_ body: () -> T) -> T {
-        self.lock()
-        defer {
-            self.unlock()
-        }
-        return body()
+    private func timestamp() -> String {
+        var buffer = [Int8](repeating: 0, count: 255)
+        var timestamp = time(nil)
+        let localTime = localtime(&timestamp)
+        strftime(&buffer, buffer.count, "%Y-%m-%dT%H:%M:%S%z", localTime)
+        return buffer.map { UInt8($0) }.withUnsafeBufferPointer { ptr in
+            String.decodeCString(ptr.baseAddress, as: UTF8.self, repairingInvalidCodeUnits: true)
+        }?.0 ?? "\(timestamp)"
     }
 }
