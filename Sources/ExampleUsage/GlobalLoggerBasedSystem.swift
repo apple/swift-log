@@ -17,7 +17,7 @@ enum GlobalLoggerBasedSystem {
         // run the example
         for i in 1 ... 2 {
             print("---------------------------- processing request #\(i) ----------------------------")
-            logger[metadataKey: "requestId"] = UUID().uuidString
+            logger[metadataKey: "requestId"] = "\(UUID().uuidString)"
             Foo().doSomething(requestNumnber: i)
         }
     }

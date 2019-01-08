@@ -7,14 +7,14 @@ internal struct TestLogging {
     private let recorder = Recorder() // shared amonog loggers
 
     func make(label: String) -> LogHandler {
-        return TestLoggger(label: label, config: self.config, recorder: self.recorder)
+        return TestLogger(label: label, config: self.config, recorder: self.recorder)
     }
 
     var config: Config { return self._config }
     var history: History { return self.recorder }
 }
 
-internal struct TestLoggger: LogHandler {
+internal struct TestLogger: LogHandler {
     private let logLevelLock = NSLock()
     private let metadataLock = NSLock()
     private let recorder: Recorder
@@ -30,7 +30,7 @@ internal struct TestLoggger: LogHandler {
         self.logger.logLevel = .trace
     }
 
-    func log(level: LogLevel, message: String, file: String, function: String, line: UInt) {
+    func log(level: Logging.Level, message: String, file: StaticString, function: StaticString, line: UInt) {
         let metadata = self.metadata ?? MDC.global.metadata // use MDC unless set
         var l = logger // local copy since we gonna override its metadata
         l.metadata = metadata
@@ -38,8 +38,8 @@ internal struct TestLoggger: LogHandler {
         recorder.record(level: level, metadata: metadata, message: message)
     }
 
-    private var _logLevel: LogLevel?
-    var logLevel: LogLevel {
+    private var _logLevel: Logging.Level?
+    var logLevel: Logging.Level {
         get {
             // get from config unless set
             return self.logLevelLock.withLock { self._logLevel } ?? self.config.get(key: self.label)
@@ -50,8 +50,8 @@ internal struct TestLoggger: LogHandler {
     }
 
     // TODO: would be nice to deleagte to local copy of logger but StdoutLogger is a reference type. why?
-    private var _metadata: LoggingMetadata?
-    subscript(metadataKey metadataKey: LoggingMetadata.Key) -> LoggingMetadata.Value? {
+    private var _metadata: Logging.Metadata?
+    subscript(metadataKey metadataKey: Logging.Metadata.Key) -> Logging.Metadata.Value? {
         get {
             // return self.logger[metadataKey: metadataKey]
             return self.metadataLock.withLock { self._metadata?[metadataKey] }
@@ -60,14 +60,14 @@ internal struct TestLoggger: LogHandler {
             // return logger[metadataKey: metadataKey] = newValue
             self.metadataLock.withLock {
                 if nil == self._metadata {
-                    self._metadata = LoggingMetadata()
+                    self._metadata = Logging.Metadata()
                 }
                 self._metadata![metadataKey] = newValue
             }
         }
     }
 
-    public var metadata: LoggingMetadata? {
+    public var metadata: Logging.Metadata? {
         get {
             // return self.logger.metadata
             return self.metadataLock.withLock { self._metadata }
@@ -83,20 +83,20 @@ internal class Config {
     private static let ALL = "*"
 
     private let lock = NSLock()
-    private var storage = [String: LogLevel]()
+    private var storage = [String: Logging.Level]()
 
-    func get(key: String) -> LogLevel {
-        return self.get(key) ?? self.get(Config.ALL) ?? LogLevel.trace
+    func get(key: String) -> Logging.Level {
+        return self.get(key) ?? self.get(Config.ALL) ?? Logging.Level.trace
     }
 
-    func get(_ key: String) -> LogLevel? {
+    func get(_ key: String) -> Logging.Level? {
         guard let value = (self.lock.withLock { self.storage[key] }) else {
             return nil
         }
         return value
     }
 
-    func set(key: String = Config.ALL, value: LogLevel) {
+    func set(key: String = Config.ALL, value: Logging.Level) {
         self.lock.withLock { self.storage[key] = value }
     }
 
@@ -109,7 +109,7 @@ internal class Recorder: History {
     private let lock = NSLock()
     private var _entries = [LogEntry]()
 
-    func record(level: LogLevel, metadata: LoggingMetadata?, message: String) {
+    func record(level: Logging.Level, metadata: Logging.Metadata?, message: String) {
         return self.lock.withLock {
             self._entries.append(LogEntry(level: level, metadata: metadata, message: message))
         }
@@ -125,7 +125,7 @@ internal protocol History {
 }
 
 internal extension History {
-    func atLevel(level: LogLevel) -> [LogEntry] {
+    func atLevel(level: Logging.Level) -> [LogEntry] {
         return self.entries.filter { entry in
             level == entry.level
         }
@@ -153,23 +153,23 @@ internal extension History {
 }
 
 internal struct LogEntry {
-    let level: LogLevel
-    let metadata: LoggingMetadata?
+    let level: Logging.Level
+    let metadata: Logging.Metadata?
     let message: String
 }
 
 extension History {
-    func assertExist(level: LogLevel, metadata: LoggingMetadata?, message: String, file: StaticString = #file, line: UInt = #line) {
+    func assertExist(level: Logging.Level, metadata: Logging.Metadata?, message: String, file: StaticString = #file, line: UInt = #line) {
         let entry = self.find(level: level, metadata: metadata, message: message)
         XCTAssertNotNil(entry, "entry not found: \(level), \(String(describing: metadata)), \(message)", file: file, line: line)
     }
 
-    func assertNotExist(level: LogLevel, metadata: LoggingMetadata?, message: String, file: StaticString = #file, line: UInt = #line) {
+    func assertNotExist(level: Logging.Level, metadata: Logging.Metadata?, message: String, file: StaticString = #file, line: UInt = #line) {
         let entry = self.find(level: level, metadata: metadata, message: message)
         XCTAssertNil(entry, "entry was found: \(level), \(String(describing: metadata)), \(message)]", file: file, line: line)
     }
 
-    func find(level: LogLevel, metadata: LoggingMetadata?, message: String) -> LogEntry? {
+    func find(level: Logging.Level, metadata: Logging.Metadata?, message: String) -> LogEntry? {
         return self.entries.first { entry in
             entry.level == level && entry.message == message && entry.metadata ?? [:] == metadata ?? [:]
         }
@@ -178,13 +178,13 @@ extension History {
 
 public class MDC {
     private let lock = NSLock()
-    private var storage = [UInt32: LoggingMetadata]()
+    private var storage = [UInt32: Logging.Metadata]()
 
     public static var global = MDC()
 
     private init() {}
 
-    public subscript(metadataKey: LoggingMetadata.Key) -> LoggingMetadata.Value? {
+    public subscript(metadataKey: String) -> Logging.Metadata.Value? {
         get {
             return self.lock.withLock {
                 self.storage[self.threadId]?[metadataKey]
@@ -193,14 +193,14 @@ public class MDC {
         set {
             self.lock.withLock {
                 if nil == self.storage[self.threadId] {
-                    self.storage[self.threadId] = LoggingMetadata()
+                    self.storage[self.threadId] = Logging.Metadata()
                 }
                 self.storage[self.threadId]![metadataKey] = newValue
             }
         }
     }
 
-    public var metadata: LoggingMetadata? {
+    public var metadata: Logging.Metadata? {
         return self.lock.withLock {
             self.storage[self.threadId]
         }
@@ -208,11 +208,11 @@ public class MDC {
 
     public func clear() {
         self.lock.withLock {
-            self.storage.removeValue(forKey: self.threadId)
+            _ = self.storage.removeValue(forKey: self.threadId)
         }
     }
 
-    public func with(metadata: LoggingMetadata?, _ body: () throws -> Void) rethrows {
+    public func with(metadata: Logging.Metadata?, _ body: () throws -> Void) rethrows {
         metadata?.forEach { self[$0] = $1 }
         defer {
             metadata?.keys.forEach { self[$0] = nil }
@@ -220,7 +220,7 @@ public class MDC {
         try body()
     }
 
-    public func with<T>(metadata: LoggingMetadata?, _ body: () throws -> T) rethrows -> T {
+    public func with<T>(metadata: Logging.Metadata?, _ body: () throws -> T) rethrows -> T {
         metadata?.forEach { self[$0] = $1 }
         defer {
             metadata?.keys.forEach { self[$0] = nil }

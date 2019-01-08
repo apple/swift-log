@@ -10,17 +10,17 @@ public protocol LogHandler {
     // `Logger`'s `info`, `error`, or `warning` functions.
     //
     // An implementation does not need to check the log level because that has been done before by `Logger` itself.
-    func log(level: LogLevel, message: String, file: String, function: String, line: UInt)
+    func log(level: Logging.Level, message: String, file: StaticString, function: StaticString, line: UInt)
 
     // This adds metadata to a place the concrete logger considers appropriate. Some loggers
     // might not support this feature at all.
-    subscript(metadataKey _: LoggingMetadata.Key) -> LoggingMetadata.Value? { get set }
+    subscript(metadataKey _: String) -> Logging.Metadata.Value? { get set }
 
     // All available metatdata
-    var metadata: LoggingMetadata? { get set }
+    var metadata: Logging.Metadata? { get set }
 
     // The log level
-    var logLevel: LogLevel { get set }
+    var logLevel: Logging.Level { get set }
 }
 
 // This is the logger itself. It can either have value or reference semantics, depending on the `LogHandler`
@@ -34,39 +34,39 @@ public struct Logger {
     }
 
     @inlinable
-    func log(level: LogLevel, message: @autoclosure () -> String, file: String, function: String, line: UInt) {
+    func log(level: Logging.Level, message: @autoclosure () -> String, file: StaticString = #file, function: StaticString = #function, line: UInt = #line) {
         if self.logLevel <= level {
             self.handler.log(level: level, message: message(), file: file, function: function, line: line)
         }
     }
 
     @inlinable
-    public func trace(_ message: @autoclosure () -> String, file: String = #file, function: String = #function, line: UInt = #line) {
-        self.log(level: .trace, message: message(), file: file, function: function, line: line)
+    public func trace(_ message: @autoclosure () -> String, file: StaticString = #file, function: StaticString = #function, line: UInt = #line) {
+        self.log(level: .trace, message: message, file: file, function: function, line: line)
     }
 
     @inlinable
-    public func debug(_ message: @autoclosure () -> String, file: String = #file, function: String = #function, line: UInt = #line) {
-        self.log(level: .debug, message: message(), file: file, function: function, line: line)
+    public func debug(_ message: @autoclosure () -> String, file: StaticString = #file, function: StaticString = #function, line: UInt = #line) {
+        self.log(level: .debug, message: message, file: file, function: function, line: line)
     }
 
     @inlinable
-    public func info(_ message: @autoclosure () -> String, file: String = #file, function: String = #function, line: UInt = #line) {
-        self.log(level: .info, message: message(), file: file, function: function, line: line)
+    public func info(_ message: @autoclosure () -> String, file: StaticString = #file, function: StaticString = #function, line: UInt = #line) {
+        self.log(level: .info, message: message, file: file, function: function, line: line)
     }
 
     @inlinable
-    public func warning(_ message: @autoclosure () -> String, file: String = #file, function: String = #function, line: UInt = #line) {
-        self.log(level: .warning, message: message(), file: file, function: function, line: line)
+    public func warning(_ message: @autoclosure () -> String, file: StaticString = #file, function: StaticString = #function, line: UInt = #line) {
+        self.log(level: .warning, message: message, file: file, function: function, line: line)
     }
 
     @inlinable
-    public func error(_ message: @autoclosure () -> String, file: String = #file, function: String = #function, line: UInt = #line) {
-        self.log(level: .error, message: message(), file: file, function: function, line: line)
+    public func error(_ message: @autoclosure () -> String, file: StaticString = #file, function: StaticString = #function, line: UInt = #line) {
+        self.log(level: .error, message: message, file: file, function: function, line: line)
     }
 
     @inlinable
-    public subscript(metadataKey metadataKey: String) -> String? {
+    public subscript(metadataKey metadataKey: String) -> Logging.Metadata.Value? {
         get {
             return self.handler[metadataKey: metadataKey]
         }
@@ -76,7 +76,7 @@ public struct Logger {
     }
 
     @inlinable
-    public var metadata: LoggingMetadata? {
+    public var metadata: Logging.Metadata? {
         get {
             return self.handler.metadata
         }
@@ -86,29 +86,13 @@ public struct Logger {
     }
 
     @inlinable
-    public var logLevel: LogLevel {
+    public var logLevel: Logging.Level {
         get {
             return self.handler.logLevel
         }
         set {
             self.handler.logLevel = newValue
         }
-    }
-}
-
-public enum LogLevel: Int {
-    case trace
-    case debug
-    case info
-    case warning
-    case error
-}
-
-public typealias LoggingMetadata = [String: String]
-
-extension LogLevel: Comparable {
-    public static func < (lhs: LogLevel, rhs: LogLevel) -> Bool {
-        return lhs.rawValue < rhs.rawValue
     }
 }
 
@@ -128,6 +112,61 @@ public enum Logging {
     public static func make(_ label: String) -> Logger {
         return self.lock.withReaderLock { Logger(self._factory(label)) }
     }
+}
+
+extension Logging {
+    public typealias Metadata = [String: MetadataValue]
+
+    public enum MetadataValue {
+        case string(String)
+        indirect case dictionary(Metadata)
+        indirect case list([Metadata.Value])
+        indirect case lazy(() -> Metadata.Value)
+    }
+
+    public enum Level: Int {
+        case trace
+        case debug
+        case info
+        case warning
+        case error
+    }
+}
+
+extension Logging.Level: Comparable {
+    public static func < (lhs: Logging.Level, rhs: Logging.Level) -> Bool {
+        return lhs.rawValue < rhs.rawValue
+    }
+}
+
+extension Logging.Metadata.Value: Equatable {
+    public static func == (lhs: Logging.MetadataValue, rhs: Logging.MetadataValue) -> Bool {
+        switch (lhs, rhs) {
+        case (.string(let lhs), .string(let rhs)):
+            return lhs == rhs
+        case (.list(let lhs), .list(let rhs)):
+            return lhs == rhs
+        case (.dictionary(let lhs), .dictionary(let rhs)):
+            return lhs == rhs
+        case (.lazy(let lhs), .lazy(let rhs)):
+            return lhs() == rhs()
+        case (.lazy(let lhs), .string(let rhs)):
+            return lhs() == .string(rhs)
+        case (.lazy(let lhs), .dictionary(let rhs)):
+            return lhs() == .dictionary(rhs)
+        case (.lazy(let lhs), .list(let rhs)):
+            return lhs() == .list(rhs)
+        case (.dictionary(let lhs), .lazy(let rhs)):
+            return .dictionary(lhs) == rhs()
+        case (.list(let lhs), .lazy(let rhs)):
+            return .list(lhs) == rhs()
+        case (.string(let lhs), .lazy(let rhs)):
+            return .string(lhs) == rhs()
+        default:
+            return false
+        }
+    }
+
 }
 
 /// Ships with the logging module, used to multiplex to multiple logging handlers
@@ -152,7 +191,7 @@ private class MUXLogHandler: LogHandler {
         self.handlers = handlers
     }
 
-    public var logLevel: LogLevel {
+    public var logLevel: Logging.Level {
         get {
             return self.handlers[0].logLevel
         }
@@ -161,13 +200,13 @@ private class MUXLogHandler: LogHandler {
         }
     }
 
-    public func log(level: LogLevel, message: String, file: String, function: String, line: UInt) {
+    public func log(level: Logging.Level, message: String, file: StaticString, function: StaticString, line: UInt) {
         self.handlers.forEach { handler in
             handler.log(level: level, message: message, file: file, function: function, line: line)
         }
     }
 
-    public var metadata: LoggingMetadata? {
+    public var metadata: Logging.Metadata? {
         get {
             return self.handlers[0].metadata
         }
@@ -176,7 +215,7 @@ private class MUXLogHandler: LogHandler {
         }
     }
 
-    public subscript(metadataKey metadataKey: String) -> String? {
+    public subscript(metadataKey metadataKey: String) -> Logging.Metadata.Value? {
         get {
             return self.handlers[0].metadata?[metadataKey]
         }
@@ -202,8 +241,8 @@ internal final class StdoutLogger: LogHandler {
 
     public init(label _: String) {}
 
-    private var _logLevel: LogLevel = .info
-    public var logLevel: LogLevel {
+    private var _logLevel: Logging.Level = .info
+    public var logLevel: Logging.Level {
         get {
             return self.lock.withLock { self._logLevel }
         }
@@ -215,19 +254,19 @@ internal final class StdoutLogger: LogHandler {
     }
 
     private var prettyMetadata: String?
-    private var _metadata: LoggingMetadata? {
+    private var _metadata: Logging.Metadata? {
         didSet {
             self.prettyMetadata = !(self._metadata?.isEmpty ?? true) ? self._metadata!.map { "\($0)=\($1)" }.joined(separator: " ") : nil
         }
     }
 
-    public func log(level: LogLevel, message: String, file _: String, function _: String, line _: UInt) {
+    public func log(level: Logging.Level, message: String, file: StaticString, function: StaticString, line _: UInt) {
         if level >= self.logLevel {
             print("\(self.timestamp()) \(level)\(self.prettyMetadata.map { " \($0)" } ?? "") \(message)")
         }
     }
 
-    public var metadata: LoggingMetadata? {
+    public var metadata: Logging.Metadata? {
         get {
             return self.lock.withLock { self._metadata }
         }
@@ -236,7 +275,7 @@ internal final class StdoutLogger: LogHandler {
         }
     }
 
-    public subscript(metadataKey metadataKey: String) -> String? {
+    public subscript(metadataKey metadataKey: String) -> Logging.Metadata.Value? {
         get {
             return self.lock.withLock { self._metadata?[metadataKey] }
         }
@@ -258,5 +297,57 @@ internal final class StdoutLogger: LogHandler {
         return buffer.map { UInt8($0) }.withUnsafeBufferPointer { ptr in
             String.decodeCString(ptr.baseAddress, as: UTF8.self, repairingInvalidCodeUnits: true)
         }?.0 ?? "\(timestamp)"
+    }
+}
+
+extension Logging.Metadata.Value: ExpressibleByStringLiteral {
+    public typealias StringLiteralType = String
+
+    public init(stringLiteral value: String) {
+        self = .string(value)
+    }
+}
+
+extension Logging.Metadata.Value: CustomStringConvertible {
+    public var description: String {
+        switch self {
+        case .dictionary(let dict):
+            return dict.mapValues { $0.description }.description
+        case .list(let list):
+            return list.map { $0.description }.description
+        case .string(let str):
+            return str
+        case .lazy(let thunk):
+            return thunk().description
+        }
+    }
+}
+
+extension Logging.Metadata.Value: ExpressibleByStringInterpolation {
+    #if !swift(>=5.0)
+    public init(stringInterpolation strings: Logging.Metadata.Value...) {
+        self = .string(strings.map { $0.description }.reduce("", +))
+    }
+
+    public init<T>(stringInterpolationSegment expr: T) {
+        self = .string(String(stringInterpolationSegment: expr))
+    }
+    #endif
+}
+
+extension Logging.Metadata.Value: ExpressibleByDictionaryLiteral {
+    public typealias Key = String
+    public typealias Value = Logging.Metadata.Value
+
+    public init(dictionaryLiteral elements: (String, Logging.Metadata.Value)...) {
+        self = .dictionary(.init(uniqueKeysWithValues: elements))
+    }
+}
+
+extension Logging.Metadata.Value: ExpressibleByArrayLiteral {
+    public typealias ArrayLiteralElement = Logging.Metadata.Value
+
+    public init(arrayLiteral elements: Logging.Metadata.Value...) {
+        self = .list(elements)
     }
 }

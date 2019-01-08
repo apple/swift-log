@@ -17,7 +17,7 @@ enum ContextBasedSystem {
         // run the example
         for i in 1 ... 2 {
             print("---------------------------- processing request #\(i) ----------------------------")
-            let context = Context(metadata: ["requestId": UUID().uuidString]) // contrived context
+            let context = Context(metadata: ["requestId": "\(UUID().uuidString)"]) // contrived context
             Foo().doSomething(context: context, requestNumnber: i)
         }
     }
@@ -25,12 +25,12 @@ enum ContextBasedSystem {
     struct Context {
         var logger = Logging.make("ContextLogger")
 
-        init(metadata: [String: String] = [:]) {
+        init(metadata: Logging.Metadata = [:]) {
             metadata.forEach { self[$0.0] = $0.1 }
         }
 
         // since logger is a value type, we can reuse our copy to manage the metadata
-        subscript(metadataKey: String) -> String? {
+        subscript(metadataKey: String) -> Logging.Metadata.Value? {
             get { return self.logger[metadataKey: metadataKey] }
             set { self.logger[metadataKey: metadataKey] = newValue }
         }
