@@ -10,7 +10,7 @@ public protocol LogHandler {
     // `Logger`'s `info`, `error`, or `warning` functions.
     //
     // An implementation does not need to check the log level because that has been done before by `Logger` itself.
-    func log(level: Logging.Level, message: String, file: StaticString, function: StaticString, line: UInt)
+    func log(level: Logging.Level, message: String, error: Error?, file: StaticString, function: StaticString, line: UInt)
 
     // This adds metadata to a place the concrete logger considers appropriate. Some loggers
     // might not support this feature at all.
@@ -34,35 +34,35 @@ public struct Logger {
     }
 
     @inlinable
-    func log(level: Logging.Level, message: @autoclosure () -> String, file: StaticString = #file, function: StaticString = #function, line: UInt = #line) {
+    func log(level: Logging.Level, message: @autoclosure () -> String, error: Error? = nil, file: StaticString = #file, function: StaticString = #function, line: UInt = #line) {
         if self.logLevel <= level {
-            self.handler.log(level: level, message: message(), file: file, function: function, line: line)
+            self.handler.log(level: level, message: message(), error: error, file: file, function: function, line: line)
         }
     }
 
     @inlinable
-    public func trace(_ message: @autoclosure () -> String, file: StaticString = #file, function: StaticString = #function, line: UInt = #line) {
-        self.log(level: .trace, message: message, file: file, function: function, line: line)
+    public func trace(_ message: @autoclosure () -> String, error: Error? = nil, file: StaticString = #file, function: StaticString = #function, line: UInt = #line) {
+        self.log(level: .trace, message: message, error: error, file: file, function: function, line: line)
     }
 
     @inlinable
-    public func debug(_ message: @autoclosure () -> String, file: StaticString = #file, function: StaticString = #function, line: UInt = #line) {
-        self.log(level: .debug, message: message, file: file, function: function, line: line)
+    public func debug(_ message: @autoclosure () -> String, error: Error? = nil, file: StaticString = #file, function: StaticString = #function, line: UInt = #line) {
+        self.log(level: .debug, message: message, error: error, file: file, function: function, line: line)
     }
 
     @inlinable
-    public func info(_ message: @autoclosure () -> String, file: StaticString = #file, function: StaticString = #function, line: UInt = #line) {
-        self.log(level: .info, message: message, file: file, function: function, line: line)
+    public func info(_ message: @autoclosure () -> String, error: Error? = nil, file: StaticString = #file, function: StaticString = #function, line: UInt = #line) {
+        self.log(level: .info, message: message, error: error, file: file, function: function, line: line)
     }
 
     @inlinable
-    public func warning(_ message: @autoclosure () -> String, file: StaticString = #file, function: StaticString = #function, line: UInt = #line) {
-        self.log(level: .warning, message: message, file: file, function: function, line: line)
+    public func warning(_ message: @autoclosure () -> String, error: Error? = nil, file: StaticString = #file, function: StaticString = #function, line: UInt = #line) {
+        self.log(level: .warning, message: message, error: error, file: file, function: function, line: line)
     }
 
     @inlinable
-    public func error(_ message: @autoclosure () -> String, file: StaticString = #file, function: StaticString = #function, line: UInt = #line) {
-        self.log(level: .error, message: message, file: file, function: function, line: line)
+    public func error(_ message: @autoclosure () -> String, error: Error? = nil, file: StaticString = #file, function: StaticString = #function, line: UInt = #line) {
+        self.log(level: .error, message: message, error: error, file: file, function: function, line: line)
     }
 
     @inlinable
@@ -121,7 +121,7 @@ extension Logging {
         case string(String)
         indirect case dictionary(Metadata)
         indirect case list([Metadata.Value])
-        indirect case lazy(() -> Metadata.Value)
+        indirect case lazy (() -> Metadata.Value)
     }
 
     public enum Level: Int {
@@ -166,7 +166,6 @@ extension Logging.Metadata.Value: Equatable {
             return false
         }
     }
-
 }
 
 /// Ships with the logging module, used to multiplex to multiple logging handlers
@@ -200,9 +199,9 @@ private class MUXLogHandler: LogHandler {
         }
     }
 
-    public func log(level: Logging.Level, message: String, file: StaticString, function: StaticString, line: UInt) {
+    public func log(level: Logging.Level, message: String, error: Error?, file: StaticString, function: StaticString, line: UInt) {
         self.handlers.forEach { handler in
-            handler.log(level: level, message: message, file: file, function: function, line: line)
+            handler.log(level: level, message: message, error: error, file: file, function: function, line: line)
         }
     }
 
@@ -239,7 +238,7 @@ private class MUXLogHandler: LogHandler {
 internal final class StdoutLogger: LogHandler {
     private let lock = Lock()
 
-    public init(label _: String) {}
+    public init(label: String) {}
 
     private var _logLevel: Logging.Level = .info
     public var logLevel: Logging.Level {
@@ -260,9 +259,9 @@ internal final class StdoutLogger: LogHandler {
         }
     }
 
-    public func log(level: Logging.Level, message: String, file: StaticString, function: StaticString, line _: UInt) {
+    public func log(level: Logging.Level, message: String, error: Error?, file: StaticString, function: StaticString, line: UInt) {
         if level >= self.logLevel {
-            print("\(self.timestamp()) \(level)\(self.prettyMetadata.map { " \($0)" } ?? "") \(message)")
+            print("\(self.timestamp()) \(level)\(self.prettyMetadata.map { " \($0)" } ?? "") \(message)\(error.map { " \($0)" } ?? "")")
         }
     }
 
@@ -325,13 +324,13 @@ extension Logging.Metadata.Value: CustomStringConvertible {
 
 extension Logging.Metadata.Value: ExpressibleByStringInterpolation {
     #if !swift(>=5.0)
-    public init(stringInterpolation strings: Logging.Metadata.Value...) {
-        self = .string(strings.map { $0.description }.reduce("", +))
-    }
+        public init(stringInterpolation strings: Logging.Metadata.Value...) {
+            self = .string(strings.map { $0.description }.reduce("", +))
+        }
 
-    public init<T>(stringInterpolationSegment expr: T) {
-        self = .string(String(stringInterpolationSegment: expr))
-    }
+        public init<T>(stringInterpolationSegment expr: T) {
+            self = .string(String(stringInterpolationSegment: expr))
+        }
     #endif
 }
 

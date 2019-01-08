@@ -30,12 +30,16 @@ internal struct TestLogger: LogHandler {
         self.logger.logLevel = .trace
     }
 
-    func log(level: Logging.Level, message: String, file: StaticString, function: StaticString, line: UInt) {
+    func log(level: Logging.Level, message: String, error: Error?, file: StaticString, function: StaticString, line: UInt) {
         let metadata = self.metadata ?? MDC.global.metadata // use MDC unless set
         var l = logger // local copy since we gonna override its metadata
         l.metadata = metadata
-        l.log(level: level, message: message, file: file, function: function, line: line)
-        recorder.record(level: level, metadata: metadata, message: message)
+        if let e = error {
+            l.log(level: level, message: message, error: e, file: file, function: function, line: line)
+        } else {
+            l.log(level: level, message: message, file: file, function: function, line: line)
+        }
+        self.recorder.record(level: level, metadata: metadata, message: message, error: error)
     }
 
     private var _logLevel: Logging.Level?
@@ -109,9 +113,9 @@ internal class Recorder: History {
     private let lock = NSLock()
     private var _entries = [LogEntry]()
 
-    func record(level: Logging.Level, metadata: Logging.Metadata?, message: String) {
+    func record(level: Logging.Level, metadata: Logging.Metadata?, message: String, error: Error?) {
         return self.lock.withLock {
-            self._entries.append(LogEntry(level: level, metadata: metadata, message: message))
+            self._entries.append(LogEntry(level: level, metadata: metadata, message: message, error: error))
         }
     }
 
@@ -156,22 +160,26 @@ internal struct LogEntry {
     let level: Logging.Level
     let metadata: Logging.Metadata?
     let message: String
+    let error: Error?
 }
 
 extension History {
-    func assertExist(level: Logging.Level, metadata: Logging.Metadata?, message: String, file: StaticString = #file, line: UInt = #line) {
-        let entry = self.find(level: level, metadata: metadata, message: message)
-        XCTAssertNotNil(entry, "entry not found: \(level), \(String(describing: metadata)), \(message)", file: file, line: line)
+    func assertExist(level: Logging.Level, message: String, metadata: Logging.Metadata? = nil, error: Error? = nil, file: StaticString = #file, line: UInt = #line) {
+        let entry = self.find(level: level, message: message, metadata: metadata, error: error)
+        XCTAssertNotNil(entry, "entry not found: \(level), \(String(describing: metadata)), \(message) \(String(describing: error))", file: file, line: line)
     }
 
-    func assertNotExist(level: Logging.Level, metadata: Logging.Metadata?, message: String, file: StaticString = #file, line: UInt = #line) {
-        let entry = self.find(level: level, metadata: metadata, message: message)
-        XCTAssertNil(entry, "entry was found: \(level), \(String(describing: metadata)), \(message)]", file: file, line: line)
+    func assertNotExist(level: Logging.Level, message: String, metadata: Logging.Metadata? = nil, error: Error? = nil, file: StaticString = #file, line: UInt = #line) {
+        let entry = self.find(level: level, message: message, metadata: metadata, error: error)
+        XCTAssertNil(entry, "entry was found: \(level), \(String(describing: metadata)), \(message) \(String(describing: error))", file: file, line: line)
     }
 
-    func find(level: Logging.Level, metadata: Logging.Metadata?, message: String) -> LogEntry? {
+    func find(level: Logging.Level, message: String, metadata: Logging.Metadata? = nil, error: Error?) -> LogEntry? {
         return self.entries.first { entry in
-            entry.level == level && entry.message == message && entry.metadata ?? [:] == metadata ?? [:]
+            entry.level == level &&
+                entry.message == message &&
+                entry.metadata ?? [:] == metadata ?? [:] &&
+                entry.error?.localizedDescription ?? "" == error?.localizedDescription ?? ""
         }
     }
 }

@@ -12,21 +12,21 @@ class LocalLoggerTest: XCTestCase {
         let context = Context()
         Struct1().doSomething(context: context)
         // test results
-        logging.history.assertExist(level: .trace, metadata: nil, message: "Struct1::doSomething")
-        logging.history.assertNotExist(level: .trace, metadata: nil, message: "Struct1::doSomethingElse")
-        logging.history.assertExist(level: .info, metadata: nil, message: "Struct2::doSomething")
-        logging.history.assertExist(level: .info, metadata: nil, message: "Struct2::doSomethingElse")
-        logging.history.assertExist(level: .error, metadata: ["bar": "baz"], message: "Struct3::doSomething")
-        logging.history.assertExist(level: .error, metadata: ["bar": "baz"], message: "Struct3::doSomethingElse")
-        logging.history.assertExist(level: .warning, metadata: ["bar": "baz"], message: "Struct3::doSomethingElseAsync")
-        logging.history.assertExist(level: .info, metadata: nil, message: "TestLibrary::doSomething")
-        logging.history.assertExist(level: .info, metadata: nil, message: "TestLibrary::doSomethingAsync")
-        logging.history.assertExist(level: .trace, metadata: ["bar": "baz", "baz": "qux"], message: "Struct3::doSomethingElse::Local")
-        logging.history.assertExist(level: .trace, metadata: ["bar": "baz"], message: "Struct3::doSomethingElse::end")
-        logging.history.assertExist(level: .trace, metadata: ["bar": "baz"], message: "Struct3::doSomething::end")
-        logging.history.assertExist(level: .trace, metadata: nil, message: "Struct2::doSomethingElse::end")
-        logging.history.assertExist(level: .trace, metadata: nil, message: "Struct1::doSomethingElse::end")
-        logging.history.assertExist(level: .trace, metadata: nil, message: "Struct1::doSomething::end")
+        logging.history.assertExist(level: .trace, message: "Struct1::doSomething")
+        logging.history.assertNotExist(level: .trace, message: "Struct1::doSomethingElse")
+        logging.history.assertExist(level: .info, message: "Struct2::doSomething")
+        logging.history.assertExist(level: .info, message: "Struct2::doSomethingElse")
+        logging.history.assertExist(level: .error, message: "Struct3::doSomething", metadata: ["bar": "baz"])
+        logging.history.assertExist(level: .error, message: "Struct3::doSomethingElse", metadata: ["bar": "baz"])
+        logging.history.assertExist(level: .warning, message: "Struct3::doSomethingElseAsync", metadata: ["bar": "baz"])
+        logging.history.assertExist(level: .info, message: "TestLibrary::doSomething")
+        logging.history.assertExist(level: .info, message: "TestLibrary::doSomethingAsync")
+        logging.history.assertExist(level: .trace, message: "Struct3::doSomethingElse::Local", metadata: ["bar": "baz", "baz": "qux"])
+        logging.history.assertExist(level: .trace, message: "Struct3::doSomethingElse::end", metadata: ["bar": "baz"])
+        logging.history.assertExist(level: .trace, message: "Struct3::doSomething::end", metadata: ["bar": "baz"])
+        logging.history.assertExist(level: .trace, message: "Struct2::doSomethingElse::end")
+        logging.history.assertExist(level: .trace, message: "Struct1::doSomethingElse::end")
+        logging.history.assertExist(level: .trace, message: "Struct1::doSomething::end")
     }
 
     func test2() throws {
@@ -39,21 +39,21 @@ class LocalLoggerTest: XCTestCase {
         let context = Context()
         Struct1().doSomething(context: context)
         // test results
-        logging.history.assertNotExist(level: .trace, metadata: nil, message: "Struct1::doSomething") // global context
-        logging.history.assertNotExist(level: .trace, metadata: nil, message: "Struct1::doSomethingElse") // global context
-        logging.history.assertExist(level: .info, metadata: nil, message: "Struct2::doSomething") // local context
-        logging.history.assertExist(level: .info, metadata: nil, message: "Struct2::doSomethingElse") // local context
-        logging.history.assertExist(level: .error, metadata: ["bar": "baz"], message: "Struct3::doSomething") // local context
-        logging.history.assertExist(level: .error, metadata: ["bar": "baz"], message: "Struct3::doSomethingElse") // local context
-        logging.history.assertExist(level: .warning, metadata: ["bar": "baz"], message: "Struct3::doSomethingElseAsync") // local context
-        logging.history.assertNotExist(level: .info, metadata: nil, message: "TestLibrary::doSomething") // global context
-        logging.history.assertNotExist(level: .info, metadata: nil, message: "TestLibrary::doSomethingAsync") // global context
-        logging.history.assertExist(level: .trace, metadata: ["bar": "baz", "baz": "qux"], message: "Struct3::doSomethingElse::Local") // hyper local context
-        logging.history.assertExist(level: .trace, metadata: ["bar": "baz"], message: "Struct3::doSomethingElse::end") // local context
-        logging.history.assertExist(level: .trace, metadata: ["bar": "baz"], message: "Struct3::doSomething::end") // local context
-        logging.history.assertExist(level: .trace, metadata: nil, message: "Struct2::doSomethingElse::end") // local context
-        logging.history.assertNotExist(level: .trace, metadata: nil, message: "Struct1::doSomethingElse::end") // global context
-        logging.history.assertNotExist(level: .trace, metadata: nil, message: "Struct1::doSomething::end") // global context
+        logging.history.assertNotExist(level: .trace, message: "Struct1::doSomething") // global context
+        logging.history.assertNotExist(level: .trace, message: "Struct1::doSomethingElse") // global context
+        logging.history.assertExist(level: .info, message: "Struct2::doSomething") // local context
+        logging.history.assertExist(level: .info, message: "Struct2::doSomethingElse") // local context
+        logging.history.assertExist(level: .error, message: "Struct3::doSomething", metadata: ["bar": "baz"]) // local context
+        logging.history.assertExist(level: .error, message: "Struct3::doSomethingElse", metadata: ["bar": "baz"]) // local context
+        logging.history.assertExist(level: .warning, message: "Struct3::doSomethingElseAsync", metadata: ["bar": "baz"]) // local context
+        logging.history.assertNotExist(level: .info, message: "TestLibrary::doSomething") // global context
+        logging.history.assertNotExist(level: .info, message: "TestLibrary::doSomethingAsync") // global context
+        logging.history.assertExist(level: .trace, message: "Struct3::doSomethingElse::Local", metadata: ["bar": "baz", "baz": "qux"]) // hyper local context
+        logging.history.assertExist(level: .trace, message: "Struct3::doSomethingElse::end", metadata: ["bar": "baz"]) // local context
+        logging.history.assertExist(level: .trace, message: "Struct3::doSomething::end", metadata: ["bar": "baz"]) // local context
+        logging.history.assertExist(level: .trace, message: "Struct2::doSomethingElse::end") // local context
+        logging.history.assertNotExist(level: .trace, message: "Struct1::doSomethingElse::end") // global context
+        logging.history.assertNotExist(level: .trace, message: "Struct1::doSomething::end") // global context
     }
 }
 

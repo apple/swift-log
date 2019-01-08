@@ -24,8 +24,8 @@ public final class SimpleLogging {
             self.defaultLogLevel = defaultLogLevel
         }
 
-        public func log(level: Logging.Level, message: String, file: StaticString, function: StaticString, line _: UInt) {
-            self.logger.log(level: level, message: message) { text in
+        public func log(level: Logging.Level, message: String, error: Error?, file: StaticString, function: StaticString, line: UInt) {
+            self.logger.log(level: level, message: message, error: error) { text in
                 print(text)
             }
         }
