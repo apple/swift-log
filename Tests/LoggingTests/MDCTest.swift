@@ -21,7 +21,7 @@ class MDCTest: XCTestCase {
                 for i in 0 ... remove {
                     MDC.global["key-\(i)"] = nil
                 }
-                XCTAssertEqual(add - remove, MDC.global.metadata?.count ?? 0, "expected number of entries to match")
+                XCTAssertEqual(add - remove, MDC.global.metadata.count, "expected number of entries to match")
                 for i in remove + 1 ... add {
                     XCTAssertNotNil(MDC.global["key-\(i)"], "expecting value for key-\(i)")
                 }
@@ -35,6 +35,6 @@ class MDCTest: XCTestCase {
         group.wait()
         XCTAssertEqual(MDC.global["foo"], "bar", "expecting to find top items")
         MDC.global["foo"] = nil
-        XCTAssertTrue(MDC.global.metadata?.isEmpty ?? true, "MDC should be empty")
+        XCTAssertTrue(MDC.global.metadata.isEmpty, "MDC should be empty")
     }
 }

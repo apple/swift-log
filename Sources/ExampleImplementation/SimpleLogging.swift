@@ -35,7 +35,7 @@ public final class SimpleLogging {
             set { self.logger.logLevel = newValue }
         }
 
-        public var metadata: Logging.Metadata? {
+        public var metadata: Logging.Metadata {
             get { return self.logger.metadata }
             set { self.logger.metadata = newValue }
         }

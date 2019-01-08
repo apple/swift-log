@@ -37,13 +37,13 @@ internal final class SimpleLogger {
     }
 
     private var prettyMetadata: String?
-    private var _metadata: Logging.Metadata? {
+    private var _metadata = Logging.Metadata() {
         didSet {
-            self.prettyMetadata = !(self._metadata?.isEmpty ?? true) ? self._metadata!.map { "\($0)=\($1)" }.joined(separator: " ") : nil
+            self.prettyMetadata = !self._metadata.isEmpty ? self._metadata.map { "\($0)=\($1)" }.joined(separator: " ") : nil
         }
     }
 
-    public var metadata: Logging.Metadata? {
+    public var metadata: Logging.Metadata {
         get {
             return self.lock.withLock { self._metadata }
         }
@@ -54,14 +54,11 @@ internal final class SimpleLogger {
 
     public subscript(metadataKey metadataKey: String) -> Logging.Metadata.Value? {
         get {
-            return self.lock.withLock { self._metadata?[metadataKey] }
+            return self.lock.withLock { self._metadata[metadataKey] }
         }
         set {
             self.lock.withLock {
-                if nil == self._metadata {
-                    self._metadata = [:]
-                }
-                self._metadata![metadataKey] = newValue
+                self._metadata[metadataKey] = newValue
             }
         }
     }

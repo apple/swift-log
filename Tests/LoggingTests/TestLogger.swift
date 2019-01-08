@@ -31,7 +31,7 @@ internal struct TestLogger: LogHandler {
     }
 
     func log(level: Logging.Level, message: String, error: Error?, file: StaticString, function: StaticString, line: UInt) {
-        let metadata = self.metadata ?? MDC.global.metadata // use MDC unless set
+        let metadata = self._metadataSet ? self.metadata : MDC.global.metadata // use MDC unless set
         var l = logger // local copy since we gonna override its metadata
         l.metadata = metadata
         if let e = error {
@@ -53,25 +53,14 @@ internal struct TestLogger: LogHandler {
         }
     }
 
-    // TODO: would be nice to deleagte to local copy of logger but StdoutLogger is a reference type. why?
-    private var _metadata: Logging.Metadata?
-    subscript(metadataKey metadataKey: Logging.Metadata.Key) -> Logging.Metadata.Value? {
-        get {
-            // return self.logger[metadataKey: metadataKey]
-            return self.metadataLock.withLock { self._metadata?[metadataKey] }
-        }
-        set {
-            // return logger[metadataKey: metadataKey] = newValue
-            self.metadataLock.withLock {
-                if nil == self._metadata {
-                    self._metadata = Logging.Metadata()
-                }
-                self._metadata![metadataKey] = newValue
-            }
+    private var _metadataSet = false
+    private var _metadata = Logging.Metadata() {
+        didSet {
+            self._metadataSet = true
         }
     }
 
-    public var metadata: Logging.Metadata? {
+    public var metadata: Logging.Metadata {
         get {
             // return self.logger.metadata
             return self.metadataLock.withLock { self._metadata }
@@ -79,6 +68,20 @@ internal struct TestLogger: LogHandler {
         set {
             // self.logger.metadata = newValue
             self.metadataLock.withLock { self._metadata = newValue }
+        }
+    }
+
+    // TODO: would be nice to deleagte to local copy of logger but StdoutLogger is a reference type. why?
+    subscript(metadataKey metadataKey: Logging.Metadata.Key) -> Logging.Metadata.Value? {
+        get {
+            // return self.logger[metadataKey: metadataKey]
+            return self.metadataLock.withLock { self._metadata[metadataKey] }
+        }
+        set {
+            // return logger[metadataKey: metadataKey] = newValue
+            self.metadataLock.withLock {
+                self._metadata[metadataKey] = newValue
+            }
         }
     }
 }
@@ -208,9 +211,9 @@ public class MDC {
         }
     }
 
-    public var metadata: Logging.Metadata? {
+    public var metadata: Logging.Metadata {
         return self.lock.withLock {
-            self.storage[self.threadId]
+            self.storage[self.threadId] ?? [:]
         }
     }
 
@@ -220,18 +223,18 @@ public class MDC {
         }
     }
 
-    public func with(metadata: Logging.Metadata?, _ body: () throws -> Void) rethrows {
-        metadata?.forEach { self[$0] = $1 }
+    public func with(metadata: Logging.Metadata, _ body: () throws -> Void) rethrows {
+        metadata.forEach { self[$0] = $1 }
         defer {
-            metadata?.keys.forEach { self[$0] = nil }
+            metadata.keys.forEach { self[$0] = nil }
         }
         try body()
     }
 
-    public func with<T>(metadata: Logging.Metadata?, _ body: () throws -> T) rethrows -> T {
-        metadata?.forEach { self[$0] = $1 }
+    public func with<T>(metadata: Logging.Metadata, _ body: () throws -> T) rethrows -> T {
+        metadata.forEach { self[$0] = $1 }
         defer {
-            metadata?.keys.forEach { self[$0] = nil }
+            metadata.keys.forEach { self[$0] = nil }
         }
         return try body()
     }
