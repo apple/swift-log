@@ -125,21 +125,6 @@ class LoggingTest: XCTestCase {
                                                    "nested-list": ["l1str", ["l2str1", "l2str2"]]])
     }
 
-    func testLazyMetadata() {
-        let testLogging = TestLogging()
-        Logging.bootstrap(testLogging.make)
-        var logger = Logging.make("\(#function)")
-        logger[metadataKey: "lazy-str"] = .lazy({ "foo" })
-        logger[metadataKey: "lazy-list"] = .lazy({ [.lazy({ "bar" })] })
-        logger[metadataKey: "lazy-dict"] = .lazy({ ["buz": .lazy({ "qux" })] })
-        logger.info("hello world!")
-        testLogging.history.assertExist(level: .info,
-                                        message: "hello world!",
-                                        metadata: ["lazy-str": "foo",
-                                                   "lazy-list": ["bar"],
-                                                   "lazy-dict": ["buz": "qux"]])
-    }
-
     private func dontEvaluateThisString(file: StaticString = #file, line: UInt = #line) -> String {
         XCTFail("should not have been evaluated", file: file, line: line)
         return "should not have been evaluated"
@@ -150,7 +135,6 @@ class LoggingTest: XCTestCase {
         Logging.bootstrap(testLogging.make)
         var logger = Logging.make("\(#function)")
         logger.logLevel = .error
-        logger[metadataKey: "foo"] = .lazy({ "\(self.dontEvaluateThisString())" })
 
         logger.debug(self.dontEvaluateThisString(), metadata: ["foo": "\(self.dontEvaluateThisString())"])
         logger.trace(self.dontEvaluateThisString())

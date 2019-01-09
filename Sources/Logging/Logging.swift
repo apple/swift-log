@@ -121,7 +121,6 @@ extension Logging {
         case string(String)
         indirect case dictionary(Metadata)
         indirect case list([Metadata.Value])
-        indirect case lazy (() -> Metadata.Value)
     }
 
     public enum Level: Int {
@@ -139,34 +138,7 @@ extension Logging.Level: Comparable {
     }
 }
 
-extension Logging.Metadata.Value: Equatable {
-    public static func == (lhs: Logging.MetadataValue, rhs: Logging.MetadataValue) -> Bool {
-        switch (lhs, rhs) {
-        case (.string(let lhs), .string(let rhs)):
-            return lhs == rhs
-        case (.list(let lhs), .list(let rhs)):
-            return lhs == rhs
-        case (.dictionary(let lhs), .dictionary(let rhs)):
-            return lhs == rhs
-        case (.lazy(let lhs), .lazy(let rhs)):
-            return lhs() == rhs()
-        case (.lazy(let lhs), .string(let rhs)):
-            return lhs() == .string(rhs)
-        case (.lazy(let lhs), .dictionary(let rhs)):
-            return lhs() == .dictionary(rhs)
-        case (.lazy(let lhs), .list(let rhs)):
-            return lhs() == .list(rhs)
-        case (.dictionary(let lhs), .lazy(let rhs)):
-            return .dictionary(lhs) == rhs()
-        case (.list(let lhs), .lazy(let rhs)):
-            return .list(lhs) == rhs()
-        case (.string(let lhs), .lazy(let rhs)):
-            return .string(lhs) == rhs()
-        default:
-            return false
-        }
-    }
-}
+extension Logging.Metadata.Value: Equatable {}
 
 /// Ships with the logging module, used to multiplex to multiple logging handlers
 public final class MultiplexLogging {
@@ -316,8 +288,6 @@ extension Logging.Metadata.Value: CustomStringConvertible {
             return list.map { $0.description }.description
         case .string(let str):
             return str
-        case .lazy(let thunk):
-            return thunk().description
         }
     }
 }
