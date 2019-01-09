@@ -21,8 +21,9 @@ internal final class SimpleLogger {
         self.formatter = formatter
     }
 
-    public func log(level: Logging.Level, message: String, error: Error?, printer: (String) -> Void) {
-        printer("[\(self.label)] \(self.formatter.string(from: Date()))\(self.prettyMetadata.map { " \($0)" } ?? "") \(level): \(message)\(error.map { " \($0)" } ?? "")")
+    public func log(level: Logging.Level, message: String, metadata: Logging.Metadata?, error: Error?, printer: (String) -> Void) {
+        let prettyMetadata = metadata?.isEmpty ?? true ? self.prettyMetadata : self.prettify(self.metadata.merging(metadata!, uniquingKeysWith: { _, new in new }))
+        printer("[\(self.label)] \(self.formatter.string(from: Date()))\(prettyMetadata.map { " \($0)" } ?? "") \(level): \(message)\(error.map { " \($0)" } ?? "")")
     }
 
     public var logLevel: Logging.Level? {
@@ -39,7 +40,7 @@ internal final class SimpleLogger {
     private var prettyMetadata: String?
     private var _metadata = Logging.Metadata() {
         didSet {
-            self.prettyMetadata = !self._metadata.isEmpty ? self._metadata.map { "\($0)=\($1)" }.joined(separator: " ") : nil
+            self.prettyMetadata = self.prettify(self._metadata)
         }
     }
 
@@ -61,6 +62,10 @@ internal final class SimpleLogger {
                 self._metadata[metadataKey] = newValue
             }
         }
+    }
+
+    private func prettify(_ metadata: Logging.Metadata) -> String? {
+        return !metadata.isEmpty ? metadata.map { "\($0)=\($1)" }.joined(separator: " ") : nil
     }
 }
 

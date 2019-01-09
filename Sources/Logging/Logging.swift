@@ -10,7 +10,7 @@ public protocol LogHandler {
     // `Logger`'s `info`, `error`, or `warning` functions.
     //
     // An implementation does not need to check the log level because that has been done before by `Logger` itself.
-    func log(level: Logging.Level, message: String, error: Error?, file: StaticString, function: StaticString, line: UInt)
+    func log(level: Logging.Level, message: String, metadata: Logging.Metadata?, error: Error?, file: StaticString, function: StaticString, line: UInt)
 
     // This adds metadata to a place the concrete logger considers appropriate. Some loggers
     // might not support this feature at all.
@@ -34,35 +34,35 @@ public struct Logger {
     }
 
     @inlinable
-    func log(level: Logging.Level, message: @autoclosure () -> String, error: Error? = nil, file: StaticString = #file, function: StaticString = #function, line: UInt = #line) {
+    func log(level: Logging.Level, message: @autoclosure () -> String, metadata: @autoclosure () -> Logging.Metadata? = nil, error: Error? = nil, file: StaticString = #file, function: StaticString = #function, line: UInt = #line) {
         if self.logLevel <= level {
-            self.handler.log(level: level, message: message(), error: error, file: file, function: function, line: line)
+            self.handler.log(level: level, message: message(), metadata: metadata(), error: error, file: file, function: function, line: line)
         }
     }
 
     @inlinable
-    public func trace(_ message: @autoclosure () -> String, error: Error? = nil, file: StaticString = #file, function: StaticString = #function, line: UInt = #line) {
-        self.log(level: .trace, message: message, error: error, file: file, function: function, line: line)
+    public func trace(_ message: @autoclosure () -> String, metadata: @autoclosure () -> Logging.Metadata? = nil, error: Error? = nil, file: StaticString = #file, function: StaticString = #function, line: UInt = #line) {
+        self.log(level: .trace, message: message, metadata: metadata, error: error, file: file, function: function, line: line)
     }
 
     @inlinable
-    public func debug(_ message: @autoclosure () -> String, error: Error? = nil, file: StaticString = #file, function: StaticString = #function, line: UInt = #line) {
-        self.log(level: .debug, message: message, error: error, file: file, function: function, line: line)
+    public func debug(_ message: @autoclosure () -> String, metadata: @autoclosure () -> Logging.Metadata? = nil, error: Error? = nil, file: StaticString = #file, function: StaticString = #function, line: UInt = #line) {
+        self.log(level: .debug, message: message, metadata: metadata, error: error, file: file, function: function, line: line)
     }
 
     @inlinable
-    public func info(_ message: @autoclosure () -> String, error: Error? = nil, file: StaticString = #file, function: StaticString = #function, line: UInt = #line) {
-        self.log(level: .info, message: message, error: error, file: file, function: function, line: line)
+    public func info(_ message: @autoclosure () -> String, metadata: @autoclosure () -> Logging.Metadata? = nil, error: Error? = nil, file: StaticString = #file, function: StaticString = #function, line: UInt = #line) {
+        self.log(level: .info, message: message, metadata: metadata, error: error, file: file, function: function, line: line)
     }
 
     @inlinable
-    public func warning(_ message: @autoclosure () -> String, error: Error? = nil, file: StaticString = #file, function: StaticString = #function, line: UInt = #line) {
-        self.log(level: .warning, message: message, error: error, file: file, function: function, line: line)
+    public func warning(_ message: @autoclosure () -> String, metadata: @autoclosure () -> Logging.Metadata? = nil, error: Error? = nil, file: StaticString = #file, function: StaticString = #function, line: UInt = #line) {
+        self.log(level: .warning, message: message, metadata: metadata, error: error, file: file, function: function, line: line)
     }
 
     @inlinable
-    public func error(_ message: @autoclosure () -> String, error: Error? = nil, file: StaticString = #file, function: StaticString = #function, line: UInt = #line) {
-        self.log(level: .error, message: message, error: error, file: file, function: function, line: line)
+    public func error(_ message: @autoclosure () -> String, metadata: @autoclosure () -> Logging.Metadata? = nil, error: Error? = nil, file: StaticString = #file, function: StaticString = #function, line: UInt = #line) {
+        self.log(level: .error, message: message, metadata: metadata, error: error, file: file, function: function, line: line)
     }
 
     @inlinable
@@ -199,9 +199,9 @@ private class MUXLogHandler: LogHandler {
         }
     }
 
-    public func log(level: Logging.Level, message: String, error: Error?, file: StaticString, function: StaticString, line: UInt) {
+    public func log(level: Logging.Level, message: String, metadata: Logging.Metadata?, error: Error?, file: StaticString, function: StaticString, line: UInt) {
         self.handlers.forEach { handler in
-            handler.log(level: level, message: message, error: error, file: file, function: function, line: line)
+            handler.log(level: level, message: message, metadata: metadata, error: error, file: file, function: function, line: line)
         }
     }
 
@@ -255,14 +255,13 @@ internal final class StdoutLogger: LogHandler {
     private var prettyMetadata: String?
     private var _metadata = Logging.Metadata() {
         didSet {
-            self.prettyMetadata = !self._metadata.isEmpty ? self._metadata.map { "\($0)=\($1)" }.joined(separator: " ") : nil
+            self.prettyMetadata = self.prettify(self._metadata)
         }
     }
 
-    public func log(level: Logging.Level, message: String, error: Error?, file: StaticString, function: StaticString, line: UInt) {
-        if level >= self.logLevel {
-            print("\(self.timestamp()) \(level)\(self.prettyMetadata.map { " \($0)" } ?? "") \(message)\(error.map { " \($0)" } ?? "")")
-        }
+    public func log(level: Logging.Level, message: String, metadata: Logging.Metadata?, error: Error?, file: StaticString, function: StaticString, line: UInt) {
+        let prettyMetadata = metadata?.isEmpty ?? true ? self.prettyMetadata : self.prettify(self.metadata.merging(metadata!, uniquingKeysWith: { _, new in new }))
+        print("\(self.timestamp()) \(level)\(prettyMetadata.map { " \($0)" } ?? "") \(message)\(error.map { " \($0)" } ?? "")")
     }
 
     public var metadata: Logging.Metadata {
@@ -283,6 +282,10 @@ internal final class StdoutLogger: LogHandler {
                 self._metadata[metadataKey] = newValue
             }
         }
+    }
+
+    private func prettify(_ metadata: Logging.Metadata) -> String? {
+        return !metadata.isEmpty ? metadata.map { "\($0)=\($1)" }.joined(separator: " ") : nil
     }
 
     private func timestamp() -> String {

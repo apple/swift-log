@@ -30,15 +30,11 @@ internal struct TestLogger: LogHandler {
         self.logger.logLevel = .trace
     }
 
-    func log(level: Logging.Level, message: String, error: Error?, file: StaticString, function: StaticString, line: UInt) {
-        let metadata = self._metadataSet ? self.metadata : MDC.global.metadata // use MDC unless set
+    func log(level: Logging.Level, message: String, metadata: Logging.Metadata?, error: Error?, file: StaticString, function: StaticString, line: UInt) {
+        let metadata = (self._metadataSet ? self.metadata : MDC.global.metadata).merging(metadata ?? [:], uniquingKeysWith: { _, new in new })
         var l = logger // local copy since we gonna override its metadata
         l.metadata = metadata
-        if let e = error {
-            l.log(level: level, message: message, error: e, file: file, function: function, line: line)
-        } else {
-            l.log(level: level, message: message, file: file, function: function, line: line)
-        }
+        l.log(level: level, message: message, metadata: metadata, error: error, file: file, function: function, line: line)
         self.recorder.record(level: level, metadata: metadata, message: message, error: error)
     }
 
