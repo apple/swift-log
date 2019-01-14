@@ -119,8 +119,8 @@ extension Logging {
 
     public enum MetadataValue {
         case string(String)
-        indirect case dictionary(Metadata)
-        indirect case list([Metadata.Value])
+        case dictionary(Metadata)
+        case array([Metadata.Value])
     }
 
     public enum Level: Int {
@@ -284,7 +284,7 @@ extension Logging.Metadata.Value: CustomStringConvertible {
         switch self {
         case .dictionary(let dict):
             return dict.mapValues { $0.description }.description
-        case .list(let list):
+        case .array(let list):
             return list.map { $0.description }.description
         case .string(let str):
             return str
@@ -317,6 +317,6 @@ extension Logging.Metadata.Value: ExpressibleByArrayLiteral {
     public typealias ArrayLiteralElement = Logging.Metadata.Value
 
     public init(arrayLiteral elements: Logging.Metadata.Value...) {
-        self = .list(elements)
+        self = .array(elements)
     }
 }
