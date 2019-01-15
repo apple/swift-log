@@ -84,7 +84,9 @@ Overall, we propose three different core, top-level types:
 
 To get started with this API, a user only needs to become familiar with the `Logger` type which has a few straightforward methods that can be used to log messages as a certain log level, for example `logger.info("Hello world!")`. There's one step a user needs to perform before being able to log: The have to have a `Logger` instance. This instance can be either retrieved from the logging system itself using
 
-    let logger = Logging.make("my-app")
+```swift
+let logger = Logging.make("my-app")
+```
 
 or through some different way provided by the framework they use or a more specialised logger package which might offer a global instance.
 
@@ -92,12 +94,16 @@ or through some different way provided by the framework they use or a more speci
 
 We propose one `struct Logger` which has a supports a number of different methods to possibly emit a log message. Namely `trace`, `debug`, `info`, `warning`, and `error`. To send a log a message you pick a log level and invoke the `Logger` method with the same name, for example
 
-    logger.error("Houston, we've had a problem")
-    
+```swift
+logger.error("Houston, we've had a problem")
+```
+
 We already briefly touched on this: Where do we get `logger: Logger` from? This question has two answers: Either the environment (could be a global variable, could be a function parameter, could be a class property, ...) provides `logger` or if not, it is always possible to obtain a logger from the logging system itself:
 
-    let logger = Logging.make("com.example.app")
-    logger.warning("uh oh, this is unexpected")
+```swift
+let logger = Logging.make("com.example.app")
+logger.warning("uh oh, this is unexpected")
+```
 
 To get the best logging experience and performance, it is advisable to use `.make` to pass `Logger`s around or store them in a global/instance variable rather than `.make`ing new `Logger`s whenever one needs to log a message.
 
@@ -157,45 +163,56 @@ warn: could not establish database connection: no route to host [request_UUID: 9
 
 now it's fairly straightforward to identify that the database issue was in the request where we were dealing with user 'Taylor' because the request ID matches. The question is: How can we decorate all our log messages with the 'request UUID' or other information that we may need to correlate the messages? The easy option is:
 
-    log.info("user \(userID) logged in [request_UUID: \(currentRequestUUID)]")
+```swift
+log.info("user \(userID) logged in [request_UUID: \(currentRequestUUID)]")
+```
 
 and similarly for all log messages. But it quickly becomes tedious appending `[request_UUID: \(currentRequestUUID)]` to every single log message. The other option is this:
 
-    logger[metadataKey: "request_UUID"] = currentRequestUUID
-    
+```swift
+logger[metadataKey: "request_UUID"] = currentRequestUUID
+```
+ 
 and from then on a simple
 
-    logger.info("user \(userID) logged in")
+```swift
+logger.info("user \(userID) logged in")
+```
 
 is enough because the logger has been decorated with the request UUID already and from now on carries this information around.
 
 In other cases however, it might be useful to attach some metadata to only one message and that can be achieved by using the `metadata` parameter from above:
 
-    logger.trace("user \(userID) logged in",
-                 metadata: ["extra_user_info": [ "favourite_colour": userFaveColour,
-                                                 "auth_method": "password" ]])
+```swift
+logger.trace("user \(userID) logged in",
+             metadata: ["extra_user_info": [ "favourite_colour": userFaveColour,
+                                             "auth_method": "password" ]])
+```
 
 The above invocation will log the message alongside metadata merged from the `logger`'s metadata and the metadata provided with the `logger.trace` call.
 
 The logging metadata is of type `typealias Logging.Metadata = [String: Metadata.Value]` where `Metadata.Value` is the following `enum` allowing nested structures rather than just `String`s as values.
 
-    public enum MetadataValue {
-        case string(String)
-        indirect case dictionary(Metadata)
-        indirect case array([Metadata.Value])
-    }
+```swift
+public enum MetadataValue {
+    case string(String)
+    case dictionary(Metadata)
+    case array([Metadata.Value])
+}
+```
 
 Users usually don't need to interact with the `Metadata.Value` type directly as it conforms to the `ExpressibleByStringLiteral`, `ExpressibleByStringInterpolation`, `ExpressibleByDictionaryLiteral`, and `ExpressibleByArrayLiteral` protocols and can therefore be constructed using the string, array, and dictionary literals.
 
 Examples:
 
-    logger.info("you can attach strings, lists, and nested dictionaries",
-                metadata: ["key_1": "and a string value",
-                           "key_2": ["and", "a", "list", "value"],
-                           "key_3": ["where": ["we": ["pretend", ["it": ["is", "all", "Objective C", "again"]]]]]])
-    logger[metadataKey: "keys-are-strings"] = ["but", "values", ["are": "more"]]
-    logger.warning("ok, we've seen enough now.")
-
+```swift
+logger.info("you can attach strings, lists, and nested dictionaries",
+            metadata: ["key_1": "and a string value",
+                       "key_2": ["and", "a", "list", "value"],
+                       "key_3": ["where": ["we": ["pretend", ["it": ["is", "all", "Objective C", "again"]]]]]])
+logger[metadataKey: "keys-are-strings"] = ["but", "values", ["are": "more"]]
+logger.warning("ok, we've seen enough now.")
+```
 
 
 ### Custom `LogHandler`s
@@ -204,8 +221,10 @@ Just like metadata, custom `LogHandler`s are an advanced feature and users will 
 
 We have already seen before that `Logging.make` is what gives us a fresh logger but that raises the question what kind of logging backend will I actually get when calling `Logging.make`? The answer: It's configurable _per application_. The application -- likely in its main function -- sets up the logging backend it wishes the whole application to use. Libraries should never change the logging implementation as that should owned by the application. Setting up the `LogHandler` to be used is straightforward:
 
-    Logging.bootstrap(MyFavouriteLoggingImplementation.init)
-    
+```swift
+Logging.bootstrap(MyFavouriteLoggingImplementation.init)
+```
+ 
 This instructs the `Logging` system to install `MyFavouriteLoggingImplementation` as the `LogHandler` to use. This should only be done once at the start of day and is usually left alone thereafter.
 
 Next, we should discuss how one would implement `MyFavouriteLoggingImplementation`. It's enough to conform to the following protocol:
@@ -244,7 +263,9 @@ public struct ShortestPossibleLogHandler: LogHandler {
 
 which can be installed using
 
-    Logging.bootstrap(ShortestPossibleLogHandler.init)
+```swift
+Logging.bootstrap(ShortestPossibleLogHandler.init)
+```
 
 ### Supported logging models
 
@@ -264,5 +285,7 @@ I believe designing a [MDC (mapped diagnostic context)](https://logback.qos.ch/m
 
 Finally, the API package will offer a solution to log to multiple `LogHandler`s at the same time through the `MultiplexLogging` facility. Let's assume you have two `LogHandler` implementations `MyConsoleLogger` & `MyFileLogger` and you wish to delegate the log messages to both of them, then the following one-time initialisation of the logging system will take care of this:
 
-    let multiLogging = MultiplexLogging([MyConsoleLogger().make, MyFileLogger().make])
-    Logging.bootstrap(multiLogging.make)
+```swift
+let multiLogging = MultiplexLogging([MyConsoleLogger().make, MyFileLogger().make])
+Logging.bootstrap(multiLogging.make)
+```
