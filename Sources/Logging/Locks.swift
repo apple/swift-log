@@ -35,7 +35,7 @@ internal final class Lock {
 
     /// Release the lock.
     ///
-    /// Whenver possible, consider using `withLock` instead of this method and
+    /// Whenever possible, consider using `withLock` instead of this method and
     /// `lock`, to simplify lock handling.
     public func unlock() {
         let err = pthread_mutex_unlock(self.mutex)
@@ -108,7 +108,7 @@ internal final class ReadWriteLock {
 
     /// Release the lock.
     ///
-    /// Whenver possible, consider using `withLock` instead of this method and
+    /// Whenever possible, consider using `withLock` instead of this method and
     /// `lock`, to simplify lock handling.
     public func unlock() {
         let err = pthread_rwlock_unlock(self.rwlock)

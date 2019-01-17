@@ -3,8 +3,8 @@ import Foundation
 import XCTest
 
 internal struct TestLogging {
-    private let _config = Config() // shared amonog loggers
-    private let recorder = Recorder() // shared amonog loggers
+    private let _config = Config() // shared among loggers
+    private let recorder = Recorder() // shared among loggers
 
     func make(label: String) -> LogHandler {
         return TestLogger(label: label, config: self.config, recorder: self.recorder)
@@ -19,7 +19,7 @@ internal struct TestLogger: LogHandler {
     private let metadataLock = NSLock()
     private let recorder: Recorder
     private let config: Config
-    private var logger: Logger // the actual loggger
+    private var logger: Logger // the actual logger
 
     let label: String
     init(label: String, config: Config, recorder: Recorder) {
@@ -67,7 +67,7 @@ internal struct TestLogger: LogHandler {
         }
     }
 
-    // TODO: would be nice to deleagte to local copy of logger but StdoutLogger is a reference type. why?
+    // TODO: would be nice to delegate to local copy of logger but StdoutLogger is a reference type. why?
     subscript(metadataKey metadataKey: Logging.Metadata.Key) -> Logging.Metadata.Value? {
         get {
             // return self.logger[metadataKey: metadataKey]
@@ -268,7 +268,7 @@ internal struct TestLibrary {
     }
 
     public func doSomethingAsync(completion: @escaping () -> Void) {
-        // libraries that use global loggers and async, need to make sure they propogate the
+        // libraries that use global loggers and async, need to make sure they propagate the
         // logging metadata when creating a new thread
         let metadata = MDC.global.metadata
         queue.asyncAfter(deadline: .now() + 0.1) {
