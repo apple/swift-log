@@ -224,7 +224,7 @@ private class MUXLogHandler: LogHandler {
 }
 
 /// Ships with the logging module, really boring just prints something using the `print` function
-internal final class StdoutLogger: LogHandler {
+internal struct StdoutLogger: LogHandler {
     private let lock = Lock()
 
     public init(label: String) {}

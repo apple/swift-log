@@ -11,7 +11,7 @@ import Logging
 #endif
 
 // this is a contrived example of a logging library implementation that writes logs to files
-public final class FileLogging {
+public struct FileLogging {
     private let defaultLogLevel: Logging.Level = .info
     private let fileHandler = FileHandler()
 

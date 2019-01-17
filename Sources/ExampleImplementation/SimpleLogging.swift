@@ -6,7 +6,7 @@ import Foundation
 import Logging
 
 // this is a contrived example of a logging library implementation that writes logs to stdout
-public final class SimpleLogging {
+public struct SimpleLogging {
     private let defaultLogLevel = Logging.Level.info
 
     public init() {}

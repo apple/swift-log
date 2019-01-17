@@ -8,7 +8,7 @@ import Logging
 // this is a contrived example of a logging library implementation that allows users to define log levels per logger label
 // this example uses a simplistic in-memory config which can be changed at runtime via code
 // real implementations could use external config files that can be changed outside the running program
-public final class ConfigLogging {
+public struct ConfigLogging {
     public var config = Config(defaultLogLevel: .info)
 
     public init() {}

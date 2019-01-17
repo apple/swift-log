@@ -6,7 +6,7 @@ import Foundation
 import Logging
 
 // helper class to keep things DRY
-internal final class SimpleLogger {
+internal struct SimpleLogger {
     let label: String
     private var _logLevel: Logging.Level?
     private let formatter: DateFormatter
