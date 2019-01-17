@@ -6,7 +6,21 @@ import ExampleImplementation
 import Foundation
 import Logging
 
-var logger = Logging.make("GlobalLogger")
+// since this example mutates the global logger, we need to lock around it
+var _logger = Logging.make("GlobalLogger")
+var lock = NSLock()
+var logger: Logger {
+    get {
+        return lock.withLock {
+            _logger
+        }
+    }
+    set {
+        lock.withLock {
+            _logger = newValue
+        }
+    }
+}
 
 // this is a contrived example of a system that shares one global logger
 enum GlobalLoggerBasedSystem {
@@ -78,5 +92,15 @@ enum GlobalLoggerBasedSystem {
             l.info("\(self)::doSomething::Local")
             logger.info("\(self)::doSomething::end")
         }
+    }
+}
+
+private extension NSLock {
+    func withLock<T>(_ body: () -> T) -> T {
+        self.lock()
+        defer {
+            self.unlock()
+        }
+        return body()
     }
 }
