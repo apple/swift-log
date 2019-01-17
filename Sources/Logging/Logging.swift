@@ -142,7 +142,7 @@ extension Logging.Level: Comparable {
 // Then we could write it as follows and it would work under Swift 5 and not only 4 as it does currently:
 // extension Logging.Metadata.Value: Equatable {
 extension Logging.MetadataValue: Equatable {
-    public static func ==(lhs: Logging.Metadata.Value, rhs: Logging.Metadata.Value) -> Bool {
+    public static func == (lhs: Logging.Metadata.Value, rhs: Logging.Metadata.Value) -> Bool {
         switch (lhs, rhs) {
         case (.string(let lhs), .string(let rhs)):
             return lhs == rhs
@@ -154,7 +154,6 @@ extension Logging.MetadataValue: Equatable {
             return false
         }
     }
-
 }
 
 /// Ships with the logging module, used to multiplex to multiple logging handlers
@@ -287,6 +286,7 @@ internal struct StdoutLogger: LogHandler {
         }?.0 ?? "\(timestamp)"
     }
 }
+
 // Extension has to be done on explicit type rather than Logging.Metadata.Value as workaround for: https://bugs.swift.org/browse/SR-9687
 extension Logging.MetadataValue: ExpressibleByStringLiteral {
     public typealias StringLiteralType = String
@@ -316,10 +316,9 @@ extension Logging.MetadataValue: ExpressibleByStringInterpolation {
             self = .string(strings.map { $0.description }.reduce("", +))
         }
 
-    // TODO: seems not to exist on 5.0-DEVELOPMENT-SNAPSHOT-2019-01-16-a
-    //        public init<T>(stringInterpolationSegment expr: T) {
-    //            self = .string(String(stringInterpolationSegment: expr))
-    //        }
+        public init<T>(stringInterpolationSegment expr: T) {
+            self = .string(String(stringInterpolationSegment: expr))
+        }    
     #endif
 }
 
