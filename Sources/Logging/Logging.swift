@@ -138,7 +138,24 @@ extension Logging.Level: Comparable {
     }
 }
 
-extension Logging.Metadata.Value: Equatable {}
+// Extension has to be done on explicit type rather than Logging.Metadata.Value as workaround for: https://bugs.swift.org/browse/SR-9687
+// Then we could write it as follows and it would work under Swift 5 and not only 4 as it does currently:
+// extension Logging.Metadata.Value: Equatable {
+extension Logging.MetadataValue: Equatable {
+    public static func ==(lhs: Logging.Metadata.Value, rhs: Logging.Metadata.Value) -> Bool {
+        switch (lhs, rhs) {
+        case (.string(let lhs), .string(let rhs)):
+            return lhs == rhs
+        case (.array(let lhs), .array(let rhs)):
+            return lhs == rhs
+        case (.dictionary(let lhs), .dictionary(let rhs)):
+            return lhs == rhs
+        default:
+            return false
+        }
+    }
+
+}
 
 /// Ships with the logging module, used to multiplex to multiple logging handlers
 public final class MultiplexLogging {
@@ -270,8 +287,8 @@ internal final class StdoutLogger: LogHandler {
         }?.0 ?? "\(timestamp)"
     }
 }
-
-extension Logging.Metadata.Value: ExpressibleByStringLiteral {
+// Extension has to be done on explicit type rather than Logging.Metadata.Value as workaround for: https://bugs.swift.org/browse/SR-9687
+extension Logging.MetadataValue: ExpressibleByStringLiteral {
     public typealias StringLiteralType = String
 
     public init(stringLiteral value: String) {
@@ -279,7 +296,7 @@ extension Logging.Metadata.Value: ExpressibleByStringLiteral {
     }
 }
 
-extension Logging.Metadata.Value: CustomStringConvertible {
+extension Logging.MetadataValue: CustomStringConvertible {
     public var description: String {
         switch self {
         case .dictionary(let dict):
@@ -292,19 +309,22 @@ extension Logging.Metadata.Value: CustomStringConvertible {
     }
 }
 
-extension Logging.Metadata.Value: ExpressibleByStringInterpolation {
+// Extension has to be done on explicit type rather than Logging.Metadata.Value as workaround for: https://bugs.swift.org/browse/SR-9687
+extension Logging.MetadataValue: ExpressibleByStringInterpolation {
     #if !swift(>=5.0)
         public init(stringInterpolation strings: Logging.Metadata.Value...) {
             self = .string(strings.map { $0.description }.reduce("", +))
         }
 
-        public init<T>(stringInterpolationSegment expr: T) {
-            self = .string(String(stringInterpolationSegment: expr))
-        }
+    // TODO: seems not to exist on 5.0-DEVELOPMENT-SNAPSHOT-2019-01-16-a
+    //        public init<T>(stringInterpolationSegment expr: T) {
+    //            self = .string(String(stringInterpolationSegment: expr))
+    //        }
     #endif
 }
 
-extension Logging.Metadata.Value: ExpressibleByDictionaryLiteral {
+// Extension has to be done on explicit type rather than Logging.Metadata.Value as workaround for: https://bugs.swift.org/browse/SR-9687
+extension Logging.MetadataValue: ExpressibleByDictionaryLiteral {
     public typealias Key = String
     public typealias Value = Logging.Metadata.Value
 
@@ -313,7 +333,8 @@ extension Logging.Metadata.Value: ExpressibleByDictionaryLiteral {
     }
 }
 
-extension Logging.Metadata.Value: ExpressibleByArrayLiteral {
+// Extension has to be done on explicit type rather than Logging.Metadata.Value as workaround for: https://bugs.swift.org/browse/SR-9687
+extension Logging.MetadataValue: ExpressibleByArrayLiteral {
     public typealias ArrayLiteralElement = Logging.Metadata.Value
 
     public init(arrayLiteral elements: Logging.Metadata.Value...) {
