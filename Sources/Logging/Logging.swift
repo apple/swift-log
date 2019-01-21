@@ -281,9 +281,11 @@ internal struct StdoutLogger: LogHandler {
         var timestamp = time(nil)
         let localTime = localtime(&timestamp)
         strftime(&buffer, buffer.count, "%Y-%m-%dT%H:%M:%S%z", localTime)
-        return buffer.map { UInt8($0) }.withUnsafeBufferPointer { ptr in
-            String.decodeCString(ptr.baseAddress, as: UTF8.self, repairingInvalidCodeUnits: true)
-        }?.0 ?? "\(timestamp)"
+        return buffer.withUnsafeBufferPointer {
+            $0.withMemoryRebound(to: CChar.self) {
+                String(cString: $0.baseAddress!)
+            }
+        }
     }
 }
 
