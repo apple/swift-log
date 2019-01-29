@@ -164,7 +164,7 @@ public final class MultiplexLogging {
         self.factories = factories
     }
 
-    public func make(label: String) -> LogHandler {
+    public func make(_ label: String) -> LogHandler {
         return MUXLogHandler(handlers: self.factories.map { $0(label) })
     }
 }
