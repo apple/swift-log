@@ -12,7 +12,7 @@ ContextBasedSystem.main()
 
 print()
 print("##### multiplexiing to multiple logging implementations #####")
-MUXExample.main()
+MultiplexExample.main()
 
 print()
 print("##### config based logging implementations #####")

@@ -165,11 +165,11 @@ public final class MultiplexLogging {
     }
 
     public func make(_ label: String) -> LogHandler {
-        return MUXLogHandler(handlers: self.factories.map { $0(label) })
+        return MultiplexLogHandler(handlers: self.factories.map { $0(label) })
     }
 }
 
-private class MUXLogHandler: LogHandler {
+private class MultiplexLogHandler: LogHandler {
     private let lock = Lock()
     private var handlers: [LogHandler]
 

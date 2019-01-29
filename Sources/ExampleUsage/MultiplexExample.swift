@@ -6,7 +6,7 @@ import ExampleImplementation
 import Foundation
 import Logging
 
-enum MUXExample {
+enum MultiplexExample {
     static func main() {
         // boostrap with two of our sample implementations
         let logging = MultiplexLogging([SimpleLogging().make, FileLogging().make])

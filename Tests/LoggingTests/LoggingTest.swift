@@ -74,7 +74,7 @@ class LoggingTest: XCTestCase {
         logging.history.assertExist(level: .error, message: "oh no!", error: TestError.boom)
     }
 
-    func testMUX() throws {
+    func testMultiplex() throws {
         // bootstrap with our test logging impl
         let logging1 = TestLogging()
         let logging2 = TestLogging()
