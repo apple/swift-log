@@ -3,3 +3,5 @@
 /Packages
 /*.xcodeproj
 .xcode
+DerivedData
+

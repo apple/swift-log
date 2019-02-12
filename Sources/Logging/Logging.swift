@@ -313,7 +313,7 @@ extension Logging.MetadataValue: CustomStringConvertible {
 
 // Extension has to be done on explicit type rather than Logging.Metadata.Value as workaround for: https://bugs.swift.org/browse/SR-9687
 extension Logging.MetadataValue: ExpressibleByStringInterpolation {
-    #if !swift(>=5.0)
+    #if !compiler(>=5.0)
         public init(stringInterpolation strings: Logging.Metadata.Value...) {
             self = .string(strings.map { $0.description }.reduce("", +))
         }
