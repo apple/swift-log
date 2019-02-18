@@ -6,9 +6,9 @@ import Foundation
 import Logging
 
 // helper class to keep things DRY
-internal struct SimpleLogger {
+internal struct CommonLogHandler {
     let label: String
-    private var _logLevel: Logging.Level?
+    private var _logLevel: Logger.Level?
     private let formatter: DateFormatter
     private let lock = NSLock()
 
@@ -21,12 +21,12 @@ internal struct SimpleLogger {
         self.formatter = formatter
     }
 
-    public func log(level: Logging.Level, message: String, metadata: Logging.Metadata?, error: Error?, printer: (String) -> Void) {
+    public func log(level: Logger.Level, message: String, metadata: Logger.Metadata?, error: Error?, printer: (String) -> Void) {
         let prettyMetadata = metadata?.isEmpty ?? true ? self.prettyMetadata : self.prettify(self.metadata.merging(metadata!, uniquingKeysWith: { _, new in new }))
         printer("[\(self.label)] \(self.formatter.string(from: Date()))\(prettyMetadata.map { " \($0)" } ?? "") \(level): \(message)\(error.map { " \($0)" } ?? "")")
     }
 
-    public var logLevel: Logging.Level? {
+    public var logLevel: Logger.Level? {
         get {
             return self.lock.withLock { self._logLevel }
         }
@@ -38,13 +38,13 @@ internal struct SimpleLogger {
     }
 
     private var prettyMetadata: String?
-    private var _metadata = Logging.Metadata() {
+    private var _metadata = Logger.Metadata() {
         didSet {
             self.prettyMetadata = self.prettify(self._metadata)
         }
     }
 
-    public var metadata: Logging.Metadata {
+    public var metadata: Logger.Metadata {
         get {
             return self.lock.withLock { self._metadata }
         }
@@ -53,7 +53,7 @@ internal struct SimpleLogger {
         }
     }
 
-    public subscript(metadataKey metadataKey: String) -> Logging.Metadata.Value? {
+    public subscript(metadataKey metadataKey: String) -> Logger.Metadata.Value? {
         get {
             return self.lock.withLock { self._metadata[metadataKey] }
         }
@@ -64,7 +64,7 @@ internal struct SimpleLogger {
         }
     }
 
-    private func prettify(_ metadata: Logging.Metadata) -> String? {
+    private func prettify(_ metadata: Logger.Metadata) -> String? {
         return !metadata.isEmpty ? metadata.map { "\($0)=\($1)" }.joined(separator: " ") : nil
     }
 }

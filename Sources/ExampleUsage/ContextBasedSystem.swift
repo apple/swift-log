@@ -12,8 +12,7 @@ import Logging
 enum ContextBasedSystem {
     static func main() {
         // boostrap with our sample implementation
-        let logging = SimpleLogging()
-        Logging.bootstrap(logging.make)
+        Logging.bootstrap(SimpleLogHandler.init)
         // run the example
         for i in 1 ... 2 {
             print("---------------------------- processing request #\(i) ----------------------------")
@@ -23,14 +22,14 @@ enum ContextBasedSystem {
     }
 
     struct Context {
-        var logger = Logging.make("ContextLogger")
+        var logger = Logger(label: "ContextLogger")
 
-        init(metadata: Logging.Metadata = [:]) {
+        init(metadata: Logger.Metadata = [:]) {
             metadata.forEach { self[$0.0] = $0.1 }
         }
 
         // since logger is a value type, we can reuse our copy to manage the metadata
-        subscript(metadataKey: String) -> Logging.Metadata.Value? {
+        subscript(metadataKey: String) -> Logger.Metadata.Value? {
             get { return self.logger[metadataKey: metadataKey] }
             set { self.logger[metadataKey: metadataKey] = newValue }
         }

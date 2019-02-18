@@ -9,10 +9,9 @@ import Logging
 enum MultiplexExample {
     static func main() {
         // boostrap with two of our sample implementations
-        let logging = MultiplexLogging([SimpleLogging().make, FileLogging().make])
-        Logging.bootstrap(logging.make)
+        Logging.bootstrap({ MultiplexLogHandler([SimpleLogHandler(label: $0), FileLogHandler(label: $0)]) })
         // run the example
-        let logger = Logging.make("com.example.TestApp")
+        let logger = Logger(label: "com.example.TestApp")
         logger.info("hello world!")
     }
 }

@@ -5,9 +5,9 @@ class LocalLoggerTest: XCTestCase {
     func test1() throws {
         // bootstrap with our test logging impl
         let logging = TestLogging()
-        Logging.bootstrap(logging.make)
+        Logger.bootstrap(logging.make)
         // change test logging config to log traces and above
-        logging.config.set(value: Logging.Level.trace)
+        logging.config.set(value: Logger.Level.trace)
         // run our program
         let context = Context()
         Struct1().doSomething(context: context)
@@ -32,9 +32,9 @@ class LocalLoggerTest: XCTestCase {
     func test2() throws {
         // bootstrap with our test logging impl
         let logging = TestLogging()
-        Logging.bootstrap(logging.make)
+        Logger.bootstrap(logging.make)
         // change test logging config to log errors and above
-        logging.config.set(value: Logging.Level.error)
+        logging.config.set(value: Logger.Level.error)
         // run our program
         let context = Context()
         Struct1().doSomething(context: context)
@@ -59,16 +59,16 @@ class LocalLoggerTest: XCTestCase {
 
 //  systems that follow the context pattern  need to implement something like this
 private struct Context {
-    var logger = Logging.make("LocalLoggerTest::ContextLogger")
+    var logger = Logger(label: "LocalLoggerTest::ContextLogger")
 
     // since logger is a value type, we can reuse our copy to manage logLevel
-    var logLevel: Logging.Level {
+    var logLevel: Logger.Level {
         get { return self.logger.logLevel }
         set { self.logger.logLevel = newValue }
     }
 
     // since logger is a value type, we can reuse our copy to manage metadata
-    subscript(metadataKey: String) -> Logging.Metadata.Value? {
+    subscript(metadataKey: String) -> Logger.Metadata.Value? {
         get { return self.logger[metadataKey: metadataKey] }
         set { self.logger[metadataKey: metadataKey] = newValue }
     }

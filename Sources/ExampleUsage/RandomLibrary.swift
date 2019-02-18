@@ -9,7 +9,7 @@ import Logging
 // this library does not know anything about the systewm that used it, so cannot make
 // assumptions about them
 class RandomLibrary {
-    private let logger = Logging.make("RandomLibrary")
+    private let logger = Logger(label: "RandomLibrary")
     private let queue = DispatchQueue(label: "RandomLibrary")
 
     public init() {}

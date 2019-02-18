@@ -10,8 +10,7 @@ import Logging
 enum LocalLoggerBasedSystem {
     static func main() {
         // boostrap with our sample implementation
-        let logging = SimpleLogging()
-        Logging.bootstrap(logging.make)
+        Logging.bootstrap(SimpleLogHandler.init)
         // run the example
         for i in 1 ... 2 {
             print("---------------------------- processing request #\(i) ----------------------------")
@@ -20,7 +19,7 @@ enum LocalLoggerBasedSystem {
     }
 
     class Foo {
-        private var logger = Logging.make("LocalLoggerBasedSystem::Foo")
+        private var logger = Logger(label: "LocalLoggerBasedSystem::Foo")
 
         func doSomething(requestNumnber: Int) {
             if 0 == requestNumnber % 2 {
@@ -42,7 +41,7 @@ enum LocalLoggerBasedSystem {
     }
 
     class Bar {
-        private var logger = Logging.make("LocalLoggerBasedSystem::Bar")
+        private var logger = Logger(label: "LocalLoggerBasedSystem::Bar")
 
         func doSomething(requestNumnber: Int) {
             if 0 == requestNumnber % 2 {
@@ -58,7 +57,7 @@ enum LocalLoggerBasedSystem {
     }
 
     class Baz {
-        private var logger = Logging.make("LocalLoggerBasedSystem::Baz")
+        private var logger = Logger(label: "LocalLoggerBasedSystem::Baz")
         private let queue = DispatchQueue(label: "LocalLoggerBasedSystem::Baz")
 
         func doSomething(requestNumnber: Int) {

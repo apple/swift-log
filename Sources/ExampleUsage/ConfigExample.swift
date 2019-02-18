@@ -9,13 +9,13 @@ import Logging
 enum ConfigExample {
     static func main() {
         // boostrap with our config based sample implementations
-        let logging = ConfigLogging()
-        Logging.bootstrap(logging.make)
+        let config = Config(defaultLogLevel: .info)
+        Logging.bootstrap({ ConfigLogHandler(label: $0, config: config) })
         // run the example
-        let logger = Logging.make("com.example.TestApp")
+        let logger = Logger(label: "com.example.TestApp")
         logger.trace("hello world?")
         // changes the config in runtime, real implemnetations will use config files instead of in-memory config
-        logging.config.set(key: "com.example.TestApp", value: .trace)
+        config.set(key: "com.example.TestApp", value: .trace)
         logger.trace("hello world!")
     }
 }

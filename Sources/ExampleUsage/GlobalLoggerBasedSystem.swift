@@ -7,7 +7,7 @@ import Foundation
 import Logging
 
 // since this example mutates the global logger, we need to lock around it
-var _logger = Logging.make("GlobalLogger")
+var _logger = Logger(label: "GlobalLogger")
 var lock = NSLock()
 var logger: Logger {
     get {
@@ -26,8 +26,7 @@ var logger: Logger {
 enum GlobalLoggerBasedSystem {
     static func main() {
         // boostrap with our sample implementation
-        let logging = SimpleLogging()
-        Logging.bootstrap(logging.make)
+        Logging.bootstrap(SimpleLogHandler.init)
         // run the example
         for i in 1 ... 2 {
             print("---------------------------- processing request #\(i) ----------------------------")
