@@ -8,6 +8,10 @@ class LoggingTest: XCTestCase {
         Logging.bootstrap(logging.make)
         var logger = Logger(label: "test")
         logger.logLevel = .info
+        logger.log(level: .trace, {
+            XCTFail("trace should not be called")
+            return "trace"
+        }())
         logger.trace({
             XCTFail("trace should not be called")
             return "trace"

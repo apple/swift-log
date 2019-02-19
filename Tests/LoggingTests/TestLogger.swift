@@ -34,7 +34,7 @@ internal struct TestLogHandler: LogHandler {
         let metadata = (self._metadataSet ? self.metadata : MDC.global.metadata).merging(metadata ?? [:], uniquingKeysWith: { _, new in new })
         var l = logger // local copy since we gonna override its metadata
         l.metadata = metadata
-        l.log(level: level, message: message, metadata: metadata, error: error, file: file, function: function, line: line)
+        l.log(level: level, message, metadata: metadata, error: error, file: file, function: function, line: line)
         self.recorder.record(level: level, metadata: metadata, message: message, error: error)
     }
 

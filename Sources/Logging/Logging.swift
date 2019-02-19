@@ -34,7 +34,7 @@ public struct Logger {
     }
 
     @inlinable
-    func log(level: Logger.Level, message: @autoclosure () -> String, metadata: @autoclosure () -> Logger.Metadata? = nil, error: Error? = nil, file: StaticString = #file, function: StaticString = #function, line: UInt = #line) {
+    public func log(level: Logger.Level, _ message: @autoclosure () -> String, metadata: @autoclosure () -> Logger.Metadata? = nil, error: Error? = nil, file: StaticString = #file, function: StaticString = #function, line: UInt = #line) {
         if self.logLevel <= level {
             self.handler.log(level: level, message: message(), metadata: metadata(), error: error, file: file, function: function, line: line)
         }
@@ -42,27 +42,27 @@ public struct Logger {
 
     @inlinable
     public func trace(_ message: @autoclosure () -> String, metadata: @autoclosure () -> Logger.Metadata? = nil, error: Error? = nil, file: StaticString = #file, function: StaticString = #function, line: UInt = #line) {
-        self.log(level: .trace, message: message, metadata: metadata, error: error, file: file, function: function, line: line)
+        self.log(level: .trace, message, metadata: metadata, error: error, file: file, function: function, line: line)
     }
 
     @inlinable
     public func debug(_ message: @autoclosure () -> String, metadata: @autoclosure () -> Logger.Metadata? = nil, error: Error? = nil, file: StaticString = #file, function: StaticString = #function, line: UInt = #line) {
-        self.log(level: .debug, message: message, metadata: metadata, error: error, file: file, function: function, line: line)
+        self.log(level: .debug, message, metadata: metadata, error: error, file: file, function: function, line: line)
     }
 
     @inlinable
     public func info(_ message: @autoclosure () -> String, metadata: @autoclosure () -> Logger.Metadata? = nil, error: Error? = nil, file: StaticString = #file, function: StaticString = #function, line: UInt = #line) {
-        self.log(level: .info, message: message, metadata: metadata, error: error, file: file, function: function, line: line)
+        self.log(level: .info, message, metadata: metadata, error: error, file: file, function: function, line: line)
     }
 
     @inlinable
     public func warning(_ message: @autoclosure () -> String, metadata: @autoclosure () -> Logger.Metadata? = nil, error: Error? = nil, file: StaticString = #file, function: StaticString = #function, line: UInt = #line) {
-        self.log(level: .warning, message: message, metadata: metadata, error: error, file: file, function: function, line: line)
+        self.log(level: .warning, message, metadata: metadata, error: error, file: file, function: function, line: line)
     }
 
     @inlinable
     public func error(_ message: @autoclosure () -> String, metadata: @autoclosure () -> Logger.Metadata? = nil, error: Error? = nil, file: StaticString = #file, function: StaticString = #function, line: UInt = #line) {
-        self.log(level: .error, message: message, metadata: metadata, error: error, file: file, function: function, line: line)
+        self.log(level: .error, message, metadata: metadata, error: error, file: file, function: function, line: line)
     }
 
     @inlinable
