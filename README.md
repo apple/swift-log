@@ -196,6 +196,7 @@ The logging metadata is of type `typealias Logging.Metadata = [String: Metadata.
 ```swift
 public enum MetadataValue {
     case string(String)
+    case stringConvertible(CustomStringConvertible)
     case dictionary(Metadata)
     case array([Metadata.Value])
 }

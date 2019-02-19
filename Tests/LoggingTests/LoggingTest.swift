@@ -129,6 +129,52 @@ class LoggingTest: XCTestCase {
                                                    "nested-list": ["l1str", ["l2str1", "l2str2"]]])
     }
 
+    // Example of custom "box" which may be used to implement "render at most once" semantics
+    // Not thread-safe, thus should not be shared across threads.
+    internal class LazyMetadataBox: CustomStringConvertible {
+        private var makeValue: (() -> String)?
+        private var _value: String? = nil
+
+        public init(_ makeValue: @escaping () -> String) {
+            self.makeValue = makeValue
+        }
+
+        /// This allows caching a value in case it is accessed via an by name subscript,
+        // rather than as part of rendering all metadata that a LoggingContext was carrying
+        public var value: String {
+            if let f = self.makeValue {
+                self._value = f()
+                self.makeValue = nil
+            }
+
+            assert(self._value != nil, "_value MUST NOT be nil once `lazyValue` has run.")
+            return self._value!
+        }
+
+        var hasRendered: Bool {
+            return value != nil
+        }
+
+        public var description: String {
+            return "\(self.value)"
+        }
+    }
+
+    func testStringConvertibleMetadata() {
+        let testLogging = TestLogging()
+        Logging.bootstrap(testLogging.make)
+        var logger = Logging.make("\(#function)")
+        logger[metadataKey: "foo"] = .stringConvertible("raw-string")
+        let lazyBox = LazyMetadataBox({ "rendered-at-first-use" })
+        logger[metadataKey: "lazy"] = .stringConvertible(lazyBox)
+        logger.info("hello world!")
+        XCTAssertTrue(lazyBox.hasRendered)
+        testLogging.history.assertExist(level: .info,
+                                        message: "hello world!",
+                                        metadata: ["foo": .stringConvertible("raw-string"),
+                                                   "lazy": .stringConvertible(LazyMetadataBox({ "rendered-at-first-use" }))])
+    }
+
     private func dontEvaluateThisString(file: StaticString = #file, line: UInt = #line) -> String {
         XCTFail("should not have been evaluated", file: file, line: line)
         return "should not have been evaluated"
