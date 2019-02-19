@@ -5,7 +5,7 @@ class LoggingTest: XCTestCase {
     func testAutoclosure() throws {
         // bootstrap with our test logging impl
         let logging = TestLogging()
-        Logger.bootstrap(logging.make)
+        Logging.bootstrap(logging.make)
         var logger = Logger(label: "test")
         logger.logLevel = .info
         logger.trace({
@@ -36,7 +36,7 @@ class LoggingTest: XCTestCase {
     func testAutoclosureWithError() throws {
         // bootstrap with our test logging impl
         let logging = TestLogging()
-        Logger.bootstrap(logging.make)
+        Logging.bootstrap(logging.make)
         var logger = Logger(label: "test")
         logger.logLevel = .warning
         logger.trace({
@@ -67,7 +67,7 @@ class LoggingTest: XCTestCase {
 
     func testWithError() throws {
         let logging = TestLogging()
-        Logger.bootstrap(logging.make)
+        Logging.bootstrap(logging.make)
 
         let logger = Logger(label: "test")
         logger.error("oh no!", error: TestError.boom)
@@ -78,7 +78,7 @@ class LoggingTest: XCTestCase {
         // bootstrap with our test logging impl
         let logging1 = TestLogging()
         let logging2 = TestLogging()
-        Logger.bootstrap({ MultiplexLogHandler([logging1.make(label: $0), logging2.make(label: $0)]) })
+        Logging.bootstrap({ MultiplexLogHandler([logging1.make(label: $0), logging2.make(label: $0)]) })
 
         var logger = Logger(label: "test")
         logger.logLevel = .warning
@@ -97,7 +97,7 @@ class LoggingTest: XCTestCase {
 
     func testDictionaryMetadata() {
         let testLogging = TestLogging()
-        Logger.bootstrap(testLogging.make)
+        Logging.bootstrap(testLogging.make)
         var logger = Logger(label: "\(#function)")
         logger[metadataKey: "foo"] = ["bar": "buz"]
         logger[metadataKey: "empty-dict"] = [:]
@@ -112,7 +112,7 @@ class LoggingTest: XCTestCase {
 
     func testListMetadata() {
         let testLogging = TestLogging()
-        Logger.bootstrap(testLogging.make)
+        Logging.bootstrap(testLogging.make)
         var logger = Logger(label: "\(#function)")
         logger[metadataKey: "foo"] = ["bar", "buz"]
         logger[metadataKey: "empty-list"] = []
@@ -132,7 +132,7 @@ class LoggingTest: XCTestCase {
 
     func testAutoClosuresAreNotForcedUnlessNeeded() {
         let testLogging = TestLogging()
-        Logger.bootstrap(testLogging.make)
+        Logging.bootstrap(testLogging.make)
         var logger = Logger(label: "\(#function)")
         logger.logLevel = .error
 
@@ -140,12 +140,12 @@ class LoggingTest: XCTestCase {
         logger.trace(self.dontEvaluateThisString())
         logger.info(self.dontEvaluateThisString())
         logger.warning(self.dontEvaluateThisString())
-        logger.log(level: .warning, message: self.dontEvaluateThisString())
+        logger.log(level: .warning, self.dontEvaluateThisString())
     }
 
     func testLocalMetadata() {
         let testLogging = TestLogging()
-        Logger.bootstrap(testLogging.make)
+        Logging.bootstrap(testLogging.make)
         var logger = Logger(label: "\(#function)")
         logger.info("hello world!", metadata: ["foo": "bar"])
         logger[metadataKey: "bar"] = "baz"
