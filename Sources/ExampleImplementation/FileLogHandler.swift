@@ -53,7 +53,7 @@ private class FileHandler {
 
     init() {
         self.path = "/tmp/log-\(UUID().uuidString).txt"
-        self.fd = open(self.path, O_WRONLY | O_CREAT, 0o666)
+        self.fd = open(self.path, O_WRONLY | O_CREAT | O_APPEND, 0o666)
         assert(self.fd > 0, "could not open \(self.path)")
         print("writing logs to \(self.path)")
     }
