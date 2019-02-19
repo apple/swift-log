@@ -65,6 +65,6 @@ private class FileHandler {
     }
 
     func _write(_ text: String) {
-        write(self.fd, text, text.utf8.count)
+        write(self.fd, text + "\n", text.utf8.count + 1)
     }
 }
