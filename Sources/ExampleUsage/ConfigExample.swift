@@ -10,7 +10,7 @@ enum ConfigExample {
     static func main() {
         // boostrap with our config based sample implementations
         let config = Config(defaultLogLevel: .info)
-        Logging.bootstrap({ ConfigLogHandler(label: $0, config: config) })
+        LoggingSystem.bootstrap({ ConfigLogHandler(label: $0, config: config) })
         // run the example
         let logger = Logger(label: "com.example.TestApp")
         logger.trace("hello world?")

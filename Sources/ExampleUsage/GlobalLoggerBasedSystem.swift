@@ -26,7 +26,7 @@ var logger: Logger {
 enum GlobalLoggerBasedSystem {
     static func main() {
         // boostrap with our sample implementation
-        Logging.bootstrap(SimpleLogHandler.init)
+        LoggingSystem.bootstrap(SimpleLogHandler.init)
         // run the example
         for i in 1 ... 2 {
             print("---------------------------- processing request #\(i) ----------------------------")
