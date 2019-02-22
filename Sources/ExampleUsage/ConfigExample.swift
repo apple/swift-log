@@ -4,13 +4,14 @@
 
 import ExampleImplementation
 import Foundation
-import Logging
+@testable import Logging // need access to internal bootstrap function
 
 enum ConfigExample {
     static func main() {
         // boostrap with our config based sample implementations
         let config = Config(defaultLogLevel: .info)
-        LoggingSystem.bootstrap({ ConfigLogHandler(label: $0, config: config) })
+        LoggingSystem.bootstrapInternal({ ConfigLogHandler(label: $0, config: config) })
+        
         // run the example
         let logger = Logger(label: "com.example.TestApp")
         logger.trace("hello world?")

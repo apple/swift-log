@@ -103,10 +103,20 @@ public struct Logger {
 public enum LoggingSystem {
     fileprivate static let lock = ReadWriteLock()
     fileprivate static var factory: (String) -> LogHandler = StdoutLogHandler.init
+    fileprivate static var initialized = false
 
     // Configures which `LogHandler` to use in the application.
     public static func bootstrap(_ factory: @escaping (String) -> LogHandler) {
         lock.withWriterLock {
+            precondition(!self.initialized, "logging system can only be initialized once per process. currently used factory: \(self.factory)")
+            self.factory = factory
+            self.initialized = true
+        }
+    }
+
+    // for our testing we want to allow multiple bootstraping
+    internal static func bootstrapInternal(_ factory: @escaping (String) -> LogHandler) {
+        self.lock.withWriterLock {
             self.factory = factory
         }
     }

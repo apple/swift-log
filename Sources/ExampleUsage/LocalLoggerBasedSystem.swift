@@ -2,15 +2,12 @@
 // THIS IS NOT PART OF THE PITCH, JUST AN EXAMPLE HOW A LOGGER USAGE LOOKS LIKE
 //
 
-import ExampleImplementation
 import Foundation
 import Logging
 
 // this is a contrived example of a system where each component obtain its own logger
 enum LocalLoggerBasedSystem {
     static func main() {
-        // boostrap with our sample implementation
-        LoggingSystem.bootstrap(SimpleLogHandler.init)
         // run the example
         for i in 1 ... 2 {
             print("---------------------------- processing request #\(i) ----------------------------")

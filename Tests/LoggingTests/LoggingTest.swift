@@ -5,7 +5,8 @@ class LoggingTest: XCTestCase {
     func testAutoclosure() throws {
         // bootstrap with our test logging impl
         let logging = TestLogging()
-        LoggingSystem.bootstrap(logging.make)
+        LoggingSystem.bootstrapInternal(logging.make)
+        
         var logger = Logger(label: "test")
         logger.logLevel = .info
         logger.log(level: .trace, {
@@ -41,7 +42,7 @@ class LoggingTest: XCTestCase {
         // bootstrap with our test logging impl
         let logging1 = TestLogging()
         let logging2 = TestLogging()
-        LoggingSystem.bootstrap({ MultiplexLogHandler([logging1.make(label: $0), logging2.make(label: $0)]) })
+        LoggingSystem.bootstrapInternal({ MultiplexLogHandler([logging1.make(label: $0), logging2.make(label: $0)]) })
 
         var logger = Logger(label: "test")
         logger.logLevel = .warning
@@ -60,7 +61,8 @@ class LoggingTest: XCTestCase {
 
     func testDictionaryMetadata() {
         let testLogging = TestLogging()
-        LoggingSystem.bootstrap(testLogging.make)
+        LoggingSystem.bootstrapInternal(testLogging.make)
+        
         var logger = Logger(label: "\(#function)")
         logger[metadataKey: "foo"] = ["bar": "buz"]
         logger[metadataKey: "empty-dict"] = [:]
@@ -75,7 +77,8 @@ class LoggingTest: XCTestCase {
 
     func testListMetadata() {
         let testLogging = TestLogging()
-        LoggingSystem.bootstrap(testLogging.make)
+        LoggingSystem.bootstrapInternal(testLogging.make)
+        
         var logger = Logger(label: "\(#function)")
         logger[metadataKey: "foo"] = ["bar", "buz"]
         logger[metadataKey: "empty-list"] = []
@@ -121,8 +124,9 @@ class LoggingTest: XCTestCase {
 
     func testStringConvertibleMetadata() {
         let testLogging = TestLogging()
-        LoggingSystem.bootstrap(testLogging.make)
+        LoggingSystem.bootstrapInternal(testLogging.make)
         var logger = Logger(label: "\(#function)")
+
         logger[metadataKey: "foo"] = .stringConvertible("raw-string")
         let lazyBox = LazyMetadataBox({ "rendered-at-first-use" })
         logger[metadataKey: "lazy"] = .stringConvertible(lazyBox)
@@ -141,7 +145,8 @@ class LoggingTest: XCTestCase {
 
     func testAutoClosuresAreNotForcedUnlessNeeded() {
         let testLogging = TestLogging()
-        LoggingSystem.bootstrap(testLogging.make)
+        LoggingSystem.bootstrapInternal(testLogging.make)
+
         var logger = Logger(label: "\(#function)")
         logger.logLevel = .error
 
@@ -154,7 +159,8 @@ class LoggingTest: XCTestCase {
 
     func testLocalMetadata() {
         let testLogging = TestLogging()
-        LoggingSystem.bootstrap(testLogging.make)
+        LoggingSystem.bootstrapInternal(testLogging.make)
+
         var logger = Logger(label: "\(#function)")
         logger.info("hello world!", metadata: ["foo": "bar"])
         logger[metadataKey: "bar"] = "baz"

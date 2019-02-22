@@ -1,3 +1,9 @@
+import Logging
+import ExampleImplementation
+
+// boostrap with our sample implementation
+LoggingSystem.bootstrap(SimpleLogHandler.init)
+
 print()
 print("##### global logger based system #####")
 GlobalLoggerBasedSystem.main()
