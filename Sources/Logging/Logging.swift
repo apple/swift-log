@@ -131,6 +131,12 @@ extension Logger {
     public init(label: String) {
         self = Logging.lock.withReaderLock { Logger(Logging.factory(label)) }
     }
+    
+    // this is to provide an escape hatch for situations one must use a custom factory instead of the gloabl one
+    // we do not expect this API to be used in normal circumstances, so if you find yourself using it make sure its for a good reason
+    public init(label: String, factory: (String) -> LogHandler) {
+        self = Logger(factory(label))
+    }
 }
 
 extension Logger.Level: Comparable {
