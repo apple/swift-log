@@ -28,8 +28,10 @@ public protocol LogHandler {
 public struct Logger {
     @usableFromInline
     var handler: LogHandler
+    public let label: String
 
-    internal init(_ handler: LogHandler) {
+    internal init(label: String, _ handler: LogHandler) {
+        self.label = label
         self.handler = handler
     }
 
@@ -129,13 +131,13 @@ extension Logger {
     }
 
     public init(label: String) {
-        self = LoggingSystem.lock.withReaderLock { Logger(LoggingSystem.factory(label)) }
+        self = LoggingSystem.lock.withReaderLock { Logger(label: label, LoggingSystem.factory(label)) }
     }
     
     // this is to provide an escape hatch for situations one must use a custom factory instead of the gloabl one
     // we do not expect this API to be used in normal circumstances, so if you find yourself using it make sure its for a good reason
     public init(label: String, factory: (String) -> LogHandler) {
-        self = Logger(factory(label))
+        self = Logger(label: label, factory(label))
     }
 }
 

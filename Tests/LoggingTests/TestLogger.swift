@@ -26,7 +26,7 @@ internal struct TestLogHandler: LogHandler {
         self.label = label
         self.config = config
         self.recorder = recorder
-        self.logger = Logger(StdoutLogHandler(label: label))
+        self.logger = Logger(label: "test", StdoutLogHandler(label: label))
         self.logger.logLevel = .trace
     }
 
