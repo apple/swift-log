@@ -21,9 +21,9 @@ internal struct CommonLogHandler {
         self.formatter = formatter
     }
 
-    public func log(level: Logger.Level, message: String, metadata: Logger.Metadata?, error: Error?, printer: (String) -> Void) {
+    public func log(level: Logger.Level, message: String, metadata: Logger.Metadata?, printer: (String) -> Void) {
         let prettyMetadata = metadata?.isEmpty ?? true ? self.prettyMetadata : self.prettify(self.metadata.merging(metadata!, uniquingKeysWith: { _, new in new }))
-        printer("[\(self.label)] \(self.formatter.string(from: Date()))\(prettyMetadata.map { " \($0)" } ?? "") \(level): \(message)\(error.map { " \($0)" } ?? "")")
+        printer("[\(self.label)] \(self.formatter.string(from: Date()))\(prettyMetadata.map { " \($0)" } ?? "") \(level): \(message)")
     }
 
     public var logLevel: Logger.Level? {

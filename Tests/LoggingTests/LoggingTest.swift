@@ -37,47 +37,6 @@ class LoggingTest: XCTestCase {
         logging.history.assertExist(level: .error, message: "error")
     }
 
-    func testAutoclosureWithError() throws {
-        // bootstrap with our test logging impl
-        let logging = TestLogging()
-        LoggingSystem.bootstrap(logging.make)
-        var logger = Logger(label: "test")
-        logger.logLevel = .warning
-        logger.trace({
-            XCTFail("trace should not be called")
-            return "trace"
-        }(), error: TestError.boom)
-        logger.debug({
-            XCTFail("debug should not be called")
-            return "debug"
-        }(), error: TestError.boom)
-        logger.info({
-            XCTFail("info should not be called")
-            return "info"
-        }(), error: TestError.boom)
-        logger.warning({
-            "warning"
-        }(), error: TestError.boom)
-        logger.error({
-            "error"
-        }(), error: TestError.boom)
-        XCTAssertEqual(2, logging.history.entries.count, "expected number of entries to match")
-        logging.history.assertNotExist(level: .trace, message: "trace", error: TestError.boom)
-        logging.history.assertNotExist(level: .debug, message: "debug", error: TestError.boom)
-        logging.history.assertNotExist(level: .info, message: "info", error: TestError.boom)
-        logging.history.assertExist(level: .warning, message: "warning", error: TestError.boom)
-        logging.history.assertExist(level: .error, message: "error", error: TestError.boom)
-    }
-
-    func testWithError() throws {
-        let logging = TestLogging()
-        LoggingSystem.bootstrap(logging.make)
-
-        let logger = Logger(label: "test")
-        logger.error("oh no!", error: TestError.boom)
-        logging.history.assertExist(level: .error, message: "oh no!", error: TestError.boom)
-    }
-
     func testMultiplex() throws {
         // bootstrap with our test logging impl
         let logging1 = TestLogging()
@@ -209,7 +168,7 @@ class LoggingTest: XCTestCase {
 
     func testCustomFactory() {
         struct CustomHandler: LogHandler {
-            func log(level: Logger.Level, message: String, metadata: Logger.Metadata?, error: Error?, file: StaticString, function: StaticString, line: UInt) {}
+            func log(level: Logger.Level, message: String, metadata: Logger.Metadata?, file: StaticString, function: StaticString, line: UInt) {}
 
             subscript(metadataKey _: String) -> Logger.Metadata.Value? {
                 get { return nil }

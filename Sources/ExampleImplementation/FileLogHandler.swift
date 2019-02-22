@@ -25,8 +25,8 @@ public struct FileLogHandler: LogHandler {
         self.defaultLogLevel = defaultLogLevel
     }
 
-    public func log(level: Logger.Level, message: String, metadata: Logger.Metadata?, error: Error?, file: StaticString, function: StaticString, line: UInt) {
-        self.handler.log(level: level, message: message, metadata: metadata, error: error) { text in
+    public func log(level: Logger.Level, message: String, metadata: Logger.Metadata?, file: StaticString, function: StaticString, line: UInt) {
+        self.handler.log(level: level, message: message, metadata: metadata) { text in
             self.fileHandler._write(text)
         }
     }

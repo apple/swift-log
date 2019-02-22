@@ -49,8 +49,8 @@ public struct ConfigLogHandler: LogHandler {
         self.config = config
     }
 
-    public func log(level: Logger.Level, message: String, metadata: Logger.Metadata?, error: Error?, file: StaticString, function: StaticString, line: UInt) {
-        self.handler.log(level: level, message: message, metadata: metadata, error: error) { text in
+    public func log(level: Logger.Level, message: String, metadata: Logger.Metadata?, file: StaticString, function: StaticString, line: UInt) {
+        self.handler.log(level: level, message: message, metadata: metadata) { text in
             print(text)
         }
     }
