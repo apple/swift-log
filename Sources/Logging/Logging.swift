@@ -23,7 +23,7 @@ public protocol LogHandler {
     // `Logger`'s `info`, `error`, or `warning` functions.
     //
     // An implementation does not need to check the log level because that has been done before by `Logger` itself.
-    func log(level: Logger.Level, message: String, metadata: Logger.Metadata?, file: StaticString, function: StaticString, line: UInt)
+    func log(level: Logger.Level, message: Logger.Message, metadata: Logger.Metadata?, file: StaticString, function: StaticString, line: UInt)
 
     // This adds metadata to a place the concrete logger considers appropriate. Some loggers
     // might not support this feature at all.
@@ -51,7 +51,7 @@ public struct Logger {
 
 extension Logger {
     @inlinable
-    public func log(level: Logger.Level, _ message: @autoclosure () -> String, metadata: @autoclosure () -> Logger.Metadata? = nil, file: StaticString = #file, function: StaticString = #function, line: UInt = #line) {
+    public func log(level: Logger.Level, _ message: @autoclosure () -> Logger.Message, metadata: @autoclosure () -> Logger.Metadata? = nil, file: StaticString = #file, function: StaticString = #function, line: UInt = #line) {
         if self.logLevel >= level {
             self.handler.log(level: level, message: message(), metadata: metadata(), file: file, function: function, line: line)
         }
@@ -91,42 +91,42 @@ extension Logger {
 
 extension Logger {
     @inlinable
-    public func debug(_ message: @autoclosure () -> String, metadata: @autoclosure () -> Logger.Metadata? = nil, file: StaticString = #file, function: StaticString = #function, line: UInt = #line) {
+    public func debug(_ message: @autoclosure () -> Logger.Message, metadata: @autoclosure () -> Logger.Metadata? = nil, file: StaticString = #file, function: StaticString = #function, line: UInt = #line) {
         self.log(level: .debug, message(), metadata: metadata(), file: file, function: function, line: line)
     }
 
     @inlinable
-    public func info(_ message: @autoclosure () -> String, metadata: @autoclosure () -> Logger.Metadata? = nil, file: StaticString = #file, function: StaticString = #function, line: UInt = #line) {
+    public func info(_ message: @autoclosure () -> Logger.Message, metadata: @autoclosure () -> Logger.Metadata? = nil, file: StaticString = #file, function: StaticString = #function, line: UInt = #line) {
         self.log(level: .info, message(), metadata: metadata(), file: file, function: function, line: line)
     }
 
     @inlinable
-    public func notice(_ message: @autoclosure () -> String, metadata: @autoclosure () -> Logger.Metadata? = nil, file: StaticString = #file, function: StaticString = #function, line: UInt = #line) {
+    public func notice(_ message: @autoclosure () -> Logger.Message, metadata: @autoclosure () -> Logger.Metadata? = nil, file: StaticString = #file, function: StaticString = #function, line: UInt = #line) {
         self.log(level: .notice, message(), metadata: metadata(), file: file, function: function, line: line)
     }
 
     @inlinable
-    public func warning(_ message: @autoclosure () -> String, metadata: @autoclosure () -> Logger.Metadata? = nil, file: StaticString = #file, function: StaticString = #function, line: UInt = #line) {
+    public func warning(_ message: @autoclosure () -> Logger.Message, metadata: @autoclosure () -> Logger.Metadata? = nil, file: StaticString = #file, function: StaticString = #function, line: UInt = #line) {
         self.log(level: .warning, message(), metadata: metadata(), file: file, function: function, line: line)
     }
 
     @inlinable
-    public func error(_ message: @autoclosure () -> String, metadata: @autoclosure () -> Logger.Metadata? = nil, file: StaticString = #file, function: StaticString = #function, line: UInt = #line) {
+    public func error(_ message: @autoclosure () -> Logger.Message, metadata: @autoclosure () -> Logger.Metadata? = nil, file: StaticString = #file, function: StaticString = #function, line: UInt = #line) {
         self.log(level: .error, message(), metadata: metadata(), file: file, function: function, line: line)
     }
 
     @inlinable
-    public func critical(_ message: @autoclosure () -> String, metadata: @autoclosure () -> Logger.Metadata? = nil, file: StaticString = #file, function: StaticString = #function, line: UInt = #line) {
+    public func critical(_ message: @autoclosure () -> Logger.Message, metadata: @autoclosure () -> Logger.Metadata? = nil, file: StaticString = #file, function: StaticString = #function, line: UInt = #line) {
         self.log(level: .critical, message(), metadata: metadata(), file: file, function: function, line: line)
     }
 
     @inlinable
-    public func alert(_ message: @autoclosure () -> String, metadata: @autoclosure () -> Logger.Metadata? = nil, file: StaticString = #file, function: StaticString = #function, line: UInt = #line) {
+    public func alert(_ message: @autoclosure () -> Logger.Message, metadata: @autoclosure () -> Logger.Metadata? = nil, file: StaticString = #file, function: StaticString = #function, line: UInt = #line) {
         self.log(level: .alert, message(), metadata: metadata(), file: file, function: function, line: line)
     }
 
     @inlinable
-    public func emergency(_ message: @autoclosure () -> String, metadata: @autoclosure () -> Logger.Metadata? = nil, file: StaticString = #file, function: StaticString = #function, line: UInt = #line) {
+    public func emergency(_ message: @autoclosure () -> Logger.Message, metadata: @autoclosure () -> Logger.Metadata? = nil, file: StaticString = #file, function: StaticString = #function, line: UInt = #line) {
         self.log(level: .emergency, message(), metadata: metadata(), file: file, function: function, line: line)
     }
 }
@@ -213,6 +213,22 @@ extension Logger.MetadataValue: Equatable {
     }
 }
 
+extension Logger {
+    public struct Message: ExpressibleByStringLiteral, Equatable, CustomStringConvertible {
+        public typealias StringLiteralType = String
+
+        private var value: String
+
+        public init(stringLiteral value: String) {
+            self.value = value
+        }
+
+        public var description: String {
+            return self.value
+        }
+    }
+}
+
 /// Ships with the logging module, used to multiplex to multiple logging handlers
 public class MultiplexLogHandler: LogHandler {
     private let lock = Lock()
@@ -232,7 +248,7 @@ public class MultiplexLogHandler: LogHandler {
         }
     }
 
-    public func log(level: Logger.Level, message: String, metadata: Logger.Metadata?, file: StaticString, function: StaticString, line: UInt) {
+    public func log(level: Logger.Level, message: Logger.Message, metadata: Logger.Metadata?, file: StaticString, function: StaticString, line: UInt) {
         self.handlers.forEach { handler in
             handler.log(level: level, message: message, metadata: metadata, file: file, function: function, line: line)
         }
@@ -292,7 +308,7 @@ internal struct StdoutLogHandler: LogHandler {
         }
     }
 
-    public func log(level: Logger.Level, message: String, metadata: Logger.Metadata?, file: StaticString, function: StaticString, line: UInt) {
+    public func log(level: Logger.Level, message: Logger.Message, metadata: Logger.Metadata?, file: StaticString, function: StaticString, line: UInt) {
         let prettyMetadata = metadata?.isEmpty ?? true ? self.prettyMetadata : self.prettify(self.metadata.merging(metadata!, uniquingKeysWith: { _, new in new }))
         print("\(self.timestamp()) \(level)\(prettyMetadata.map { " \($0)" } ?? "") \(message)")
     }

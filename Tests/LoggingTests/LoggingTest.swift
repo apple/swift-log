@@ -146,7 +146,7 @@ class LoggingTest: XCTestCase {
                                                    "lazy": .stringConvertible(LazyMetadataBox({ "rendered-at-first-use" }))])
     }
 
-    private func dontEvaluateThisString(file: StaticString = #file, line: UInt = #line) -> String {
+    private func dontEvaluateThisString(file: StaticString = #file, line: UInt = #line) -> Logger.Message {
         XCTFail("should not have been evaluated", file: file, line: line)
         return "should not have been evaluated"
     }
@@ -182,7 +182,7 @@ class LoggingTest: XCTestCase {
 
     func testCustomFactory() {
         struct CustomHandler: LogHandler {
-            func log(level: Logger.Level, message: String, metadata: Logger.Metadata?, file: StaticString, function: StaticString, line: UInt) {}
+            func log(level: Logger.Level, message: Logger.Message, metadata: Logger.Metadata?, file: StaticString, function: StaticString, line: UInt) {}
 
             subscript(metadataKey _: String) -> Logger.Metadata.Value? {
                 get { return nil }
