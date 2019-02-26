@@ -22,11 +22,11 @@ class LoggingTest: XCTestCase {
         
         var logger = Logger(label: "test")
         logger.logLevel = .info
-        logger.log(level: .trace, {
+        logger.log(level: .debug, {
             XCTFail("trace should not be called")
             return "trace"
         }())
-        logger.trace({
+        logger.debug({
             XCTFail("trace should not be called")
             return "trace"
         }())
@@ -44,7 +44,7 @@ class LoggingTest: XCTestCase {
             "error"
         }())
         XCTAssertEqual(3, logging.history.entries.count, "expected number of entries to match")
-        logging.history.assertNotExist(level: .trace, message: "trace")
+        logging.history.assertNotExist(level: .debug, message: "trace")
         logging.history.assertNotExist(level: .debug, message: "debug")
         logging.history.assertExist(level: .info, message: "info")
         logging.history.assertExist(level: .warning, message: "warning")
@@ -126,10 +126,6 @@ class LoggingTest: XCTestCase {
             return self._value!
         }
 
-        var hasRendered: Bool {
-            return value != nil
-        }
-
         public var description: String {
             return "\(self.value)"
         }
@@ -144,7 +140,6 @@ class LoggingTest: XCTestCase {
         let lazyBox = LazyMetadataBox({ "rendered-at-first-use" })
         logger[metadataKey: "lazy"] = .stringConvertible(lazyBox)
         logger.info("hello world!")
-        XCTAssertTrue(lazyBox.hasRendered)
         testLogging.history.assertExist(level: .info,
                                         message: "hello world!",
                                         metadata: ["foo": .stringConvertible("raw-string"),
@@ -164,7 +159,7 @@ class LoggingTest: XCTestCase {
         logger.logLevel = .error
 
         logger.debug(self.dontEvaluateThisString(), metadata: ["foo": "\(self.dontEvaluateThisString())"])
-        logger.trace(self.dontEvaluateThisString())
+        logger.debug(self.dontEvaluateThisString())
         logger.info(self.dontEvaluateThisString())
         logger.warning(self.dontEvaluateThisString())
         logger.log(level: .warning, self.dontEvaluateThisString())
@@ -209,5 +204,57 @@ class LoggingTest: XCTestCase {
         XCTAssertFalse(logger1.handler is CustomHandler, "expected non-custom log handler")
         let logger2 = Logger(label: "foo", factory: { _ in CustomHandler() })
         XCTAssertTrue(logger2.handler is CustomHandler, "expected custom log handler")
+    }
+
+    func testAllLogLevelsExceptEmergencyCanBeBlocked() {
+        let testLogging = TestLogging()
+        LoggingSystem.bootstrapInternal(testLogging.make)
+
+        var logger = Logger(label: "\(#function)")
+        logger.logLevel = .emergency
+
+        logger.debug("no")
+        logger.info("no")
+        logger.notice("no")
+        logger.warning("no")
+        logger.error("no")
+        logger.critical("no")
+        logger.alert("no")
+        logger.emergency("yes")
+
+        testLogging.history.assertNotExist(level: .debug, message: "no")
+        testLogging.history.assertNotExist(level: .info, message: "no")
+        testLogging.history.assertNotExist(level: .notice, message: "no")
+        testLogging.history.assertNotExist(level: .warning, message: "no")
+        testLogging.history.assertNotExist(level: .error, message: "no")
+        testLogging.history.assertNotExist(level: .critical, message: "no")
+        testLogging.history.assertNotExist(level: .alert, message: "no")
+        testLogging.history.assertExist(level: .emergency, message: "yes")
+    }
+
+    func testAllLogLevelsWork() {
+        let testLogging = TestLogging()
+        LoggingSystem.bootstrapInternal(testLogging.make)
+
+        var logger = Logger(label: "\(#function)")
+        logger.logLevel = .debug
+
+        logger.debug("yes")
+        logger.info("yes")
+        logger.notice("yes")
+        logger.warning("yes")
+        logger.error("yes")
+        logger.critical("yes")
+        logger.alert("yes")
+        logger.emergency("yes")
+
+        testLogging.history.assertExist(level: .debug, message: "yes")
+        testLogging.history.assertExist(level: .info, message: "yes")
+        testLogging.history.assertExist(level: .notice, message: "yes")
+        testLogging.history.assertExist(level: .warning, message: "yes")
+        testLogging.history.assertExist(level: .error, message: "yes")
+        testLogging.history.assertExist(level: .critical, message: "yes")
+        testLogging.history.assertExist(level: .alert, message: "yes")
+        testLogging.history.assertExist(level: .emergency, message: "yes")
     }
 }

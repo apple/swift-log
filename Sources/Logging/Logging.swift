@@ -47,37 +47,14 @@ public struct Logger {
         self.label = label
         self.handler = handler
     }
+}
 
+extension Logger {
     @inlinable
     public func log(level: Logger.Level, _ message: @autoclosure () -> String, metadata: @autoclosure () -> Logger.Metadata? = nil, file: StaticString = #file, function: StaticString = #function, line: UInt = #line) {
-        if self.logLevel <= level {
+        if self.logLevel >= level {
             self.handler.log(level: level, message: message(), metadata: metadata(), file: file, function: function, line: line)
         }
-    }
-
-    @inlinable
-    public func trace(_ message: @autoclosure () -> String, metadata: @autoclosure () -> Logger.Metadata? = nil, file: StaticString = #file, function: StaticString = #function, line: UInt = #line) {
-        self.log(level: .trace, message, metadata: metadata, file: file, function: function, line: line)
-    }
-
-    @inlinable
-    public func debug(_ message: @autoclosure () -> String, metadata: @autoclosure () -> Logger.Metadata? = nil, file: StaticString = #file, function: StaticString = #function, line: UInt = #line) {
-        self.log(level: .debug, message, metadata: metadata, file: file, function: function, line: line)
-    }
-
-    @inlinable
-    public func info(_ message: @autoclosure () -> String, metadata: @autoclosure () -> Logger.Metadata? = nil, file: StaticString = #file, function: StaticString = #function, line: UInt = #line) {
-        self.log(level: .info, message, metadata: metadata, file: file, function: function, line: line)
-    }
-
-    @inlinable
-    public func warning(_ message: @autoclosure () -> String, metadata: @autoclosure () -> Logger.Metadata? = nil, file: StaticString = #file, function: StaticString = #function, line: UInt = #line) {
-        self.log(level: .warning, message, metadata: metadata, file: file, function: function, line: line)
-    }
-
-    @inlinable
-    public func error(_ message: @autoclosure () -> String, metadata: @autoclosure () -> Logger.Metadata? = nil, file: StaticString = #file, function: StaticString = #function, line: UInt = #line) {
-        self.log(level: .error, message, metadata: metadata, file: file, function: function, line: line)
     }
 
     @inlinable
@@ -109,6 +86,49 @@ public struct Logger {
             self.handler.logLevel = newValue
         }
     }
+
+}
+
+extension Logger {
+    @inlinable
+    public func debug(_ message: @autoclosure () -> String, metadata: @autoclosure () -> Logger.Metadata? = nil, file: StaticString = #file, function: StaticString = #function, line: UInt = #line) {
+        self.log(level: .debug, message(), metadata: metadata(), file: file, function: function, line: line)
+    }
+
+    @inlinable
+    public func info(_ message: @autoclosure () -> String, metadata: @autoclosure () -> Logger.Metadata? = nil, file: StaticString = #file, function: StaticString = #function, line: UInt = #line) {
+        self.log(level: .info, message(), metadata: metadata(), file: file, function: function, line: line)
+    }
+
+    @inlinable
+    public func notice(_ message: @autoclosure () -> String, metadata: @autoclosure () -> Logger.Metadata? = nil, file: StaticString = #file, function: StaticString = #function, line: UInt = #line) {
+        self.log(level: .notice, message(), metadata: metadata(), file: file, function: function, line: line)
+    }
+
+    @inlinable
+    public func warning(_ message: @autoclosure () -> String, metadata: @autoclosure () -> Logger.Metadata? = nil, file: StaticString = #file, function: StaticString = #function, line: UInt = #line) {
+        self.log(level: .warning, message(), metadata: metadata(), file: file, function: function, line: line)
+    }
+
+    @inlinable
+    public func error(_ message: @autoclosure () -> String, metadata: @autoclosure () -> Logger.Metadata? = nil, file: StaticString = #file, function: StaticString = #function, line: UInt = #line) {
+        self.log(level: .error, message(), metadata: metadata(), file: file, function: function, line: line)
+    }
+
+    @inlinable
+    public func critical(_ message: @autoclosure () -> String, metadata: @autoclosure () -> Logger.Metadata? = nil, file: StaticString = #file, function: StaticString = #function, line: UInt = #line) {
+        self.log(level: .critical, message(), metadata: metadata(), file: file, function: function, line: line)
+    }
+
+    @inlinable
+    public func alert(_ message: @autoclosure () -> String, metadata: @autoclosure () -> Logger.Metadata? = nil, file: StaticString = #file, function: StaticString = #function, line: UInt = #line) {
+        self.log(level: .alert, message(), metadata: metadata(), file: file, function: function, line: line)
+    }
+
+    @inlinable
+    public func emergency(_ message: @autoclosure () -> String, metadata: @autoclosure () -> Logger.Metadata? = nil, file: StaticString = #file, function: StaticString = #function, line: UInt = #line) {
+        self.log(level: .emergency, message(), metadata: metadata(), file: file, function: function, line: line)
+    }
 }
 
 // This is the logging system itself, it's mostly used to obtain loggers and to set the type of the `LogHandler`
@@ -121,7 +141,7 @@ public enum LoggingSystem {
     // Configures which `LogHandler` to use in the application.
     public static func bootstrap(_ factory: @escaping (String) -> LogHandler) {
         lock.withWriterLock {
-            precondition(!self.initialized, "logging system can only be initialized once per process. currently used factory: \(self.factory)")
+            precondition(!self.initialized, "logging system can only be initialized once per process.")
             self.factory = factory
             self.initialized = true
         }
@@ -146,11 +166,14 @@ extension Logger {
     }
 
     public enum Level: Int {
-        case trace
-        case debug
-        case info
-        case warning
-        case error
+        case debug = 7
+        case info = 6
+        case notice = 5
+        case warning = 4
+        case error = 3
+        case critical = 2
+        case alert = 1
+        case emergency = 0
     }
 
     public init(label: String) {
@@ -337,15 +360,6 @@ extension Logger.MetadataValue: CustomStringConvertible {
 
 // Extension has to be done on explicit type rather than Logger.Metadata.Value as workaround for: https://bugs.swift.org/browse/SR-9687
 extension Logger.MetadataValue: ExpressibleByStringInterpolation {
-    #if !compiler(>=5.0)
-        public init(stringInterpolation strings: Logger.Metadata.Value...) {
-            self = .string(strings.map { $0.description }.reduce("", +))
-        }
-
-        public init<T>(stringInterpolationSegment expr: T) {
-            self = .string(String(stringInterpolationSegment: expr))
-        }
-    #endif
 }
 
 // Extension has to be done on explicit type rather than Logger.Metadata.Value as workaround for: https://bugs.swift.org/browse/SR-9687

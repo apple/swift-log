@@ -40,7 +40,7 @@ internal struct TestLogHandler: LogHandler {
         self.config = config
         self.recorder = recorder
         self.logger = Logger(label: "test", StdoutLogHandler(label: label))
-        self.logger.logLevel = .trace
+        self.logger.logLevel = .debug
     }
 
     func log(level: Logger.Level, message: String, metadata: Logger.Metadata?, file: StaticString, function: StaticString, line: UInt) {
@@ -102,7 +102,7 @@ internal class Config {
     private var storage = [String: Logger.Level]()
 
     func get(key: String) -> Logger.Level {
-        return self.get(key) ?? self.get(Config.ALL) ?? Logger.Level.trace
+        return self.get(key) ?? self.get(Config.ALL) ?? Logger.Level.debug
     }
 
     func get(_ key: String) -> Logger.Level? {
@@ -148,7 +148,7 @@ internal extension History {
     }
 
     var trace: [LogEntry] {
-        return self.atLevel(level: .trace)
+        return self.atLevel(level: .debug)
     }
 
     var debug: [LogEntry] {
