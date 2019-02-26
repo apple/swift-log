@@ -1,4 +1,4 @@
-// swift-tools-version:4.2
+// swift-tools-version:5.0
 //===----------------------------------------------------------------------===//
 //
 // This source file is part of the Swift Logging API open source project
@@ -24,14 +24,6 @@ let package = Package(
         .target(
             name: "Logging",
             dependencies: []
-        ),
-        .target(
-            name: "ExampleImplementation",
-            dependencies: ["Logging"]
-        ),
-        .target(
-            name: "ExampleUsage",
-            dependencies: ["Logging", "ExampleImplementation"]
         ),
         .testTarget(
             name: "LoggingTests",
