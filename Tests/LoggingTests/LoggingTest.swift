@@ -257,4 +257,17 @@ class LoggingTest: XCTestCase {
         testLogging.history.assertExist(level: .alert, message: "yes")
         testLogging.history.assertExist(level: .emergency, message: "yes")
     }
+
+    func testLogMessageWithStringInterpolation() {
+        let testLogging = TestLogging()
+        LoggingSystem.bootstrapInternal(testLogging.make)
+
+        var logger = Logger(label: "\(#function)")
+        logger.logLevel = .debug
+
+        let someInt = Int.random(in: 23..<42)
+        logger.debug("My favourite number is \(someInt) and not \(someInt - 1)")
+        testLogging.history.assertExist(level: .debug,
+                                        message: "My favourite number is \(someInt) and not \(someInt - 1)" as String)
+    }
 }

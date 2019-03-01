@@ -214,7 +214,7 @@ extension Logger.MetadataValue: Equatable {
 }
 
 extension Logger {
-    public struct Message: ExpressibleByStringLiteral, Equatable, CustomStringConvertible {
+    public struct Message: ExpressibleByStringLiteral, Equatable, CustomStringConvertible, ExpressibleByStringInterpolation {
         public typealias StringLiteralType = String
 
         private var value: String
