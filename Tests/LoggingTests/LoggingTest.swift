@@ -270,4 +270,20 @@ class LoggingTest: XCTestCase {
         testLogging.history.assertExist(level: .debug,
                                         message: "My favourite number is \(someInt) and not \(someInt - 1)" as String)
     }
+
+    func testLoggingAString() {
+        let testLogging = TestLogging()
+        LoggingSystem.bootstrapInternal(testLogging.make)
+
+        var logger = Logger(label: "\(#function)")
+        logger.logLevel = .debug
+
+        let anActualString: String = "hello world!"
+        // We can't stick an actual String in here because we expect a Logger.Message. If we want to log an existing
+        // `String`, we can use string interpolation. The error you'll get trying to use the String directly is:
+        //
+        //     error: Cannot convert value of type 'String' to expected argument type 'Logger.Message'
+        logger.debug("\(anActualString)")
+        testLogging.history.assertExist(level: .debug, message: "hello world!")
+    }
 }
