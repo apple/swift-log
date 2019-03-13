@@ -1,0 +1,15 @@
+version: "3"
+
+services:
+
+  runtime-setup:
+    image: swift-log:18.04-5.0
+    build:
+      args:
+        ubuntu_version: "18.04"
+        swift_version: "5.0"
+        swift_flavour: "DEVELOPMENT-SNAPSHOT-2019-03-06-a"
+        swift_builds_suffix: "branch"
+
+  test:
+    image: swift-log:18.04-5.0
