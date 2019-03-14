@@ -1,17 +1,25 @@
 # swift-log
 
-A Logging API package for Swift.
+A Logging API package for Swift 5.
+
+This is still in very early development (we haven't even tagged a version yet) so your contributions of any kind would be very welcome!
+
+---
+
+**NOTE**: You will need Xcode 10.2 beta 4 or a recent [Swift 5.0 development snapshot](http://swift.org/download/#swift-50-development) to try out `swift-log`.
+
+---
 
 ## Great, what's the tl;dr
 
 If you have a cross-platform (for example Linux & macOS) Swift application or library and you would like to log, we think targeting this logging API package is a great idea. Below you'll find all you need to know to get started.
 
-#### Add a dependency
+#### Adding the dependency
 
-To depend on the logging API package, you just need to declare your dependency in your `Package.swift`:
+To depend on the logging API package, you need to declare your dependency in your `Package.swift`:
 
 ```swift
-// it's super early days here so we haven't tagged a version yet, but will soon
+// it's early days here so we haven't tagged a version yet, but will soon
 .package(url: "https://github.com/apple/swift-log.git", .branch("master")),
 ```
 
@@ -65,7 +73,7 @@ logger.error("Houston, we have a problem: \(problem)")
 
 ### Log levels
 
-The following log levels are supported:
+The following log levels are supported, the match the [syslog severity levels](https://en.wikipedia.org/wiki/Syslog#Severity_level):
 
  - `debug`
  - `info`
@@ -76,7 +84,7 @@ The following log levels are supported:
  - `alert`
  - `emergency`
 
-The log level of a given logger can be changed but the change will only affect the very logger you changed it on.
+The log level of a given logger can be changed but the change will only affect the very logger you changed it on, you could say the `Logger` is a _value type_ regarding the log level.
 
 
 ### Logging metadata
