@@ -43,7 +43,7 @@ internal struct TestLogHandler: LogHandler {
         self.logger.logLevel = .debug
     }
 
-    func log(level: Logger.Level, message: Logger.Message, metadata: Logger.Metadata?, file: StaticString, function: StaticString, line: UInt) {
+    func log(level: Logger.Level, message: Logger.Message, metadata: Logger.Metadata?, file: String, function: String, line: UInt) {
         let metadata = (self._metadataSet ? self.metadata : MDC.global.metadata).merging(metadata ?? [:], uniquingKeysWith: { _, new in new })
         var l = logger // local copy since we gonna override its metadata
         l.metadata = metadata
