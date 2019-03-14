@@ -310,7 +310,7 @@ internal struct StdoutLogHandler: LogHandler {
 
     public func log(level: Logger.Level, message: Logger.Message, metadata: Logger.Metadata?, file: StaticString, function: StaticString, line: UInt) {
         let prettyMetadata = metadata?.isEmpty ?? true ? self.prettyMetadata : self.prettify(self.metadata.merging(metadata!, uniquingKeysWith: { _, new in new }))
-        print("\(self.timestamp()) \(level)\(prettyMetadata.map { " \($0)" } ?? "") \(message)")
+        print("\(self.timestamp()) \(level):\(prettyMetadata.map { " \($0)" } ?? "") \(message)")
     }
 
     public var metadata: Logger.Metadata {
