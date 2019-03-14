@@ -196,7 +196,7 @@ extension History {
 
 public class MDC {
     private let lock = NSLock()
-    private var storage = [UInt32: Logger.Metadata]()
+    private var storage = [Int: Logger.Metadata]()
 
     public static var global = MDC()
 
@@ -253,8 +253,12 @@ public class MDC {
         }
     }
 
-    private var threadId: UInt32 {
-        return pthread_mach_thread_np(pthread_self())
+    private var threadId: Int {
+      #if os(macOS) || os(iOS) || os(tvOS) || os(watchOS)
+          return Int(pthread_mach_thread_np(pthread_self()))
+      #else
+          return Int(pthread_self())
+      #endif
     }
 }
 

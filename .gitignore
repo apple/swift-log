@@ -5,3 +5,5 @@
 .xcode
 DerivedData
 
+.SourceKitten/
+docs/
