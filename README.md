@@ -60,7 +60,7 @@ Just for completeness sake: This API package does actually include an overly sim
 logger.info("Hello World!")
 
 // ouch, something went wrong
-logger.error("Huston, we have a problem: \(problem)")
+logger.error("Houston, we have a problem: \(problem)")
 ```
 
 ### Log levels
