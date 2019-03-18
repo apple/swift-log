@@ -474,8 +474,7 @@ extension Logger {
 /// The first `LogHandler` passed to the initialisation function of `MultiplexLogHandler` control the `logLevel` as
 /// well as the `metadata` for this `LogHandler`. Any subsequent `LogHandler`s used to initialise a
 /// `MultiplexLogHandler` are merely to emit the log message to another place.
-public class MultiplexLogHandler: LogHandler {
-    private let lock = Lock()
+public struct MultiplexLogHandler: LogHandler {
     private var handlers: [LogHandler]
 
     public init(_ handlers: [LogHandler]) {
@@ -488,7 +487,9 @@ public class MultiplexLogHandler: LogHandler {
             return self.handlers[0].logLevel
         }
         set {
-            self.mutateHandlers { $0.logLevel = newValue }
+            self.mutatingForEachHandler {
+                $0.logLevel = newValue
+            }
         }
     }
 
@@ -503,7 +504,7 @@ public class MultiplexLogHandler: LogHandler {
             return self.handlers[0].metadata
         }
         set {
-            self.mutateHandlers { $0.metadata = newValue }
+            self.mutatingForEachHandler { $0.metadata = newValue }
         }
     }
 
@@ -512,18 +513,14 @@ public class MultiplexLogHandler: LogHandler {
             return self.handlers[0].metadata[metadataKey]
         }
         set {
-            self.mutateHandlers { $0[metadataKey: metadataKey] = newValue }
+            self.mutatingForEachHandler { $0[metadataKey: metadataKey] = newValue }
         }
     }
 
-    private func mutateHandlers(mutator: (inout LogHandler) -> Void) {
-        var newHandlers = [LogHandler]()
-        self.handlers.forEach {
-            var handler = $0
-            mutator(&handler)
-            newHandlers.append(handler)
+    private mutating func mutatingForEachHandler(_ mutator: (inout LogHandler) -> Void) {
+        for index in self.handlers.indices {
+            mutator(&self.handlers[index])
         }
-        self.lock.withLock { self.handlers = newHandlers }
     }
 }
 
