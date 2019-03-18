@@ -38,6 +38,7 @@ extension LoggingTest {
                 ("testAllLogLevelsWork", testAllLogLevelsWork),
                 ("testLogMessageWithStringInterpolation", testLogMessageWithStringInterpolation),
                 ("testLoggingAString", testLoggingAString),
+                ("testMultiplexerIsValue", testMultiplexerIsValue),
            ]
    }
 }

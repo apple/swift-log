@@ -286,4 +286,23 @@ class LoggingTest: XCTestCase {
         logger.debug("\(anActualString)")
         testLogging.history.assertExist(level: .debug, message: "hello world!")
     }
+
+    func testMultiplexerIsValue() {
+        let multi = MultiplexLogHandler([StdoutLogHandler(label: "x"), StdoutLogHandler(label: "y")])
+        LoggingSystem.bootstrapInternal { _ in
+            print("new multi")
+            return multi
+        }
+        var logger1: Logger = {
+            var logger = Logger(label: "foo")
+            logger.logLevel = .debug
+            return logger
+        }()
+        XCTAssertEqual(.debug, logger1.logLevel)
+        var logger2 = logger1
+        logger2.logLevel = .error
+        XCTAssertEqual(.error, logger2.logLevel)
+        XCTAssertEqual(.debug, logger1.logLevel)
+        logger1.error("hey")
+    }
 }
