@@ -62,13 +62,13 @@ jazzy_args=(--clean
 cat > "$module_switcher" <<EOF
 # swift-log Docs
 
-swift-log contains multiple modules:
+swift-log is a Swift 5 logging API package.
+
+To get started with swift-log, [`import Logging`](../Logging/index.html). The
+most important type is [`Logger`](https://apple.github.io/swift-log/docs/current/Logging/Structs/Logger.html)
+which you can use to emit log messages.
 
 EOF
-
-for module in "${modules[@]}"; do
-  echo " - [$module](../$module/index.html)" >> "$module_switcher"
-done
 
 for module in "${modules[@]}"; do
   args=("${jazzy_args[@]}"  --output "$root_path/docs/$version/$module" --module "$module")
