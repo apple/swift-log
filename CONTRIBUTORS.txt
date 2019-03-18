@@ -15,6 +15,7 @@ needs to be listed here.
 - Iain Smith <iainsmith@users.noreply.github.com>
 - Ian Partridge <i.partridge@uk.ibm.com>
 - Johannes Weiss <johannesweiss@apple.com>
+- Kevin Sweeney <kevin.t.sweeney@gmail.com>
 - Konrad `ktoso` Malawski <ktoso@apple.com>
 - Max Moiseev <moiseev@apple.com>
 - Tanner <me@tanner.xyz>

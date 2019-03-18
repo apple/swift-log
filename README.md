@@ -2,7 +2,9 @@
 
 A Logging API package for Swift 5.
 
-This is still in very early development (we haven't even tagged a version yet) so your contributions of any kind would be very welcome!
+First things first: This is the beginning of a community-driven open-source project actively seeking contributions, be it code, documentation, or ideas. Apart from contributing to `swift-log` itself, there's another huge gap at the moment: `swift-log` is an _API package_ which tries to establish a common API the ecosystem can use. But to make logging really work for real-world workloads, we need `swift-log`-compatible _logging backends_ which then either persist the log messages in files, render them in nicer colors on the terminal, or send them over to Splunk or ELK.
+
+What `swift-log` provides today can be found in the [API docs][api-docs]. At this moment, we have not tagged a version for `swift-log` yet but we will do so soon after Swift 5 gets released.
 
 ---
 
@@ -12,7 +14,7 @@ This is still in very early development (we haven't even tagged a version yet) s
 
 ## Great, what's the tl;dr
 
-If you have a cross-platform (for example Linux & macOS) Swift application or library and you would like to log, we think targeting this logging API package is a great idea. Below you'll find all you need to know to get started.
+If you have a server-side Swift application or maybe a cross-platform (for example Linux & macOS) app/library and you would like to log, we think targeting this logging API package is a great idea. Below you'll find all you need to know to get started.
 
 #### Adding the dependency
 
@@ -43,6 +45,8 @@ logger.info("Hello World!")
 ```
 2019-03-13T15:46:38+0000 info: Hello World!
 ```
+
+For further information, please check the [API documentation][api-docs].
 
 ## What is an API package?
 
@@ -159,3 +163,5 @@ This logging API was designed with the contributors to the Swift on Server commu
 
 - [pitch](https://forums.swift.org/t/logging/16027), [discussion](https://forums.swift.org/t/discussion-server-logging-api/18834), [feedback](https://forums.swift.org/t/feedback-server-logging-api-with-revisions/19375)
 - [log levels](https://forums.swift.org/t/logging-levels-for-swifts-server-side-logging-apis-and-new-os-log-apis/20365)
+
+[api-docs]: https://apple.github.io/swift-log/docs/current/Logging/Structs/Logger.html
