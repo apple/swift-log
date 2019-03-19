@@ -11,56 +11,12 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 //===----------------------------------------------------------------------===//
+
 #if os(macOS) || os(iOS) || os(tvOS) || os(watchOS)
     import Darwin
 #else
     import Glibc
 #endif
-
-/// A `LogHandler` is an implementation of a logging backend.
-///
-/// This type is an implementation detail and should not normally be used, unless implementing your own logging backend.
-/// For user API of please refer to the documentation of `Logger`.
-public protocol LogHandler {
-    /// This functions is called when a `LogHandler` must emit a log message. There is no need for the `LogHandler` to
-    /// check if the `level` is above or below the configured `logLevel` as `Logger` already performed this check and
-    /// determined that a message should be logged.
-    ///
-    /// - parameters:
-    ///     - level: The log level the message was logged at.
-    ///     - message: The message to log. To objtain a `String` represenation call `message.description`.
-    ///     - metadata: The metadata associated to this log message.
-    ///     - file: The file the log message was emitted from.
-    ///     - function: The function the log line was emitted from.
-    ///      -line: The line the log message was emitted from.
-    func log(level: Logger.Level,
-             message: Logger.Message,
-             metadata: Logger.Metadata?,
-             file: String, function: String, line: UInt)
-
-    /// Add, remove, or change the logging metadata.
-    ///
-    /// - note: `LogHandler`s must treat logging metadata as a value type. This means that the change in metadata must
-    ///         only affect this very `LogHandler`.
-    ///
-    /// - parameters:
-    ///    - metadataKey: The key for the metadata item
-    subscript(metadataKey _: String) -> Logger.Metadata.Value? { get set }
-
-    /// Get or set the entire metadata storage as a dictionary.
-    ///
-    /// - note: `LogHandler`s must treat logging metadata as a value type. This means that the change in metadata must
-    ///         only affect this very `LogHandler`.
-    var metadata: Logger.Metadata { get set }
-
-    /// Get or set the configured log level.
-    ///
-    /// - note: `LogHandler`s must treat the log level as a value type. This means that the change in metadata must
-    ///         only affect this very `LogHandler`. It is acceptable to provide some form of global log level override
-    ///         that means a change in log level on a particular `LogHandler` might not be reflected in any
-    ///        `LogHandler`.
-    var logLevel: Logger.Level { get set }
-}
 
 /// A `Logger` is the central type in `swift-log`. Its central function is to emit log messages using one of the methods
 /// corresponding to a log level.

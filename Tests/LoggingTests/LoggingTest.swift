@@ -296,13 +296,100 @@ class LoggingTest: XCTestCase {
         var logger1: Logger = {
             var logger = Logger(label: "foo")
             logger.logLevel = .debug
+            logger[metadataKey: "only-on"] = "first"
             return logger
         }()
         XCTAssertEqual(.debug, logger1.logLevel)
         var logger2 = logger1
         logger2.logLevel = .error
+        logger2[metadataKey: "only-on"] = "second"
         XCTAssertEqual(.error, logger2.logLevel)
         XCTAssertEqual(.debug, logger1.logLevel)
+        XCTAssertEqual("first", logger1[metadataKey: "only-on"])
+        XCTAssertEqual("second", logger2[metadataKey: "only-on"])
         logger1.error("hey")
+    }
+
+    func testLoggerWithGlobalOverride() {
+        struct LogHandlerWithGlobalLogLevelOverride: LogHandler {
+            // the static properties hold the globally overridden log level (if overridden)
+            private static let overrideLock = Lock()
+            private static var overrideLogLevel: Logger.Level? = nil
+
+            private let recorder: Recorder
+            // this holds the log level if not overridden
+            private var _logLevel: Logger.Level = .info
+
+            // metadata storage
+            var metadata: Logger.Metadata = [:]
+
+            init(recorder: Recorder) {
+                self.recorder = recorder
+            }
+
+            var logLevel: Logger.Level {
+                // when we get asked for the log level, we check if it was globally overridden or not
+                get {
+                    return LogHandlerWithGlobalLogLevelOverride.overrideLock.withLock {
+                        return LogHandlerWithGlobalLogLevelOverride.overrideLogLevel
+                    } ?? self._logLevel
+                }
+                // we set the log level whenever we're asked (note: this might not have an effect if globally
+                // overridden)
+                set {
+                    self._logLevel = newValue
+                }
+            }
+
+            func log(level: Logger.Level, message: Logger.Message, metadata: Logger.Metadata?,
+                     file: String, function: String, line: UInt) {
+                self.recorder.record(level: level, metadata: metadata, message: message)
+            }
+
+            subscript(metadataKey metadataKey: String) -> Logger.Metadata.Value? {
+                get {
+                    return self.metadata[metadataKey]
+                }
+                set(newValue) {
+                    self.metadata[metadataKey] = newValue
+                }
+            }
+
+            // this is the function to globally override the log level, it is not part of the `LogHandler` protocol
+            static func overrideGlobalLogLevel(_ logLevel: Logger.Level) {
+                LogHandlerWithGlobalLogLevelOverride.overrideLock.withLock {
+                    LogHandlerWithGlobalLogLevelOverride.overrideLogLevel = logLevel
+                }
+            }
+        }
+
+        let logRecorder = Recorder()
+        LoggingSystem.bootstrapInternal { _ in
+            return LogHandlerWithGlobalLogLevelOverride(recorder: logRecorder)
+        }
+
+        var logger1 = Logger(label: "logger-\(#file):\(#line)")
+        var logger2 = logger1
+        logger1.logLevel = .warning
+        logger1[metadataKey: "only-on"] = "first"
+        logger2.logLevel = .error
+        logger2[metadataKey: "only-on"] = "second"
+        XCTAssertEqual(.error, logger2.logLevel)
+        XCTAssertEqual(.warning, logger1.logLevel)
+        XCTAssertEqual("first", logger1[metadataKey: "only-on"])
+        XCTAssertEqual("second", logger2[metadataKey: "only-on"])
+
+        logger1.notice("logger1, before")
+        logger2.notice("logger2, before")
+
+        LogHandlerWithGlobalLogLevelOverride.overrideGlobalLogLevel(.debug)
+
+        logger1.notice("logger1, after")
+        logger2.notice("logger2, after")
+
+        logRecorder.assertNotExist(level: .notice, message: "logger1, before")
+        logRecorder.assertNotExist(level: .notice, message: "logger2, before")
+        logRecorder.assertExist(level: .notice, message: "logger1, after")
+        logRecorder.assertExist(level: .notice, message: "logger2, after")
     }
 }
