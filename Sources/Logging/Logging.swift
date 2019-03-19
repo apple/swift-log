@@ -102,12 +102,10 @@ extension Logger {
                     metadata: @autoclosure () -> Logger.Metadata? = nil,
                     file: String = #file, function: String = #function, line: UInt = #line) {
         if self.logLevel >= level {
-            self.handler.log(
-                level: level,
-                message: message(),
-                metadata: metadata(),
-                file: file, function: function, line: line
-            )
+            self.handler.log(level: level,
+                             message: message(),
+                             metadata: metadata(),
+                             file: file, function: function, line: line)
         }
     }
 
