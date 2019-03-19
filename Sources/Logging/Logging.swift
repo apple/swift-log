@@ -399,7 +399,7 @@ extension Logger {
     public init(label: String) {
         self = LoggingSystem.lock.withReaderLock { Logger(label: label, LoggingSystem.factory(label)) }
     }
-    
+
     /// Construct a `Logger` given a `label` identifying the creator of the `Logger` or a non-standard `LogHandler`.
     ///
     /// The `label` should identify the creator of the `Logger`. This can be an application, a sub-system, or even
