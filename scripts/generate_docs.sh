@@ -59,7 +59,7 @@ jazzy_args=(--clean
             --github_url https://github.com/apple/swift-log
             --theme fullwidth
             --xcodebuild-arguments -scheme,swift-log-Package)
-cat > "$module_switcher" <<EOF
+cat > "$module_switcher" <<"EOF"
 # swift-log Docs
 
 swift-log is a Swift 5 logging API package.
