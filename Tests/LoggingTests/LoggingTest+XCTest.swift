@@ -39,6 +39,7 @@ extension LoggingTest {
                 ("testLogMessageWithStringInterpolation", testLogMessageWithStringInterpolation),
                 ("testLoggingAString", testLoggingAString),
                 ("testMultiplexerIsValue", testMultiplexerIsValue),
+                ("testLoggerWithGlobalOverride", testLoggerWithGlobalOverride),
            ]
    }
 }
