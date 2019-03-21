@@ -2,9 +2,9 @@
 
 A Logging API package for Swift 5.
 
-First things first: This is the beginning of a community-driven open-source project actively seeking contributions, be it code, documentation, or ideas. Apart from contributing to `swift-log` itself, there's another huge gap at the moment: `swift-log` is an _API package_ which tries to establish a common API the ecosystem can use. But to make logging really work for real-world workloads, we need `swift-log`-compatible _logging backends_ which then either persist the log messages in files, render them in nicer colors on the terminal, or send them over to Splunk or ELK.
+First things first: This is the beginning of a community-driven open-source project actively seeking contributions, be it code, documentation, or ideas. Apart from contributing to `swift-log` itself, there's another huge gap at the moment: `swift-log` is an _API package_ which tries to establish a common API the ecosystem can use. To make logging really work for real-world workloads, we need `swift-log`-compatible _logging backends_ which then either persist the log messages in files, render them in nicer colors on the terminal, or send them over to Splunk or ELK.
 
-What `swift-log` provides today can be found in the [API docs][api-docs]. At this moment, we have not tagged a version for `swift-log` yet but we will do so soon after Swift 5 gets released.
+What `swift-log` provides today can be found in the [API docs][api-docs]. At this moment, we have not tagged a version for `swift-log`, but we will do so soon after Swift 5 gets released.
 
 ---
 
@@ -14,7 +14,7 @@ What `swift-log` provides today can be found in the [API docs][api-docs]. At thi
 
 ## Great, what's the tl;dr
 
-If you have a server-side Swift application or maybe a cross-platform (for example Linux & macOS) app/library and you would like to log, we think targeting this logging API package is a great idea. Below you'll find all you need to know to get started.
+If you have a server-side Swift application, or maybe a cross-platform (for example Linux & macOS) app/library, and you would like to log, we think targeting this logging API package is a great idea. Below you'll find all you need to know to get started.
 
 #### Adding the dependency
 
@@ -50,7 +50,7 @@ For further information, please check the [API documentation][api-docs].
 
 ## What is an API package?
 
-Glad you asked. We believe that for the Swift on Server ecosystem it's crucial to have a logging API that can be adopted by anybody so a multitude of libraries from different parties can all log to a shared destination. More concretely this means that we believe all the log messages from all libraries end up in the same file, database, Elastic Stack/Splunk instance, or whatever you may choose.
+Glad you asked. We believe that for the Swift on Server ecosystem, it's crucial to have a logging API that can be adopted by anybody so a multitude of libraries from different parties can all log to a shared destination. More concretely this means that we believe all the log messages from all libraries end up in the same file, database, Elastic Stack/Splunk instance, or whatever you may choose.
 
 In the real-world however there are so many opinions over how exactly a logging system should behave, what a log message should be formatted like, and where/how it should be persisted. We think it's not feasible to wait for one logging package to support everything that a specific deployment needs whilst still being easy enough to use and remain performant. That's why we decided to cut the problem in half:
 
@@ -59,7 +59,7 @@ In the real-world however there are so many opinions over how exactly a logging 
 
 This package only provides the logging API itself and therefore `swift-log` is a 'logging API package'. `swift-log` (using `LoggingSystem.bootstrap`) can be configured to choose any compatible logging backend implementation. This way packages can adopt the API and the _application_ can choose any compatible logging backend implementation without requiring any changes from any of the libraries.
 
-Just for completeness sake: This API package does actually include an overly simplistic and non-configurable logging backend implementation which simply writes all log messages to `stdout`. The reason to include this overly simplistic logging backend implementation is to improve the first-time usage experience. Let's assume you start a project and try out `swift-log` for the first time, it's just a whole lot better to see something you logged appear on `stdout` in a simplistic format rather than nothing happening at all. For any real-world application we advise to configure another logging backend implementation that logs in the style you like.
+Just for completeness sake: This API package does actually include an overly simplistic and non-configurable logging backend implementation which simply writes all log messages to `stdout`. The reason to include this overly simplistic logging backend implementation is to improve the first-time usage experience. Let's assume you start a project and try out `swift-log` for the first time, it's just a whole lot better to see something you logged appear on `stdout` in a simplistic format rather than nothing happening at all. For any real-world application, we advise to configure another logging backend implementation that logs in the style you like.
 
 ## The core concepts
 
@@ -88,7 +88,7 @@ The following log levels are supported, the match the [syslog severity levels](h
  - `alert`
  - `emergency`
 
-The log level of a given logger can be changed but the change will only affect the very logger you changed it on, you could say the `Logger` is a _value type_ regarding the log level.
+The log level of a given logger can be changed, but the change will only affect the very logger you changed it on. You could say the `Logger` is a _value type_ regarding the log level.
 
 
 ### Logging metadata
@@ -146,7 +146,7 @@ Instructing `swift-log` to use your logging backend as the one the whole applica
 - log level (`logger.logLevel` property)
 - logging metadata (`logger[metadataKey:]` and `logger.metadata`)
 
-For the system to work however it is important that `LogHandler` treat the configuration as _value types_. This means that `LogHandler`s should be `struct`s and a change in log level or logging metadata should only affect the very `LogHandler` it was changed on.
+For the system to work, however, it is important that `LogHandler` treat the configuration as _value types_. This means that `LogHandler`s should be `struct`s and a change in log level or logging metadata should only affect the very `LogHandler` it was changed on.
 
 However, in special cases, it is acceptable that a `LogHandler` provide some global log level override that may affect all `LogHandler`s created.
 
