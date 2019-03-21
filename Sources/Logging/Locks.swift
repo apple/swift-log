@@ -49,7 +49,11 @@ internal final class Lock {
     deinit {
         let err = pthread_mutex_destroy(self.mutex)
         precondition(err == 0)
+        #if swift(>=4.0) && !swift(>=4.0.50)
+        self.mutex.deallocate(capacity: 1)
+        #else
         self.mutex.deallocate()
+        #endif
     }
 
     /// Acquire the lock.
@@ -80,7 +84,6 @@ extension Lock {
     ///
     /// - Parameter body: The block to execute while holding the lock.
     /// - Returns: The value returned by the block.
-    @inlinable
     internal func withLock<T>(_ body: () throws -> T) rethrows -> T {
         self.lock()
         defer {
@@ -90,7 +93,6 @@ extension Lock {
     }
 
     // specialise Void return (for performance)
-    @inlinable
     internal func withLockVoid(_ body: () throws -> Void) rethrows {
         try self.withLock(body)
     }
@@ -113,7 +115,11 @@ internal final class ReadWriteLock {
     deinit {
         let err = pthread_rwlock_destroy(self.rwlock)
         precondition(err == 0)
+        #if swift(>=4.0) && !swift(>=4.0.50)
+        self.rwlock.deallocate(capacity: 1)
+        #else
         self.rwlock.deallocate()
+        #endif
     }
 
     /// Acquire a reader lock.
@@ -153,7 +159,6 @@ extension ReadWriteLock {
     ///
     /// - Parameter body: The block to execute while holding the lock.
     /// - Returns: The value returned by the block.
-    @inlinable
     internal func withReaderLock<T>(_ body: () throws -> T) rethrows -> T {
         self.lockRead()
         defer {
@@ -170,7 +175,6 @@ extension ReadWriteLock {
     ///
     /// - Parameter body: The block to execute while holding the lock.
     /// - Returns: The value returned by the block.
-    @inlinable
     internal func withWriterLock<T>(_ body: () throws -> T) rethrows -> T {
         self.lockWrite()
         defer {
@@ -180,13 +184,11 @@ extension ReadWriteLock {
     }
 
     // specialise Void return (for performance)
-    @inlinable
     internal func withReaderLockVoid(_ body: () throws -> Void) rethrows {
         try self.withReaderLock(body)
     }
 
     // specialise Void return (for performance)
-    @inlinable
     internal func withWriterLockVoid(_ body: () throws -> Void) rethrows {
         try self.withWriterLock(body)
     }

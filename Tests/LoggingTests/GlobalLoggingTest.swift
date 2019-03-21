@@ -11,8 +11,11 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 //===----------------------------------------------------------------------===//
-@testable import Logging
+
+import Dispatch
 import XCTest
+
+@testable import Logging
 
 class GlobalLoggerTest: XCTestCase {
     func test1() throws {
@@ -142,7 +145,7 @@ private struct Struct3 {
     }
 
     private func doSomethingElse() {
-        MDC.global["foo"] = "bar"
+        MDC.global["foo"] = .string("bar")
         self.logger.error("Struct3::doSomethingElse")
         let group = DispatchGroup()
         group.enter()
@@ -161,7 +164,7 @@ private struct Struct3 {
         MDC.global["foo"] = nil
         // only effects the logger instance
         var l = logger
-        l[metadataKey: "baz"] = "qux"
+        l[metadataKey: "baz"] = .string("qux")
         l.debug("Struct3::doSomethingElse::Local")
         logger.debug("Struct3::doSomethingElse::end")
     }

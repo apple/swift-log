@@ -28,9 +28,6 @@ extension LoggingTest {
       return [
                 ("testAutoclosure", testAutoclosure),
                 ("testMultiplex", testMultiplex),
-                ("testDictionaryMetadata", testDictionaryMetadata),
-                ("testListMetadata", testListMetadata),
-                ("testStringConvertibleMetadata", testStringConvertibleMetadata),
                 ("testAutoClosuresAreNotForcedUnlessNeeded", testAutoClosuresAreNotForcedUnlessNeeded),
                 ("testLocalMetadata", testLocalMetadata),
                 ("testCustomFactory", testCustomFactory),
@@ -40,7 +37,6 @@ extension LoggingTest {
                 ("testLoggingAString", testLoggingAString),
                 ("testMultiplexerIsValue", testMultiplexerIsValue),
                 ("testLoggerWithGlobalOverride", testLoggerWithGlobalOverride),
-                ("testLogLevelCases", testLogLevelCases),
                 ("testLogLevelOrdering", testLogLevelOrdering),
            ]
    }

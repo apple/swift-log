@@ -26,7 +26,6 @@
 ///     logger.info("Hello World!")
 ///
 public struct Logger {
-    @usableFromInline
     var handler: LogHandler
     public let label: String
 
@@ -52,7 +51,6 @@ extension Logger {
     ///                it defaults to `#file`.
     ///    - line: The line this log message originates from (there's usually no need to pass it explicitly as it
     ///            defaults to `#line`.
-    @inlinable
     public func log(level: Logger.Level,
                     _ message: @autoclosure () -> Logger.Message,
                     metadata: @autoclosure () -> Logger.Metadata? = nil,
@@ -65,11 +63,21 @@ extension Logger {
         }
     }
 
+    public func log(level: Logger.Level,
+                    _ message: @autoclosure () -> String,
+                    metadata: @autoclosure () -> [String: String]? = nil,
+                    file: String = #file, function: String = #function, line: UInt = #line) {
+        self.log(level: level,
+                 Logger.Message(stringLiteral: message()),
+                 metadata: metadata().map { $0.mapValues { Logger.MetadataValue.string($0) } },
+                 file: file, function: function, line: line)
+    }
+
+
     /// Add, change, or remove a logging metadata item.
     ///
     /// - note: Logging metadata behaves as a value that means a change to the logging metadata will only affect the
     ///         very `Logger` it was changed on.
-    @inlinable
     public subscript(metadataKey metadataKey: String) -> Logger.Metadata.Value? {
         get {
             return self.handler[metadataKey: metadataKey]
@@ -85,7 +93,6 @@ extension Logger {
     ///         very `Logger`. It it acceptable for logging backends to have some form of global log level override
     ///         that affects multiple or even all loggers. This means a change in `logLevel` to one `Logger` might in
     ///         certain cases have no effect.
-    @inlinable
     public var logLevel: Logger.Level {
         get {
             return self.handler.logLevel
@@ -112,11 +119,18 @@ extension Logger {
     ///                it defaults to `#file`.
     ///    - line: The line this log message originates from (there's usually no need to pass it explicitly as it
     ///            defaults to `#line`.
-    @inlinable
     public func trace(_ message: @autoclosure () -> Logger.Message,
                       metadata: @autoclosure () -> Logger.Metadata? = nil,
                       file: String = #file, function: String = #function, line: UInt = #line) {
         self.log(level: .trace, message(), metadata: metadata(), file: file, function: function, line: line)
+    }
+
+    public func trace(_ message: @autoclosure () -> String,
+                      metadata: @autoclosure () -> [String: String]? = nil,
+                      file: String = #file, function: String = #function, line: UInt = #line) {
+        self.trace(Logger.Message(stringLiteral: message()),
+                   metadata: metadata().map { $0.mapValues { Logger.MetadataValue.string($0) } },
+                   file: file, function: function, line: line)
     }
 
     /// Log a message passing with the `Logger.info` log level.
@@ -134,11 +148,18 @@ extension Logger {
     ///                it defaults to `#file`.
     ///    - line: The line this log message originates from (there's usually no need to pass it explicitly as it
     ///            defaults to `#line`.
-    @inlinable
     public func debug(_ message: @autoclosure () -> Logger.Message,
                       metadata: @autoclosure () -> Logger.Metadata? = nil,
                       file: String = #file, function: String = #function, line: UInt = #line) {
         self.log(level: .debug, message(), metadata: metadata(), file: file, function: function, line: line)
+    }
+
+    public func debug(_ message: @autoclosure () -> String,
+                      metadata: @autoclosure () -> [String: String]? = nil,
+                      file: String = #file, function: String = #function, line: UInt = #line) {
+        self.debug(Logger.Message(stringLiteral: message()),
+                   metadata: metadata().map { $0.mapValues { Logger.MetadataValue.string($0) } },
+                   file: file, function: function, line: line)
     }
 
     /// Log a message passing with the `Logger.Level.info` log level.
@@ -156,11 +177,18 @@ extension Logger {
     ///                it defaults to `#file`.
     ///    - line: The line this log message originates from (there's usually no need to pass it explicitly as it
     ///            defaults to `#line`.
-    @inlinable
     public func info(_ message: @autoclosure () -> Logger.Message,
                      metadata: @autoclosure () -> Logger.Metadata? = nil,
                      file: String = #file, function: String = #function, line: UInt = #line) {
         self.log(level: .info, message(), metadata: metadata(), file: file, function: function, line: line)
+    }
+
+    public func info(_ message: @autoclosure () -> String,
+                     metadata: @autoclosure () -> [String: String]? = nil,
+                     file: String = #file, function: String = #function, line: UInt = #line) {
+        self.info(Logger.Message(stringLiteral: message()),
+                  metadata: metadata().map { $0.mapValues { Logger.MetadataValue.string($0) } },
+                  file: file, function: function, line: line)
     }
 
     /// Log a message passing with the `Logger.Level.notice` log level.
@@ -178,11 +206,18 @@ extension Logger {
     ///                it defaults to `#file`.
     ///    - line: The line this log message originates from (there's usually no need to pass it explicitly as it
     ///            defaults to `#line`.
-    @inlinable
     public func notice(_ message: @autoclosure () -> Logger.Message,
                        metadata: @autoclosure () -> Logger.Metadata? = nil,
                        file: String = #file, function: String = #function, line: UInt = #line) {
         self.log(level: .notice, message(), metadata: metadata(), file: file, function: function, line: line)
+    }
+
+    public func notice(_ message: @autoclosure () -> String,
+                       metadata: @autoclosure () -> [String: String]? = nil,
+                       file: String = #file, function: String = #function, line: UInt = #line) {
+        self.notice(Logger.Message(stringLiteral: message()),
+                    metadata: metadata().map { $0.mapValues { Logger.MetadataValue.string($0) } },
+                    file: file, function: function, line: line)
     }
 
     /// Log a message passing with the `Logger.Level.warning` log level.
@@ -200,11 +235,18 @@ extension Logger {
     ///                it defaults to `#file`.
     ///    - line: The line this log message originates from (there's usually no need to pass it explicitly as it
     ///            defaults to `#line`.
-    @inlinable
     public func warning(_ message: @autoclosure () -> Logger.Message,
                         metadata: @autoclosure () -> Logger.Metadata? = nil,
                         file: String = #file, function: String = #function, line: UInt = #line) {
         self.log(level: .warning, message(), metadata: metadata(), file: file, function: function, line: line)
+    }
+
+    public func warning(_ message: @autoclosure () -> String,
+                        metadata: @autoclosure () -> [String: String]? = nil,
+                        file: String = #file, function: String = #function, line: UInt = #line) {
+        self.warning(Logger.Message(stringLiteral: message()),
+                     metadata: metadata().map { $0.mapValues { Logger.MetadataValue.string($0) } },
+                     file: file, function: function, line: line)
     }
 
     /// Log a message passing with the `Logger.Level.error` log level.
@@ -222,11 +264,18 @@ extension Logger {
     ///                it defaults to `#file`.
     ///    - line: The line this log message originates from (there's usually no need to pass it explicitly as it
     ///            defaults to `#line`.
-    @inlinable
     public func error(_ message: @autoclosure () -> Logger.Message,
                       metadata: @autoclosure () -> Logger.Metadata? = nil,
                       file: String = #file, function: String = #function, line: UInt = #line) {
         self.log(level: .error, message(), metadata: metadata(), file: file, function: function, line: line)
+    }
+
+    public func error(_ message: @autoclosure () -> String,
+                      metadata: @autoclosure () -> [String: String]? = nil,
+                      file: String = #file, function: String = #function, line: UInt = #line) {
+        self.error(Logger.Message(stringLiteral: message()),
+                   metadata: metadata().map { $0.mapValues { Logger.MetadataValue.string($0) } },
+                   file: file, function: function, line: line)
     }
 
     /// Log a message passing with the `Logger.Level.critical` log level.
@@ -243,12 +292,20 @@ extension Logger {
     ///                it defaults to `#file`.
     ///    - line: The line this log message originates from (there's usually no need to pass it explicitly as it
     ///            defaults to `#line`.
-    @inlinable
     public func critical(_ message: @autoclosure () -> Logger.Message,
                          metadata: @autoclosure () -> Logger.Metadata? = nil,
                          file: String = #file, function: String = #function, line: UInt = #line) {
         self.log(level: .critical, message(), metadata: metadata(), file: file, function: function, line: line)
     }
+
+    public func critical(_ message: @autoclosure () -> String,
+                         metadata: @autoclosure () -> [String: String]? = nil,
+                         file: String = #file, function: String = #function, line: UInt = #line) {
+        self.critical(Logger.Message(stringLiteral: message()),
+                      metadata: metadata().map { $0.mapValues { Logger.MetadataValue.string($0) } },
+                      file: file, function: function, line: line)
+    }
+
 }
 
 /// The `LoggingSystem` is a global facility where the default logging backend implementation (`LogHandler`) can be
@@ -304,7 +361,7 @@ extension Logger {
     ///
     /// Raw values of log levels correspond to their severity, and are ordered by lowest numeric value (0) being
     /// the most severe. The raw values match the syslog values.
-    public enum Level: CaseIterable {
+    public enum Level {
         /// Appropriate for messages that contain information only when debugging a program.
         case trace
 
@@ -422,10 +479,7 @@ extension Logger {
     ///
     ///     logger.info("Hello \(world)")
     ///
-    public struct Message: ExpressibleByStringLiteral,
-                           Equatable,
-                           CustomStringConvertible,
-                           ExpressibleByStringInterpolation {
+    public struct Message: CustomStringConvertible {
         public typealias StringLiteralType = String
 
         private var value: String
@@ -439,6 +493,17 @@ extension Logger {
         }
     }
 }
+
+#if swift(>=4.0) && !swift(>=4.0.50)
+extension Logger.Message: Equatable {
+    public static func == (lhs: Logger.Message, rhs: Logger.Message) -> Bool {
+        return lhs.value == rhs.value
+    }
+}
+#else
+extension Logger.Message: Equatable {}
+#endif
+
 
 /// A pseudo-`LogHandler` that can be used to send messages to multiple other `LogHandler`s.
 ///
@@ -564,20 +629,10 @@ internal struct StdoutLogHandler: LogHandler {
         let localTime = localtime(&timestamp)
         strftime(&buffer, buffer.count, "%Y-%m-%dT%H:%M:%S%z", localTime)
         return buffer.withUnsafeBufferPointer {
-            $0.withMemoryRebound(to: CChar.self) {
-                String(cString: $0.baseAddress!)
+            $0.baseAddress!.withMemoryRebound(to: CChar.self, capacity: $0.count) { ptr in
+                String(cString: ptr)
             }
         }
-    }
-}
-
-// Extension has to be done on explicit type rather than Logger.Metadata.Value as workaround for
-// https://bugs.swift.org/browse/SR-9687
-extension Logger.MetadataValue: ExpressibleByStringLiteral {
-    public typealias StringLiteralType = String
-
-    public init(stringLiteral value: String) {
-        self = .string(value)
     }
 }
 
@@ -594,11 +649,6 @@ extension Logger.MetadataValue: CustomStringConvertible {
             return repr.description
         }
     }
-}
-
-// Extension has to be done on explicit type rather than Logger.Metadata.Value as workaround for
-// https://bugs.swift.org/browse/SR-9687
-extension Logger.MetadataValue: ExpressibleByStringInterpolation {
 }
 
 // Extension has to be done on explicit type rather than Logger.Metadata.Value as workaround for

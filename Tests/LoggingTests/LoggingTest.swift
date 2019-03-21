@@ -22,15 +22,15 @@ class LoggingTest: XCTestCase {
 
         var logger = Logger(label: "test")
         logger.logLevel = .info
-        logger.log(level: .debug, {
+        logger.log(level: .debug, { () -> String in
             XCTFail("trace should not be called")
             return "trace"
         }())
-        logger.debug({
+        logger.debug({ () -> String in
             XCTFail("trace should not be called")
             return "trace"
         }())
-        logger.debug({
+        logger.debug({ () -> String in
             XCTFail("debug should not be called")
             return "debug"
         }())
@@ -60,7 +60,7 @@ class LoggingTest: XCTestCase {
         var logger = Logger(label: "test")
         logger.logLevel = .warning
         logger.info("hello world?")
-        logger[metadataKey: "foo"] = "bar"
+        logger[metadataKey: "foo"] = .string("bar")
         logger.warning("hello world!")
         logging1.history.assertNotExist(level: .info, message: "hello world?")
         logging2.history.assertNotExist(level: .info, message: "hello world?")
@@ -70,38 +70,6 @@ class LoggingTest: XCTestCase {
 
     enum TestError: Error {
         case boom
-    }
-
-    func testDictionaryMetadata() {
-        let testLogging = TestLogging()
-        LoggingSystem.bootstrapInternal(testLogging.make)
-
-        var logger = Logger(label: "\(#function)")
-        logger[metadataKey: "foo"] = ["bar": "buz"]
-        logger[metadataKey: "empty-dict"] = [:]
-        logger[metadataKey: "nested-dict"] = ["l1key": ["l2key": ["l3key": "l3value"]]]
-        logger.info("hello world!")
-        testLogging.history.assertExist(level: .info,
-                                        message: "hello world!",
-                                        metadata: ["foo": ["bar": "buz"],
-                                                   "empty-dict": [:],
-                                                   "nested-dict": ["l1key": ["l2key": ["l3key": "l3value"]]]])
-    }
-
-    func testListMetadata() {
-        let testLogging = TestLogging()
-        LoggingSystem.bootstrapInternal(testLogging.make)
-
-        var logger = Logger(label: "\(#function)")
-        logger[metadataKey: "foo"] = ["bar", "buz"]
-        logger[metadataKey: "empty-list"] = []
-        logger[metadataKey: "nested-list"] = ["l1str", ["l2str1", "l2str2"]]
-        logger.info("hello world!")
-        testLogging.history.assertExist(level: .info,
-                                        message: "hello world!",
-                                        metadata: ["foo": ["bar", "buz"],
-                                                   "empty-list": [],
-                                                   "nested-list": ["l1str", ["l2str1", "l2str2"]]])
     }
 
     // Example of custom "box" which may be used to implement "render at most once" semantics
@@ -131,22 +99,7 @@ class LoggingTest: XCTestCase {
         }
     }
 
-    func testStringConvertibleMetadata() {
-        let testLogging = TestLogging()
-        LoggingSystem.bootstrapInternal(testLogging.make)
-        var logger = Logger(label: "\(#function)")
-
-        logger[metadataKey: "foo"] = .stringConvertible("raw-string")
-        let lazyBox = LazyMetadataBox({ "rendered-at-first-use" })
-        logger[metadataKey: "lazy"] = .stringConvertible(lazyBox)
-        logger.info("hello world!")
-        testLogging.history.assertExist(level: .info,
-                                        message: "hello world!",
-                                        metadata: ["foo": .stringConvertible("raw-string"),
-                                                   "lazy": .stringConvertible(LazyMetadataBox({ "rendered-at-first-use" }))])
-    }
-
-    private func dontEvaluateThisString(file: StaticString = #file, line: UInt = #line) -> Logger.Message {
+    private func dontEvaluateThisString(file: StaticString = #file, line: UInt = #line) -> String {
         XCTFail("should not have been evaluated", file: file, line: line)
         return "should not have been evaluated"
     }
@@ -171,8 +124,8 @@ class LoggingTest: XCTestCase {
 
         var logger = Logger(label: "\(#function)")
         logger.info("hello world!", metadata: ["foo": "bar"])
-        logger[metadataKey: "bar"] = "baz"
-        logger[metadataKey: "baz"] = "qux"
+        logger[metadataKey: "bar"] = .string("baz")
+        logger[metadataKey: "baz"] = .string("qux")
         logger.warning("hello world!")
         logger.error("hello world!", metadata: ["baz": "quc"])
         testLogging.history.assertExist(level: .info, message: "hello world!", metadata: ["foo": "bar"])
@@ -261,7 +214,7 @@ class LoggingTest: XCTestCase {
         var logger = Logger(label: "\(#function)")
         logger.logLevel = .debug
 
-        let someInt = Int.random(in: 23..<42)
+        let someInt = 42
         logger.debug("My favourite number is \(someInt) and not \(someInt - 1)")
         testLogging.history.assertExist(level: .debug,
                                         message: "My favourite number is \(someInt) and not \(someInt - 1)" as String)
@@ -292,17 +245,17 @@ class LoggingTest: XCTestCase {
         var logger1: Logger = {
             var logger = Logger(label: "foo")
             logger.logLevel = .debug
-            logger[metadataKey: "only-on"] = "first"
+            logger[metadataKey: "only-on"] = .string("first")
             return logger
         }()
         XCTAssertEqual(.debug, logger1.logLevel)
         var logger2 = logger1
         logger2.logLevel = .error
-        logger2[metadataKey: "only-on"] = "second"
+        logger2[metadataKey: "only-on"] = .string("second")
         XCTAssertEqual(.error, logger2.logLevel)
         XCTAssertEqual(.debug, logger1.logLevel)
-        XCTAssertEqual("first", logger1[metadataKey: "only-on"])
-        XCTAssertEqual("second", logger2[metadataKey: "only-on"])
+        XCTAssertEqual(.string("first"), logger1[metadataKey: "only-on"])
+        XCTAssertEqual(.string("second"), logger2[metadataKey: "only-on"])
         logger1.error("hey")
     }
 
@@ -367,13 +320,13 @@ class LoggingTest: XCTestCase {
         var logger1 = Logger(label: "logger-\(#file):\(#line)")
         var logger2 = logger1
         logger1.logLevel = .warning
-        logger1[metadataKey: "only-on"] = "first"
+        logger1[metadataKey: "only-on"] = .string("first")
         logger2.logLevel = .error
-        logger2[metadataKey: "only-on"] = "second"
+        logger2[metadataKey: "only-on"] = .string("second")
         XCTAssertEqual(.error, logger2.logLevel)
         XCTAssertEqual(.warning, logger1.logLevel)
-        XCTAssertEqual("first", logger1[metadataKey: "only-on"])
-        XCTAssertEqual("second", logger2[metadataKey: "only-on"])
+        XCTAssertEqual(Logger.MetadataValue.string("first"), logger1[metadataKey: "only-on"])
+        XCTAssertEqual(Logger.MetadataValue.string("second"), logger2[metadataKey: "only-on"])
 
         logger1.notice("logger1, before")
         logger2.notice("logger2, before")
@@ -389,11 +342,6 @@ class LoggingTest: XCTestCase {
         logRecorder.assertExist(level: .notice, message: "logger2, after")
     }
     
-    func testLogLevelCases() {
-        let levels = Logger.Level.allCases
-        XCTAssertEqual(7, levels.count)
-    }
-
     func testLogLevelOrdering() {
         XCTAssertLessThan(Logger.Level.trace, Logger.Level.debug)
         XCTAssertLessThan(Logger.Level.trace, Logger.Level.info)

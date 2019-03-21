@@ -11,8 +11,11 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 //===----------------------------------------------------------------------===//
-@testable import Logging
+
+import Dispatch
 import XCTest
+
+@testable import Logging
 
 class LocalLoggerTest: XCTestCase {
     func test1() throws {
@@ -129,7 +132,7 @@ private struct Struct3 {
 
     func doSomething(context: Context) {
         var c = context
-        c["bar"] = "baz" // only effects from this point on
+        c["bar"] = .string("baz") // only effects from this point on
         c.logger.error("Struct3::doSomething")
         doSomethingElse(context: c)
         c.logger.debug("Struct3::doSomething::end")
@@ -150,7 +153,7 @@ private struct Struct3 {
         group.wait()
         // only effects the logger instance
         var l = context.logger
-        l[metadataKey: "baz"] = "qux"
+        l[metadataKey: "baz"] = .string("qux")
         l.debug("Struct3::doSomethingElse::Local")
         context.logger.debug("Struct3::doSomethingElse::end")
     }
