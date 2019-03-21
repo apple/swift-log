@@ -22,7 +22,7 @@ class MDCTest: XCTestCase {
         LoggingSystem.bootstrapInternal(logging.make)
 
         // run the program
-        MDC.global["foo"] = "bar"
+        MDC.global["foo"] = .string("bar")
         let group = DispatchGroup()
         for r in 5 ... 10 {
             group.enter()
@@ -30,7 +30,7 @@ class MDCTest: XCTestCase {
                 let add = Int.random(in: 10 ... 1000)
                 let remove = Int.random(in: 0 ... add - 1)
                 for i in 0 ... add {
-                    MDC.global["key-\(i)"] = "value-\(i)"
+                    MDC.global["key-\(i)"] = .string("value-\(i)")
                 }
                 for i in 0 ... remove {
                     MDC.global["key-\(i)"] = nil
@@ -47,7 +47,7 @@ class MDCTest: XCTestCase {
             }
         }
         group.wait()
-        XCTAssertEqual(MDC.global["foo"], "bar", "expecting to find top items")
+        XCTAssertEqual(MDC.global["foo"], .string("bar"), "expecting to find top items")
         MDC.global["foo"] = nil
         XCTAssertTrue(MDC.global.metadata.isEmpty, "MDC should be empty")
     }

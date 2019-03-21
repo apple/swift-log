@@ -1,6 +1,6 @@
 # swift-log
 
-A Logging API package for Swift 5.
+A Logging API package for Swift. This is the transitional version that also supports Swift 4.2.
 
 First things first: This is the beginning of a community-driven open-source project actively seeking contributions, be it code, documentation, or ideas. Apart from contributing to `swift-log` itself, there's another huge gap at the moment: `swift-log` is an _API package_ which tries to establish a common API the ecosystem can use. To make logging really work for real-world workloads, we need `swift-log`-compatible _logging backends_ which then either persist the log messages in files, render them in nicer colors on the terminal, or send them over to Splunk or ELK.
 

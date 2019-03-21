@@ -28,9 +28,6 @@ extension LoggingTest {
       return [
                 ("testAutoclosure", testAutoclosure),
                 ("testMultiplex", testMultiplex),
-                ("testDictionaryMetadata", testDictionaryMetadata),
-                ("testListMetadata", testListMetadata),
-                ("testStringConvertibleMetadata", testStringConvertibleMetadata),
                 ("testAutoClosuresAreNotForcedUnlessNeeded", testAutoClosuresAreNotForcedUnlessNeeded),
                 ("testLocalMetadata", testLocalMetadata),
                 ("testCustomFactory", testCustomFactory),
