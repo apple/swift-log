@@ -52,14 +52,14 @@ For further information, please check the [API documentation][api-docs].
 
 Glad you asked. We believe that for the Swift on Server ecosystem, it's crucial to have a logging API that can be adopted by anybody so a multitude of libraries from different parties can all log to a shared destination. More concretely this means that we believe all the log messages from all libraries end up in the same file, database, Elastic Stack/Splunk instance, or whatever you may choose.
 
-In the real-world however there are so many opinions over how exactly a logging system should behave, what a log message should be formatted like, and where/how it should be persisted. We think it's not feasible to wait for one logging package to support everything that a specific deployment needs whilst still being easy enough to use and remain performant. That's why we decided to cut the problem in half:
+In the real-world however, there are so many opinions over how exactly a logging system should behave, what a log message should be formatted like, and where/how it should be persisted. We think it's not feasible to wait for one logging package to support everything that a specific deployment needs whilst still being easy enough to use and remain performant. That's why we decided to cut the problem in half:
 
 1. a logging API
 2. a logging backend implementation
 
 This package only provides the logging API itself and therefore `swift-log` is a 'logging API package'. `swift-log` (using `LoggingSystem.bootstrap`) can be configured to choose any compatible logging backend implementation. This way packages can adopt the API and the _application_ can choose any compatible logging backend implementation without requiring any changes from any of the libraries.
 
-Just for completeness sake: This API package does actually include an overly simplistic and non-configurable logging backend implementation which simply writes all log messages to `stdout`. The reason to include this overly simplistic logging backend implementation is to improve the first-time usage experience. Let's assume you start a project and try out `swift-log` for the first time, it's just a whole lot better to see something you logged appear on `stdout` in a simplistic format rather than nothing happening at all. For any real-world application, we advise to configure another logging backend implementation that logs in the style you like.
+Just for completeness sake: This API package does actually include an overly simplistic and non-configurable logging backend implementation which simply writes all log messages to `stdout`. The reason to include this overly simplistic logging backend implementation is to improve the first-time usage experience. Let's assume you start a project and try out `swift-log` for the first time, it's just a whole lot better to see something you logged appear on `stdout` in a simplistic format rather than nothing happening at all. For any real-world application, we advise configuring another logging backend implementation that logs in the style you like.
 
 ## The core concepts
 
@@ -107,11 +107,11 @@ will print
 2019-03-13T18:30:02+0000 info: request-uuid=F8633013-3DD8-481C-9256-B296E43443ED hello world
 ```
 
-with the default logging backend implementation that ships with `swift-log`. Needless to say the format is fully defined by the logging backend you choose.
+with the default logging backend implementation that ships with `swift-log`. Needless to say, the format is fully defined by the logging backend you choose.
 
 ## On the implementation of a logging backend (a `LogHandler`)
 
-Note: If you don't want to implement a custom logging backend, everything is this section is probably not very relevant, so please feel free to skip.
+Note: If you don't want to implement a custom logging backend, everything in this section is probably not very relevant, so please feel free to skip.
 
 To become a compatible logging backend that all `swift-log` consumers can use, you need to do two things: 1) Implement a type (usually a `struct`) that implements `LogHandler`, a protocol provided by `swift-log` and 2) instruct `swift-log` to use your logging backend implementation.
 
@@ -148,7 +148,7 @@ Instructing `swift-log` to use your logging backend as the one the whole applica
 
 For the system to work, however, it is important that `LogHandler` treat the configuration as _value types_. This means that `LogHandler`s should be `struct`s and a change in log level or logging metadata should only affect the very `LogHandler` it was changed on.
 
-However, in special cases, it is acceptable that a `LogHandler` provide some global log level override that may affect all `LogHandler`s created.
+However, in special cases, it is acceptable that a `LogHandler` provides some global log level override that may affect all `LogHandler`s created.
 
 ##### Emitting
 - emitting the log message itself
