@@ -19,7 +19,7 @@ class LoggingTest: XCTestCase {
         // bootstrap with our test logging impl
         let logging = TestLogging()
         LoggingSystem.bootstrapInternal(logging.make)
-        
+
         var logger = Logger(label: "test")
         logger.logLevel = .info
         logger.log(level: .debug, {
@@ -75,7 +75,7 @@ class LoggingTest: XCTestCase {
     func testDictionaryMetadata() {
         let testLogging = TestLogging()
         LoggingSystem.bootstrapInternal(testLogging.make)
-        
+
         var logger = Logger(label: "\(#function)")
         logger[metadataKey: "foo"] = ["bar": "buz"]
         logger[metadataKey: "empty-dict"] = [:]
@@ -91,7 +91,7 @@ class LoggingTest: XCTestCase {
     func testListMetadata() {
         let testLogging = TestLogging()
         LoggingSystem.bootstrapInternal(testLogging.make)
-        
+
         var logger = Logger(label: "\(#function)")
         logger[metadataKey: "foo"] = ["bar", "buz"]
         logger[metadataKey: "empty-list"] = []
