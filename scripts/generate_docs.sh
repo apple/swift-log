@@ -70,8 +70,9 @@ which you can use to emit log messages.
 
 EOF
 
+tmp=`mktemp -d`
 for module in "${modules[@]}"; do
-  args=("${jazzy_args[@]}"  --output "$root_path/docs/$version/$module" --module "$module")
+  args=("${jazzy_args[@]}"  --output "$tmp/docs/$version/$module" --docset-path "$tmp/docset/$version/$module" --module "$module")
   if [[ -f "$root_path/.build/sourcekitten/$module.json" ]]; then
     args+=(--sourcekitten-sourcefile "$root_path/.build/sourcekitten/$module.json")
   fi
@@ -84,8 +85,9 @@ if [[ $CI == true ]]; then
   GIT_AUTHOR=$(git --no-pager show -s --format='%an <%ae>' HEAD)
   git fetch origin +gh-pages:gh-pages
   git checkout gh-pages
-  rm -rf docs/current
-  cp -r docs/$version docs/current
+  rm -rf "docs"
+  cp -r "$tmp/docs" .
+  cp -r "docs/$version" docs/current
   git add --all docs
   echo '<html><head><meta http-equiv="refresh" content="0; url=docs/current/Logging/index.html" /></head></html>' > index.html
   git add index.html
@@ -93,6 +95,7 @@ if [[ $CI == true ]]; then
   git add .nojekyll
   changes=$(git diff-index --name-only HEAD)
   if [[ -n "$changes" ]]; then
+    echo -e "changes detected\n$changes"
     git commit --author="$GIT_AUTHOR" -m "publish $version docs"
     git push origin gh-pages
   else
