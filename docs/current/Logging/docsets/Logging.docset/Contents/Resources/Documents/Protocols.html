@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Protocols  Reference</title>
+    <link rel="stylesheet" type="text/css" href="css/jazzy.css" />
+    <link rel="stylesheet" type="text/css" href="css/highlight.css" />
+    <meta charset="utf-8">
+    <script src="js/jquery.min.js" defer></script>
+    <script src="js/jazzy.js" defer></script>
+    
+    <script src="js/lunr.min.js" defer></script>
+    <script src="js/typeahead.jquery.js" defer></script>
+    <script src="js/jazzy.search.js" defer></script>
+  </head>
+  <body>
+
+    <a name="//apple_ref/swift/Section/Protocols" class="dashAnchor"></a>
+
+    <a title="Protocols  Reference"></a>
+
+    <header class="header">
+      <p class="header-col header-col--primary">
+        <a class="header-link" href="index.html">
+          Logging Docs
+        </a>
+         (97% documented)
+      </p>
+    
+      <p class="header-col--secondary">
+        <form role="search" action="search.json">
+          <input type="text" placeholder="Search documentation" data-typeahead>
+        </form>
+      </p>
+    
+        <p class="header-col header-col--secondary">
+          <a class="header-link" href="https://github.com/apple/swift-log">
+            <img class="header-icon" src="img/gh.png"/>
+            View on GitHub
+          </a>
+        </p>
+    
+    </header>
+
+    <p class="breadcrumbs">
+      <a class="breadcrumb" href="index.html">Logging Reference</a>
+      <img class="carat" src="img/carat.png" />
+      Protocols  Reference
+    </p>
+
+    <div class="content-wrapper">
+      <nav class="navigation">
+        <ul class="nav-groups">
+          <li class="nav-group-name">
+            <a class="nav-group-name-link" href="Enums.html">Enumerations</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="Enums/LoggingSystem.html">LoggingSystem</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a class="nav-group-name-link" href="Protocols.html">Protocols</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="Protocols/LogHandler.html">LogHandler</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a class="nav-group-name-link" href="Structs.html">Structures</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="Structs/Logger.html">Logger</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="Structs/Logger/MetadataValue.html">– MetadataValue</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="Structs/Logger/Level.html">– Level</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="Structs/Logger/Message.html">– Message</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="Structs/MultiplexLogHandler.html">MultiplexLogHandler</a>
+              </li>
+            </ul>
+          </li>
+        </ul>
+      </nav>
+      <article class="main-content">
+
+        <section class="section">
+          <div class="section-content">
+            <h1>Protocols</h1>
+            <p>The following protocols are available globally.</p>
+
+          </div>
+        </section>
+
+        <section class="section">
+          <div class="section-content">
+            <div class="task-group">
+              <ul class="item-container">
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:7Logging10LogHandlerP"></a>
+                    <a name="//apple_ref/swift/Protocol/LogHandler" class="dashAnchor"></a>
+                    <a class="token" href="#/s:7Logging10LogHandlerP">LogHandler</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>A <code>LogHandler</code> is an implementation of a logging backend.</p>
+
+<p>This type is an implementation detail and should not normally be used, unless implementing your own logging backend.
+To use the swift-log API, please refer to the documentation of <code><a href="Structs/Logger.html">Logger</a></code>.</p>
+<h1 id='implementation-requirements' class='heading'>Implementation requirements</h1>
+
+<p>To implement your own <code>LogHandler</code> you should respect a few requirements that are necessary so applications work
+as expected regardless of the selected <code>LogHandler</code> implementation.</p>
+
+<ul>
+<li>The <code>LogHandler</code> must be a <code>struct</code>.</li>
+<li>The metadata and <code>logLevel</code> properties must be implemented so that setting them on a <code><a href="Structs/Logger.html">Logger</a></code> does not affect
+other <code><a href="Structs/Logger.html">Logger</a></code>s.</li>
+</ul>
+<h3 id='treat-log-level-amp-metadata-as-values' class='heading'>Treat log level &amp; metadata as values</h3>
+
+<p>When developing your <code>LogHandler</code>, please make sure the following test works.</p>
+<pre class="highlight swift"><code><span class="kt">LoggingSystem</span><span class="o">.</span><span class="nf">bootstrap</span><span class="p">(</span><span class="kt">MyLogHandler</span><span class="o">.</span><span class="kd">init</span><span class="p">)</span> <span class="c1">// your LogHandler might have a different bootstrapping step</span>
+<span class="k">var</span> <span class="nv">logger1</span><span class="p">:</span> <span class="kt">Logger</span><span class="p">(</span><span class="nv">label</span><span class="p">:</span> <span class="s">"first logger"</span><span class="p">)</span>
+<span class="n">logger1</span><span class="o">.</span><span class="n">logLevel</span> <span class="o">=</span> <span class="o">.</span><span class="n">debug</span>
+<span class="n">logger1</span><span class="p">[</span><span class="nv">metadataKey</span><span class="p">:</span> <span class="s">"only-on"</span><span class="p">]</span> <span class="o">=</span> <span class="s">"first"</span>
+
+<span class="k">var</span> <span class="nv">logger2</span> <span class="o">=</span> <span class="n">logger1</span>
+<span class="n">logger2</span><span class="o">.</span><span class="n">logLevel</span> <span class="o">=</span> <span class="o">.</span><span class="n">error</span>                  <span class="c1">// this must not override `logger1`'s log level</span>
+<span class="n">logger2</span><span class="p">[</span><span class="nv">metadataKey</span><span class="p">:</span> <span class="s">"only-on"</span><span class="p">]</span> <span class="o">=</span> <span class="s">"second"</span> <span class="c1">// this must not override `logger1`'s metadata</span>
+
+<span class="kt">XCTAssertEqual</span><span class="p">(</span><span class="o">.</span><span class="n">debug</span><span class="p">,</span> <span class="n">logger1</span><span class="o">.</span><span class="n">logLevel</span><span class="p">)</span>
+<span class="kt">XCTAssertEqual</span><span class="p">(</span><span class="o">.</span><span class="n">error</span><span class="p">,</span> <span class="n">logger2</span><span class="o">.</span><span class="n">logLevel</span><span class="p">)</span>
+<span class="kt">XCTAssertEqual</span><span class="p">(</span><span class="s">"first"</span><span class="p">,</span> <span class="n">logger1</span><span class="p">[</span><span class="nv">metadataKey</span><span class="p">:</span> <span class="s">"only-on"</span><span class="p">])</span>
+<span class="kt">XCTAssertEqual</span><span class="p">(</span><span class="s">"second"</span><span class="p">,</span> <span class="n">logger2</span><span class="p">[</span><span class="nv">metadataKey</span><span class="p">:</span> <span class="s">"only-on"</span><span class="p">])</span>
+</code></pre>
+<h3 id='special-cases' class='heading'>Special cases</h3>
+
+<p>In certain special cases, the log level behaving like a value on <code><a href="Structs/Logger.html">Logger</a></code> might not be what you want. For example,
+you might want to set the log level across <em>all</em> <code><a href="Structs/Logger.html">Logger</a></code>s to <code>.debug</code> when say a signal (eg. <code>SIGUSR1</code>) is received
+to be able to debug special failures in production. This special case is acceptable but we urge you to create a
+solution specific to your <code>LogHandler</code> implementation to achieve that. Please find an example implementation of this
+behavior below, on reception of the signal you would call
+<code>LogHandlerWithGlobalLogLevelOverride.overrideGlobalLogLevel = .debug</code>, for example.</p>
+<pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">struct</span> <span class="kt">LogHandlerWithGlobalLogLevelOverride</span><span class="p">:</span> <span class="kt">LogHandler</span> <span class="p">{</span>
+    <span class="c1">// the static properties hold the globally overridden log level (if overridden)</span>
+    <span class="kd">private</span> <span class="kd">static</span> <span class="k">let</span> <span class="nv">overrideLock</span> <span class="o">=</span> <span class="kt">Lock</span><span class="p">()</span>
+    <span class="kd">private</span> <span class="kd">static</span> <span class="k">var</span> <span class="nv">overrideLogLevel</span><span class="p">:</span> <span class="kt">Logger</span><span class="o">.</span><span class="kt">Level</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span>
+
+    <span class="c1">// this holds the log level if not overridden</span>
+    <span class="kd">private</span> <span class="k">var</span> <span class="nv">_logLevel</span><span class="p">:</span> <span class="kt">Logger</span><span class="o">.</span><span class="kt">Level</span> <span class="o">=</span> <span class="o">.</span><span class="n">info</span>
+
+    <span class="c1">// metadata storage</span>
+    <span class="kd">public</span> <span class="k">var</span> <span class="nv">metadata</span><span class="p">:</span> <span class="kt">Logger</span><span class="o">.</span><span class="kt">Metadata</span> <span class="o">=</span> <span class="p">[:]</span>
+
+    <span class="kd">public</span> <span class="nf">init</span><span class="p">(</span><span class="nv">label</span><span class="p">:</span> <span class="kt">String</span><span class="p">)</span> <span class="p">{</span>
+        <span class="c1">// [...]</span>
+    <span class="p">}</span>
+
+    <span class="kd">public</span> <span class="k">var</span> <span class="nv">logLevel</span><span class="p">:</span> <span class="kt">Logger</span><span class="o">.</span><span class="kt">Level</span> <span class="p">{</span>
+        <span class="c1">// when we get asked for the log level, we check if it was globally overridden or not</span>
+        <span class="k">get</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="kt">LogHandlerWithGlobalLogLevelOverride</span><span class="o">.</span><span class="n">overrideLock</span><span class="o">.</span><span class="n">withLock</span> <span class="p">{</span>
+                <span class="k">return</span> <span class="kt">LogHandlerWithGlobalLogLevelOverride</span><span class="o">.</span><span class="n">overrideLogLevel</span>
+            <span class="p">}</span> <span class="p">??</span> <span class="k">self</span><span class="o">.</span><span class="n">_logLevel</span>
+        <span class="p">}</span>
+        <span class="c1">// we set the log level whenever we're asked (note: this might not have an effect if globally</span>
+        <span class="c1">// overridden)</span>
+        <span class="k">set</span> <span class="p">{</span>
+            <span class="k">self</span><span class="o">.</span><span class="n">_logLevel</span> <span class="o">=</span> <span class="n">newValue</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+
+    <span class="kd">public</span> <span class="kd">func</span> <span class="nf">log</span><span class="p">(</span><span class="nv">level</span><span class="p">:</span> <span class="kt">Logger</span><span class="o">.</span><span class="kt">Level</span><span class="p">,</span> <span class="nv">message</span><span class="p">:</span> <span class="kt">Logger</span><span class="o">.</span><span class="kt">Message</span><span class="p">,</span> <span class="nv">metadata</span><span class="p">:</span> <span class="kt">Logger</span><span class="o">.</span><span class="kt">Metadata</span><span class="p">?,</span>
+             <span class="nv">file</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">function</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">line</span><span class="p">:</span> <span class="kt">UInt</span><span class="p">)</span> <span class="p">{</span>
+        <span class="c1">// [...]</span>
+    <span class="p">}</span>
+
+    <span class="kd">public</span> <span class="nf">subscript</span><span class="p">(</span><span class="n">metadataKey</span> <span class="nv">metadataKey</span><span class="p">:</span> <span class="kt">String</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">Logger</span><span class="o">.</span><span class="kt">Metadata</span><span class="o">.</span><span class="kt">Value</span><span class="p">?</span> <span class="p">{</span>
+        <span class="k">get</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="k">self</span><span class="o">.</span><span class="n">metadata</span><span class="p">[</span><span class="n">metadataKey</span><span class="p">]</span>
+        <span class="p">}</span>
+        <span class="nf">set</span><span class="p">(</span><span class="n">newValue</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">self</span><span class="o">.</span><span class="n">metadata</span><span class="p">[</span><span class="n">metadataKey</span><span class="p">]</span> <span class="o">=</span> <span class="n">newValue</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+
+    <span class="c1">// this is the function to globally override the log level, it is not part of the `LogHandler` protocol</span>
+    <span class="kd">public</span> <span class="kd">static</span> <span class="kd">func</span> <span class="nf">overrideGlobalLogLevel</span><span class="p">(</span><span class="n">_</span> <span class="nv">logLevel</span><span class="p">:</span> <span class="kt">Logger</span><span class="o">.</span><span class="kt">Level</span><span class="p">)</span> <span class="p">{</span>
+        <span class="kt">LogHandlerWithGlobalLogLevelOverride</span><span class="o">.</span><span class="n">overrideLock</span><span class="o">.</span><span class="n">withLock</span> <span class="p">{</span>
+            <span class="kt">LogHandlerWithGlobalLogLevelOverride</span><span class="o">.</span><span class="n">overrideLogLevel</span> <span class="o">=</span> <span class="n">logLevel</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</code></pre>
+
+<p>Please note that the above <code>LogHandler</code> will still pass the &lsquo;log level is a value&rsquo; test above it iff the global log
+level has not been overridden. And most importantly it passes the requirement listed above: A change to the log
+level on one <code><a href="Structs/Logger.html">Logger</a></code> should not affect the log level of another <code><a href="Structs/Logger.html">Logger</a></code> variable.</p>
+
+                        <a href="Protocols/LogHandler.html" class="slightly-smaller">See more</a>
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">protocol</span> <span class="kt">LogHandler</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+      </article>
+    </div>
+    <section class="footer">
+      <p>&copy; 2019 <a class="link" href="https://github.com/apple/swift-log" target="_blank" rel="external">swift-log team</a>. All rights reserved. (Last updated: 2019-03-26)</p>
+      <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.9.5</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
+    </section>
+  </body>
+</div>
+</html>

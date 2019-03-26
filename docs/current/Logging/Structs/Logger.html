@@ -1,0 +1,1543 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Logger Structure Reference</title>
+    <link rel="stylesheet" type="text/css" href="../css/jazzy.css" />
+    <link rel="stylesheet" type="text/css" href="../css/highlight.css" />
+    <meta charset="utf-8">
+    <script src="../js/jquery.min.js" defer></script>
+    <script src="../js/jazzy.js" defer></script>
+    
+    <script src="../js/lunr.min.js" defer></script>
+    <script src="../js/typeahead.jquery.js" defer></script>
+    <script src="../js/jazzy.search.js" defer></script>
+  </head>
+  <body>
+
+    <a name="//apple_ref/swift/Struct/Logger" class="dashAnchor"></a>
+
+    <a title="Logger Structure Reference"></a>
+
+    <header class="header">
+      <p class="header-col header-col--primary">
+        <a class="header-link" href="../index.html">
+          Logging Docs
+        </a>
+         (97% documented)
+      </p>
+    
+      <p class="header-col--secondary">
+        <form role="search" action="../search.json">
+          <input type="text" placeholder="Search documentation" data-typeahead>
+        </form>
+      </p>
+    
+        <p class="header-col header-col--secondary">
+          <a class="header-link" href="https://github.com/apple/swift-log">
+            <img class="header-icon" src="../img/gh.png"/>
+            View on GitHub
+          </a>
+        </p>
+    
+    </header>
+
+    <p class="breadcrumbs">
+      <a class="breadcrumb" href="../index.html">Logging Reference</a>
+      <img class="carat" src="../img/carat.png" />
+      Logger Structure Reference
+    </p>
+
+    <div class="content-wrapper">
+      <nav class="navigation">
+        <ul class="nav-groups">
+          <li class="nav-group-name">
+            <a class="nav-group-name-link" href="../Enums.html">Enumerations</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Enums/LoggingSystem.html">LoggingSystem</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a class="nav-group-name-link" href="../Protocols.html">Protocols</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Protocols/LogHandler.html">LogHandler</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a class="nav-group-name-link" href="../Structs.html">Structures</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Structs/Logger.html">Logger</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Structs/Logger/MetadataValue.html">– MetadataValue</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Structs/Logger/Level.html">– Level</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Structs/Logger/Message.html">– Message</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Structs/MultiplexLogHandler.html">MultiplexLogHandler</a>
+              </li>
+            </ul>
+          </li>
+        </ul>
+      </nav>
+      <article class="main-content">
+
+        <section class="section">
+          <div class="section-content">
+            <h1>Logger</h1>
+              <div class="declaration">
+                <div class="language">
+                  <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">struct</span> <span class="kt">Logger</span></code></pre>
+
+                </div>
+              </div>
+            <p>A <code>Logger</code> is the central type in <code>swift-log</code>. Its central function is to emit log messages using one of the methods
+corresponding to a log level.</p>
+
+<p>The most basic usage of a <code>Logger</code> is</p>
+<pre class="highlight swift"><code><span class="n">logger</span><span class="o">.</span><span class="nf">info</span><span class="p">(</span><span class="s">"Hello World!"</span><span class="p">)</span>
+</code></pre>
+
+          </div>
+        </section>
+
+        <section class="section">
+          <div class="section-content">
+            <div class="task-group">
+              <ul class="item-container">
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:7Logging6LoggerV5labelSSvp"></a>
+                    <a name="//apple_ref/swift/Property/label" class="dashAnchor"></a>
+                    <a class="token" href="#/s:7Logging6LoggerV5labelSSvp">label</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Undocumented</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">let</span> <span class="nv">label</span><span class="p">:</span> <span class="kt">String</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+            <div class="task-group">
+              <ul class="item-container">
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:7Logging6LoggerV3log5level_8metadata4file8function4lineyAC5LevelO_AC7MessageVyXKSDySSAC13MetadataValueOGSgyXKS2SSutF"></a>
+                    <a name="//apple_ref/swift/Method/log(level:_:metadata:file:function:line:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:7Logging6LoggerV3log5level_8metadata4file8function4lineyAC5LevelO_AC7MessageVyXKSDySSAC13MetadataValueOGSgyXKS2SSutF">log(level:_:metadata:file:function:line:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Log a message passing the log level as a parameter.</p>
+
+<p>If the <code><a href="../Structs/Logger.html#/s:7Logging6LoggerV8logLevelAC0D0Ovp">logLevel</a></code> passed to this method is more severe than the <code>Logger</code>&lsquo;s <code><a href="../Structs/Logger.html#/s:7Logging6LoggerV8logLevelAC0D0Ovp">logLevel</a></code>, it will be logged,
+otherwise nothing will happen.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">@inlinable</span>
+<span class="kd">public</span> <span class="kd">func</span> <span class="nf">log</span><span class="p">(</span><span class="nv">level</span><span class="p">:</span> <span class="kt">Logger</span><span class="o">.</span><span class="kt"><a href="../Structs/Logger/Level.html">Level</a></span><span class="p">,</span>
+                <span class="n">_</span> <span class="nv">message</span><span class="p">:</span> <span class="kd">@autoclosure</span> <span class="p">()</span> <span class="o">-&gt;</span> <span class="kt">Logger</span><span class="o">.</span><span class="kt"><a href="../Structs/Logger/Message.html">Message</a></span><span class="p">,</span>
+                <span class="nv">metadata</span><span class="p">:</span> <span class="kd">@autoclosure</span> <span class="p">()</span> <span class="o">-&gt;</span> <span class="kt">Logger</span><span class="o">.</span><span class="kt"><a href="../Structs/Logger.html#/s:7Logging6LoggerV8Metadataa">Metadata</a></span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span>
+                <span class="nv">file</span><span class="p">:</span> <span class="kt">String</span> <span class="o">=</span> <span class="kd">#file</span><span class="p">,</span> <span class="nv">function</span><span class="p">:</span> <span class="kt">String</span> <span class="o">=</span> <span class="kd">#function</span><span class="p">,</span> <span class="nv">line</span><span class="p">:</span> <span class="kt">UInt</span> <span class="o">=</span> <span class="kd">#line</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>level</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The log level to log <code>message</code> at. For the available log levels, see <code><a href="../Structs/Logger/Level.html">Logger.Level</a></code>.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>message</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The message to be logged. <code>message</code> can be used with any string interpolation literal.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>metadata</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>One-off metadata to attach to this log message</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>file</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The file this log message originates from (there&rsquo;s usually no need to pass it explicitly as it
+   defaults to <code>#file</code>.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>function</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The function this log message originates from (there&rsquo;s usually no need to pass it explicitly as
+       it defaults to <code>#file</code>.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>line</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The line this log message originates from (there&rsquo;s usually no need to pass it explicitly as it
+   defaults to <code>#line</code>.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:7Logging6LoggerV11metadataKeyAC13MetadataValueOSgSS_tcip"></a>
+                    <a name="//apple_ref/swift/Method/subscript(metadataKey:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:7Logging6LoggerV11metadataKeyAC13MetadataValueOSgSS_tcip">subscript(metadataKey:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Add, change, or remove a logging metadata item.</p>
+<div class="aside aside-note">
+    <p class="aside-title">Note</p>
+    Logging metadata behaves as a value that means a change to the logging metadata will only affect the
+    very <code>Logger</code> it was changed on.
+
+</div>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">@inlinable</span>
+<span class="kd">public</span> <span class="nf">subscript</span><span class="p">(</span><span class="n">metadataKey</span> <span class="nv">metadataKey</span><span class="p">:</span> <span class="kt">String</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">Logger</span><span class="o">.</span><span class="kt"><a href="../Structs/Logger.html#/s:7Logging6LoggerV8Metadataa">Metadata</a></span><span class="o">.</span><span class="kt">Value</span><span class="p">?</span> <span class="p">{</span> <span class="k">get</span> <span class="k">set</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:7Logging6LoggerV8metadataSDySSAC13MetadataValueOGvp"></a>
+                    <a name="//apple_ref/swift/Property/metadata" class="dashAnchor"></a>
+                    <a class="token" href="#/s:7Logging6LoggerV8metadataSDySSAC13MetadataValueOGvp">metadata</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Get or set the entire metadata storage.</p>
+<div class="aside aside-note">
+    <p class="aside-title">Note</p>
+    Logging metadata behaves as a value that means a change to the logging metadata will only affect the
+    very <code>Logger</code> it was changed on.
+
+</div>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">@inlinable</span>
+<span class="kd">public</span> <span class="k">var</span> <span class="nv">metadata</span><span class="p">:</span> <span class="kt">Logger</span><span class="o">.</span><span class="kt"><a href="../Structs/Logger.html#/s:7Logging6LoggerV8Metadataa">Metadata</a></span> <span class="p">{</span> <span class="k">get</span> <span class="k">set</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:7Logging6LoggerV8logLevelAC0D0Ovp"></a>
+                    <a name="//apple_ref/swift/Property/logLevel" class="dashAnchor"></a>
+                    <a class="token" href="#/s:7Logging6LoggerV8logLevelAC0D0Ovp">logLevel</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Get or set the log level configured for this <code>Logger</code>.</p>
+<div class="aside aside-note">
+    <p class="aside-title">Note</p>
+    <code>Logger</code>s treat <code>logLevel</code> as a value. This means that a change in <code>logLevel</code> will only affect this
+    very <code>Logger</code>. It it acceptable for logging backends to have some form of global log level override
+    that affects multiple or even all loggers. This means a change in <code>logLevel</code> to one <code>Logger</code> might in
+    certain cases have no effect.
+
+</div>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">@inlinable</span>
+<span class="kd">public</span> <span class="k">var</span> <span class="nv">logLevel</span><span class="p">:</span> <span class="kt">Logger</span><span class="o">.</span><span class="kt"><a href="../Structs/Logger/Level.html">Level</a></span> <span class="p">{</span> <span class="k">get</span> <span class="k">set</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+            <div class="task-group">
+              <ul class="item-container">
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:7Logging6LoggerV5debug_8metadata4file8function4lineyAC7MessageVyXK_SDySSAC13MetadataValueOGSgyXKS2SSutF"></a>
+                    <a name="//apple_ref/swift/Method/debug(_:metadata:file:function:line:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:7Logging6LoggerV5debug_8metadata4file8function4lineyAC7MessageVyXK_SDySSAC13MetadataValueOGSgyXKS2SSutF">debug(_:metadata:file:function:line:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Log a message passing with the <code>Logger.info</code> log level.</p>
+
+<p>If <code>.debug</code> is more severe than the <code>Logger</code>&lsquo;s <code><a href="../Structs/Logger.html#/s:7Logging6LoggerV8logLevelAC0D0Ovp">logLevel</a></code>, it will be logged, otherwise nothing will happen.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">@inlinable</span>
+<span class="kd">public</span> <span class="kd">func</span> <span class="nf">debug</span><span class="p">(</span><span class="n">_</span> <span class="nv">message</span><span class="p">:</span> <span class="kd">@autoclosure</span> <span class="p">()</span> <span class="o">-&gt;</span> <span class="kt">Logger</span><span class="o">.</span><span class="kt"><a href="../Structs/Logger/Message.html">Message</a></span><span class="p">,</span>
+                  <span class="nv">metadata</span><span class="p">:</span> <span class="kd">@autoclosure</span> <span class="p">()</span> <span class="o">-&gt;</span> <span class="kt">Logger</span><span class="o">.</span><span class="kt"><a href="../Structs/Logger.html#/s:7Logging6LoggerV8Metadataa">Metadata</a></span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span>
+                  <span class="nv">file</span><span class="p">:</span> <span class="kt">String</span> <span class="o">=</span> <span class="kd">#file</span><span class="p">,</span> <span class="nv">function</span><span class="p">:</span> <span class="kt">String</span> <span class="o">=</span> <span class="kd">#function</span><span class="p">,</span> <span class="nv">line</span><span class="p">:</span> <span class="kt">UInt</span> <span class="o">=</span> <span class="kd">#line</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>level</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The log level to log <code>message</code> at. For the available log levels, see <code><a href="../Structs/Logger/Level.html">Logger.Level</a></code>.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>message</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The message to be logged. <code>message</code> can be used with any string interpolation literal.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>metadata</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>One-off metadata to attach to this log message</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>file</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The file this log message originates from (there&rsquo;s usually no need to pass it explicitly as it
+   defaults to <code>#file</code>.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>function</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The function this log message originates from (there&rsquo;s usually no need to pass it explicitly as
+       it defaults to <code>#file</code>.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>line</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The line this log message originates from (there&rsquo;s usually no need to pass it explicitly as it
+   defaults to <code>#line</code>.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:7Logging6LoggerV4info_8metadata4file8function4lineyAC7MessageVyXK_SDySSAC13MetadataValueOGSgyXKS2SSutF"></a>
+                    <a name="//apple_ref/swift/Method/info(_:metadata:file:function:line:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:7Logging6LoggerV4info_8metadata4file8function4lineyAC7MessageVyXK_SDySSAC13MetadataValueOGSgyXKS2SSutF">info(_:metadata:file:function:line:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Log a message passing with the <code><a href="../Structs/Logger/Level.html#/s:7Logging6LoggerV5LevelO4infoyA2EmF">Logger.Level.info</a></code> log level.</p>
+
+<p>If <code>.info</code> is more severe than the <code>Logger</code>&lsquo;s <code><a href="../Structs/Logger.html#/s:7Logging6LoggerV8logLevelAC0D0Ovp">logLevel</a></code>, it will be logged, otherwise nothing will happen.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">@inlinable</span>
+<span class="kd">public</span> <span class="kd">func</span> <span class="nf">info</span><span class="p">(</span><span class="n">_</span> <span class="nv">message</span><span class="p">:</span> <span class="kd">@autoclosure</span> <span class="p">()</span> <span class="o">-&gt;</span> <span class="kt">Logger</span><span class="o">.</span><span class="kt"><a href="../Structs/Logger/Message.html">Message</a></span><span class="p">,</span>
+                 <span class="nv">metadata</span><span class="p">:</span> <span class="kd">@autoclosure</span> <span class="p">()</span> <span class="o">-&gt;</span> <span class="kt">Logger</span><span class="o">.</span><span class="kt"><a href="../Structs/Logger.html#/s:7Logging6LoggerV8Metadataa">Metadata</a></span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span>
+                 <span class="nv">file</span><span class="p">:</span> <span class="kt">String</span> <span class="o">=</span> <span class="kd">#file</span><span class="p">,</span> <span class="nv">function</span><span class="p">:</span> <span class="kt">String</span> <span class="o">=</span> <span class="kd">#function</span><span class="p">,</span> <span class="nv">line</span><span class="p">:</span> <span class="kt">UInt</span> <span class="o">=</span> <span class="kd">#line</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>level</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The log level to log <code>message</code> at. For the available log levels, see <code><a href="../Structs/Logger/Level.html">Logger.Level</a></code>.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>message</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The message to be logged. <code>message</code> can be used with any string interpolation literal.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>metadata</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>One-off metadata to attach to this log message</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>file</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The file this log message originates from (there&rsquo;s usually no need to pass it explicitly as it
+   defaults to <code>#file</code>.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>function</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The function this log message originates from (there&rsquo;s usually no need to pass it explicitly as
+       it defaults to <code>#file</code>.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>line</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The line this log message originates from (there&rsquo;s usually no need to pass it explicitly as it
+   defaults to <code>#line</code>.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:7Logging6LoggerV6notice_8metadata4file8function4lineyAC7MessageVyXK_SDySSAC13MetadataValueOGSgyXKS2SSutF"></a>
+                    <a name="//apple_ref/swift/Method/notice(_:metadata:file:function:line:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:7Logging6LoggerV6notice_8metadata4file8function4lineyAC7MessageVyXK_SDySSAC13MetadataValueOGSgyXKS2SSutF">notice(_:metadata:file:function:line:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Log a message passing with the <code><a href="../Structs/Logger/Level.html#/s:7Logging6LoggerV5LevelO6noticeyA2EmF">Logger.Level.notice</a></code> log level.</p>
+
+<p>If <code>.notice</code> is more severe than the <code>Logger</code>&lsquo;s <code><a href="../Structs/Logger.html#/s:7Logging6LoggerV8logLevelAC0D0Ovp">logLevel</a></code>, it will be logged, otherwise nothing will happen.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">@inlinable</span>
+<span class="kd">public</span> <span class="kd">func</span> <span class="nf">notice</span><span class="p">(</span><span class="n">_</span> <span class="nv">message</span><span class="p">:</span> <span class="kd">@autoclosure</span> <span class="p">()</span> <span class="o">-&gt;</span> <span class="kt">Logger</span><span class="o">.</span><span class="kt"><a href="../Structs/Logger/Message.html">Message</a></span><span class="p">,</span>
+                   <span class="nv">metadata</span><span class="p">:</span> <span class="kd">@autoclosure</span> <span class="p">()</span> <span class="o">-&gt;</span> <span class="kt">Logger</span><span class="o">.</span><span class="kt"><a href="../Structs/Logger.html#/s:7Logging6LoggerV8Metadataa">Metadata</a></span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span>
+                   <span class="nv">file</span><span class="p">:</span> <span class="kt">String</span> <span class="o">=</span> <span class="kd">#file</span><span class="p">,</span> <span class="nv">function</span><span class="p">:</span> <span class="kt">String</span> <span class="o">=</span> <span class="kd">#function</span><span class="p">,</span> <span class="nv">line</span><span class="p">:</span> <span class="kt">UInt</span> <span class="o">=</span> <span class="kd">#line</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>level</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The log level to log <code>message</code> at. For the available log levels, see <code><a href="../Structs/Logger/Level.html">Logger.Level</a></code>.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>message</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The message to be logged. <code>message</code> can be used with any string interpolation literal.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>metadata</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>One-off metadata to attach to this log message</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>file</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The file this log message originates from (there&rsquo;s usually no need to pass it explicitly as it
+   defaults to <code>#file</code>.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>function</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The function this log message originates from (there&rsquo;s usually no need to pass it explicitly as
+       it defaults to <code>#file</code>.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>line</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The line this log message originates from (there&rsquo;s usually no need to pass it explicitly as it
+   defaults to <code>#line</code>.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:7Logging6LoggerV7warning_8metadata4file8function4lineyAC7MessageVyXK_SDySSAC13MetadataValueOGSgyXKS2SSutF"></a>
+                    <a name="//apple_ref/swift/Method/warning(_:metadata:file:function:line:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:7Logging6LoggerV7warning_8metadata4file8function4lineyAC7MessageVyXK_SDySSAC13MetadataValueOGSgyXKS2SSutF">warning(_:metadata:file:function:line:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Log a message passing with the <code><a href="../Structs/Logger/Level.html#/s:7Logging6LoggerV5LevelO7warningyA2EmF">Logger.Level.warning</a></code> log level.</p>
+
+<p>If <code>.warning</code> is more severe than the <code>Logger</code>&lsquo;s <code><a href="../Structs/Logger.html#/s:7Logging6LoggerV8logLevelAC0D0Ovp">logLevel</a></code>, it will be logged, otherwise nothing will happen.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">@inlinable</span>
+<span class="kd">public</span> <span class="kd">func</span> <span class="nf">warning</span><span class="p">(</span><span class="n">_</span> <span class="nv">message</span><span class="p">:</span> <span class="kd">@autoclosure</span> <span class="p">()</span> <span class="o">-&gt;</span> <span class="kt">Logger</span><span class="o">.</span><span class="kt"><a href="../Structs/Logger/Message.html">Message</a></span><span class="p">,</span>
+                    <span class="nv">metadata</span><span class="p">:</span> <span class="kd">@autoclosure</span> <span class="p">()</span> <span class="o">-&gt;</span> <span class="kt">Logger</span><span class="o">.</span><span class="kt"><a href="../Structs/Logger.html#/s:7Logging6LoggerV8Metadataa">Metadata</a></span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span>
+                    <span class="nv">file</span><span class="p">:</span> <span class="kt">String</span> <span class="o">=</span> <span class="kd">#file</span><span class="p">,</span> <span class="nv">function</span><span class="p">:</span> <span class="kt">String</span> <span class="o">=</span> <span class="kd">#function</span><span class="p">,</span> <span class="nv">line</span><span class="p">:</span> <span class="kt">UInt</span> <span class="o">=</span> <span class="kd">#line</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>level</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The log level to log <code>message</code> at. For the available log levels, see <code><a href="../Structs/Logger/Level.html">Logger.Level</a></code>.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>message</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The message to be logged. <code>message</code> can be used with any string interpolation literal.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>metadata</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>One-off metadata to attach to this log message</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>file</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The file this log message originates from (there&rsquo;s usually no need to pass it explicitly as it
+   defaults to <code>#file</code>.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>function</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The function this log message originates from (there&rsquo;s usually no need to pass it explicitly as
+       it defaults to <code>#file</code>.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>line</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The line this log message originates from (there&rsquo;s usually no need to pass it explicitly as it
+   defaults to <code>#line</code>.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:7Logging6LoggerV5error_8metadata4file8function4lineyAC7MessageVyXK_SDySSAC13MetadataValueOGSgyXKS2SSutF"></a>
+                    <a name="//apple_ref/swift/Method/error(_:metadata:file:function:line:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:7Logging6LoggerV5error_8metadata4file8function4lineyAC7MessageVyXK_SDySSAC13MetadataValueOGSgyXKS2SSutF">error(_:metadata:file:function:line:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Log a message passing with the <code><a href="../Structs/Logger/Level.html#/s:7Logging6LoggerV5LevelO5erroryA2EmF">Logger.Level.error</a></code> log level.</p>
+
+<p>If <code>.error</code> is more severe than the <code>Logger</code>&lsquo;s <code><a href="../Structs/Logger.html#/s:7Logging6LoggerV8logLevelAC0D0Ovp">logLevel</a></code>, it will be logged, otherwise nothing will happen.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">@inlinable</span>
+<span class="kd">public</span> <span class="kd">func</span> <span class="nf">error</span><span class="p">(</span><span class="n">_</span> <span class="nv">message</span><span class="p">:</span> <span class="kd">@autoclosure</span> <span class="p">()</span> <span class="o">-&gt;</span> <span class="kt">Logger</span><span class="o">.</span><span class="kt"><a href="../Structs/Logger/Message.html">Message</a></span><span class="p">,</span>
+                  <span class="nv">metadata</span><span class="p">:</span> <span class="kd">@autoclosure</span> <span class="p">()</span> <span class="o">-&gt;</span> <span class="kt">Logger</span><span class="o">.</span><span class="kt"><a href="../Structs/Logger.html#/s:7Logging6LoggerV8Metadataa">Metadata</a></span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span>
+                  <span class="nv">file</span><span class="p">:</span> <span class="kt">String</span> <span class="o">=</span> <span class="kd">#file</span><span class="p">,</span> <span class="nv">function</span><span class="p">:</span> <span class="kt">String</span> <span class="o">=</span> <span class="kd">#function</span><span class="p">,</span> <span class="nv">line</span><span class="p">:</span> <span class="kt">UInt</span> <span class="o">=</span> <span class="kd">#line</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>level</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The log level to log <code>message</code> at. For the available log levels, see <code><a href="../Structs/Logger/Level.html">Logger.Level</a></code>.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>message</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The message to be logged. <code>message</code> can be used with any string interpolation literal.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>metadata</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>One-off metadata to attach to this log message</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>file</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The file this log message originates from (there&rsquo;s usually no need to pass it explicitly as it
+   defaults to <code>#file</code>.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>function</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The function this log message originates from (there&rsquo;s usually no need to pass it explicitly as
+       it defaults to <code>#file</code>.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>line</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The line this log message originates from (there&rsquo;s usually no need to pass it explicitly as it
+   defaults to <code>#line</code>.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:7Logging6LoggerV8critical_8metadata4file8function4lineyAC7MessageVyXK_SDySSAC13MetadataValueOGSgyXKS2SSutF"></a>
+                    <a name="//apple_ref/swift/Method/critical(_:metadata:file:function:line:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:7Logging6LoggerV8critical_8metadata4file8function4lineyAC7MessageVyXK_SDySSAC13MetadataValueOGSgyXKS2SSutF">critical(_:metadata:file:function:line:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Log a message passing with the <code><a href="../Structs/Logger/Level.html#/s:7Logging6LoggerV5LevelO8criticalyA2EmF">Logger.Level.critical</a></code> log level.</p>
+
+<p>If <code>.critical</code> is more severe than the <code>Logger</code>&lsquo;s <code><a href="../Structs/Logger.html#/s:7Logging6LoggerV8logLevelAC0D0Ovp">logLevel</a></code>, it will be logged, otherwise nothing will happen.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">@inlinable</span>
+<span class="kd">public</span> <span class="kd">func</span> <span class="nf">critical</span><span class="p">(</span><span class="n">_</span> <span class="nv">message</span><span class="p">:</span> <span class="kd">@autoclosure</span> <span class="p">()</span> <span class="o">-&gt;</span> <span class="kt">Logger</span><span class="o">.</span><span class="kt"><a href="../Structs/Logger/Message.html">Message</a></span><span class="p">,</span>
+                     <span class="nv">metadata</span><span class="p">:</span> <span class="kd">@autoclosure</span> <span class="p">()</span> <span class="o">-&gt;</span> <span class="kt">Logger</span><span class="o">.</span><span class="kt"><a href="../Structs/Logger.html#/s:7Logging6LoggerV8Metadataa">Metadata</a></span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span>
+                     <span class="nv">file</span><span class="p">:</span> <span class="kt">String</span> <span class="o">=</span> <span class="kd">#file</span><span class="p">,</span> <span class="nv">function</span><span class="p">:</span> <span class="kt">String</span> <span class="o">=</span> <span class="kd">#function</span><span class="p">,</span> <span class="nv">line</span><span class="p">:</span> <span class="kt">UInt</span> <span class="o">=</span> <span class="kd">#line</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>level</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The log level to log <code>message</code> at. For the available log levels, see <code><a href="../Structs/Logger/Level.html">Logger.Level</a></code>.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>message</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The message to be logged. <code>message</code> can be used with any string interpolation literal.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>metadata</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>One-off metadata to attach to this log message</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>file</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The file this log message originates from (there&rsquo;s usually no need to pass it explicitly as it
+   defaults to <code>#file</code>.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>function</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The function this log message originates from (there&rsquo;s usually no need to pass it explicitly as
+       it defaults to <code>#file</code>.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>line</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The line this log message originates from (there&rsquo;s usually no need to pass it explicitly as it
+   defaults to <code>#line</code>.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:7Logging6LoggerV5alert_8metadata4file8function4lineyAC7MessageVyXK_SDySSAC13MetadataValueOGSgyXKS2SSutF"></a>
+                    <a name="//apple_ref/swift/Method/alert(_:metadata:file:function:line:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:7Logging6LoggerV5alert_8metadata4file8function4lineyAC7MessageVyXK_SDySSAC13MetadataValueOGSgyXKS2SSutF">alert(_:metadata:file:function:line:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Log a message passing with the <code><a href="../Structs/Logger/Level.html#/s:7Logging6LoggerV5LevelO5alertyA2EmF">Logger.Level.alert</a></code> log level.</p>
+
+<p>If <code>.alert</code> is more severe than the <code>Logger</code>&lsquo;s <code><a href="../Structs/Logger.html#/s:7Logging6LoggerV8logLevelAC0D0Ovp">logLevel</a></code>, it will be logged, otherwise nothing will happen.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">@inlinable</span>
+<span class="kd">public</span> <span class="kd">func</span> <span class="nf">alert</span><span class="p">(</span><span class="n">_</span> <span class="nv">message</span><span class="p">:</span> <span class="kd">@autoclosure</span> <span class="p">()</span> <span class="o">-&gt;</span> <span class="kt">Logger</span><span class="o">.</span><span class="kt"><a href="../Structs/Logger/Message.html">Message</a></span><span class="p">,</span>
+                  <span class="nv">metadata</span><span class="p">:</span> <span class="kd">@autoclosure</span> <span class="p">()</span> <span class="o">-&gt;</span> <span class="kt">Logger</span><span class="o">.</span><span class="kt"><a href="../Structs/Logger.html#/s:7Logging6LoggerV8Metadataa">Metadata</a></span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span>
+                  <span class="nv">file</span><span class="p">:</span> <span class="kt">String</span> <span class="o">=</span> <span class="kd">#file</span><span class="p">,</span> <span class="nv">function</span><span class="p">:</span> <span class="kt">String</span> <span class="o">=</span> <span class="kd">#function</span><span class="p">,</span> <span class="nv">line</span><span class="p">:</span> <span class="kt">UInt</span> <span class="o">=</span> <span class="kd">#line</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>level</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The log level to log <code>message</code> at. For the available log levels, see <code><a href="../Structs/Logger/Level.html">Logger.Level</a></code>.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>message</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The message to be logged. <code>message</code> can be used with any string interpolation literal.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>metadata</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>One-off metadata to attach to this log message</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>file</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The file this log message originates from (there&rsquo;s usually no need to pass it explicitly as it
+   defaults to <code>#file</code>.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>function</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The function this log message originates from (there&rsquo;s usually no need to pass it explicitly as
+       it defaults to <code>#file</code>.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>line</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The line this log message originates from (there&rsquo;s usually no need to pass it explicitly as it
+   defaults to <code>#line</code>.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:7Logging6LoggerV9emergency_8metadata4file8function4lineyAC7MessageVyXK_SDySSAC13MetadataValueOGSgyXKS2SSutF"></a>
+                    <a name="//apple_ref/swift/Method/emergency(_:metadata:file:function:line:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:7Logging6LoggerV9emergency_8metadata4file8function4lineyAC7MessageVyXK_SDySSAC13MetadataValueOGSgyXKS2SSutF">emergency(_:metadata:file:function:line:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Log a message passing with the <code><a href="../Structs/Logger/Level.html#/s:7Logging6LoggerV5LevelO9emergencyyA2EmF">Logger.Level.emergency</a></code> log level.</p>
+
+<p>If <code>.emergency</code> is more severe than the <code>Logger</code>&lsquo;s <code><a href="../Structs/Logger.html#/s:7Logging6LoggerV8logLevelAC0D0Ovp">logLevel</a></code>, it will be logged, otherwise nothing will happen.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">@inlinable</span>
+<span class="kd">public</span> <span class="kd">func</span> <span class="nf">emergency</span><span class="p">(</span><span class="n">_</span> <span class="nv">message</span><span class="p">:</span> <span class="kd">@autoclosure</span> <span class="p">()</span> <span class="o">-&gt;</span> <span class="kt">Logger</span><span class="o">.</span><span class="kt"><a href="../Structs/Logger/Message.html">Message</a></span><span class="p">,</span>
+                      <span class="nv">metadata</span><span class="p">:</span> <span class="kd">@autoclosure</span> <span class="p">()</span> <span class="o">-&gt;</span> <span class="kt">Logger</span><span class="o">.</span><span class="kt"><a href="../Structs/Logger.html#/s:7Logging6LoggerV8Metadataa">Metadata</a></span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span>
+                      <span class="nv">file</span><span class="p">:</span> <span class="kt">String</span> <span class="o">=</span> <span class="kd">#file</span><span class="p">,</span> <span class="nv">function</span><span class="p">:</span> <span class="kt">String</span> <span class="o">=</span> <span class="kd">#function</span><span class="p">,</span> <span class="nv">line</span><span class="p">:</span> <span class="kt">UInt</span> <span class="o">=</span> <span class="kd">#line</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>level</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The log level to log <code>message</code> at. For the available log levels, see <code><a href="../Structs/Logger/Level.html">Logger.Level</a></code>.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>message</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The message to be logged. <code>message</code> can be used with any string interpolation literal.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>metadata</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>One-off metadata to attach to this log message</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>file</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The file this log message originates from (there&rsquo;s usually no need to pass it explicitly as it
+   defaults to <code>#file</code>.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>function</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The function this log message originates from (there&rsquo;s usually no need to pass it explicitly as
+       it defaults to <code>#file</code>.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>line</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The line this log message originates from (there&rsquo;s usually no need to pass it explicitly as it
+   defaults to <code>#line</code>.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+            <div class="task-group">
+              <ul class="item-container">
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:7Logging6LoggerV8Metadataa"></a>
+                    <a name="//apple_ref/swift/Alias/Metadata" class="dashAnchor"></a>
+                    <a class="token" href="#/s:7Logging6LoggerV8Metadataa">Metadata</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p><code>Metadata</code> is a typealias for <code>[String: Logger.MetadataValue]</code> the type of the metadata storage.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">typealias</span> <span class="kt">Metadata</span> <span class="o">=</span> <span class="p">[</span><span class="kt">String</span> <span class="p">:</span> <span class="kt"><a href="../Structs/Logger/MetadataValue.html">MetadataValue</a></span><span class="p">]</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:7Logging6LoggerV13MetadataValueO"></a>
+                    <a name="//apple_ref/swift/Enum/MetadataValue" class="dashAnchor"></a>
+                    <a class="token" href="#/s:7Logging6LoggerV13MetadataValueO">MetadataValue</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>A logging metadata value. <code>Logger.MetadataValue</code> is string, array, and dictionary literal convertible.</p>
+
+                        <a href="../Structs/Logger/MetadataValue.html" class="slightly-smaller">See more</a>
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">enum</span> <span class="kt">MetadataValue</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:7Logging6LoggerV5LevelO"></a>
+                    <a name="//apple_ref/swift/Enum/Level" class="dashAnchor"></a>
+                    <a class="token" href="#/s:7Logging6LoggerV5LevelO">Level</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>The log level.</p>
+
+<p>Raw values of log levels correspond to their severity, and are ordered by lowest numeric value (0) being
+the most severe. The raw values match the syslog values.</p>
+
+                        <a href="../Structs/Logger/Level.html" class="slightly-smaller">See more</a>
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">enum</span> <span class="kt">Level</span> <span class="p">:</span> <span class="kt">Int</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:7Logging6LoggerV5labelACSS_tcfc"></a>
+                    <a name="//apple_ref/swift/Method/init(label:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:7Logging6LoggerV5labelACSS_tcfc">init(label:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Construct a <code>Logger</code> given a <code><a href="../Structs/Logger.html#/s:7Logging6LoggerV5labelSSvp">label</a></code> identifying the creator of the <code>Logger</code>.</p>
+
+<p>The <code><a href="../Structs/Logger.html#/s:7Logging6LoggerV5labelSSvp">label</a></code> should identify the creator of the <code>Logger</code>. This can be an application, a sub-system, or even
+a datatype.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="nf">init</span><span class="p">(</span><span class="nv">label</span><span class="p">:</span> <span class="kt">String</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>label</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>An identifier for the creator of a <code>Logger</code>.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:7Logging6LoggerV5label7factoryACSS_AA10LogHandler_pSSXEtcfc"></a>
+                    <a name="//apple_ref/swift/Method/init(label:factory:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:7Logging6LoggerV5label7factoryACSS_AA10LogHandler_pSSXEtcfc">init(label:factory:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Construct a <code>Logger</code> given a <code><a href="../Structs/Logger.html#/s:7Logging6LoggerV5labelSSvp">label</a></code> identifying the creator of the <code>Logger</code> or a non-standard <code><a href="../Protocols/LogHandler.html">LogHandler</a></code>.</p>
+
+<p>The <code><a href="../Structs/Logger.html#/s:7Logging6LoggerV5labelSSvp">label</a></code> should identify the creator of the <code>Logger</code>. This can be an application, a sub-system, or even
+a datatype.</p>
+
+<p>This initializer provides an escape hatch in case the global default logging backend implementation (set up
+using <code>LoggingSystem.bootstrap</code> is not appropriate for this particular logger.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="nf">init</span><span class="p">(</span><span class="nv">label</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">factory</span><span class="p">:</span> <span class="p">(</span><span class="kt">String</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt"><a href="../Protocols/LogHandler.html">LogHandler</a></span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>label</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>An identifier for the creator of a <code>Logger</code>.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>factory</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>A closure creating non-standard <code><a href="../Protocols/LogHandler.html">LogHandler</a></code>s.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+            <div class="task-group">
+              <ul class="item-container">
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:7Logging6LoggerV7MessageV"></a>
+                    <a name="//apple_ref/swift/Struct/Message" class="dashAnchor"></a>
+                    <a class="token" href="#/s:7Logging6LoggerV7MessageV">Message</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p><code>Logger.Message</code> represents a log message&rsquo;s text. It is usually created using string literals.</p>
+
+<p>Example creating a <code>Logger.Message</code>:</p>
+<pre class="highlight swift"><code><span class="k">let</span> <span class="nv">world</span><span class="p">:</span> <span class="kt">String</span> <span class="o">=</span> <span class="s">"world"</span>
+<span class="k">let</span> <span class="nv">myLogMessage</span><span class="p">:</span> <span class="kt">Logger</span><span class="o">.</span><span class="kt">Message</span> <span class="o">=</span> <span class="s">"Hello </span><span class="se">\(</span><span class="n">world</span><span class="se">)</span><span class="s">"</span>
+</code></pre>
+
+<p>Most commonly, <code>Logger.Message</code>s appear simply as the parameter to a logging method such as:</p>
+<pre class="highlight swift"><code><span class="n">logger</span><span class="o">.</span><span class="nf">info</span><span class="p">(</span><span class="s">"Hello </span><span class="se">\(</span><span class="n">world</span><span class="se">)</span><span class="s">"</span><span class="p">)</span>
+</code></pre>
+
+                        <a href="../Structs/Logger/Message.html" class="slightly-smaller">See more</a>
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">struct</span> <span class="kt">Message</span><span class="p">:</span> <span class="kt">ExpressibleByStringLiteral</span><span class="p">,</span>
+                       <span class="kt">Equatable</span><span class="p">,</span>
+                       <span class="kt">CustomStringConvertible</span><span class="p">,</span>
+                       <span class="kt">ExpressibleByStringInterpolation</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+      </article>
+    </div>
+    <section class="footer">
+      <p>&copy; 2019 <a class="link" href="https://github.com/apple/swift-log" target="_blank" rel="external">swift-log team</a>. All rights reserved. (Last updated: 2019-03-26)</p>
+      <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.9.5</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
+    </section>
+  </body>
+</div>
+</html>
