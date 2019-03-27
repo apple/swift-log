@@ -8,7 +8,7 @@ What `swift-log` provides today can be found in the [API docs][api-docs]. At thi
 
 ---
 
-**NOTE**: You will need Xcode 10.2 beta 4 or a recent [Swift 5.0 development snapshot](http://swift.org/download/#swift-50-development) to try out `swift-log`.
+**NOTE**: You will need [Xcode 10.2](https://itunes.apple.com/us/app/xcode/id497799835) or [Swift 5.0](https://swift.org/download/#swift-50) to try out `swift-log`.
 
 ---
 
@@ -25,7 +25,11 @@ To depend on the logging API package, you need to declare your dependency in you
 .package(url: "https://github.com/apple/swift-log.git", .branch("master")),
 ```
 
-and to your application/library target, add `"Logging"` to your `dependencies`.
+and to your application/library target, add `"Logging"` to your `dependencies`, e.g. like this:
+
+```swift
+.target(name: "BestExampleApp", dependencies: ["Logging']),
+```
 
 #### Let's log
 
@@ -65,7 +69,7 @@ Just for completeness sake: This API package does actually include an overly sim
 
 ### Loggers
 
-`Logger`s are used to emit log messages and therefore the most important type in `swift-log`. Using `Logger`s is very straightforward. Most commonly, they are used to emit log messages in a certain log level. For example
+`Logger`s are used to emit log messages and therefore the most important type in `swift-log`, so their use should be as simple as possible.  Most commonly, they are used to emit log messages in a certain log level. For example:
 
 ```swift
 // logging an informational message
@@ -77,7 +81,7 @@ logger.error("Houston, we have a problem: \(problem)")
 
 ### Log levels
 
-The following log levels are supported, the match the [syslog severity levels](https://en.wikipedia.org/wiki/Syslog#Severity_level):
+The following log levels are supported, they match the [syslog severity levels](https://en.wikipedia.org/wiki/Syslog#Severity_level):
 
  - `debug`
  - `info`
@@ -88,7 +92,7 @@ The following log levels are supported, the match the [syslog severity levels](h
  - `alert`
  - `emergency`
 
-The log level of a given logger can be changed, but the change will only affect the very logger you changed it on. You could say the `Logger` is a _value type_ regarding the log level.
+The log level of a given logger can be changed, but the change will only affect the specific logger you changed it on. You could say the `Logger` is a _value type_ regarding the log level.
 
 
 ### Logging metadata
@@ -141,7 +145,7 @@ Instructing `swift-log` to use your logging backend as the one the whole applica
 
 ##### Configuration
 
-`LogHandler`s control the two crucial pieces of `Logger` configuration, namely
+`LogHandler`s control the two crucial pieces of `Logger` configuration, namely:
 
 - log level (`logger.logLevel` property)
 - logging metadata (`logger[metadataKey:]` and `logger.metadata`)
