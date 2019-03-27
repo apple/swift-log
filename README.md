@@ -8,7 +8,7 @@ What `swift-log` provides today can be found in the [API docs][api-docs]. At thi
 
 ---
 
-**NOTE**: You will need Xcode 10.2 beta 4, [Xcode 10.2](https://itunes.apple.com/us/app/xcode/id497799835) or a recent [Swift 5.0 development snapshot](http://swift.org/download/#swift-50-development) to try out `swift-log`.
+**NOTE**: You will need [Xcode 10.2](https://itunes.apple.com/us/app/xcode/id497799835) or [Swift 5.0](https://swift.org/download/#swift-50) to try out `swift-log`.
 
 ---
 
@@ -25,7 +25,7 @@ To depend on the logging API package, you need to declare your dependency in you
 .package(url: "https://github.com/apple/swift-log.git", .branch("master")),
 ```
 
-and to your application/library target, add `"Logging"` to your `dependencies`:
+and to your application/library target, add `"Logging"` to your `dependencies`, e.g. like this:
 
 ```swift
 .target(name: "BestExampleApp", dependencies: ["Logging']),
