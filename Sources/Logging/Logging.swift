@@ -57,7 +57,7 @@ extension Logger {
                     _ message: @autoclosure () -> Logger.Message,
                     metadata: @autoclosure () -> Logger.Metadata? = nil,
                     file: String = #file, function: String = #function, line: UInt = #line) {
-        if self.logLevel >= level {
+        if level >= self.logLevel {
             self.handler.log(level: level,
                              message: message(),
                              metadata: metadata(),
@@ -331,37 +331,45 @@ extension Logger {
 
     /// The log level.
     ///
-    /// Raw values of log levels correspond to their severity, and are ordered by lowest numeric value (0) being
-    /// the most severe. The raw values match the syslog values.
-    public enum Level: Int {
+    /// The names match those defined by `syslog` while the underlying numeric representation is
+    /// left as an implementation detail for library authors.
+    ///
+    /// However, this type does have a defined semantic ordering that is provided through
+    /// conformance to the `Comparable` protocol.
+    ///
+    /// i.e. semantically, `debug` is considered lower than `emergency`.
+    ///
+    /// See [https://en.wikipedia.org/wiki/Syslog](https://en.wikipedia.org/wiki/Syslog) for more
+    /// detailed information.
+    public enum Level {
         /// Appropriate for messages that contain information normally of use only when
         /// debugging a program.
-        case debug = 7
+        case debug
 
         /// Appropriate for informational messages.
-        case info = 6
+        case info
 
         /// Appropriate for conditions that are not error conditions, but that may require
         /// special handling.
-        case notice = 5
+        case notice
 
         /// Appropriate for messages that are not error conditions, but more severe than
         /// `.notice`.
-        case warning = 4
+        case warning
 
         /// Appropriate for error conditions.
-        case error = 3
+        case error
 
         /// Appropriate for criticial error conditions that usually require immediate
         /// attention.
-        case critical = 2
+        case critical
 
         /// Appropriate for conditions that should be corrected immediately, such as a corrupted
         /// system database.
-        case alert = 1
+        case alert
 
         /// Appropriate for panic conditions.
-        case emergency = 0
+        case emergency
     }
 
     /// Construct a `Logger` given a `label` identifying the creator of the `Logger`.
@@ -392,8 +400,21 @@ extension Logger {
 }
 
 extension Logger.Level: Comparable {
+    private var severityOrdering: Int {
+        switch self {
+        case .debug: return 0
+        case .info: return 1
+        case .notice: return 2
+        case .warning: return 3
+        case .error: return 4
+        case .critical: return 5
+        case .alert: return 6
+        case .emergency: return 7
+        }
+    }
+
     public static func < (lhs: Logger.Level, rhs: Logger.Level) -> Bool {
-        return lhs.rawValue < rhs.rawValue
+        return lhs.severityOrdering < rhs.severityOrdering
     }
 }
 
