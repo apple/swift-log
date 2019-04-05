@@ -34,12 +34,13 @@ extension LoggingTest {
                 ("testAutoClosuresAreNotForcedUnlessNeeded", testAutoClosuresAreNotForcedUnlessNeeded),
                 ("testLocalMetadata", testLocalMetadata),
                 ("testCustomFactory", testCustomFactory),
-                ("testAllLogLevelsExceptEmergencyCanBeBlocked", testAllLogLevelsExceptEmergencyCanBeBlocked),
+                ("testAllLogLevelsExceptCriticalCanBeBlocked", testAllLogLevelsExceptCriticalCanBeBlocked),
                 ("testAllLogLevelsWork", testAllLogLevelsWork),
                 ("testLogMessageWithStringInterpolation", testLogMessageWithStringInterpolation),
                 ("testLoggingAString", testLoggingAString),
                 ("testMultiplexerIsValue", testMultiplexerIsValue),
                 ("testLoggerWithGlobalOverride", testLoggerWithGlobalOverride),
+                ("testLogLevelOrdering", testLogLevelOrdering),
            ]
    }
 }
