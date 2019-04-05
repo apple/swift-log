@@ -206,30 +206,28 @@ class LoggingTest: XCTestCase {
         XCTAssertTrue(logger2.handler is CustomHandler, "expected custom log handler")
     }
 
-    func testAllLogLevelsExceptEmergencyCanBeBlocked() {
+    func testAllLogLevelsExceptCriticalCanBeBlocked() {
         let testLogging = TestLogging()
         LoggingSystem.bootstrapInternal(testLogging.make)
 
         var logger = Logger(label: "\(#function)")
-        logger.logLevel = .emergency
+        logger.logLevel = .critical
 
+        logger.trace("no")
         logger.debug("no")
         logger.info("no")
         logger.notice("no")
         logger.warning("no")
         logger.error("no")
-        logger.critical("no")
-        logger.alert("no")
-        logger.emergency("yes")
+        logger.critical("yes: critical")
 
+        testLogging.history.assertNotExist(level: .trace, message: "no")
         testLogging.history.assertNotExist(level: .debug, message: "no")
         testLogging.history.assertNotExist(level: .info, message: "no")
         testLogging.history.assertNotExist(level: .notice, message: "no")
         testLogging.history.assertNotExist(level: .warning, message: "no")
         testLogging.history.assertNotExist(level: .error, message: "no")
-        testLogging.history.assertNotExist(level: .critical, message: "no")
-        testLogging.history.assertNotExist(level: .alert, message: "no")
-        testLogging.history.assertExist(level: .emergency, message: "yes")
+        testLogging.history.assertExist(level: .critical, message: "yes: critical")
     }
 
     func testAllLogLevelsWork() {
@@ -237,25 +235,23 @@ class LoggingTest: XCTestCase {
         LoggingSystem.bootstrapInternal(testLogging.make)
 
         var logger = Logger(label: "\(#function)")
-        logger.logLevel = .debug
+        logger.logLevel = .trace
 
-        logger.debug("yes")
-        logger.info("yes")
-        logger.notice("yes")
-        logger.warning("yes")
-        logger.error("yes")
-        logger.critical("yes")
-        logger.alert("yes")
-        logger.emergency("yes")
+        logger.trace("yes: trace")
+        logger.debug("yes: debug")
+        logger.info("yes: info")
+        logger.notice("yes: notice")
+        logger.warning("yes: warning")
+        logger.error("yes: error")
+        logger.critical("yes: critical")
 
-        testLogging.history.assertExist(level: .debug, message: "yes")
-        testLogging.history.assertExist(level: .info, message: "yes")
-        testLogging.history.assertExist(level: .notice, message: "yes")
-        testLogging.history.assertExist(level: .warning, message: "yes")
-        testLogging.history.assertExist(level: .error, message: "yes")
-        testLogging.history.assertExist(level: .critical, message: "yes")
-        testLogging.history.assertExist(level: .alert, message: "yes")
-        testLogging.history.assertExist(level: .emergency, message: "yes")
+        testLogging.history.assertExist(level: .trace, message: "yes: trace")
+        testLogging.history.assertExist(level: .debug, message: "yes: debug")
+        testLogging.history.assertExist(level: .info, message: "yes: info")
+        testLogging.history.assertExist(level: .notice, message: "yes: notice")
+        testLogging.history.assertExist(level: .warning, message: "yes: warning")
+        testLogging.history.assertExist(level: .error, message: "yes: error")
+        testLogging.history.assertExist(level: .critical, message: "yes: critical")
     }
 
     func testLogMessageWithStringInterpolation() {
@@ -391,5 +387,29 @@ class LoggingTest: XCTestCase {
         logRecorder.assertNotExist(level: .notice, message: "logger2, before")
         logRecorder.assertExist(level: .notice, message: "logger1, after")
         logRecorder.assertExist(level: .notice, message: "logger2, after")
+    }
+
+    func testLogLevelOrdering() {
+        XCTAssertLessThan(Logger.Level.trace, Logger.Level.debug)
+        XCTAssertLessThan(Logger.Level.trace, Logger.Level.info)
+        XCTAssertLessThan(Logger.Level.trace, Logger.Level.notice)
+        XCTAssertLessThan(Logger.Level.trace, Logger.Level.warning)
+        XCTAssertLessThan(Logger.Level.trace, Logger.Level.error)
+        XCTAssertLessThan(Logger.Level.trace, Logger.Level.critical)
+        XCTAssertLessThan(Logger.Level.debug, Logger.Level.info)
+        XCTAssertLessThan(Logger.Level.debug, Logger.Level.notice)
+        XCTAssertLessThan(Logger.Level.debug, Logger.Level.warning)
+        XCTAssertLessThan(Logger.Level.debug, Logger.Level.error)
+        XCTAssertLessThan(Logger.Level.debug, Logger.Level.critical)
+        XCTAssertLessThan(Logger.Level.info, Logger.Level.notice)
+        XCTAssertLessThan(Logger.Level.info, Logger.Level.warning)
+        XCTAssertLessThan(Logger.Level.info, Logger.Level.error)
+        XCTAssertLessThan(Logger.Level.info, Logger.Level.critical)
+        XCTAssertLessThan(Logger.Level.notice, Logger.Level.warning)
+        XCTAssertLessThan(Logger.Level.notice, Logger.Level.error)
+        XCTAssertLessThan(Logger.Level.notice, Logger.Level.critical)
+        XCTAssertLessThan(Logger.Level.warning, Logger.Level.error)
+        XCTAssertLessThan(Logger.Level.warning, Logger.Level.critical)
+        XCTAssertLessThan(Logger.Level.error, Logger.Level.critical)
     }
 }
