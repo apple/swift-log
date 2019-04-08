@@ -79,20 +79,6 @@ extension Logger {
         }
     }
 
-    /// Get or set the entire metadata storage.
-    ///
-    /// - note: Logging metadata behaves as a value that means a change to the logging metadata will only affect the
-    ///         very `Logger` it was changed on.
-    @inlinable
-    public var metadata: Logger.Metadata {
-        get {
-            return self.handler.metadata
-        }
-        set {
-            self.handler.metadata = newValue
-        }
-    }
-
     /// Get or set the log level configured for this `Logger`.
     ///
     /// - note: `Logger`s treat `logLevel` as a value. This means that a change in `logLevel` will only affect this
