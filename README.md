@@ -1,10 +1,10 @@
-# swift-log
+# SwiftLog
 
 A Logging API package for Swift. Version `1.0.0` requires Swift 5.0 but in due course we will also tag a mostly compatible version for Swift 4 (which will be tagged `0.x`) to ease your transition towards Swift 5.
 
-First things first: This is the beginning of a community-driven open-source project actively seeking contributions, be it code, documentation, or ideas. Apart from contributing to `swift-log` itself, there's another huge gap at the moment: `swift-log` is an _API package_ which tries to establish a common API the ecosystem can use. To make logging really work for real-world workloads, we need `swift-log`-compatible _logging backends_ which then either persist the log messages in files, render them in nicer colors on the terminal, or send them over to Splunk or ELK.
+First things first: This is the beginning of a community-driven open-source project actively seeking contributions, be it code, documentation, or ideas. Apart from contributing to `SwiftLog` itself, there's another huge gap at the moment: `SwiftLog` is an _API package_ which tries to establish a common API the ecosystem can use. To make logging really work for real-world workloads, we need `SwiftLog`-compatible _logging backends_ which then either persist the log messages in files, render them in nicer colors on the terminal, or send them over to Splunk or ELK.
 
-What `swift-log` provides today can be found in the [API docs][api-docs].
+What `SwiftLog` provides today can be found in the [API docs][api-docs].
 
 ## Great, what's the tl;dr
 
@@ -12,7 +12,7 @@ If you have a server-side Swift application, or maybe a cross-platform (for exam
 
 #### Adding the dependency
 
-`swift-log` is designed for Swift 5, the `1.0.0` release requires Swift 5 (however we will soon tag a `0.x` version that will work with Swift 4 for the transition period). To depend on the logging API package, you need to declare your dependency in your `Package.swift`:
+`SwiftLog` is designed for Swift 5, the `1.0.0` release requires Swift 5 (however we will soon tag a `0.x` version that will work with Swift 4 for the transition period). To depend on the logging API package, you need to declare your dependency in your `Package.swift`:
 
 ```swift
 .package(url: "https://github.com/apple/swift-log.git", from: "1.0.0"),
@@ -54,15 +54,15 @@ In the real-world however, there are so many opinions over how exactly a logging
 1. a logging API
 2. a logging backend implementation
 
-This package only provides the logging API itself and therefore `swift-log` is a 'logging API package'. `swift-log` (using `LoggingSystem.bootstrap`) can be configured to choose any compatible logging backend implementation. This way packages can adopt the API and the _application_ can choose any compatible logging backend implementation without requiring any changes from any of the libraries.
+This package only provides the logging API itself and therefore `SwiftLog` is a 'logging API package'. `SwiftLog` (using `LoggingSystem.bootstrap`) can be configured to choose any compatible logging backend implementation. This way packages can adopt the API and the _application_ can choose any compatible logging backend implementation without requiring any changes from any of the libraries.
 
-Just for completeness sake: This API package does actually include an overly simplistic and non-configurable logging backend implementation which simply writes all log messages to `stdout`. The reason to include this overly simplistic logging backend implementation is to improve the first-time usage experience. Let's assume you start a project and try out `swift-log` for the first time, it's just a whole lot better to see something you logged appear on `stdout` in a simplistic format rather than nothing happening at all. For any real-world application, we advise configuring another logging backend implementation that logs in the style you like.
+Just for completeness sake: This API package does actually include an overly simplistic and non-configurable logging backend implementation which simply writes all log messages to `stdout`. The reason to include this overly simplistic logging backend implementation is to improve the first-time usage experience. Let's assume you start a project and try out `SwiftLog` for the first time, it's just a whole lot better to see something you logged appear on `stdout` in a simplistic format rather than nothing happening at all. For any real-world application, we advise configuring another logging backend implementation that logs in the style you like.
 
 ## The core concepts
 
 ### Loggers
 
-`Logger`s are used to emit log messages and therefore the most important type in `swift-log`, so their use should be as simple as possible.  Most commonly, they are used to emit log messages in a certain log level. For example:
+`Logger`s are used to emit log messages and therefore the most important type in `SwiftLog`, so their use should be as simple as possible.  Most commonly, they are used to emit log messages in a certain log level. For example:
 
 ```swift
 // logging an informational message
@@ -104,13 +104,13 @@ will print
 2019-03-13T18:30:02+0000 info: request-uuid=F8633013-3DD8-481C-9256-B296E43443ED hello world
 ```
 
-with the default logging backend implementation that ships with `swift-log`. Needless to say, the format is fully defined by the logging backend you choose.
+with the default logging backend implementation that ships with `SwiftLog`. Needless to say, the format is fully defined by the logging backend you choose.
 
 ## On the implementation of a logging backend (a `LogHandler`)
 
 Note: If you don't want to implement a custom logging backend, everything in this section is probably not very relevant, so please feel free to skip.
 
-To become a compatible logging backend that all `swift-log` consumers can use, you need to do two things: 1) Implement a type (usually a `struct`) that implements `LogHandler`, a protocol provided by `swift-log` and 2) instruct `swift-log` to use your logging backend implementation.
+To become a compatible logging backend that all `SwiftLog` consumers can use, you need to do two things: 1) Implement a type (usually a `struct`) that implements `LogHandler`, a protocol provided by `SwiftLog` and 2) instruct `SwiftLog` to use your logging backend implementation.
 
 A `LogHandler` or logging backend implementation is anything that conforms to the following protocol
 
@@ -126,7 +126,7 @@ public protocol LogHandler {
 }
 ```
 
-Instructing `swift-log` to use your logging backend as the one the whole application (including all libraries) should use is very simple:
+Instructing `SwiftLog` to use your logging backend as the one the whole application (including all libraries) should use is very simple:
 
     LoggingSystem.bootstrap(MyLogHandler.init)
 
