@@ -18,7 +18,7 @@
     import Glibc
 #endif
 
-/// A `Logger` is the central type in `swift-log`. Its central function is to emit log messages using one of the methods
+/// A `Logger` is the central type in `SwiftLog`. Its central function is to emit log messages using one of the methods
 /// corresponding to a log level.
 ///
 /// The most basic usage of a `Logger` is
