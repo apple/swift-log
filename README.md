@@ -74,16 +74,15 @@ logger.error("Houston, we have a problem: \(problem)")
 
 ### Log levels
 
-The following log levels are supported, they match the [syslog severity levels](https://en.wikipedia.org/wiki/Syslog#Severity_level):
+The following log levels are supported:
 
+ - `trace`
  - `debug`
  - `info`
  - `notice`
  - `warning`
  - `error`
  - `critical`
- - `alert`
- - `emergency`
 
 The log level of a given logger can be changed, but the change will only affect the specific logger you changed it on. You could say the `Logger` is a _value type_ regarding the log level.
 
