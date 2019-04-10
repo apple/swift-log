@@ -15,7 +15,7 @@
 /// A `LogHandler` is an implementation of a logging backend.
 ///
 /// This type is an implementation detail and should not normally be used, unless implementing your own logging backend.
-/// To use the swift-log API, please refer to the documentation of `Logger`.
+/// To use the SwiftLog API, please refer to the documentation of `Logger`.
 ///
 /// # Implementation requirements
 ///

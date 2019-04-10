@@ -53,18 +53,18 @@ if ! command -v jazzy > /dev/null; then
 fi
 module_switcher="docs/$version/README.md"
 jazzy_args=(--clean
-            --author 'swift-log team'
+            --author 'SwiftLog team'
             --readme "$module_switcher"
             --author_url https://github.com/apple/swift-log
             --github_url https://github.com/apple/swift-log
             --theme fullwidth
             --xcodebuild-arguments -scheme,swift-log-Package)
 cat > "$module_switcher" <<"EOF"
-# swift-log Docs
+# SwiftLog Docs
 
-swift-log is a Swift 5 logging API package.
+SwiftLog is a Swift logging API package.
 
-To get started with swift-log, [`import Logging`](../Logging/index.html). The
+To get started with SwiftLog, [`import Logging`](../Logging/index.html). The
 most important type is [`Logger`](https://apple.github.io/swift-log/docs/current/Logging/Structs/Logger.html)
 which you can use to emit log messages.
 
