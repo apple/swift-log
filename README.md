@@ -1,16 +1,10 @@
 # swift-log
 
-A Logging API package for Swift 5.
+A Logging API package for Swift. Version `1.0.0` requires Swift 5.0 but in due course we will also tag a mostly compatible version for Swift 4 (which will be tagged `0.x`) to ease your transition towards Swift 5.
 
 First things first: This is the beginning of a community-driven open-source project actively seeking contributions, be it code, documentation, or ideas. Apart from contributing to `swift-log` itself, there's another huge gap at the moment: `swift-log` is an _API package_ which tries to establish a common API the ecosystem can use. To make logging really work for real-world workloads, we need `swift-log`-compatible _logging backends_ which then either persist the log messages in files, render them in nicer colors on the terminal, or send them over to Splunk or ELK.
 
-What `swift-log` provides today can be found in the [API docs][api-docs]. At this moment, we have not tagged a version for `swift-log`, but we will do so soon after Swift 5 gets released.
-
----
-
-**NOTE**: You will need [Xcode 10.2](https://itunes.apple.com/us/app/xcode/id497799835) or [Swift 5.0](https://swift.org/download/#swift-50) to try out `swift-log`.
-
----
+What `swift-log` provides today can be found in the [API docs][api-docs].
 
 ## Great, what's the tl;dr
 
@@ -18,11 +12,10 @@ If you have a server-side Swift application, or maybe a cross-platform (for exam
 
 #### Adding the dependency
 
-To depend on the logging API package, you need to declare your dependency in your `Package.swift`:
+`swift-log` is designed for Swift 5, the `1.0.0` release requires Swift 5 (however we will soon tag a `0.x` version that will work with Swift 4 for the transition period). To depend on the logging API package, you need to declare your dependency in your `Package.swift`:
 
 ```swift
-// it's early days here so we haven't tagged a version yet, but will soon
-.package(url: "https://github.com/apple/swift-log.git", .branch("master")),
+.package(url: "https://github.com/apple/swift-log.git", from: "1.0.0"),
 ```
 
 and to your application/library target, add `"Logging"` to your `dependencies`, e.g. like this:
