@@ -27,8 +27,8 @@ class MDCTest: XCTestCase {
         for r in 5 ... 10 {
             group.enter()
             DispatchQueue(label: "mdc-test-queue-\(r)").async {
-                let add = Int.random(in: 10 ... 1000)
-                let remove = Int.random(in: 0 ... add - 1)
+                let add = 999
+                let remove = 123
                 for i in 0 ... add {
                     MDC.global["key-\(i)"] = .string("value-\(i)")
                 }

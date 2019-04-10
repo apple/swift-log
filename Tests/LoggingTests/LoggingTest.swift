@@ -214,7 +214,7 @@ class LoggingTest: XCTestCase {
         var logger = Logger(label: "\(#function)")
         logger.logLevel = .debug
 
-        let someInt = Int.random(in: 23..<42)
+        let someInt = 42
         logger.debug("My favourite number is \(someInt) and not \(someInt - 1)")
         testLogging.history.assertExist(level: .debug,
                                         message: "My favourite number is \(someInt) and not \(someInt - 1)" as String)
