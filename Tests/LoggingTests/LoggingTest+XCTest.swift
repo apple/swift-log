@@ -41,6 +41,7 @@ extension LoggingTest {
                 ("testMultiplexerIsValue", testMultiplexerIsValue),
                 ("testLoggerWithGlobalOverride", testLoggerWithGlobalOverride),
                 ("testLogLevelOrdering", testLogLevelOrdering),
+                ("testLogLevelCases", testLogLevelCases)
            ]
    }
 }
