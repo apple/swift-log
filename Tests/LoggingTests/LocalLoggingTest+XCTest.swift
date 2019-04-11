@@ -23,12 +23,10 @@ import XCTest
 ///
 
 extension LocalLoggerTest {
-
-   static var allTests : [(String, (LocalLoggerTest) -> () throws -> Void)] {
-      return [
-                ("test1", test1),
-                ("test2", test2),
-           ]
-   }
+    static var allTests: [(String, (LocalLoggerTest) -> () throws -> Void)] {
+        return [
+            ("test1", test1),
+            ("test2", test2),
+        ]
+    }
 }
-

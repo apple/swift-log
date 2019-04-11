@@ -252,11 +252,11 @@ public class MDC {
     }
 
     private var threadId: Int {
-      #if os(macOS) || os(iOS) || os(tvOS) || os(watchOS)
-          return Int(pthread_mach_thread_np(pthread_self()))
-      #else
-          return Int(pthread_self())
-      #endif
+        #if os(macOS) || os(iOS) || os(tvOS) || os(watchOS)
+            return Int(pthread_mach_thread_np(pthread_self()))
+        #else
+            return Int(pthread_self())
+        #endif
     }
 }
 

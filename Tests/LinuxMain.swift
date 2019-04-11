@@ -23,12 +23,12 @@ import XCTest
 ///
 
 #if os(Linux) || os(FreeBSD)
-   @testable import LoggingTests
+    @testable import LoggingTests
 
-   XCTMain([
-         testCase(GlobalLoggerTest.allTests),
-         testCase(LocalLoggerTest.allTests),
-         testCase(LoggingTest.allTests),
-         testCase(MDCTest.allTests),
+    XCTMain([
+        testCase(GlobalLoggerTest.allTests),
+        testCase(LocalLoggerTest.allTests),
+        testCase(LoggingTest.allTests),
+        testCase(MDCTest.allTests),
     ])
 #endif
