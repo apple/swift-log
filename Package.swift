@@ -1,4 +1,4 @@
-// swift-tools-version:4.1
+// swift-tools-version:4.0
 //===----------------------------------------------------------------------===//
 //
 // This source file is part of the Swift Logging API open source project
