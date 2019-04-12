@@ -304,27 +304,27 @@ extension Logger {
     ///
     /// Raw values of log levels correspond to their severity, and are ordered by lowest numeric value (0) being
     /// the most severe. The raw values match the syslog values.
-    public enum Level: String, CaseIterable {
+    public enum Level: CaseIterable {
         /// Appropriate for messages that contain information only when debugging a program.
-        case trace = "TRACE"
+        case trace
 
         /// Appropriate for messages that contain information normally of use only when
         /// debugging a program.
-        case debug = "DEBUG"
+        case debug
 
         /// Appropriate for informational messages.
-        case info = "INFO"
+        case info
 
         /// Appropriate for conditions that are not error conditions, but that may require
         /// special handling.
-        case notice = "NOTICE"
+        case notice
 
         /// Appropriate for messages that are not error conditions, but more severe than
         /// `.notice`.
-        case warning = "WARNING"
+        case warning
 
         /// Appropriate for error conditions.
-        case error = "ERROR"
+        case error
 
         /// Appropriate for criticial error conditions that usually require immediate
         /// attention.
@@ -332,7 +332,7 @@ extension Logger {
         /// When a `critical` message is logged, the logging backend (`LogHandler`) is free to perform
         /// more heavy-weight operations to capture system state (such as capturing stack traces) to facilitate
         /// debugging.
-        case critical = "CRITICAL"
+        case critical
     }
 
     /// Construct a `Logger` given a `label` identifying the creator of the `Logger`.
