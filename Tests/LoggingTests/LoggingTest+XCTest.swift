@@ -40,8 +40,8 @@ extension LoggingTest {
                 ("testLoggingAString", testLoggingAString),
                 ("testMultiplexerIsValue", testMultiplexerIsValue),
                 ("testLoggerWithGlobalOverride", testLoggerWithGlobalOverride),
+                ("testLogLevelCases", testLogLevelCases),
                 ("testLogLevelOrdering", testLogLevelOrdering),
-                ("testLogLevelCases", testLogLevelCases)
            ]
    }
 }
