@@ -388,6 +388,11 @@ class LoggingTest: XCTestCase {
         logRecorder.assertExist(level: .notice, message: "logger1, after")
         logRecorder.assertExist(level: .notice, message: "logger2, after")
     }
+    
+    func testLogLevelCases() {
+        let levels = Logger.Level.allCases
+        XCTAssertEqual(7, levels.count)
+    }
 
     func testLogLevelOrdering() {
         XCTAssertLessThan(Logger.Level.trace, Logger.Level.debug)

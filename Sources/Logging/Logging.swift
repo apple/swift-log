@@ -304,7 +304,7 @@ extension Logger {
     ///
     /// Raw values of log levels correspond to their severity, and are ordered by lowest numeric value (0) being
     /// the most severe. The raw values match the syslog values.
-    public enum Level {
+    public enum Level: CaseIterable {
         /// Appropriate for messages that contain information only when debugging a program.
         case trace
 
