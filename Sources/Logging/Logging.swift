@@ -255,8 +255,10 @@ extension Logger {
 /// configured. `LoggingSystem` is set up just once in a given program to set up the desired logging backend
 /// implementation.
 public enum LoggingSystem {
+    public typealias LogHandlerFactory = (String) -> LogHandler
+
     fileprivate static let lock = ReadWriteLock()
-    fileprivate static var factory: (String) -> LogHandler = StdoutLogHandler.init
+    fileprivate static var _factory: LogHandlerFactory = StdoutLogHandler.init
     fileprivate static var initialized = false
 
     /// `bootstrap` is a one-time configuration function which globally selects the desired logging backend
@@ -268,16 +270,21 @@ public enum LoggingSystem {
     public static func bootstrap(_ factory: @escaping (String) -> LogHandler) {
         self.lock.withWriterLock {
             precondition(!self.initialized, "logging system can only be initialized once per process.")
-            self.factory = factory
+            self._factory = factory
             self.initialized = true
         }
     }
 
-    // for our testing we want to allow multiple bootstraping
+    // For our testing we want to allow multiple bootstraping
     internal static func bootstrapInternal(_ factory: @escaping (String) -> LogHandler) {
         self.lock.withWriterLock {
-            self.factory = factory
+            self._factory = factory
         }
+    }
+
+    /// Returns a reference to the configured factory.
+    public static var factory: LogHandlerFactory {
+        return self.lock.withReaderLock { self._factory }
     }
 }
 
