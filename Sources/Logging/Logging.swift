@@ -326,7 +326,7 @@ extension Logger {
         /// Appropriate for error conditions.
         case error
 
-        /// Appropriate for criticial error conditions that usually require immediate
+        /// Appropriate for critical error conditions that usually require immediate
         /// attention.
         ///
         /// When a `critical` message is logged, the logging backend (`LogHandler`) is free to perform
@@ -572,7 +572,7 @@ internal struct StdoutLogHandler: LogHandler {
 }
 
 // Extension has to be done on explicit type rather than Logger.Metadata.Value as workaround for
-// https://bugs.swift.org/browse/SR-9687
+// https://bugs.swift.org/browse/SR-9686
 extension Logger.MetadataValue: ExpressibleByStringLiteral {
     public typealias StringLiteralType = String
 
@@ -581,6 +581,8 @@ extension Logger.MetadataValue: ExpressibleByStringLiteral {
     }
 }
 
+// Extension has to be done on explicit type rather than Logger.Metadata.Value as workaround for
+// https://bugs.swift.org/browse/SR-9686
 extension Logger.MetadataValue: CustomStringConvertible {
     public var description: String {
         switch self {
@@ -597,12 +599,12 @@ extension Logger.MetadataValue: CustomStringConvertible {
 }
 
 // Extension has to be done on explicit type rather than Logger.Metadata.Value as workaround for
-// https://bugs.swift.org/browse/SR-9687
+// https://bugs.swift.org/browse/SR-9686
 extension Logger.MetadataValue: ExpressibleByStringInterpolation {
 }
 
 // Extension has to be done on explicit type rather than Logger.Metadata.Value as workaround for
-// https://bugs.swift.org/browse/SR-9687
+// https://bugs.swift.org/browse/SR-9686
 extension Logger.MetadataValue: ExpressibleByDictionaryLiteral {
     public typealias Key = String
     public typealias Value = Logger.Metadata.Value
@@ -613,7 +615,7 @@ extension Logger.MetadataValue: ExpressibleByDictionaryLiteral {
 }
 
 // Extension has to be done on explicit type rather than Logger.Metadata.Value as workaround for
-// https://bugs.swift.org/browse/SR-9687
+// https://bugs.swift.org/browse/SR-9686
 extension Logger.MetadataValue: ExpressibleByArrayLiteral {
     public typealias ArrayLiteralElement = Logger.Metadata.Value
 
