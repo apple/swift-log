@@ -23,11 +23,9 @@ import XCTest
 ///
 
 extension MDCTest {
-
-   static var allTests : [(String, (MDCTest) -> () throws -> Void)] {
-      return [
-                ("test1", test1),
-           ]
-   }
+    static var allTests: [(String, (MDCTest) -> () throws -> Void)] {
+        return [
+            ("test1", test1),
+        ]
+    }
 }
-

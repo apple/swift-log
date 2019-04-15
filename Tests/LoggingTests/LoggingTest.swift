@@ -108,7 +108,7 @@ class LoggingTest: XCTestCase {
     // Not thread-safe, thus should not be shared across threads.
     internal class LazyMetadataBox: CustomStringConvertible {
         private var makeValue: (() -> String)?
-        private var _value: String? = nil
+        private var _value: String?
 
         public init(_ makeValue: @escaping () -> String) {
             self.makeValue = makeValue
@@ -261,7 +261,7 @@ class LoggingTest: XCTestCase {
         var logger = Logger(label: "\(#function)")
         logger.logLevel = .debug
 
-        let someInt = Int.random(in: 23..<42)
+        let someInt = Int.random(in: 23 ..< 42)
         logger.debug("My favourite number is \(someInt) and not \(someInt - 1)")
         testLogging.history.assertExist(level: .debug,
                                         message: "My favourite number is \(someInt) and not \(someInt - 1)" as String)
@@ -310,7 +310,7 @@ class LoggingTest: XCTestCase {
         struct LogHandlerWithGlobalLogLevelOverride: LogHandler {
             // the static properties hold the globally overridden log level (if overridden)
             private static let overrideLock = Lock()
-            private static var overrideLogLevel: Logger.Level? = nil
+            private static var overrideLogLevel: Logger.Level?
 
             private let recorder: Recorder
             // this holds the log level if not overridden
@@ -327,7 +327,7 @@ class LoggingTest: XCTestCase {
                 // when we get asked for the log level, we check if it was globally overridden or not
                 get {
                     return LogHandlerWithGlobalLogLevelOverride.overrideLock.withLock {
-                        return LogHandlerWithGlobalLogLevelOverride.overrideLogLevel
+                        LogHandlerWithGlobalLogLevelOverride.overrideLogLevel
                     } ?? self._logLevel
                 }
                 // we set the log level whenever we're asked (note: this might not have an effect if globally

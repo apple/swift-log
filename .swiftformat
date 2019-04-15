@@ -1,0 +1,11 @@
+# file options
+
+# format options
+
+--self insert 
+--patternlet inline 
+--stripunusedargs unnamed-only 
+--comments ignore
+
+# rules
+

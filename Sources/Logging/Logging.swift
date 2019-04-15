@@ -266,7 +266,7 @@ public enum LoggingSystem {
     /// - parameters:
     ///     - factory: A closure that given a `Logger` identifier, produces an instance of the `LogHandler`.
     public static func bootstrap(_ factory: @escaping (String) -> LogHandler) {
-        lock.withWriterLock {
+        self.lock.withWriterLock {
             precondition(!self.initialized, "logging system can only be initialized once per process.")
             self.factory = factory
             self.initialized = true
@@ -423,9 +423,9 @@ extension Logger {
     ///     logger.info("Hello \(world)")
     ///
     public struct Message: ExpressibleByStringLiteral,
-                           Equatable,
-                           CustomStringConvertible,
-                           ExpressibleByStringInterpolation {
+        Equatable,
+        CustomStringConvertible,
+        ExpressibleByStringInterpolation {
         public typealias StringLiteralType = String
 
         private var value: String
@@ -599,9 +599,8 @@ extension Logger.MetadataValue: CustomStringConvertible {
 }
 
 // Extension has to be done on explicit type rather than Logger.Metadata.Value as workaround for
-// https://bugs.swift.org/browse/SR-9686
-extension Logger.MetadataValue: ExpressibleByStringInterpolation {
-}
+// https://bugs.swift.org/browse/SR-9687
+extension Logger.MetadataValue: ExpressibleByStringInterpolation {}
 
 // Extension has to be done on explicit type rather than Logger.Metadata.Value as workaround for
 // https://bugs.swift.org/browse/SR-9686
