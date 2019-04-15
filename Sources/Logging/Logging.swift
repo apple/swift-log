@@ -326,7 +326,7 @@ extension Logger {
         /// Appropriate for error conditions.
         case error
 
-        /// Appropriate for criticial error conditions that usually require immediate
+        /// Appropriate for critical error conditions that usually require immediate
         /// attention.
         ///
         /// When a `critical` message is logged, the logging backend (`LogHandler`) is free to perform
