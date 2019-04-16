@@ -18,7 +18,7 @@ class LoggingTest: XCTestCase {
     func testAutoclosure() throws {
         // bootstrap with our test logging impl
         let logging = TestLogging()
-        LoggingSystem.bootstrapInternal(logging.make)
+        LoggingSystem.bootstrapInternal(logging)
 
         var logger = Logger(label: "test")
         logger.logLevel = .info
@@ -55,7 +55,7 @@ class LoggingTest: XCTestCase {
         // bootstrap with our test logging impl
         let logging1 = TestLogging()
         let logging2 = TestLogging()
-        LoggingSystem.bootstrapInternal({ MultiplexLogHandler([logging1.make(label: $0), logging2.make(label: $0)]) })
+        LoggingSystem.bootstrapInternal(MultiplexLogHandlerFactory([logging1, logging2]))
 
         var logger = Logger(label: "test")
         logger.logLevel = .warning
@@ -74,7 +74,7 @@ class LoggingTest: XCTestCase {
 
     func testDictionaryMetadata() {
         let testLogging = TestLogging()
-        LoggingSystem.bootstrapInternal(testLogging.make)
+        LoggingSystem.bootstrapInternal(testLogging)
 
         var logger = Logger(label: "\(#function)")
         logger[metadataKey: "foo"] = ["bar": "buz"]
@@ -90,7 +90,7 @@ class LoggingTest: XCTestCase {
 
     func testListMetadata() {
         let testLogging = TestLogging()
-        LoggingSystem.bootstrapInternal(testLogging.make)
+        LoggingSystem.bootstrapInternal(testLogging)
 
         var logger = Logger(label: "\(#function)")
         logger[metadataKey: "foo"] = ["bar", "buz"]
@@ -133,7 +133,7 @@ class LoggingTest: XCTestCase {
 
     func testStringConvertibleMetadata() {
         let testLogging = TestLogging()
-        LoggingSystem.bootstrapInternal(testLogging.make)
+        LoggingSystem.bootstrapInternal(testLogging)
         var logger = Logger(label: "\(#function)")
 
         logger[metadataKey: "foo"] = .stringConvertible("raw-string")
@@ -153,7 +153,7 @@ class LoggingTest: XCTestCase {
 
     func testAutoClosuresAreNotForcedUnlessNeeded() {
         let testLogging = TestLogging()
-        LoggingSystem.bootstrapInternal(testLogging.make)
+        LoggingSystem.bootstrapInternal(testLogging)
 
         var logger = Logger(label: "\(#function)")
         logger.logLevel = .error
@@ -167,7 +167,7 @@ class LoggingTest: XCTestCase {
 
     func testLocalMetadata() {
         let testLogging = TestLogging()
-        LoggingSystem.bootstrapInternal(testLogging.make)
+        LoggingSystem.bootstrapInternal(testLogging)
 
         var logger = Logger(label: "\(#function)")
         logger.info("hello world!", metadata: ["foo": "bar"])
@@ -202,13 +202,13 @@ class LoggingTest: XCTestCase {
 
         let logger1 = Logger(label: "foo")
         XCTAssertFalse(logger1.handler is CustomHandler, "expected non-custom log handler")
-        let logger2 = Logger(label: "foo", factory: { _ in CustomHandler() })
+        let logger2 = Logger(label: "foo", factory: ClosureLogHandlerFactory { _ in CustomHandler() }) // can't express this...
         XCTAssertTrue(logger2.handler is CustomHandler, "expected custom log handler")
     }
 
     func testAllLogLevelsExceptCriticalCanBeBlocked() {
         let testLogging = TestLogging()
-        LoggingSystem.bootstrapInternal(testLogging.make)
+        LoggingSystem.bootstrapInternal(testLogging)
 
         var logger = Logger(label: "\(#function)")
         logger.logLevel = .critical
@@ -232,7 +232,7 @@ class LoggingTest: XCTestCase {
 
     func testAllLogLevelsWork() {
         let testLogging = TestLogging()
-        LoggingSystem.bootstrapInternal(testLogging.make)
+        LoggingSystem.bootstrapInternal(testLogging)
 
         var logger = Logger(label: "\(#function)")
         logger.logLevel = .trace
@@ -256,7 +256,7 @@ class LoggingTest: XCTestCase {
 
     func testLogMessageWithStringInterpolation() {
         let testLogging = TestLogging()
-        LoggingSystem.bootstrapInternal(testLogging.make)
+        LoggingSystem.bootstrapInternal(testLogging)
 
         var logger = Logger(label: "\(#function)")
         logger.logLevel = .debug
@@ -269,7 +269,7 @@ class LoggingTest: XCTestCase {
 
     func testLoggingAString() {
         let testLogging = TestLogging()
-        LoggingSystem.bootstrapInternal(testLogging.make)
+        LoggingSystem.bootstrapInternal(testLogging)
 
         var logger = Logger(label: "\(#function)")
         logger.logLevel = .debug
@@ -284,11 +284,11 @@ class LoggingTest: XCTestCase {
     }
 
     func testMultiplexerIsValue() {
-        let multi = MultiplexLogHandler([StdoutLogHandler(label: "x"), StdoutLogHandler(label: "y")])
-        LoggingSystem.bootstrapInternal { _ in
+        let multi = MultiplexLogHandlerFactory([StdoutLogHandlerFactory(), StdoutLogHandlerFactory()])
+        LoggingSystem.bootstrapInternal(ClosureLogHandlerFactory { label in
             print("new multi")
-            return multi
-        }
+            return multi.make(label: label)
+        })
         var logger1: Logger = {
             var logger = Logger(label: "foo")
             logger.logLevel = .debug
@@ -360,9 +360,9 @@ class LoggingTest: XCTestCase {
         }
 
         let logRecorder = Recorder()
-        LoggingSystem.bootstrapInternal { _ in
+        LoggingSystem.bootstrapInternal(ClosureLogHandlerFactory { label in
             return LogHandlerWithGlobalLogLevelOverride(recorder: logRecorder)
-        }
+        })
 
         var logger1 = Logger(label: "logger-\(#file):\(#line)")
         var logger2 = logger1

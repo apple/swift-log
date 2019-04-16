@@ -15,7 +15,8 @@ import Foundation
 @testable import Logging
 import XCTest
 
-internal struct TestLogging {
+/// Internal `TestLogHandler` factory, which can be used to inspect the recorded log statements.
+internal struct TestLogging: LogHandlerFactory {
     private let _config = Config() // shared among loggers
     private let recorder = Recorder() // shared among loggers
 

@@ -45,6 +45,30 @@ logger.info("Hello World!")
 
 For further information, please check the [API documentation][api-docs].
 
+### Selecting a logging backend implementation (applications only)
+
+Note: If you are building a library, you don't need to concern yourself with this section. 
+It is the end users of your library (the applications) who will decide which logging backend to use. 
+Libraries should never change the logging implementation as that is something owned by the application.
+
+SwiftLog only provides the logging system API. 
+As an application owner, you may want to select a logging backend different than the built-in minimal standard out 
+implementation in order to make the logging information more useful.
+
+Selecting a backend is done by adding a dependency on the desired backend client implementation and invoking the `LoggingSystem.bootstrap` function at the beginning of the program: 
+
+```swift 
+LoggingSystem.bootstrap(SelectedLoggingImplementation())
+```
+
+This instructs the `LoggingSystem` to install `SelectedLoggingImplementation` (actual name will differ) as the logging backend to use.
+
+As the API has just launched, not many implementations exist yet. If you are interested in implementing one see the "Implementing a logging backend" section below explaining how to do so.
+ 
+List of existing SwiftLog API compatible libraries:
+
+- Your library? [Get in touch!](https://forums.swift.org/c/server)
+
 ## What is an API package?
 
 Glad you asked. We believe that for the Swift on Server ecosystem, it's crucial to have a logging API that can be adopted by anybody so a multitude of libraries from different parties can all log to a shared destination. More concretely this means that we believe all the log messages from all libraries end up in the same file, database, Elastic Stack/Splunk instance, or whatever you may choose.

@@ -251,14 +251,26 @@ extension Logger {
     }
 }
 
-/// The `LoggingSystem` is a global facility where the default logging backend implementation (`LogHandler`) can be
-/// configured. `LoggingSystem` is set up just once in a given program to set up the desired logging backend
-/// implementation.
-public enum LoggingSystem {
-    public typealias LogHandlerFactory = (String) -> LogHandler
+/// The `LogHandlerFactory` is the bridge between the `LoggingSystem` and the metrics backend implementation.
+/// `LogHandlerFactory` role is to initialize concrete `LogHandler` instances,
+/// it may also contain any additional state it wishes to keep for operating those handlers if it needs to.
+///
+/// This type is an implementation detail and should not be used directly, unless implementing your own metrics backend.
+/// To use the Logging API, please refer to the documentation of `LoggingSystem`.
+public protocol LogHandlerFactory {
+    /// Create an instance of the underlying factories log handler implementation.
+    ///
+    /// - parameters:
+    ///    - label: The label to be used by the log handler
+    func make(label: String) -> LogHandler
+}
 
+/// The `LoggingSystem` is a global facility where the default logging backend implementation (`LogHandler`) can be
+/// configured. `LoggingSystem` is set up just once by calling `.bootstrap(LogHandlerFactory)` in a given program to set
+/// up the desired logging backend implementation.
+public enum LoggingSystem {
     fileprivate static let lock = ReadWriteLock()
-    fileprivate static var _factory: LogHandlerFactory = StdoutLogHandler.init
+    fileprivate static var _factory: LogHandlerFactory = StdoutLogHandlerFactory()
     fileprivate static var initialized = false
 
     /// `bootstrap` is a one-time configuration function which globally selects the desired logging backend
@@ -266,8 +278,8 @@ public enum LoggingSystem {
     /// lead to undefined behaviour, most likely a crash.
     ///
     /// - parameters:
-    ///     - factory: A closure that given a `Logger` identifier, produces an instance of the `LogHandler`.
-    public static func bootstrap(_ factory: @escaping (String) -> LogHandler) {
+    ///     - factory: Factory object that handles the creation of `LogHandler`s given a `Logger` identifier `String`.
+    public static func bootstrap(_ factory: LogHandlerFactory) {
         self.lock.withWriterLock {
             precondition(!self.initialized, "logging system can only be initialized once per process.")
             self._factory = factory
@@ -276,7 +288,7 @@ public enum LoggingSystem {
     }
 
     // For our testing we want to allow multiple bootstraping
-    internal static func bootstrapInternal(_ factory: @escaping (String) -> LogHandler) {
+    internal static func bootstrapInternal(_ factory: LogHandlerFactory) {
         self.lock.withWriterLock {
             self._factory = factory
         }
@@ -350,7 +362,7 @@ extension Logger {
     /// - parameters:
     ///     - label: An identifier for the creator of a `Logger`.
     public init(label: String) {
-        self = LoggingSystem.lock.withReaderLock { Logger(label: label, LoggingSystem.factory(label)) }
+        self = LoggingSystem.lock.withReaderLock { Logger(label: label, LoggingSystem.factory.make(label: label)) }
     }
 
     /// Construct a `Logger` given a `label` identifying the creator of the `Logger` or a non-standard `LogHandler`.
@@ -364,8 +376,8 @@ extension Logger {
     /// - parameters:
     ///     - label: An identifier for the creator of a `Logger`.
     ///     - factory: A closure creating non-standard `LogHandler`s.
-    public init(label: String, factory: (String) -> LogHandler) {
-        self = Logger(label: label, factory(label))
+    public init(label: String, factory: LogHandlerFactory) {
+        self = Logger(label: label, factory.make(label: label))
     }
 }
 
@@ -447,6 +459,32 @@ extension Logger {
     }
 }
 
+/// A pseudo-`LogHandlerFactory` for creating ad-hoc factories from simple closures.
+/// Logging library implementations are recommended to implement their own `LogHandlerFactory` type instead,
+/// and instruct users to bootstrap the `LoggingSystem` using that type on application initialization.
+internal struct ClosureLogHandlerFactory: LogHandlerFactory {
+    private let maker: (String) -> LogHandler
+    public init(_ maker: @escaping (String) -> LogHandler) {
+        self.maker = maker
+    }
+    public func make(label: String) -> LogHandler {
+        return self.maker(label)
+    }
+}
+
+public struct MultiplexLogHandlerFactory: LogHandlerFactory {
+    let factories: [LogHandlerFactory]
+
+    public init(_ handlers: [LogHandlerFactory]) {
+        self.factories = handlers
+    }
+
+    public func make(label: String) -> LogHandler {
+        let handlers = self.factories.map { $0.make(label: label) }
+        return MultiplexLogHandler(handlers)
+    }
+}
+
 /// A pseudo-`LogHandler` that can be used to send messages to multiple other `LogHandler`s.
 ///
 /// The first `LogHandler` passed to the initialisation function of `MultiplexLogHandler` control the `logLevel` as
@@ -502,6 +540,13 @@ public struct MultiplexLogHandler: LogHandler {
         for index in self.handlers.indices {
             mutator(&self.handlers[index])
         }
+    }
+}
+
+/// Bootstrap the `LoggingSystem` using this factory to log using the `StdoutLogHandler`.
+internal struct StdoutLogHandlerFactory: LogHandlerFactory {
+    public func make(label: String) -> LogHandler {
+        return StdoutLogHandler(label: label)
     }
 }
 
