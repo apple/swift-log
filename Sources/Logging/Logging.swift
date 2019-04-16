@@ -256,7 +256,7 @@ extension Logger {
 /// implementation.
 public enum LoggingSystem {
     fileprivate static let lock = ReadWriteLock()
-    fileprivate static var factory: (String) -> LogHandler = StdoutLogHandler.init
+    fileprivate static var factory: (String) -> LogHandler = StderrLogHandler.init
     fileprivate static var initialized = false
 
     /// `bootstrap` is a one-time configuration function which globally selects the desired logging backend
@@ -498,8 +498,16 @@ public struct MultiplexLogHandler: LogHandler {
     }
 }
 
+private struct StandardErrorOutputStream: TextOutputStream {
+    func write(_ string: String) {
+        string.withCString { ptr in
+            _ = fputs(ptr, stderr)
+        }
+    }
+}
+
 /// Ships with the logging module, really boring just prints something using the `print` function
-internal struct StdoutLogHandler: LogHandler {
+internal struct StderrLogHandler: LogHandler {
     private let lock = Lock()
 
     public init(label: String) {}
@@ -531,7 +539,9 @@ internal struct StdoutLogHandler: LogHandler {
         let prettyMetadata = metadata?.isEmpty ?? true
             ? self.prettyMetadata
             : self.prettify(self.metadata.merging(metadata!, uniquingKeysWith: { _, new in new }))
-        print("\(self.timestamp()) \(level):\(prettyMetadata.map { " \($0)" } ?? "") \(message)")
+        var stderrOutputStream = StandardErrorOutputStream()
+        print("\(self.timestamp()) \(level):\(prettyMetadata.map { " \($0)" } ?? "") \(message)",
+            to: &stderrOutputStream)
     }
 
     public var metadata: Logger.Metadata {
