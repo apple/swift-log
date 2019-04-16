@@ -47,11 +47,11 @@ extension Logger {
     ///    - message: The message to be logged. `message` can be used with any string interpolation literal.
     ///    - metadata: One-off metadata to attach to this log message
     ///    - file: The file this log message originates from (there's usually no need to pass it explicitly as it
-    ///            defaults to `#file`.
+    ///            defaults to `#file`).
     ///    - function: The function this log message originates from (there's usually no need to pass it explicitly as
-    ///                it defaults to `#function`.
+    ///                it defaults to `#function`).
     ///    - line: The line this log message originates from (there's usually no need to pass it explicitly as it
-    ///            defaults to `#line`.
+    ///            defaults to `#line`).
     @inlinable
     public func log(level: Logger.Level,
                     _ message: @autoclosure () -> Logger.Message,
@@ -107,11 +107,11 @@ extension Logger {
     ///    - message: The message to be logged. `message` can be used with any string interpolation literal.
     ///    - metadata: One-off metadata to attach to this log message
     ///    - file: The file this log message originates from (there's usually no need to pass it explicitly as it
-    ///            defaults to `#file`.
+    ///            defaults to `#file`).
     ///    - function: The function this log message originates from (there's usually no need to pass it explicitly as
-    ///                it defaults to `#function`.
+    ///                it defaults to `#function`).
     ///    - line: The line this log message originates from (there's usually no need to pass it explicitly as it
-    ///            defaults to `#line`.
+    ///            defaults to `#line`).
     @inlinable
     public func trace(_ message: @autoclosure () -> Logger.Message,
                       metadata: @autoclosure () -> Logger.Metadata? = nil,
@@ -129,11 +129,11 @@ extension Logger {
     ///    - message: The message to be logged. `message` can be used with any string interpolation literal.
     ///    - metadata: One-off metadata to attach to this log message
     ///    - file: The file this log message originates from (there's usually no need to pass it explicitly as it
-    ///            defaults to `#file`.
+    ///            defaults to `#file`).
     ///    - function: The function this log message originates from (there's usually no need to pass it explicitly as
-    ///                it defaults to `#function`.
+    ///                it defaults to `#function`).
     ///    - line: The line this log message originates from (there's usually no need to pass it explicitly as it
-    ///            defaults to `#line`.
+    ///            defaults to `#line`).
     @inlinable
     public func debug(_ message: @autoclosure () -> Logger.Message,
                       metadata: @autoclosure () -> Logger.Metadata? = nil,
@@ -151,11 +151,11 @@ extension Logger {
     ///    - message: The message to be logged. `message` can be used with any string interpolation literal.
     ///    - metadata: One-off metadata to attach to this log message
     ///    - file: The file this log message originates from (there's usually no need to pass it explicitly as it
-    ///            defaults to `#file`.
+    ///            defaults to `#file`).
     ///    - function: The function this log message originates from (there's usually no need to pass it explicitly as
-    ///                it defaults to `#function`.
+    ///                it defaults to `#function`).
     ///    - line: The line this log message originates from (there's usually no need to pass it explicitly as it
-    ///            defaults to `#line`.
+    ///            defaults to `#line`).
     @inlinable
     public func info(_ message: @autoclosure () -> Logger.Message,
                      metadata: @autoclosure () -> Logger.Metadata? = nil,
@@ -173,11 +173,11 @@ extension Logger {
     ///    - message: The message to be logged. `message` can be used with any string interpolation literal.
     ///    - metadata: One-off metadata to attach to this log message
     ///    - file: The file this log message originates from (there's usually no need to pass it explicitly as it
-    ///            defaults to `#file`.
+    ///            defaults to `#file`).
     ///    - function: The function this log message originates from (there's usually no need to pass it explicitly as
-    ///                it defaults to `#function`.
+    ///                it defaults to `#function`).
     ///    - line: The line this log message originates from (there's usually no need to pass it explicitly as it
-    ///            defaults to `#line`.
+    ///            defaults to `#line`).
     @inlinable
     public func notice(_ message: @autoclosure () -> Logger.Message,
                        metadata: @autoclosure () -> Logger.Metadata? = nil,
@@ -195,11 +195,11 @@ extension Logger {
     ///    - message: The message to be logged. `message` can be used with any string interpolation literal.
     ///    - metadata: One-off metadata to attach to this log message
     ///    - file: The file this log message originates from (there's usually no need to pass it explicitly as it
-    ///            defaults to `#file`.
+    ///            defaults to `#file`).
     ///    - function: The function this log message originates from (there's usually no need to pass it explicitly as
-    ///                it defaults to `#function`.
+    ///                it defaults to `#function`).
     ///    - line: The line this log message originates from (there's usually no need to pass it explicitly as it
-    ///            defaults to `#line`.
+    ///            defaults to `#line`).
     @inlinable
     public func warning(_ message: @autoclosure () -> Logger.Message,
                         metadata: @autoclosure () -> Logger.Metadata? = nil,
@@ -217,11 +217,11 @@ extension Logger {
     ///    - message: The message to be logged. `message` can be used with any string interpolation literal.
     ///    - metadata: One-off metadata to attach to this log message
     ///    - file: The file this log message originates from (there's usually no need to pass it explicitly as it
-    ///            defaults to `#file`.
+    ///            defaults to `#file`).
     ///    - function: The function this log message originates from (there's usually no need to pass it explicitly as
-    ///                it defaults to `#function`.
+    ///                it defaults to `#function`).
     ///    - line: The line this log message originates from (there's usually no need to pass it explicitly as it
-    ///            defaults to `#line`.
+    ///            defaults to `#line`).
     @inlinable
     public func error(_ message: @autoclosure () -> Logger.Message,
                       metadata: @autoclosure () -> Logger.Metadata? = nil,
@@ -238,11 +238,11 @@ extension Logger {
     ///    - message: The message to be logged. `message` can be used with any string interpolation literal.
     ///    - metadata: One-off metadata to attach to this log message
     ///    - file: The file this log message originates from (there's usually no need to pass it explicitly as it
-    ///            defaults to `#file`.
+    ///            defaults to `#file`).
     ///    - function: The function this log message originates from (there's usually no need to pass it explicitly as
-    ///                it defaults to `#function`.
+    ///                it defaults to `#function`).
     ///    - line: The line this log message originates from (there's usually no need to pass it explicitly as it
-    ///            defaults to `#line`.
+    ///            defaults to `#line`).
     @inlinable
     public func critical(_ message: @autoclosure () -> Logger.Message,
                          metadata: @autoclosure () -> Logger.Metadata? = nil,
