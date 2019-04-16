@@ -49,7 +49,7 @@ extension Logger {
     ///    - file: The file this log message originates from (there's usually no need to pass it explicitly as it
     ///            defaults to `#file`.
     ///    - function: The function this log message originates from (there's usually no need to pass it explicitly as
-    ///                it defaults to `#file`.
+    ///                it defaults to `#function`.
     ///    - line: The line this log message originates from (there's usually no need to pass it explicitly as it
     ///            defaults to `#line`.
     @inlinable
@@ -109,7 +109,7 @@ extension Logger {
     ///    - file: The file this log message originates from (there's usually no need to pass it explicitly as it
     ///            defaults to `#file`.
     ///    - function: The function this log message originates from (there's usually no need to pass it explicitly as
-    ///                it defaults to `#file`.
+    ///                it defaults to `#function`.
     ///    - line: The line this log message originates from (there's usually no need to pass it explicitly as it
     ///            defaults to `#line`.
     @inlinable
@@ -131,7 +131,7 @@ extension Logger {
     ///    - file: The file this log message originates from (there's usually no need to pass it explicitly as it
     ///            defaults to `#file`.
     ///    - function: The function this log message originates from (there's usually no need to pass it explicitly as
-    ///                it defaults to `#file`.
+    ///                it defaults to `#function`.
     ///    - line: The line this log message originates from (there's usually no need to pass it explicitly as it
     ///            defaults to `#line`.
     @inlinable
@@ -153,7 +153,7 @@ extension Logger {
     ///    - file: The file this log message originates from (there's usually no need to pass it explicitly as it
     ///            defaults to `#file`.
     ///    - function: The function this log message originates from (there's usually no need to pass it explicitly as
-    ///                it defaults to `#file`.
+    ///                it defaults to `#function`.
     ///    - line: The line this log message originates from (there's usually no need to pass it explicitly as it
     ///            defaults to `#line`.
     @inlinable
@@ -175,7 +175,7 @@ extension Logger {
     ///    - file: The file this log message originates from (there's usually no need to pass it explicitly as it
     ///            defaults to `#file`.
     ///    - function: The function this log message originates from (there's usually no need to pass it explicitly as
-    ///                it defaults to `#file`.
+    ///                it defaults to `#function`.
     ///    - line: The line this log message originates from (there's usually no need to pass it explicitly as it
     ///            defaults to `#line`.
     @inlinable
@@ -197,7 +197,7 @@ extension Logger {
     ///    - file: The file this log message originates from (there's usually no need to pass it explicitly as it
     ///            defaults to `#file`.
     ///    - function: The function this log message originates from (there's usually no need to pass it explicitly as
-    ///                it defaults to `#file`.
+    ///                it defaults to `#function`.
     ///    - line: The line this log message originates from (there's usually no need to pass it explicitly as it
     ///            defaults to `#line`.
     @inlinable
@@ -219,7 +219,7 @@ extension Logger {
     ///    - file: The file this log message originates from (there's usually no need to pass it explicitly as it
     ///            defaults to `#file`.
     ///    - function: The function this log message originates from (there's usually no need to pass it explicitly as
-    ///                it defaults to `#file`.
+    ///                it defaults to `#function`.
     ///    - line: The line this log message originates from (there's usually no need to pass it explicitly as it
     ///            defaults to `#line`.
     @inlinable
@@ -240,7 +240,7 @@ extension Logger {
     ///    - file: The file this log message originates from (there's usually no need to pass it explicitly as it
     ///            defaults to `#file`.
     ///    - function: The function this log message originates from (there's usually no need to pass it explicitly as
-    ///                it defaults to `#file`.
+    ///                it defaults to `#function`.
     ///    - line: The line this log message originates from (there's usually no need to pass it explicitly as it
     ///            defaults to `#line`.
     @inlinable
