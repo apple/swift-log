@@ -21,7 +21,7 @@ If you have a server-side Swift application, or maybe a cross-platform (for exam
 and to your application/library target, add `"Logging"` to your `dependencies`, e.g. like this:
 
 ```swift
-.target(name: "BestExampleApp", dependencies: ["Logging']),
+.target(name: "BestExampleApp", dependencies: ["Logging"]),
 ```
 
 #### Let's log
