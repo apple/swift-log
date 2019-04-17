@@ -506,7 +506,7 @@ public struct MultiplexLogHandler: LogHandler {
 }
 
 /// Ships with the logging module, really boring just prints something using the `print` function
-internal struct StdoutLogHandler: LogHandler {
+public struct StdoutLogHandler: LogHandler {
     private let lock = Lock()
 
     public init(label: String) {}
