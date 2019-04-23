@@ -57,6 +57,7 @@ jazzy_args=(--clean
             --readme "$module_switcher"
             --author_url https://github.com/apple/swift-log
             --github_url https://github.com/apple/swift-log
+            --github-file-prefix https://github.com/apple/swift-log/tree/$version
             --theme fullwidth
             --xcodebuild-arguments -scheme,swift-log-Package)
 cat > "$module_switcher" <<"EOF"
