@@ -449,7 +449,7 @@ public struct MultiplexLogHandler: LogHandler {
     private var handlers: [LogHandler]
 
     public init(_ handlers: [LogHandler]) {
-        assert(handlers.count > 0)
+        assert(!handlers.isEmpty)
         self.handlers = handlers
     }
 
