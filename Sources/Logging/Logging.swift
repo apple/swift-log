@@ -97,7 +97,7 @@ extension Logger {
 }
 
 extension Logger {
-    /// Log a message passing with the `Logger.trace` log level.
+    /// Log a message passing with the `Logger.Level.trace` log level.
     ///
     /// If `.trace` is at least as severe as the `Logger`'s `logLevel`, it will be logged,
     /// otherwise nothing will happen.
@@ -119,7 +119,7 @@ extension Logger {
         self.log(level: .trace, message(), metadata: metadata(), file: file, function: function, line: line)
     }
 
-    /// Log a message passing with the `Logger.info` log level.
+    /// Log a message passing with the `Logger.Level.debug` log level.
     ///
     /// If `.debug` is at least as severe as the `Logger`'s `logLevel`, it will be logged,
     /// otherwise nothing will happen.
