@@ -530,7 +530,7 @@ public struct StdioLogHandler: LogHandler {
         self.init(label: label, stream: .stdout)
     }
 
-    public init(label: String, stream: Stream = .stdout) {
+    public init(label: String, stream: Stream) {
         self.stream = stream
     }
 
