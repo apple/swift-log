@@ -28,6 +28,8 @@
 public struct Logger {
     @usableFromInline
     var handler: LogHandler
+
+    /// An identifier of the creator of this `Logger`.
     public let label: String
 
     internal init(label: String, _ handler: LogHandler) {
@@ -448,6 +450,11 @@ extension Logger {
 public struct MultiplexLogHandler: LogHandler {
     private var handlers: [LogHandler]
 
+    /// Create a `MultiplexLogHandler`.
+    ///
+    /// - parameters:
+    ///    - handlers: An array of `LogHandler`s, each of which will receive the log messages sent to this `Logger`.
+    ///                The array must not be empty.
     public init(_ handlers: [LogHandler]) {
         assert(handlers.count > 0)
         self.handlers = handlers
