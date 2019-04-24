@@ -258,7 +258,7 @@ extension Logger {
 /// implementation.
 public enum LoggingSystem {
     fileprivate static let lock = ReadWriteLock()
-    fileprivate static var factory: (String) -> LogHandler = StdoutLogHandler.init
+    fileprivate static var factory: (String) -> LogHandler = StdioLogHandler.init
     fileprivate static var initialized = false
 
     /// `bootstrap` is a one-time configuration function which globally selects the desired logging backend
@@ -505,11 +505,34 @@ public struct MultiplexLogHandler: LogHandler {
     }
 }
 
-/// Ships with the logging module, really boring just prints something using the `print` function
-public struct StdoutLogHandler: LogHandler {
-    private let lock = Lock()
+/// A wrapper to facilitate `print`-ing to stderr and stdio
+private struct FileOutputStream: TextOutputStream {
+    var file: UnsafeMutablePointer<FILE>
 
-    public init(label: String) {}
+    func write(_ string: String) {
+        string.withCString { ptr in
+            _ = fputs(ptr, file)
+        }
+    }
+}
+
+/// Ships with the logging module, really boring just prints something using the `print` function
+public struct StdioLogHandler: LogHandler {
+
+    public enum Stream {
+        case stdout, stderr
+    }
+
+    private let lock = Lock()
+    public let stream: Stream
+
+    public init(label: String) {
+        self.init(label: label, stream: .stdout)
+    }
+
+    public init(label: String, stream: Stream = .stdout) {
+        self.stream = stream
+    }
 
     private var _logLevel: Logger.Level = .info
 
@@ -538,7 +561,8 @@ public struct StdoutLogHandler: LogHandler {
         let prettyMetadata = metadata?.isEmpty ?? true
             ? self.prettyMetadata
             : self.prettify(self.metadata.merging(metadata!, uniquingKeysWith: { _, new in new }))
-        print("\(self.timestamp()) \(level):\(prettyMetadata.map { " \($0)" } ?? "") \(message)")
+        var output = FileOutputStream(file: stream == .stdout ? stdout : stderr)
+        print("\(self.timestamp()) \(level):\(prettyMetadata.map { " \($0)" } ?? "") \(message)", to: &output)
     }
 
     public var metadata: Logger.Metadata {
