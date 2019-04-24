@@ -258,7 +258,7 @@ extension Logger {
 /// implementation.
 public enum LoggingSystem {
     fileprivate static let lock = ReadWriteLock()
-    fileprivate static var factory: (String) -> LogHandler = StdioLogHandler.init
+    fileprivate static var factory: (String) -> LogHandler = { StdioLogHandler.init(label: $0) }
     fileprivate static var initialized = false
 
     /// `bootstrap` is a one-time configuration function which globally selects the desired logging backend
@@ -507,7 +507,7 @@ public struct MultiplexLogHandler: LogHandler {
 
 /// A wrapper to facilitate `print`-ing to stderr and stdio
 private struct FileOutputStream: TextOutputStream {
-    var file: UnsafeMutablePointer<FILE>
+    let file: UnsafeMutablePointer<FILE>
 
     func write(_ string: String) {
         string.withCString { ptr in
@@ -525,13 +525,11 @@ public struct StdioLogHandler: LogHandler {
 
     private let lock = Lock()
     public let stream: Stream
+    private let output: FileOutputStream
 
-    public init(label: String) {
-        self.init(label: label, stream: .stdout)
-    }
-
-    public init(label: String, stream: Stream) {
+    public init(label: String, stream: Stream = .stdout) {
         self.stream = stream
+        output = FileOutputStream(file: stream == .stdout ? stdout : stderr)
     }
 
     private var _logLevel: Logger.Level = .info
@@ -561,7 +559,8 @@ public struct StdioLogHandler: LogHandler {
         let prettyMetadata = metadata?.isEmpty ?? true
             ? self.prettyMetadata
             : self.prettify(self.metadata.merging(metadata!, uniquingKeysWith: { _, new in new }))
-        var output = FileOutputStream(file: stream == .stdout ? stdout : stderr)
+
+        var output = self.output
         print("\(self.timestamp()) \(level):\(prettyMetadata.map { " \($0)" } ?? "") \(message)", to: &output)
     }
 
