@@ -525,11 +525,9 @@ public struct StdioLogHandler: LogHandler {
 
     private let lock = Lock()
     public let stream: Stream
-    private let output: FileOutputStream
 
     public init(label: String, stream: Stream = .stdout) {
         self.stream = stream
-        output = FileOutputStream(file: stream == .stdout ? stdout : stderr)
     }
 
     private var _logLevel: Logger.Level = .info
@@ -560,7 +558,7 @@ public struct StdioLogHandler: LogHandler {
             ? self.prettyMetadata
             : self.prettify(self.metadata.merging(metadata!, uniquingKeysWith: { _, new in new }))
 
-        var output = self.output
+        var output = FileOutputStream(file: stream == .stdout ? stdout : stderr)
         print("\(self.timestamp()) \(level):\(prettyMetadata.map { " \($0)" } ?? "") \(message)", to: &output)
     }
 
