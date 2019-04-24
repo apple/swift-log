@@ -38,6 +38,7 @@ extension LoggingTest {
             ("testLogMessageWithStringInterpolation", testLogMessageWithStringInterpolation),
             ("testLoggingAString", testLoggingAString),
             ("testMultiplexerIsValue", testMultiplexerIsValue),
+            ("testFactoryCanBeAccessed", testFactoryCanBeAccessed),
             ("testLoggerWithGlobalOverride", testLoggerWithGlobalOverride),
             ("testLogLevelCases", testLogLevelCases),
             ("testLogLevelOrdering", testLogLevelOrdering),

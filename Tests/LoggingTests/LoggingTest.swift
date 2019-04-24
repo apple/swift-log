@@ -306,6 +306,27 @@ class LoggingTest: XCTestCase {
         logger1.error("hey")
     }
 
+    func testFactoryCanBeAccessed() {
+        var counter = 0
+        let fun: (String) -> LogHandler = { _ in
+            counter += 1
+            var handler = StdoutLogHandler(label: "-\(counter)")
+            handler.logLevel = .error // only to inspect that we got our "customized one" in the assertions below
+            return handler
+        }
+        LoggingSystem.bootstrapInternal(fun)
+
+        let l1 = Logger(label: "x")
+        XCTAssertTrue(l1.handler is StdoutLogHandler)
+        XCTAssertEqual(l1.handler.logLevel, .error)
+
+        let logHandler = LoggingSystem.factory("x")
+        XCTAssertTrue(logHandler is StdoutLogHandler)
+        XCTAssertEqual(logHandler.logLevel, .error)
+
+        XCTAssertEqual(counter, 2)
+    }
+
     func testLoggerWithGlobalOverride() {
         struct LogHandlerWithGlobalLogLevelOverride: LogHandler {
             // the static properties hold the globally overridden log level (if overridden)
