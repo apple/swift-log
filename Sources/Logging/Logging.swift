@@ -28,6 +28,8 @@
 public struct Logger {
     @usableFromInline
     var handler: LogHandler
+
+    /// An identifier of the creator of this `Logger`.
     public let label: String
 
     internal init(label: String, _ handler: LogHandler) {
@@ -97,7 +99,7 @@ extension Logger {
 }
 
 extension Logger {
-    /// Log a message passing with the `Logger.trace` log level.
+    /// Log a message passing with the `Logger.Level.trace` log level.
     ///
     /// If `.trace` is at least as severe as the `Logger`'s `logLevel`, it will be logged,
     /// otherwise nothing will happen.
@@ -119,7 +121,7 @@ extension Logger {
         self.log(level: .trace, message(), metadata: metadata(), file: file, function: function, line: line)
     }
 
-    /// Log a message passing with the `Logger.info` log level.
+    /// Log a message passing with the `Logger.Level.debug` log level.
     ///
     /// If `.debug` is at least as severe as the `Logger`'s `logLevel`, it will be logged,
     /// otherwise nothing will happen.
@@ -448,6 +450,11 @@ extension Logger {
 public struct MultiplexLogHandler: LogHandler {
     private var handlers: [LogHandler]
 
+    /// Create a `MultiplexLogHandler`.
+    ///
+    /// - parameters:
+    ///    - handlers: An array of `LogHandler`s, each of which will receive the log messages sent to this `Logger`.
+    ///                The array must not be empty.
     public init(_ handlers: [LogHandler]) {
         assert(!handlers.isEmpty)
         self.handlers = handlers
