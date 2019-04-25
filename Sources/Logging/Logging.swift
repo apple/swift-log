@@ -511,6 +511,10 @@ private struct FileOutputStream: TextOutputStream {
 
     func write(_ string: String) {
         string.withCString { ptr in
+            flockfile(file)
+            defer {
+                funlockfile(file)
+            }
             _ = fputs(ptr, file)
         }
     }

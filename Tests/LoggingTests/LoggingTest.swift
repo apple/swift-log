@@ -417,4 +417,75 @@ class LoggingTest: XCTestCase {
         XCTAssertLessThan(Logger.Level.warning, Logger.Level.critical)
         XCTAssertLessThan(Logger.Level.error, Logger.Level.critical)
     }
+
+    func testStdioLogHandlerOutputsToStderr() {
+        LoggingSystem.bootstrapInternal { _ in
+            StdioLogHandler(label: "test", stream: .stderr)
+        }
+        let log = Logger(label: "test")
+
+        let testString = "test stdout"
+        let interceptedString = String(data: stderr.intercept { log.critical("\(testString)") },
+                                       encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        let messageSucceeded = interceptedString?.hasSuffix(testString) ?? false
+
+        XCTAssertTrue(messageSucceeded)
+    }
+
+    func testStdioLogHandlerDefaultsToStdout() {
+        LoggingSystem.bootstrapInternal { _ in
+            StdioLogHandler(label: "test")
+        }
+        let log = Logger(label: "test")
+
+        let testString = "test stdout"
+        let interceptedString = String(data: stdout.intercept { log.critical("\(testString)") },
+                                       encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        let messageSucceeded = interceptedString?.hasSuffix(testString) ?? false
+
+        XCTAssertTrue(messageSucceeded)
+    }
+}
+
+extension UnsafeMutablePointer where Pointee == FILE {
+
+    /// Intercepts data written to a file descriptor during the `intercepted` closure
+    func intercept(_ intercepted: () -> Void) -> Data {
+        var fpos: fpos_t = -1
+        fgetpos(self, &fpos)
+
+        let temporaryFileDescriptor = dup(fileno(self))
+
+        // The pipe is for convenience, could be done purely with fd's and FILE's
+        let pipe = Pipe()
+        dup2(pipe.fileHandleForWriting.fileDescriptor, fileno(self))
+
+        var beforePostion: fpos_t = -1
+        fgetpos(self, &beforePostion)
+
+        var data: Data
+        do {
+            defer { funlockfile(self) }
+
+            flockfile(self)
+
+            intercepted()
+            // if there is no data, `availableData` unhelpfully blocks
+            // so we ensure at least one byte is available and then remove it
+            _ = fputc(Int32(UInt8(ascii: " ")), self)
+            data = pipe.fileHandleForReading.availableData
+        }
+
+        data.removeLast()
+
+        // Put everything back the way it was
+        fflush(self)
+        dup2(temporaryFileDescriptor, fileno(self))
+        clearerr(self)
+        fsetpos(self, &fpos)
+
+        return data
+    }
 }

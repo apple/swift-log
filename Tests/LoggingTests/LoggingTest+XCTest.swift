@@ -41,6 +41,8 @@ extension LoggingTest {
             ("testLoggerWithGlobalOverride", testLoggerWithGlobalOverride),
             ("testLogLevelCases", testLogLevelCases),
             ("testLogLevelOrdering", testLogLevelOrdering),
+            ("testStdioLogHandlerOutputsToStderr", testStdioLogHandlerOutputsToStderr),
+            ("testStdioLogHandlerDefaultsToStdout", testStdioLogHandlerDefaultsToStdout),
         ]
     }
 }
