@@ -125,6 +125,8 @@ extension Logger {
         self.log(level: .trace, message(), metadata: metadata(), file: file, function: function, line: line)
     }
 
+    #if swift(>=4.1.50)
+    #if !compiler(>=5.0)
     public func trace(_ message: @autoclosure () -> String,
                       metadata: @autoclosure () -> [String: String]? = nil,
                       file: String = #file, function: String = #function, line: UInt = #line) {
@@ -132,6 +134,16 @@ extension Logger {
                    metadata: metadata().map { $0.mapValues { Logger.MetadataValue.string($0) } },
                    file: file, function: function, line: line)
     }
+    #endif
+    #else
+    public func trace(_ message: @autoclosure () -> String,
+                      metadata: @autoclosure () -> [String: String]? = nil,
+                      file: String = #file, function: String = #function, line: UInt = #line) {
+        self.trace(Logger.Message(stringLiteral: message()),
+                   metadata: metadata().map { $0.mapValues { Logger.MetadataValue.string($0) } },
+                   file: file, function: function, line: line)
+    }
+    #endif
 
     /// Log a message passing with the `Logger.info` log level.
     ///
@@ -154,6 +166,8 @@ extension Logger {
         self.log(level: .debug, message(), metadata: metadata(), file: file, function: function, line: line)
     }
 
+    #if swift(>=4.1.50)
+    #if !compiler(>=5.0)
     public func debug(_ message: @autoclosure () -> String,
                       metadata: @autoclosure () -> [String: String]? = nil,
                       file: String = #file, function: String = #function, line: UInt = #line) {
@@ -161,6 +175,16 @@ extension Logger {
                    metadata: metadata().map { $0.mapValues { Logger.MetadataValue.string($0) } },
                    file: file, function: function, line: line)
     }
+    #endif
+    #else
+    public func debug(_ message: @autoclosure () -> String,
+                      metadata: @autoclosure () -> [String: String]? = nil,
+                      file: String = #file, function: String = #function, line: UInt = #line) {
+        self.debug(Logger.Message(stringLiteral: message()),
+                   metadata: metadata().map { $0.mapValues { Logger.MetadataValue.string($0) } },
+                   file: file, function: function, line: line)
+    }
+    #endif
 
     /// Log a message passing with the `Logger.Level.info` log level.
     ///
@@ -183,6 +207,8 @@ extension Logger {
         self.log(level: .info, message(), metadata: metadata(), file: file, function: function, line: line)
     }
 
+    #if swift(>=4.1.50)
+    #if !compiler(>=5.0)
     public func info(_ message: @autoclosure () -> String,
                      metadata: @autoclosure () -> [String: String]? = nil,
                      file: String = #file, function: String = #function, line: UInt = #line) {
@@ -190,6 +216,16 @@ extension Logger {
                   metadata: metadata().map { $0.mapValues { Logger.MetadataValue.string($0) } },
                   file: file, function: function, line: line)
     }
+    #endif
+    #else
+    public func info(_ message: @autoclosure () -> String,
+                     metadata: @autoclosure () -> [String: String]? = nil,
+                     file: String = #file, function: String = #function, line: UInt = #line) {
+        self.info(Logger.Message(stringLiteral: message()),
+                  metadata: metadata().map { $0.mapValues { Logger.MetadataValue.string($0) } },
+                  file: file, function: function, line: line)
+    }
+    #endif
 
     /// Log a message passing with the `Logger.Level.notice` log level.
     ///
@@ -212,6 +248,8 @@ extension Logger {
         self.log(level: .notice, message(), metadata: metadata(), file: file, function: function, line: line)
     }
 
+    #if swift(>=4.1.50)
+    #if !compiler(>=5.0)
     public func notice(_ message: @autoclosure () -> String,
                        metadata: @autoclosure () -> [String: String]? = nil,
                        file: String = #file, function: String = #function, line: UInt = #line) {
@@ -219,6 +257,16 @@ extension Logger {
                     metadata: metadata().map { $0.mapValues { Logger.MetadataValue.string($0) } },
                     file: file, function: function, line: line)
     }
+    #endif
+    #else
+    public func notice(_ message: @autoclosure () -> String,
+                       metadata: @autoclosure () -> [String: String]? = nil,
+                       file: String = #file, function: String = #function, line: UInt = #line) {
+        self.notice(Logger.Message(stringLiteral: message()),
+                    metadata: metadata().map { $0.mapValues { Logger.MetadataValue.string($0) } },
+                    file: file, function: function, line: line)
+    }
+    #endif
 
     /// Log a message passing with the `Logger.Level.warning` log level.
     ///
@@ -241,6 +289,8 @@ extension Logger {
         self.log(level: .warning, message(), metadata: metadata(), file: file, function: function, line: line)
     }
 
+    #if swift(>=4.1.50)
+    #if !compiler(>=5.0)
     public func warning(_ message: @autoclosure () -> String,
                         metadata: @autoclosure () -> [String: String]? = nil,
                         file: String = #file, function: String = #function, line: UInt = #line) {
@@ -248,6 +298,16 @@ extension Logger {
                      metadata: metadata().map { $0.mapValues { Logger.MetadataValue.string($0) } },
                      file: file, function: function, line: line)
     }
+    #endif
+    #else
+    public func warning(_ message: @autoclosure () -> String,
+                        metadata: @autoclosure () -> [String: String]? = nil,
+                        file: String = #file, function: String = #function, line: UInt = #line) {
+        self.warning(Logger.Message(stringLiteral: message()),
+                     metadata: metadata().map { $0.mapValues { Logger.MetadataValue.string($0) } },
+                     file: file, function: function, line: line)
+    }
+    #endif
 
     /// Log a message passing with the `Logger.Level.error` log level.
     ///
@@ -270,6 +330,8 @@ extension Logger {
         self.log(level: .error, message(), metadata: metadata(), file: file, function: function, line: line)
     }
 
+    #if swift(>=4.1.50)
+    #if !compiler(>=5.0)
     public func error(_ message: @autoclosure () -> String,
                       metadata: @autoclosure () -> [String: String]? = nil,
                       file: String = #file, function: String = #function, line: UInt = #line) {
@@ -277,6 +339,16 @@ extension Logger {
                    metadata: metadata().map { $0.mapValues { Logger.MetadataValue.string($0) } },
                    file: file, function: function, line: line)
     }
+    #endif
+    #else
+    public func error(_ message: @autoclosure () -> String,
+                      metadata: @autoclosure () -> [String: String]? = nil,
+                      file: String = #file, function: String = #function, line: UInt = #line) {
+        self.error(Logger.Message(stringLiteral: message()),
+                   metadata: metadata().map { $0.mapValues { Logger.MetadataValue.string($0) } },
+                   file: file, function: function, line: line)
+    }
+    #endif
 
     /// Log a message passing with the `Logger.Level.critical` log level.
     ///
@@ -298,6 +370,8 @@ extension Logger {
         self.log(level: .critical, message(), metadata: metadata(), file: file, function: function, line: line)
     }
 
+    #if swift(>=4.1.50)
+    #if !compiler(>=5.0)
     public func critical(_ message: @autoclosure () -> String,
                          metadata: @autoclosure () -> [String: String]? = nil,
                          file: String = #file, function: String = #function, line: UInt = #line) {
@@ -305,7 +379,16 @@ extension Logger {
                       metadata: metadata().map { $0.mapValues { Logger.MetadataValue.string($0) } },
                       file: file, function: function, line: line)
     }
-
+    #endif
+    #else
+    public func critical(_ message: @autoclosure () -> String,
+                         metadata: @autoclosure () -> [String: String]? = nil,
+                         file: String = #file, function: String = #function, line: UInt = #line) {
+        self.critical(Logger.Message(stringLiteral: message()),
+                      metadata: metadata().map { $0.mapValues { Logger.MetadataValue.string($0) } },
+                      file: file, function: function, line: line)
+    }
+    #endif
 }
 
 /// The `LoggingSystem` is a global facility where the default logging backend implementation (`LogHandler`) can be
@@ -494,7 +577,24 @@ extension Logger {
     }
 }
 
-#if swift(>=4.0) && !swift(>=4.0.50)
+#if swift(>=4.1.50)
+#if compiler(>=5.0)
+extension Logger.Message: ExpressibleByStringLiteral,
+    ExpressibleByStringInterpolation {}
+
+// Extension has to be done on explicit type rather than Logger.Metadata.Value as workaround for
+// https://bugs.swift.org/browse/SR-9687
+extension Logger.MetadataValue: ExpressibleByStringLiteral, ExpressibleByStringInterpolation {
+    public typealias StringLiteralType = String
+
+    public init(stringLiteral value: String) {
+        self = .string(value)
+    }
+}
+#endif
+#endif
+
+#if !swift(>=4.1.50)
 extension Logger.Message: Equatable {
     public static func == (lhs: Logger.Message, rhs: Logger.Message) -> Bool {
         return lhs.value == rhs.value
