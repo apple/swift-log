@@ -456,7 +456,7 @@ public struct MultiplexLogHandler: LogHandler {
     ///    - handlers: An array of `LogHandler`s, each of which will receive the log messages sent to this `Logger`.
     ///                The array must not be empty.
     public init(_ handlers: [LogHandler]) {
-        assert(handlers.count > 0)
+        assert(!handlers.isEmpty)
         self.handlers = handlers
     }
 
