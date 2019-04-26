@@ -26,14 +26,36 @@ class LoggingTest: XCTestCase {
             XCTFail("trace should not be called")
             return "trace"
         }())
-        logger.debug({ () -> String in
+        #if swift(>=4.1.50)
+        #if compiler(>=5.0)
+        logger.debug({
             XCTFail("trace should not be called")
             return "trace"
         }())
-        logger.debug({ () -> String in
+        logger.debug({
             XCTFail("debug should not be called")
             return "debug"
         }())
+        #else
+        logger.debug({ () -> String in
+            XCTFail("trace should not be called")
+            return "trace"
+            }())
+        logger.debug({ () -> String in
+            XCTFail("debug should not be called")
+            return "debug"
+            }())
+        #endif
+        #else
+        logger.debug({ () -> String in
+            XCTFail("trace should not be called")
+            return "trace"
+            }())
+        logger.debug({ () -> String in
+            XCTFail("debug should not be called")
+            return "debug"
+            }())
+        #endif
         logger.info({
             "info"
         }())
@@ -99,10 +121,24 @@ class LoggingTest: XCTestCase {
         }
     }
 
+    #if swift(>=4.1.50)
+    #if compiler(>=5.0)
+    private func dontEvaluateThisString(file: StaticString = #file, line: UInt = #line) -> Logger.Message {
+        XCTFail("should not have been evaluated", file: file, line: line)
+        return "should not have been evaluated"
+    }
+    #else
     private func dontEvaluateThisString(file: StaticString = #file, line: UInt = #line) -> String {
         XCTFail("should not have been evaluated", file: file, line: line)
         return "should not have been evaluated"
     }
+    #endif
+    #else
+    private func dontEvaluateThisString(file: StaticString = #file, line: UInt = #line) -> String {
+        XCTFail("should not have been evaluated", file: file, line: line)
+        return "should not have been evaluated"
+    }
+    #endif
 
     func testAutoClosuresAreNotForcedUnlessNeeded() {
         let testLogging = TestLogging()
