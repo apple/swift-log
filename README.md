@@ -183,7 +183,7 @@ If you have a `String` that you received from elsewhere, please use
 
     logger.info("\(stringIAlreadyHave)")
 
-For more details, have a look in the next session.
+For more details, have a look in the next section.
 
 
 ### What are the differences between SwiftLog 1 and 0?
