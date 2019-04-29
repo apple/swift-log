@@ -258,7 +258,7 @@ extension Logger {
 /// implementation.
 public enum LoggingSystem {
     fileprivate static let lock = ReadWriteLock()
-    fileprivate static var factory: (String) -> LogHandler = { StdioLogHandler.init(label: $0) }
+    fileprivate static var factory: (String) -> LogHandler = { StreamLogHandler.init(label: $0) }
     fileprivate static var initialized = false
 
     /// `bootstrap` is a one-time configuration function which globally selects the desired logging backend
@@ -505,7 +505,9 @@ public struct MultiplexLogHandler: LogHandler {
     }
 }
 
-/// A wrapper to facilitate `print`-ing to stderr and stdio
+/// A wrapper to facilitate `print`-ing to stderr and stdio that
+/// ensures access to the underlying `FILE` is locked to prevent
+/// cross-thread interleaving of output.
 private struct FileOutputStream: TextOutputStream {
     let file: UnsafeMutablePointer<FILE>
 
@@ -520,14 +522,49 @@ private struct FileOutputStream: TextOutputStream {
     }
 }
 
-/// Ships with the logging module, really boring just prints something using the `print` function
-public struct StdioLogHandler: LogHandler {
+// Prevent name clashes
+#if os(macOS) || os(tvOS) || os(iOS) || os(watchOS)
+let systemStderr = Darwin.stderr
+let systemStdout = Darwin.stdout
+#else
+let systemStderr = Glibc.stderr!
+let systemStdout = Glibc.stdout!
+#endif
 
-    public enum Stream {
-        case stdout, stderr
+/// `StreamLogHandler` is a simple implementation of `LogHandler` for directing
+/// `Logger` output to a `TextOutputStream`.
+///
+/// This powers `Logger`'s out-of-the-box behavior of outputing logs to stdout.
+public struct StreamLogHandler: LogHandler {
+
+    /// `Stream` wraps a `TextOutputStream` so that `StreamLogHandler` can
+    /// `print` directly to its stream.
+    ///
+    /// TODO: <How to provide your own, safely with a simple example>
+    ///
+    /// The static properties `stderr` and `stdout` abstract the system-dependent
+    /// implementations for outputting to the standard process-level outputs
+    public struct Stream: TextOutputStream {
+
+        private let underlying: TextOutputStream
+
+        public init(underlying: TextOutputStream) {
+            self.underlying = underlying
+        }
+
+        public mutating func write(_ string: String) {
+            var underlying = self.underlying
+            underlying.write(string)
+        }
+
+        public static let stderr: Stream = .init(underlying: FileOutputStream(file: systemStderr))
+        public static let stdout: Stream = .init(underlying: FileOutputStream(file: systemStdout))
     }
 
+    /// Lock for accessing underlying properties, does not provide locking behavior for output
     private let lock = Lock()
+
+    /// The instance of `Stream` to which this handler will output
     public let stream: Stream
 
     public init(label: String, stream: Stream = .stdout) {
@@ -562,8 +599,8 @@ public struct StdioLogHandler: LogHandler {
             ? self.prettyMetadata
             : self.prettify(self.metadata.merging(metadata!, uniquingKeysWith: { _, new in new }))
 
-        var output = FileOutputStream(file: stream == .stdout ? stdout : stderr)
-        print("\(self.timestamp()) \(level):\(prettyMetadata.map { " \($0)" } ?? "") \(message)", to: &output)
+        var stream = self.stream
+        print("\(self.timestamp()) \(level):\(prettyMetadata.map { " \($0)" } ?? "") \(message)", to: &stream)
     }
 
     public var metadata: Logger.Metadata {

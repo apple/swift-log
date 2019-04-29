@@ -284,7 +284,7 @@ class LoggingTest: XCTestCase {
     }
 
     func testMultiplexerIsValue() {
-        let multi = MultiplexLogHandler([StdioLogHandler(label: "x"), StdioLogHandler(label: "y")])
+        let multi = MultiplexLogHandler([StreamLogHandler(label: "x"), StreamLogHandler(label: "y")])
         LoggingSystem.bootstrapInternal { _ in
             print("new multi")
             return multi
@@ -418,74 +418,42 @@ class LoggingTest: XCTestCase {
         XCTAssertLessThan(Logger.Level.error, Logger.Level.critical)
     }
 
+    class InterceptStream: TextOutputStream {
+        var interceptedText: String?
+
+        func write(_ string: String) {
+            interceptedText = (interceptedText ?? "") + string
+        }
+    }
+
     func testStdioLogHandlerOutputsToStderr() {
+        let interceptStream = InterceptStream()
         LoggingSystem.bootstrapInternal { _ in
-            StdioLogHandler(label: "test", stream: .stderr)
+            StreamLogHandler(label: "test", stream: StreamLogHandler.Stream(underlying: interceptStream))
         }
         let log = Logger(label: "test")
 
         let testString = "test stdout"
-        let interceptedString = String(data: stderr.intercept { log.critical("\(testString)") },
-                                       encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines)
+        log.critical("\(testString)")
 
-        let messageSucceeded = interceptedString?.hasSuffix(testString) ?? false
+        let messageSucceeded = interceptStream.interceptedText?.trimmingCharacters(in: .whitespacesAndNewlines).hasSuffix(testString)
 
-        XCTAssertTrue(messageSucceeded)
+        XCTAssertTrue(messageSucceeded ?? false)
     }
 
     func testStdioLogHandlerDefaultsToStdout() {
+
+        let interceptStream = InterceptStream()
         LoggingSystem.bootstrapInternal { _ in
-            StdioLogHandler(label: "test")
+            StreamLogHandler(label: "test", stream: StreamLogHandler.Stream(underlying: interceptStream))
         }
         let log = Logger(label: "test")
 
         let testString = "test stdout"
-        let interceptedString = String(data: stdout.intercept { log.critical("\(testString)") },
-                                       encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines)
+        log.critical("\(testString)")
 
-        let messageSucceeded = interceptedString?.hasSuffix(testString) ?? false
+        let messageSucceeded = interceptStream.interceptedText?.trimmingCharacters(in: .whitespacesAndNewlines).hasSuffix(testString)
 
-        XCTAssertTrue(messageSucceeded)
-    }
-}
-
-extension UnsafeMutablePointer where Pointee == FILE {
-
-    /// Intercepts data written to a file descriptor during the `intercepted` closure
-    func intercept(_ intercepted: () -> Void) -> Data {
-        var fpos: fpos_t = -1
-        fgetpos(self, &fpos)
-
-        let temporaryFileDescriptor = dup(fileno(self))
-
-        // The pipe is for convenience, could be done purely with fd's and FILE's
-        let pipe = Pipe()
-        dup2(pipe.fileHandleForWriting.fileDescriptor, fileno(self))
-
-        var beforePostion: fpos_t = -1
-        fgetpos(self, &beforePostion)
-
-        var data: Data
-        do {
-            defer { funlockfile(self) }
-
-            flockfile(self)
-
-            intercepted()
-            // if there is no data, `availableData` unhelpfully blocks
-            // so we ensure at least one byte is available and then remove it
-            _ = fputc(Int32(UInt8(ascii: " ")), self)
-            data = pipe.fileHandleForReading.availableData
-        }
-
-        data.removeLast()
-
-        // Put everything back the way it was
-        fflush(self)
-        dup2(temporaryFileDescriptor, fileno(self))
-        clearerr(self)
-        fsetpos(self, &fpos)
-
-        return data
+        XCTAssertTrue(messageSucceeded ?? false)
     }
 }
