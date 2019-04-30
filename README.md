@@ -1,6 +1,6 @@
 # SwiftLog
 
-A Logging API package for Swift. Version `1.0.0` requires Swift 5.0 but in due course we will also tag a mostly compatible version for Swift 4 (which will be tagged `0.x`) to ease your transition towards Swift 5.
+A Logging API package for Swift. Version `1.0.0` requires Swift 5.0 but there is a version `0.x.y` series available for Swift 4 to ease your transition towards Swift 5. If you intend to use or support SwiftLog for Swift 4, please check the [paragraph](#help-i-need-swift-4) at the end of the document.
 
 First things first: This is the beginning of a community-driven open-source project actively seeking contributions, be it code, documentation, or ideas. Apart from contributing to `SwiftLog` itself, there's another huge gap at the moment: `SwiftLog` is an _API package_ which tries to establish a common API the ecosystem can use. To make logging really work for real-world workloads, we need `SwiftLog`-compatible _logging backends_ which then either persist the log messages in files, render them in nicer colors on the terminal, or send them over to Splunk or ELK.
 
@@ -152,6 +152,70 @@ However, in special cases, it is acceptable that a `LogHandler` provides some gl
 ### Not under control of `LogHandler`s
 
 `LogHandler`s do not control if a message should be logged or not. `Logger` will only invoke the `log` function of a `LogHandler` if `Logger` determines that a log message should be emitted given the configured log level.
+
+## SwiftLog for Swift 4
+<a name="help-i-need-swift-4"></a>
+
+First of, SwiftLog 1.0.x and SwiftLog 0.0.x are mostly compatible so don't be afraid. In fact, SwiftLog 0.0.0 is the same source code as SwiftLog 1.0.0 with a few changes made to make it Swift 4 compatible.
+
+### How can I use SwiftLog 0 library or application?
+
+If you have a application or a library that needs to be compatible with both Swift 4 and 5, then we recommend using the following in your `Package.swift`:
+
+```swift
+.package(url: "https://github.com/apple/swift-log.git", Version("0.0.0") ..< Version("2.0.0")),
+```
+
+This will instruct SwiftPM to allow any SwiftLog 0 and any SwiftLog 1 version. This is an unusual form because usually packages don't support multiple major versions of a package. Because SwiftLog 0 and 1 are mostly compatible however, this should not be a real issue and will enable everybody to get the best. If compiled with a Swift 4 compiler, this will be a SwiftLog 0 version but if compiled with a Swift 5 compiler everybody will get the best experience and performance delivered by SwiftLog 1.
+
+In most cases, there is only one thing you need to remember: Always use _string literals_ and _string interpolations_ in the log methods and don't rely on the fact that SwiftLog 0 also allows `String`.
+
+Good:
+
+    logger.info("hello world")
+
+Bad:
+
+    let message = "hello world"
+    logger.info(message)
+
+If you have a `String` that you received from elsewhere, please use
+
+    logger.info("\(stringIAlreadyHave)")
+
+For more details, have a look in the next section.
+
+
+### What are the differences between SwiftLog 1 and 0?
+
+- SwiftLog 0 does not use `@inlinable`.
+- Apart from accepting `Logger.Message` for the message, SwiftLog 0 has a `String` overload.
+- In SwiftLog 0, `Logger.Message` is not `ExpressibleByStringLiteral` or `ExpressibleByStringInterpolation`.
+- In SwiftLog 0, `Logger.MetadataValue` is not `ExpressibleByStringLiteral` or `ExpressibleByStringInterpolation`.
+
+#### Why these differences?
+
+##### @inlinable
+
+Swift 4.0 & 4.1 don't support `@inlinable`, so SwiftLog 0 can't use them.
+
+##### Logger.Message
+Because all Swift 4 versions don't have a (non-deprecated) mechanism for a type to be `ExpressibleByStringInterpolation` we couldn't make `Logger.Message` expressible by string literals. Unfortunately, the most basic form of our logging API is `logger.info("Hello \(world)")`. For this to work however, `"Hello \(world)"` needs to be accepted and because we can't make `Logger.Message` `ExpressibleByStringInterpolation` we added an overload for all the logging methods to also accept `String`. In most cases, you won't even notice that with SwiftLog 0 you're creating a `String` (which is then transformed to a `Logger.Message`) and with SwiftLog 1 you're creating a `Logger.Message` directly. That is because both `String` and `Logger.Message` will accept all forms of string literals and string interpolations.
+Unfortunately, there is code that will make this seemingly small difference visible. If you write
+
+    let message = "Hello world"
+    logger.info(message)
+
+then this will only work in SwiftLog 0 and not in SwiftLog 1. Why? Because SwiftLog 1 will want a `Logger.Message` but `let message = "Hello world"` will make `message` to be of type `String` and in SwiftLog 1, the logging methods don't accept `String`s.
+
+So if you intend to be compatible with SwiftLog 0 and 1 at the same time, please make sure to always use a _string literal_ or a _string interpolation_ inside of the logging methods.
+
+In the case that you already have a `String` handy that you want to log, don't worry at all, just use
+
+    let message = "Hello world"
+    logger.info("\(message)")
+
+and again, you will be okay with SwiftLog 0 and 1.
 
 ## Design
 
