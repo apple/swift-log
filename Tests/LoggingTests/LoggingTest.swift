@@ -418,24 +418,39 @@ class LoggingTest: XCTestCase {
         XCTAssertLessThan(Logger.Level.error, Logger.Level.critical)
     }
 
-    class InterceptStream: TextOutputStream {
+    final class InterceptStream: TextOutputStream {
         var interceptedText: String?
         var strings = [String]()
 
         func write(_ string: String) {
+            // This is a test implementation, a real implementation would include locking
             strings.append(string)
             interceptedText = (interceptedText ?? "") + string
         }
     }
 
-    func testStreamLogHandlerOutputsToStderr() {
+    /// This scenario is required to ensure locking is effective
+    func testStreamLogHandlerCallsWriteOncePerLog() {
         let interceptStream = InterceptStream()
         LoggingSystem.bootstrapInternal { _ in
-            StreamLogHandler(label: "test", stream: StreamLogHandler.Stream(underlying: interceptStream))
+            StreamLogHandler(label: "test", stream: interceptStream)
         }
         let log = Logger(label: "test")
 
         let testString = "test stdout"
+        log.critical("\(testString)")
+
+        XCTAssertEqual(interceptStream.strings.count, 1)
+    }
+
+    func testStreamLogHandlerPrintsToAStream() {
+        let interceptStream = InterceptStream()
+        LoggingSystem.bootstrapInternal { _ in
+            StreamLogHandler(label: "test", stream: interceptStream)
+        }
+        let log = Logger(label: "test")
+
+        let testString = "my message is better than yours"
         log.critical("\(testString)")
 
         let messageSucceeded = interceptStream.interceptedText?.trimmingCharacters(in: .whitespacesAndNewlines).hasSuffix(testString)
@@ -445,17 +460,9 @@ class LoggingTest: XCTestCase {
 
     func testStreamLogHandlerDefaultsToStdout() {
 
-        let interceptStream = InterceptStream()
-        LoggingSystem.bootstrapInternal { _ in
-            StreamLogHandler(label: "test", stream: StreamLogHandler.Stream(underlying: interceptStream))
-        }
-        let log = Logger(label: "test")
+        let stdoutStream = StdioOutputStream.stdout
+        let streamLogHandler = StreamLogHandler(label: "test")
 
-        let testString = "test stdout"
-        log.critical("\(testString)")
-
-        let messageSucceeded = interceptStream.interceptedText?.trimmingCharacters(in: .whitespacesAndNewlines).hasSuffix(testString)
-
-        XCTAssertTrue(messageSucceeded ?? false)
+        XCTAssertEqual(stdoutStream.file, (streamLogHandler.stream as! StdioOutputStream).file)
     }
 }

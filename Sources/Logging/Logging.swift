@@ -508,10 +508,10 @@ public struct MultiplexLogHandler: LogHandler {
 /// A wrapper to facilitate `print`-ing to stderr and stdio that
 /// ensures access to the underlying `FILE` is locked to prevent
 /// cross-thread interleaving of output.
-private struct FileOutputStream: TextOutputStream {
-    let file: UnsafeMutablePointer<FILE>
+public struct StdioOutputStream: TextOutputStream {
+    internal let file: UnsafeMutablePointer<FILE>
 
-    func write(_ string: String) {
+    public func write(_ string: String) {
         string.withCString { ptr in
             flockfile(file)
             defer {
@@ -520,6 +520,9 @@ private struct FileOutputStream: TextOutputStream {
             _ = fputs(ptr, file)
         }
     }
+
+    public static let stderr = StdioOutputStream(file: systemStderr)
+    public static let stdout = StdioOutputStream(file: systemStdout)
 }
 
 // Prevent name clashes
@@ -537,32 +540,8 @@ let systemStdout = Glibc.stdout!
 /// This powers `Logger`'s out-of-the-box behavior of outputing logs to stdout.
 public struct StreamLogHandler: LogHandler {
 
-    /// `Stream` wraps a `TextOutputStream` so that `StreamLogHandler` can
-    /// `print` directly to its stream.
-    ///
-    /// TODO: <How to provide your own, safely with a simple example>
-    ///
-    /// The static properties `stderr` and `stdout` abstract the system-dependent
-    /// implementations for outputting to the standard process-level outputs
-    public struct Stream: TextOutputStream {
-
-        private let underlying: TextOutputStream
-
-        public init(underlying: TextOutputStream) {
-            self.underlying = underlying
-        }
-
-        public mutating func write(_ string: String) {
-            var underlying = self.underlying
-            underlying.write(string)
-        }
-
-        public static let stderr: Stream = .init(underlying: FileOutputStream(file: systemStderr))
-        public static let stdout: Stream = .init(underlying: FileOutputStream(file: systemStdout))
-    }
-
-    /// The instance of `Stream` to which this handler will output
-    public let stream: Stream
+    /// The instance of `TextOutputStream` to which this handler will write to
+    public let stream: TextOutputStream
 
     public var logLevel: Logger.Level = .info
 
@@ -582,7 +561,7 @@ public struct StreamLogHandler: LogHandler {
         }
     }
 
-    public init(label: String, stream: Stream = .stdout) {
+    public init(label: String, stream: TextOutputStream = StdioOutputStream.stdout) {
         self.stream = stream
     }
 
@@ -595,7 +574,7 @@ public struct StreamLogHandler: LogHandler {
             : self.prettify(self.metadata.merging(metadata!, uniquingKeysWith: { _, new in new }))
 
         var stream = self.stream
-        print("\(self.timestamp()) \(level):\(prettyMetadata.map { " \($0)" } ?? "") \(message)", to: &stream)
+        stream.write("\(timestamp()) \(level):\(prettyMetadata.map { " \($0)" } ?? "") \(message)\n")
     }
 
     private func prettify(_ metadata: Logger.Metadata) -> String? {
