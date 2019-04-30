@@ -561,34 +561,29 @@ public struct StreamLogHandler: LogHandler {
         public static let stdout: Stream = .init(underlying: FileOutputStream(file: systemStdout))
     }
 
-    /// Lock for accessing underlying properties, does not provide locking behavior for output
-    private let lock = Lock()
-
     /// The instance of `Stream` to which this handler will output
     public let stream: Stream
 
-    public init(label: String, stream: Stream = .stdout) {
-        self.stream = stream
-    }
-
-    private var _logLevel: Logger.Level = .info
-
-    public var logLevel: Logger.Level {
-        get {
-            return self.lock.withLock { self._logLevel }
-        }
-        set {
-            self.lock.withLock {
-                self._logLevel = newValue
-            }
-        }
-    }
+    public var logLevel: Logger.Level = .info
 
     private var prettyMetadata: String?
-    private var _metadata = Logger.Metadata() {
+    public var metadata = Logger.Metadata() {
         didSet {
-            self.prettyMetadata = self.prettify(self._metadata)
+            prettyMetadata = prettify(metadata)
         }
+    }
+
+    public subscript(metadataKey metadataKey: String) -> Logger.Metadata.Value? {
+        get {
+            return metadata[metadataKey]
+        }
+        set {
+            metadata[metadataKey] = newValue
+        }
+    }
+
+    public init(label: String, stream: Stream = .stdout) {
+        self.stream = stream
     }
 
     public func log(level: Logger.Level,
@@ -601,26 +596,6 @@ public struct StreamLogHandler: LogHandler {
 
         var stream = self.stream
         print("\(self.timestamp()) \(level):\(prettyMetadata.map { " \($0)" } ?? "") \(message)", to: &stream)
-    }
-
-    public var metadata: Logger.Metadata {
-        get {
-            return self.lock.withLock { self._metadata }
-        }
-        set {
-            self.lock.withLock { self._metadata = newValue }
-        }
-    }
-
-    public subscript(metadataKey metadataKey: String) -> Logger.Metadata.Value? {
-        get {
-            return self.lock.withLock { self._metadata[metadataKey] }
-        }
-        set {
-            self.lock.withLock {
-                self._metadata[metadataKey] = newValue
-            }
-        }
     }
 
     private func prettify(_ metadata: Logger.Metadata) -> String? {

@@ -420,13 +420,15 @@ class LoggingTest: XCTestCase {
 
     class InterceptStream: TextOutputStream {
         var interceptedText: String?
+        var strings = [String]()
 
         func write(_ string: String) {
+            strings.append(string)
             interceptedText = (interceptedText ?? "") + string
         }
     }
 
-    func testStdioLogHandlerOutputsToStderr() {
+    func testStreamLogHandlerOutputsToStderr() {
         let interceptStream = InterceptStream()
         LoggingSystem.bootstrapInternal { _ in
             StreamLogHandler(label: "test", stream: StreamLogHandler.Stream(underlying: interceptStream))
@@ -441,7 +443,7 @@ class LoggingTest: XCTestCase {
         XCTAssertTrue(messageSucceeded ?? false)
     }
 
-    func testStdioLogHandlerDefaultsToStdout() {
+    func testStreamLogHandlerDefaultsToStdout() {
 
         let interceptStream = InterceptStream()
         LoggingSystem.bootstrapInternal { _ in
