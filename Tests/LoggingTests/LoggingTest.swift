@@ -284,7 +284,7 @@ class LoggingTest: XCTestCase {
     }
 
     func testMultiplexerIsValue() {
-        let multi = MultiplexLogHandler([StreamLogHandler(label: "x"), StreamLogHandler(label: "y")])
+        let multi = MultiplexLogHandler([StreamLogHandler.makeStdoutLogHandler(label: "x"), StreamLogHandler.makeStdoutLogHandler(label: "y")])
         LoggingSystem.bootstrapInternal { _ in
             print("new multi")
             return multi
@@ -429,21 +429,7 @@ class LoggingTest: XCTestCase {
         }
     }
 
-    /// This scenario is required to ensure locking is effective
-    func testStreamLogHandlerCallsWriteOncePerLog() {
-        let interceptStream = InterceptStream()
-        LoggingSystem.bootstrapInternal { _ in
-            StreamLogHandler(label: "test", stream: interceptStream)
-        }
-        let log = Logger(label: "test")
-
-        let testString = "test stdout"
-        log.critical("\(testString)")
-
-        XCTAssertEqual(interceptStream.strings.count, 1)
-    }
-
-    func testStreamLogHandlerPrintsToAStream() {
+    func testStreamLogHandlerWritesToAStream() {
         let interceptStream = InterceptStream()
         LoggingSystem.bootstrapInternal { _ in
             StreamLogHandler(label: "test", stream: interceptStream)
@@ -456,13 +442,6 @@ class LoggingTest: XCTestCase {
         let messageSucceeded = interceptStream.interceptedText?.trimmingCharacters(in: .whitespacesAndNewlines).hasSuffix(testString)
 
         XCTAssertTrue(messageSucceeded ?? false)
-    }
-
-    func testStreamLogHandlerDefaultsToStdout() {
-
-        let stdoutStream = StdioOutputStream.stdout
-        let streamLogHandler = StreamLogHandler(label: "test")
-
-        XCTAssertEqual(stdoutStream.file, (streamLogHandler.stream as! StdioOutputStream).file)
+        XCTAssertEqual(interceptStream.strings.count, 1)
     }
 }

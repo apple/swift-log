@@ -41,9 +41,7 @@ extension LoggingTest {
             ("testLoggerWithGlobalOverride", testLoggerWithGlobalOverride),
             ("testLogLevelCases", testLogLevelCases),
             ("testLogLevelOrdering", testLogLevelOrdering),
-            ("testStreamLogHandlerCallsWriteOncePerLog", testStreamLogHandlerCallsWriteOncePerLog),
-            ("testStreamLogHandlerPrintsToAStream", testStreamLogHandlerPrintsToAStream),
-            ("testStreamLogHandlerDefaultsToStdout", testStreamLogHandlerDefaultsToStdout),
+            ("testStreamLogHandlerWritesToAStream", testStreamLogHandlerWritesToAStream),
         ]
     }
 }

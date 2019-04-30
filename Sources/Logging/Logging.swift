@@ -258,7 +258,7 @@ extension Logger {
 /// implementation.
 public enum LoggingSystem {
     fileprivate static let lock = ReadWriteLock()
-    fileprivate static var factory: (String) -> LogHandler = { StreamLogHandler.init(label: $0) }
+    fileprivate static var factory: (String) -> LogHandler = StreamLogHandler.makeStdoutLogHandler
     fileprivate static var initialized = false
 
     /// `bootstrap` is a one-time configuration function which globally selects the desired logging backend
@@ -508,10 +508,10 @@ public struct MultiplexLogHandler: LogHandler {
 /// A wrapper to facilitate `print`-ing to stderr and stdio that
 /// ensures access to the underlying `FILE` is locked to prevent
 /// cross-thread interleaving of output.
-public struct StdioOutputStream: TextOutputStream {
+internal struct StdioOutputStream: TextOutputStream {
     internal let file: UnsafeMutablePointer<FILE>
 
-    public func write(_ string: String) {
+    internal func write(_ string: String) {
         string.withCString { ptr in
             flockfile(file)
             defer {
@@ -521,8 +521,8 @@ public struct StdioOutputStream: TextOutputStream {
         }
     }
 
-    public static let stderr = StdioOutputStream(file: systemStderr)
-    public static let stdout = StdioOutputStream(file: systemStdout)
+    internal static let stderr = StdioOutputStream(file: systemStderr)
+    internal static let stdout = StdioOutputStream(file: systemStdout)
 }
 
 // Prevent name clashes
@@ -535,13 +535,20 @@ let systemStdout = Glibc.stdout!
 #endif
 
 /// `StreamLogHandler` is a simple implementation of `LogHandler` for directing
-/// `Logger` output to a `TextOutputStream`.
-///
-/// This powers `Logger`'s out-of-the-box behavior of outputing logs to stdout.
+/// `Logger` output to either `stderr` or `stdout` via the factory methods.
 public struct StreamLogHandler: LogHandler {
 
-    /// The instance of `TextOutputStream` to which this handler will write to
-    public let stream: TextOutputStream
+    /// Factory that makes a `StreamLogHandler` to directs its output to `stdout`
+    public static func makeStdoutLogHandler(label: String) -> StreamLogHandler {
+        return StreamLogHandler(label: label, stream: StdioOutputStream.stdout)
+    }
+
+    /// Factory that makes a `StreamLogHandler` to directs its output to `stderr`
+    public static func makeStderrLogHandler(label: String) -> StreamLogHandler {
+        return StreamLogHandler(label: label, stream: StdioOutputStream.stderr)
+    }
+
+    private let stream: TextOutputStream
 
     public var logLevel: Logger.Level = .info
 
@@ -561,7 +568,8 @@ public struct StreamLogHandler: LogHandler {
         }
     }
 
-    public init(label: String, stream: TextOutputStream = StdioOutputStream.stdout) {
+    // internal for testing only
+    internal init(label: String, stream: TextOutputStream) {
         self.stream = stream
     }
 
