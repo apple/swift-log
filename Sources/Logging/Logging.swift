@@ -258,7 +258,7 @@ extension Logger {
 /// implementation.
 public enum LoggingSystem {
     fileprivate static let lock = ReadWriteLock()
-    fileprivate static var factory: (String) -> LogHandler = StreamLogHandler.makeStdoutLogHandler
+    fileprivate static var factory: (String) -> LogHandler = StreamLogHandler.standardOutput
     fileprivate static var initialized = false
 
     /// `bootstrap` is a one-time configuration function which globally selects the desired logging backend
@@ -539,12 +539,12 @@ let systemStdout = Glibc.stdout!
 public struct StreamLogHandler: LogHandler {
 
     /// Factory that makes a `StreamLogHandler` to directs its output to `stdout`
-    public static func makeStdoutLogHandler(label: String) -> StreamLogHandler {
+    public static func standardOutput(label: String) -> StreamLogHandler {
         return StreamLogHandler(label: label, stream: StdioOutputStream.stdout)
     }
 
     /// Factory that makes a `StreamLogHandler` to directs its output to `stderr`
-    public static func makeStderrLogHandler(label: String) -> StreamLogHandler {
+    public static func standardError(label: String) -> StreamLogHandler {
         return StreamLogHandler(label: label, stream: StdioOutputStream.stderr)
     }
 

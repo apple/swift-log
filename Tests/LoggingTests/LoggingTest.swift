@@ -284,7 +284,7 @@ class LoggingTest: XCTestCase {
     }
 
     func testMultiplexerIsValue() {
-        let multi = MultiplexLogHandler([StreamLogHandler.makeStdoutLogHandler(label: "x"), StreamLogHandler.makeStdoutLogHandler(label: "y")])
+        let multi = MultiplexLogHandler([StreamLogHandler.standardOutput(label: "x"), StreamLogHandler.standardOutput(label: "y")])
         LoggingSystem.bootstrapInternal { _ in
             print("new multi")
             return multi
