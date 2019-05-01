@@ -284,7 +284,7 @@ class LoggingTest: XCTestCase {
     }
 
     func testMultiplexerIsValue() {
-        let multi = MultiplexLogHandler([StdoutLogHandler(label: "x"), StdoutLogHandler(label: "y")])
+        let multi = MultiplexLogHandler([StreamLogHandler.standardOutput(label: "x"), StreamLogHandler.standardOutput(label: "y")])
         LoggingSystem.bootstrapInternal { _ in
             print("new multi")
             return multi
@@ -416,5 +416,32 @@ class LoggingTest: XCTestCase {
         XCTAssertLessThan(Logger.Level.warning, Logger.Level.error)
         XCTAssertLessThan(Logger.Level.warning, Logger.Level.critical)
         XCTAssertLessThan(Logger.Level.error, Logger.Level.critical)
+    }
+
+    final class InterceptStream: TextOutputStream {
+        var interceptedText: String?
+        var strings = [String]()
+
+        func write(_ string: String) {
+            // This is a test implementation, a real implementation would include locking
+            strings.append(string)
+            interceptedText = (interceptedText ?? "") + string
+        }
+    }
+
+    func testStreamLogHandlerWritesToAStream() {
+        let interceptStream = InterceptStream()
+        LoggingSystem.bootstrapInternal { _ in
+            StreamLogHandler(label: "test", stream: interceptStream)
+        }
+        let log = Logger(label: "test")
+
+        let testString = "my message is better than yours"
+        log.critical("\(testString)")
+
+        let messageSucceeded = interceptStream.interceptedText?.trimmingCharacters(in: .whitespacesAndNewlines).hasSuffix(testString)
+
+        XCTAssertTrue(messageSucceeded ?? false)
+        XCTAssertEqual(interceptStream.strings.count, 1)
     }
 }

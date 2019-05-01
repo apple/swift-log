@@ -258,7 +258,7 @@ extension Logger {
 /// implementation.
 public enum LoggingSystem {
     fileprivate static let lock = ReadWriteLock()
-    fileprivate static var factory: (String) -> LogHandler = StdoutLogHandler.init
+    fileprivate static var factory: (String) -> LogHandler = StreamLogHandler.standardOutput
     fileprivate static var initialized = false
 
     /// `bootstrap` is a one-time configuration function which globally selects the desired logging backend
@@ -505,30 +505,72 @@ public struct MultiplexLogHandler: LogHandler {
     }
 }
 
-/// Ships with the logging module, really boring just prints something using the `print` function
-internal struct StdoutLogHandler: LogHandler {
-    private let lock = Lock()
+/// A wrapper to facilitate `print`-ing to stderr and stdio that
+/// ensures access to the underlying `FILE` is locked to prevent
+/// cross-thread interleaving of output.
+internal struct StdioOutputStream: TextOutputStream {
+    internal let file: UnsafeMutablePointer<FILE>
 
-    public init(label: String) {}
-
-    private var _logLevel: Logger.Level = .info
-
-    public var logLevel: Logger.Level {
-        get {
-            return self.lock.withLock { self._logLevel }
-        }
-        set {
-            self.lock.withLock {
-                self._logLevel = newValue
+    internal func write(_ string: String) {
+        string.withCString { ptr in
+            flockfile(file)
+            defer {
+                funlockfile(file)
             }
+            _ = fputs(ptr, file)
         }
     }
 
+    internal static let stderr = StdioOutputStream(file: systemStderr)
+    internal static let stdout = StdioOutputStream(file: systemStdout)
+}
+
+// Prevent name clashes
+#if os(macOS) || os(tvOS) || os(iOS) || os(watchOS)
+let systemStderr = Darwin.stderr
+let systemStdout = Darwin.stdout
+#else
+let systemStderr = Glibc.stderr!
+let systemStdout = Glibc.stdout!
+#endif
+
+/// `StreamLogHandler` is a simple implementation of `LogHandler` for directing
+/// `Logger` output to either `stderr` or `stdout` via the factory methods.
+public struct StreamLogHandler: LogHandler {
+
+    /// Factory that makes a `StreamLogHandler` to directs its output to `stdout`
+    public static func standardOutput(label: String) -> StreamLogHandler {
+        return StreamLogHandler(label: label, stream: StdioOutputStream.stdout)
+    }
+
+    /// Factory that makes a `StreamLogHandler` to directs its output to `stderr`
+    public static func standardError(label: String) -> StreamLogHandler {
+        return StreamLogHandler(label: label, stream: StdioOutputStream.stderr)
+    }
+
+    private let stream: TextOutputStream
+
+    public var logLevel: Logger.Level = .info
+
     private var prettyMetadata: String?
-    private var _metadata = Logger.Metadata() {
+    public var metadata = Logger.Metadata() {
         didSet {
-            self.prettyMetadata = self.prettify(self._metadata)
+            prettyMetadata = prettify(metadata)
         }
+    }
+
+    public subscript(metadataKey metadataKey: String) -> Logger.Metadata.Value? {
+        get {
+            return metadata[metadataKey]
+        }
+        set {
+            metadata[metadataKey] = newValue
+        }
+    }
+
+    // internal for testing only
+    internal init(label: String, stream: TextOutputStream) {
+        self.stream = stream
     }
 
     public func log(level: Logger.Level,
@@ -538,27 +580,9 @@ internal struct StdoutLogHandler: LogHandler {
         let prettyMetadata = metadata?.isEmpty ?? true
             ? self.prettyMetadata
             : self.prettify(self.metadata.merging(metadata!, uniquingKeysWith: { _, new in new }))
-        print("\(self.timestamp()) \(level):\(prettyMetadata.map { " \($0)" } ?? "") \(message)")
-    }
 
-    public var metadata: Logger.Metadata {
-        get {
-            return self.lock.withLock { self._metadata }
-        }
-        set {
-            self.lock.withLock { self._metadata = newValue }
-        }
-    }
-
-    public subscript(metadataKey metadataKey: String) -> Logger.Metadata.Value? {
-        get {
-            return self.lock.withLock { self._metadata[metadataKey] }
-        }
-        set {
-            self.lock.withLock {
-                self._metadata[metadataKey] = newValue
-            }
-        }
+        var stream = self.stream
+        stream.write("\(timestamp()) \(level):\(prettyMetadata.map { " \($0)" } ?? "") \(message)\n")
     }
 
     private func prettify(_ metadata: Logger.Metadata) -> String? {
