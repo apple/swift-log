@@ -47,7 +47,7 @@ logger.info("Hello World!")
 
 `SwiftLog` provides for very basic console logging out-of-the-box by way of `StreamLogHandler`. It is possible to switch the default output to `stderr` like so:
 ```
-LoggingSystem.bootstrap(StreamLogHandler.makeStderrLogHandler)
+LoggingSystem.bootstrap(StreamLogHandler.standardError)
 ```
 
 `StreamLogHandler` is primarily a convenience only and does not provide any substantial customization. Library maintainers who aim to build their own logging backends for integration and consumption should implement the `LogHandler` protocol directly as laid out in the "On the implementation of a logging backend" section.
