@@ -50,7 +50,7 @@ logger.info("Hello World!")
 LoggingSystem.bootstrap(StreamLogHandler.standardError)
 ```
 
-`StreamLogHandler` is primarily a convenience only and does not provide any substantial customization. Library maintainers who aim to build their own logging backends for integration and consumption should implement the `LogHandler` protocol directly as laid out in the "On the implementation of a logging backend" section.
+`StreamLogHandler` is primarily a convenience only and does not provide any substantial customization. Library maintainers who aim to build their own logging backends for integration and consumption should implement the `LogHandler` protocol directly as laid out in [the "On the implementation of a logging backend" section](#on-the-implementation-of-a-logging-backend-a-loghandler).
 
 For further information, please check the [API documentation][api-docs].
 
