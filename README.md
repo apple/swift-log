@@ -58,7 +58,7 @@ For further information, please check the [API documentation][api-docs].
 
 As the API has just launched, not many implementations exist yet. If you are interested in implementing one see the "Implementation considerations" section below explaining how to do so. List of existing SwiftLog API compatible libraries:
 
-- [ianpatridge/swift-log-**syslog**](https://github.com/ianpartridge/swift-log-syslog) – a [syslog](https://en.wikipedia.org/wiki/Syslog) backend,
+- [ianpartridge/swift-log-**syslog**](https://github.com/ianpartridge/swift-log-syslog) – a [syslog](https://en.wikipedia.org/wiki/Syslog) backend,
 - Your library? [Get in touch!](https://forums.swift.org/c/server)
 
 ## What is an API package?
