@@ -32,7 +32,7 @@
 ///
 /// ```swift
 /// LoggingSystem.bootstrap(MyLogHandler.init) // your LogHandler might have a different bootstrapping step
-/// var logger1: Logger(label: "first logger")
+/// var logger1 = Logger(label: "first logger")
 /// logger1.logLevel = .debug
 /// logger1[metadataKey: "only-on"] = "first"
 ///
