@@ -6,7 +6,7 @@ First things first: This is the beginning of a community-driven open-source proj
 
 What `SwiftLog` provides today can be found in the [API docs][api-docs].
 
-## Great, what's the tl;dr
+## Getting started
 
 If you have a server-side Swift application, or maybe a cross-platform (for example Linux & macOS) app/library, and you would like to log, we think targeting this logging API package is a great idea. Below you'll find all you need to know to get started.
 
@@ -53,6 +53,13 @@ LoggingSystem.bootstrap(StreamLogHandler.standardError)
 `StreamLogHandler` is primarily a convenience only and does not provide any substantial customization. Library maintainers who aim to build their own logging backends for integration and consumption should implement the `LogHandler` protocol directly as laid out in [the "On the implementation of a logging backend" section](#on-the-implementation-of-a-logging-backend-a-loghandler).
 
 For further information, please check the [API documentation][api-docs].
+
+#### Selecting a logging backend implementation (applications only)
+
+As the API has just launched, not many implementations exist yet. If you are interested in implementing one see the "Implementation considerations" section below explaining how to do so. List of existing SwiftLog API compatible libraries:
+
+- [ianpartridge/swift-log-**syslog**](https://github.com/ianpartridge/swift-log-syslog) – a [syslog](https://en.wikipedia.org/wiki/Syslog) backend,
+- Your library? [Get in touch!](https://forums.swift.org/c/server)
 
 ## What is an API package?
 
