@@ -13,9 +13,9 @@
 //===----------------------------------------------------------------------===//
 
 #if os(macOS) || os(iOS) || os(tvOS) || os(watchOS)
-    import Darwin
+import Darwin
 #else
-    import Glibc
+import Glibc
 #endif
 
 /// A `Logger` is the central type in `SwiftLog`. Its central function is to emit log messages using one of the methods
@@ -537,7 +537,6 @@ let systemStdout = Glibc.stdout!
 /// `StreamLogHandler` is a simple implementation of `LogHandler` for directing
 /// `Logger` output to either `stderr` or `stdout` via the factory methods.
 public struct StreamLogHandler: LogHandler {
-
     /// Factory that makes a `StreamLogHandler` to directs its output to `stdout`
     public static func standardOutput(label: String) -> StreamLogHandler {
         return StreamLogHandler(label: label, stream: StdioOutputStream.stdout)
@@ -555,16 +554,16 @@ public struct StreamLogHandler: LogHandler {
     private var prettyMetadata: String?
     public var metadata = Logger.Metadata() {
         didSet {
-            prettyMetadata = prettify(metadata)
+            self.prettyMetadata = self.prettify(self.metadata)
         }
     }
 
     public subscript(metadataKey metadataKey: String) -> Logger.Metadata.Value? {
         get {
-            return metadata[metadataKey]
+            return self.metadata[metadataKey]
         }
         set {
-            metadata[metadataKey] = newValue
+            self.metadata[metadataKey] = newValue
         }
     }
 
@@ -582,7 +581,7 @@ public struct StreamLogHandler: LogHandler {
             : self.prettify(self.metadata.merging(metadata!, uniquingKeysWith: { _, new in new }))
 
         var stream = self.stream
-        stream.write("\(timestamp()) \(level):\(prettyMetadata.map { " \($0)" } ?? "") \(message)\n")
+        stream.write("\(self.timestamp()) \(level):\(prettyMetadata.map { " \($0)" } ?? "") \(message)\n")
     }
 
     private func prettify(_ metadata: Logger.Metadata) -> String? {

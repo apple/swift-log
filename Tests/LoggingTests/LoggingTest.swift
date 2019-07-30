@@ -55,7 +55,7 @@ class LoggingTest: XCTestCase {
         // bootstrap with our test logging impl
         let logging1 = TestLogging()
         let logging2 = TestLogging()
-        LoggingSystem.bootstrapInternal({ MultiplexLogHandler([logging1.make(label: $0), logging2.make(label: $0)]) })
+        LoggingSystem.bootstrapInternal { MultiplexLogHandler([logging1.make(label: $0), logging2.make(label: $0)]) }
 
         var logger = Logger(label: "test")
         logger.logLevel = .warning
@@ -137,13 +137,13 @@ class LoggingTest: XCTestCase {
         var logger = Logger(label: "\(#function)")
 
         logger[metadataKey: "foo"] = .stringConvertible("raw-string")
-        let lazyBox = LazyMetadataBox({ "rendered-at-first-use" })
+        let lazyBox = LazyMetadataBox { "rendered-at-first-use" }
         logger[metadataKey: "lazy"] = .stringConvertible(lazyBox)
         logger.info("hello world!")
         testLogging.history.assertExist(level: .info,
                                         message: "hello world!",
                                         metadata: ["foo": .stringConvertible("raw-string"),
-                                                   "lazy": .stringConvertible(LazyMetadataBox({ "rendered-at-first-use" }))])
+                                                   "lazy": .stringConvertible(LazyMetadataBox { "rendered-at-first-use" })])
     }
 
     private func dontEvaluateThisString(file: StaticString = #file, line: UInt = #line) -> Logger.Message {
@@ -361,7 +361,7 @@ class LoggingTest: XCTestCase {
 
         let logRecorder = Recorder()
         LoggingSystem.bootstrapInternal { _ in
-            return LogHandlerWithGlobalLogLevelOverride(recorder: logRecorder)
+            LogHandlerWithGlobalLogLevelOverride(recorder: logRecorder)
         }
 
         var logger1 = Logger(label: "logger-\(#file):\(#line)")
@@ -388,7 +388,7 @@ class LoggingTest: XCTestCase {
         logRecorder.assertExist(level: .notice, message: "logger1, after")
         logRecorder.assertExist(level: .notice, message: "logger2, after")
     }
-    
+
     func testLogLevelCases() {
         let levels = Logger.Level.allCases
         XCTAssertEqual(7, levels.count)
@@ -424,8 +424,8 @@ class LoggingTest: XCTestCase {
 
         func write(_ string: String) {
             // This is a test implementation, a real implementation would include locking
-            strings.append(string)
-            interceptedText = (interceptedText ?? "") + string
+            self.strings.append(string)
+            self.interceptedText = (self.interceptedText ?? "") + string
         }
     }
 

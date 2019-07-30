@@ -147,7 +147,7 @@ private struct Struct3 {
         let group = DispatchGroup()
         group.enter()
         let loggingMetadata = MDC.global.metadata
-        queue.async {
+        self.queue.async {
             MDC.global.with(metadata: loggingMetadata) {
                 self.logger.warning("Struct3::doSomethingElseAsync")
                 let library = TestLibrary()
@@ -160,9 +160,9 @@ private struct Struct3 {
         group.wait()
         MDC.global["foo"] = nil
         // only effects the logger instance
-        var l = logger
+        var l = self.logger
         l[metadataKey: "baz"] = "qux"
         l.debug("Struct3::doSomethingElse::Local")
-        logger.debug("Struct3::doSomethingElse::end")
+        self.logger.debug("Struct3::doSomethingElse::end")
     }
 }
