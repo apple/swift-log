@@ -27,9 +27,9 @@
 //===----------------------------------------------------------------------===//
 
 #if os(macOS) || os(iOS) || os(tvOS) || os(watchOS)
-    import Darwin
+import Darwin
 #else
-    import Glibc
+import Glibc
 #endif
 
 /// A threading lock based on `libpthread` instead of `libdispatch`.

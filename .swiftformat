@@ -8,5 +8,6 @@
 --patternlet inline
 --stripunusedargs unnamed-only
 --comments ignore
+--ifdef no-indent
 
 # rules

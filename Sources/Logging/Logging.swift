@@ -13,9 +13,9 @@
 //===----------------------------------------------------------------------===//
 
 #if os(macOS) || os(iOS) || os(tvOS) || os(watchOS)
-    import Darwin
+import Darwin
 #else
-    import Glibc
+import Glibc
 #endif
 
 /// A `Logger` is the central type in `SwiftLog`. Its central function is to emit log messages using one of the methods
@@ -527,11 +527,11 @@ internal struct StdioOutputStream: TextOutputStream {
 
 // Prevent name clashes
 #if os(macOS) || os(tvOS) || os(iOS) || os(watchOS)
-    let systemStderr = Darwin.stderr
-    let systemStdout = Darwin.stdout
+let systemStderr = Darwin.stderr
+let systemStdout = Darwin.stdout
 #else
-    let systemStderr = Glibc.stderr!
-    let systemStdout = Glibc.stdout!
+let systemStderr = Glibc.stderr!
+let systemStdout = Glibc.stdout!
 #endif
 
 /// `StreamLogHandler` is a simple implementation of `LogHandler` for directing
