@@ -1,11 +1,12 @@
 # file options
 
+--exclude .build
+
 # format options
 
---self insert 
---patternlet inline 
---stripunusedargs unnamed-only 
+--self insert
+--patternlet inline
+--stripunusedargs unnamed-only
 --comments ignore
 
 # rules
-

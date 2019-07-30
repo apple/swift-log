@@ -45,7 +45,7 @@ internal struct TestLogHandler: LogHandler {
 
     func log(level: Logger.Level, message: Logger.Message, metadata: Logger.Metadata?, file: String, function: String, line: UInt) {
         let metadata = (self._metadataSet ? self.metadata : MDC.global.metadata).merging(metadata ?? [:], uniquingKeysWith: { _, new in new })
-        logger.log(level: level, message, metadata: metadata, file: file, function: function, line: line)
+        self.logger.log(level: level, message, metadata: metadata, file: file, function: function, line: line)
         self.recorder.record(level: level, metadata: metadata, message: message)
     }
 
@@ -208,7 +208,7 @@ public class MDC {
         }
         set {
             self.lock.withLock {
-                if nil == self.storage[self.threadId] {
+                if self.storage[self.threadId] == nil {
                     self.storage[self.threadId] = Logger.Metadata()
                 }
                 self.storage[self.threadId]![metadataKey] = newValue
@@ -284,7 +284,7 @@ internal struct TestLibrary {
         // libraries that use global loggers and async, need to make sure they propagate the
         // logging metadata when creating a new thread
         let metadata = MDC.global.metadata
-        queue.asyncAfter(deadline: .now() + 0.1) {
+        self.queue.asyncAfter(deadline: .now() + 0.1) {
             MDC.global.with(metadata: metadata) {
                 self.logger.info("TestLibrary::doSomethingAsync")
                 completion()
