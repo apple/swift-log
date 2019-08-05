@@ -288,17 +288,38 @@ extension Logger {
     public typealias Metadata = [String: MetadataValue]
 
     /// A logging metadata value. `Logger.MetadataValue` is string, array, and dictionary literal convertible.
+    ///
+    /// `MetadataValue` provides convenient conformances to `ExpressibleByStringInterpolation`,
+    /// `ExpressibleByStringLiteral`, `ExpressibleByArrayLiteral`, and `ExpressibleByDictionaryLiteral` which means
+    /// that when constructing `MetadataValue`s you should default to using Swift's usual literals.
+    ///
+    /// Examples:
+    ///  - prefer `logger.info("user logged in", metadata: ["user-id": "\(user.id)"])` over
+    ///    `logger.info("user logged in", metadata: ["user-id": .string(user.id.description)])`
+    ///  - prefer `logger.info("user selected colours", metadata: ["colors": ["\(user.topColor)", "\(user.secondColor)"]])`
+    ///    over `..., metadata: ["colors": .array([.string("\(user.topColor)"), .string("\(user.secondColor)")])`
+    ///  - prefer `logger.info("nested info", metadata: ["nested": ["fave-numbers": ["\(1)", "\(2)", "\(3)"], "foo": "bar"]])`
+    ///    over `..., metadata: ["nested": .dictionary(["fave-numbers": ...])]`
     public enum MetadataValue {
         /// A metadata value which is a `String`.
+        ///
+        /// Because `MetadataValue` implements `ExpressibleByStringInterpolation`, and `ExpressibleByStringLiteral`,
+        /// you don't need to type `.string(someType.description)` you can use the string interpolation `"\(someType)"`.
         case string(String)
 
         /// A metadata value which is some `CustomStringConvertible`.
         case stringConvertible(CustomStringConvertible)
 
         /// A metadata value which is a dictionary from `String` to `Logger.MetadataValue`.
+        ///
+        /// Because `MetadataValue` implements `ExpressibleByDictionaryLiteral`, you don't need to type
+        /// `.dictionary(["foo": .string("bar \(buz)")])`, you can just use the more readable `["foo": "bar \(buz)"]`.
         case dictionary(Metadata)
 
         /// A metadata value which is an array of `Logger.MetadataValue`s.
+        ///
+        /// Because `MetadataValue` implements `ExpressibleByArrayLiteral`, you don't need to type
+        /// `.array([.string("foo"), .string("bar \(buz)")])`, you can just use the more readable `["foo", "bar \(buz)"]`.
         case array([Metadata.Value])
     }
 
