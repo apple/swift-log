@@ -295,11 +295,11 @@ extension Logger {
     ///
     /// Examples:
     ///  - prefer `logger.info("user logged in", metadata: ["user-id": "\(user.id)"])` over
-    ///    `logger.info("user logged in", metadata: ["user-id": .string(user.id.description)])`
+    ///    `..., metadata: ["user-id": .string(user.id.description)])`
     ///  - prefer `logger.info("user selected colours", metadata: ["colors": ["\(user.topColor)", "\(user.secondColor)"]])`
     ///    over `..., metadata: ["colors": .array([.string("\(user.topColor)"), .string("\(user.secondColor)")])`
     ///  - prefer `logger.info("nested info", metadata: ["nested": ["fave-numbers": ["\(1)", "\(2)", "\(3)"], "foo": "bar"]])`
-    ///    over `..., metadata: ["nested": .dictionary(["fave-numbers": ...])]`
+    ///    over `..., metadata: ["nested": .dictionary(["fave-numbers": ...])])`
     public enum MetadataValue {
         /// A metadata value which is a `String`.
         ///
@@ -313,13 +313,13 @@ extension Logger {
         /// A metadata value which is a dictionary from `String` to `Logger.MetadataValue`.
         ///
         /// Because `MetadataValue` implements `ExpressibleByDictionaryLiteral`, you don't need to type
-        /// `.dictionary(["foo": .string("bar \(buz)")])`, you can just use the more readable `["foo": "bar \(buz)"]`.
+        /// `.dictionary(["foo": .string("bar \(buz)")])`, you can just use the more natural `["foo": "bar \(buz)"]`.
         case dictionary(Metadata)
 
         /// A metadata value which is an array of `Logger.MetadataValue`s.
         ///
         /// Because `MetadataValue` implements `ExpressibleByArrayLiteral`, you don't need to type
-        /// `.array([.string("foo"), .string("bar \(buz)")])`, you can just use the more readable `["foo", "bar \(buz)"]`.
+        /// `.array([.string("foo"), .string("bar \(buz)")])`, you can just use the more natural `["foo", "bar \(buz)"]`.
         case array([Metadata.Value])
     }
 
