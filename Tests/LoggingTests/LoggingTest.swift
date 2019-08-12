@@ -453,7 +453,7 @@ class LoggingTest: XCTestCase {
 
     func testStdioOutputStreamFlush() {
         // flush on every statement
-        self.testStdioOutputStreamFlush { writeFD, readFD, readBuffer in
+        self.withWriteReadFDsAndReadBuffer { writeFD, readFD, readBuffer in
             let logStream = StdioOutputStream(file: writeFD, flushMode: .always)
             LoggingSystem.bootstrapInternal { StreamLogHandler(label: $0, stream: logStream) }
             Logger(label: "test").critical("test")
@@ -466,7 +466,7 @@ class LoggingTest: XCTestCase {
             XCTAssertEqual(size2, -1, "expected no flush")
         }
         // default flushing
-        self.testStdioOutputStreamFlush { writeFD, readFD, readBuffer in
+        self.withWriteReadFDsAndReadBuffer { writeFD, readFD, readBuffer in
             let logStream = StdioOutputStream(file: writeFD, flushMode: .undefined)
             LoggingSystem.bootstrapInternal { StreamLogHandler(label: $0, stream: logStream) }
             Logger(label: "test").critical("test")
@@ -480,11 +480,11 @@ class LoggingTest: XCTestCase {
         }
     }
 
-    func testStdioOutputStreamFlush(_ body: (UnsafeMutablePointer<FILE>, CInt, UnsafeMutablePointer<Int8>) -> Void) {
+    func withWriteReadFDsAndReadBuffer(_ body: (UnsafeMutablePointer<FILE>, CInt, UnsafeMutablePointer<Int8>) -> Void) {
         var fds: [Int32] = [-1, -1]
         fds.withUnsafeMutableBufferPointer { ptr in
             let err = pipe(ptr.baseAddress!)
-            assert(err == 0, "pipe: \(err)")
+            XCTAssertEqual(err, 0, "pipe faild \(err)")
         }
 
         let writeFD = fdopen(fds[1], "w")
@@ -495,11 +495,11 @@ class LoggingTest: XCTestCase {
         }
 
         var err = setvbuf(writeFD, writeBuffer, _IOFBF, 256)
-        assert(err == 0)
+        XCTAssertEqual(err, 0, "setvbuf faild \(err)")
 
         let readFD = fds[0]
         err = fcntl(readFD, F_SETFL, fcntl(readFD, F_GETFL) | O_NONBLOCK)
-        assert(err == 0)
+        XCTAssertEqual(err, 0, "fcntl faild \(err)")
 
         let readBuffer = UnsafeMutablePointer<Int8>.allocate(capacity: 256)
         defer {
