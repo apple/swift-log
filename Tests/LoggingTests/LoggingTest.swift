@@ -14,6 +14,12 @@
 @testable import Logging
 import XCTest
 
+#if os(macOS) || os(iOS) || os(tvOS) || os(watchOS)
+import Darwin
+#else
+import Glibc
+#endif
+
 class LoggingTest: XCTestCase {
     func testAutoclosure() throws {
         // bootstrap with our test logging impl
@@ -443,5 +449,67 @@ class LoggingTest: XCTestCase {
 
         XCTAssertTrue(messageSucceeded ?? false)
         XCTAssertEqual(interceptStream.strings.count, 1)
+    }
+
+    func testStdioOutputStreamFlush() {
+        // flush on every statement
+        self.withWriteReadFDsAndReadBuffer { writeFD, readFD, readBuffer in
+            let logStream = StdioOutputStream(file: writeFD, flushMode: .always)
+            LoggingSystem.bootstrapInternal { StreamLogHandler(label: $0, stream: logStream) }
+            Logger(label: "test").critical("test")
+
+            let size = read(readFD, readBuffer, 256)
+            XCTAssertGreaterThan(size, -1, "expected flush")
+
+            logStream.flush()
+            let size2 = read(readFD, readBuffer, 256)
+            XCTAssertEqual(size2, -1, "expected no flush")
+        }
+        // default flushing
+        self.withWriteReadFDsAndReadBuffer { writeFD, readFD, readBuffer in
+            let logStream = StdioOutputStream(file: writeFD, flushMode: .undefined)
+            LoggingSystem.bootstrapInternal { StreamLogHandler(label: $0, stream: logStream) }
+            Logger(label: "test").critical("test")
+
+            let size = read(readFD, readBuffer, 256)
+            XCTAssertEqual(size, -1, "expected no flush")
+
+            logStream.flush()
+            let size2 = read(readFD, readBuffer, 256)
+            XCTAssertGreaterThan(size2, -1, "expected flush")
+        }
+    }
+
+    func withWriteReadFDsAndReadBuffer(_ body: (UnsafeMutablePointer<FILE>, CInt, UnsafeMutablePointer<Int8>) -> Void) {
+        var fds: [Int32] = [-1, -1]
+        fds.withUnsafeMutableBufferPointer { ptr in
+            let err = pipe(ptr.baseAddress!)
+            XCTAssertEqual(err, 0, "pipe faild \(err)")
+        }
+
+        let writeFD = fdopen(fds[1], "w")
+        let writeBuffer = UnsafeMutablePointer<Int8>.allocate(capacity: 256)
+        defer {
+            writeBuffer.deinitialize(count: 256)
+            writeBuffer.deallocate()
+        }
+
+        var err = setvbuf(writeFD, writeBuffer, _IOFBF, 256)
+        XCTAssertEqual(err, 0, "setvbuf faild \(err)")
+
+        let readFD = fds[0]
+        err = fcntl(readFD, F_SETFL, fcntl(readFD, F_GETFL) | O_NONBLOCK)
+        XCTAssertEqual(err, 0, "fcntl faild \(err)")
+
+        let readBuffer = UnsafeMutablePointer<Int8>.allocate(capacity: 256)
+        defer {
+            readBuffer.deinitialize(count: 256)
+            readBuffer.deallocate()
+        }
+
+        // the actual test
+        body(writeFD!, readFD, readBuffer)
+
+        fds.forEach { close($0) }
     }
 }

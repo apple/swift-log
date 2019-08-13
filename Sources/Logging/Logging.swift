@@ -531,19 +531,35 @@ public struct MultiplexLogHandler: LogHandler {
 /// cross-thread interleaving of output.
 internal struct StdioOutputStream: TextOutputStream {
     internal let file: UnsafeMutablePointer<FILE>
+    internal let flushMode: FlushMode
 
     internal func write(_ string: String) {
         string.withCString { ptr in
-            flockfile(file)
+            flockfile(self.file)
             defer {
-                funlockfile(file)
+                funlockfile(self.file)
             }
-            _ = fputs(ptr, file)
+            _ = fputs(ptr, self.file)
+            if case .always = self.flushMode {
+                self.flush()
+            }
         }
     }
 
-    internal static let stderr = StdioOutputStream(file: systemStderr)
-    internal static let stdout = StdioOutputStream(file: systemStdout)
+    /// Flush the underlying stream.
+    /// This has no effect when using the `.always` flush mode, which is the default
+    internal func flush() {
+        _ = fflush(self.file)
+    }
+
+    internal static let stderr = StdioOutputStream(file: systemStderr, flushMode: .always)
+    internal static let stdout = StdioOutputStream(file: systemStdout, flushMode: .always)
+
+    /// Defines the flushing strategy for the underlying stream.
+    internal enum FlushMode {
+        case undefined
+        case always
+    }
 }
 
 // Prevent name clashes
