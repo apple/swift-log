@@ -105,7 +105,6 @@ extension Logger {
     /// otherwise nothing will happen.
     ///
     /// - parameters:
-    ///    - level: The log level to log `message` at. For the available log levels, see `Logger.Level`.
     ///    - message: The message to be logged. `message` can be used with any string interpolation literal.
     ///    - metadata: One-off metadata to attach to this log message
     ///    - file: The file this log message originates from (there's usually no need to pass it explicitly as it
@@ -127,7 +126,6 @@ extension Logger {
     /// otherwise nothing will happen.
     ///
     /// - parameters:
-    ///    - level: The log level to log `message` at. For the available log levels, see `Logger.Level`.
     ///    - message: The message to be logged. `message` can be used with any string interpolation literal.
     ///    - metadata: One-off metadata to attach to this log message
     ///    - file: The file this log message originates from (there's usually no need to pass it explicitly as it
@@ -149,7 +147,6 @@ extension Logger {
     /// otherwise nothing will happen.
     ///
     /// - parameters:
-    ///    - level: The log level to log `message` at. For the available log levels, see `Logger.Level`.
     ///    - message: The message to be logged. `message` can be used with any string interpolation literal.
     ///    - metadata: One-off metadata to attach to this log message
     ///    - file: The file this log message originates from (there's usually no need to pass it explicitly as it
@@ -171,7 +168,6 @@ extension Logger {
     /// otherwise nothing will happen.
     ///
     /// - parameters:
-    ///    - level: The log level to log `message` at. For the available log levels, see `Logger.Level`.
     ///    - message: The message to be logged. `message` can be used with any string interpolation literal.
     ///    - metadata: One-off metadata to attach to this log message
     ///    - file: The file this log message originates from (there's usually no need to pass it explicitly as it
@@ -193,7 +189,6 @@ extension Logger {
     /// otherwise nothing will happen.
     ///
     /// - parameters:
-    ///    - level: The log level to log `message` at. For the available log levels, see `Logger.Level`.
     ///    - message: The message to be logged. `message` can be used with any string interpolation literal.
     ///    - metadata: One-off metadata to attach to this log message
     ///    - file: The file this log message originates from (there's usually no need to pass it explicitly as it
@@ -215,7 +210,6 @@ extension Logger {
     /// otherwise nothing will happen.
     ///
     /// - parameters:
-    ///    - level: The log level to log `message` at. For the available log levels, see `Logger.Level`.
     ///    - message: The message to be logged. `message` can be used with any string interpolation literal.
     ///    - metadata: One-off metadata to attach to this log message
     ///    - file: The file this log message originates from (there's usually no need to pass it explicitly as it
@@ -236,7 +230,6 @@ extension Logger {
     /// `.critical` messages will always be logged.
     ///
     /// - parameters:
-    ///    - level: The log level to log `message` at. For the available log levels, see `Logger.Level`.
     ///    - message: The message to be logged. `message` can be used with any string interpolation literal.
     ///    - metadata: One-off metadata to attach to this log message
     ///    - file: The file this log message originates from (there's usually no need to pass it explicitly as it
