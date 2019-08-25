@@ -1,6 +1,14 @@
+def self.infer_version_from_git
+  return nil unless Dir.exist?('.git')
+
+  `git tag --list '*.*.*' --sort=committerdate`.split.select do |tag|
+    Version.correct?(tag)
+  end.last
+end
+
 Pod::Spec.new do |spec|
   spec.name         = "Logging"
-  spec.version      = "0.0.1"
+  spec.version      = infer_version_from_git || (raise Informative, 'Could not infer `Logging` version from git')
   spec.summary      = "A Logging API package for Swift 5."
 
   spec.description  = <<-DESC
