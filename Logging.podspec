@@ -1,7 +1,7 @@
 def self.infer_version_from_git
   return nil unless Dir.exist?('.git')
 
-  `git tag --list '*.*.*' --sort=committerdate`.split.select do |tag|
+  `git tag --merged HEAD --sort=committerdate`.split.select do |tag|
     Version.correct?(tag)
   end.last
 end
