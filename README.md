@@ -63,6 +63,7 @@ As the API has just launched, not many implementations exist yet. If you are int
 - [Adorkable/swift-log-**format-and-pipe**](https://github.com/Adorkable/swift-log-format-and-pipe) – a backend that allows customization of the output format and the resulting destination
 - [chrisaljoudi/swift-log-**oslog**](https://github.com/chrisaljoudi/swift-log-oslog) - an OSLog [Unified Logging](https://developer.apple.com/documentation/os/logging) backend for use on Apple platforms
 - [Brainfinance/StackdriverLogging](https://github.com/Brainfinance/StackdriverLogging) - a structured JSON logging backend for use on Google Cloud Platform with the [Stackdriver logging agent](https://cloud.google.com/logging/docs/agent) 
+- [vapor/console-kit](https://github.com/vapor/console-kit/) - print log messages to a terminal with stylized ([ANSI](https://en.wikipedia.org/wiki/ANSI_escape_code)) output
 - Your library? [Get in touch!](https://forums.swift.org/c/server)
 
 ## What is an API package?
