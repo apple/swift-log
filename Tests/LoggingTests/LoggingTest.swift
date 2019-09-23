@@ -295,7 +295,7 @@ class LoggingTest: XCTestCase {
             print("new multi")
             return multi
         }
-        var logger1: Logger = {
+        let logger1: Logger = {
             var logger = Logger(label: "foo")
             logger.logLevel = .debug
             logger[metadataKey: "only-on"] = "first"
