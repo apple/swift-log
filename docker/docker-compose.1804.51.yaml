@@ -1,0 +1,13 @@
+version: "3"
+
+services:
+
+  runtime-setup:
+    image: swift-log:18.04-5.1
+    build:
+      args:
+        ubuntu_version: "bionic"
+        swift_version: "5.1"
+
+  test:
+    image: swift-log:18.04-5.1
