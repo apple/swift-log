@@ -23,7 +23,7 @@
         <a class="header-link" href="../index.html">
           Logging Docs
         </a>
-         (96% documented)
+         (100% documented)
       </p>
     
       <p class="header-col--secondary">
@@ -84,6 +84,9 @@
               <li class="nav-group-task">
                 <a class="nav-group-task-link" href="../Structs/MultiplexLogHandler.html">MultiplexLogHandler</a>
               </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Structs/StreamLogHandler.html">StreamLogHandler</a>
+              </li>
             </ul>
           </li>
         </ul>
@@ -126,7 +129,7 @@ corresponding to a log level.</p>
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p>An identifier of the creator of this <code>Logger</code>.</p>
 
                       </div>
                       <div class="declaration">
@@ -138,7 +141,7 @@ corresponding to a log level.</p>
                         </div>
                       </div>
                       <div class="slightly-smaller">
-                        <a href="https://github.com/apple/swift-log/tree/1.0.0/Sources/Logging/Logging.swift#L">Show on GitHub</a>
+                        <a href="https://github.com/apple/swift-log/tree/1.1.1/Sources/Logging/Logging.swift#L33">Show on GitHub</a>
                       </div>
                     </section>
                   </div>
@@ -261,7 +264,7 @@ otherwise nothing will happen.</p>
                         </table>
                       </div>
                       <div class="slightly-smaller">
-                        <a href="https://github.com/apple/swift-log/tree/1.0.0/Sources/Logging/Logging.swift#L56-L66">Show on GitHub</a>
+                        <a href="https://github.com/apple/swift-log/tree/1.1.1/Sources/Logging/Logging.swift#L58-L68">Show on GitHub</a>
                       </div>
                     </section>
                   </div>
@@ -298,7 +301,7 @@ otherwise nothing will happen.</p>
                         </div>
                       </div>
                       <div class="slightly-smaller">
-                        <a href="https://github.com/apple/swift-log/tree/1.0.0/Sources/Logging/Logging.swift#L73-L80">Show on GitHub</a>
+                        <a href="https://github.com/apple/swift-log/tree/1.1.1/Sources/Logging/Logging.swift#L75-L82">Show on GitHub</a>
                       </div>
                     </section>
                   </div>
@@ -337,7 +340,7 @@ otherwise nothing will happen.</p>
                         </div>
                       </div>
                       <div class="slightly-smaller">
-                        <a href="https://github.com/apple/swift-log/tree/1.0.0/Sources/Logging/Logging.swift#L89-L96">Show on GitHub</a>
+                        <a href="https://github.com/apple/swift-log/tree/1.1.1/Sources/Logging/Logging.swift#L91-L98">Show on GitHub</a>
                       </div>
                     </section>
                   </div>
@@ -359,7 +362,7 @@ otherwise nothing will happen.</p>
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Log a message passing with the <code>Logger.trace</code> log level.</p>
+                        <p>Log a message passing with the <code><a href="../Structs/Logger/Level.html#/s:7Logging6LoggerV5LevelO5traceyA2EmF">Logger.Level.trace</a></code> log level.</p>
 
 <p>If <code>.trace</code> is at least as severe as the <code>Logger</code>&lsquo;s <code><a href="../Structs/Logger.html#/s:7Logging6LoggerV8logLevelAC0D0Ovp">logLevel</a></code>, it will be logged,
 otherwise nothing will happen.</p>
@@ -383,18 +386,6 @@ otherwise nothing will happen.</p>
                             <tr>
                               <td>
                                 <code>
-                                <em>level</em>
-                                </code>
-                              </td>
-                              <td>
-                                <div>
-                                  <p>The log level to log <code>message</code> at. For the available log levels, see <code><a href="../Structs/Logger/Level.html">Logger.Level</a></code>.</p>
-                                </div>
-                              </td>
-                            </tr>
-                            <tr>
-                              <td>
-                                <code>
                                 <em>message</em>
                                 </code>
                               </td>
@@ -459,7 +450,7 @@ otherwise nothing will happen.</p>
                         </table>
                       </div>
                       <div class="slightly-smaller">
-                        <a href="https://github.com/apple/swift-log/tree/1.0.0/Sources/Logging/Logging.swift#L116-L120">Show on GitHub</a>
+                        <a href="https://github.com/apple/swift-log/tree/1.1.1/Sources/Logging/Logging.swift#L117-L121">Show on GitHub</a>
                       </div>
                     </section>
                   </div>
@@ -477,7 +468,7 @@ otherwise nothing will happen.</p>
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Log a message passing with the <code>Logger.info</code> log level.</p>
+                        <p>Log a message passing with the <code><a href="../Structs/Logger/Level.html#/s:7Logging6LoggerV5LevelO5debugyA2EmF">Logger.Level.debug</a></code> log level.</p>
 
 <p>If <code>.debug</code> is at least as severe as the <code>Logger</code>&lsquo;s <code><a href="../Structs/Logger.html#/s:7Logging6LoggerV8logLevelAC0D0Ovp">logLevel</a></code>, it will be logged,
 otherwise nothing will happen.</p>
@@ -501,18 +492,6 @@ otherwise nothing will happen.</p>
                             <tr>
                               <td>
                                 <code>
-                                <em>level</em>
-                                </code>
-                              </td>
-                              <td>
-                                <div>
-                                  <p>The log level to log <code>message</code> at. For the available log levels, see <code><a href="../Structs/Logger/Level.html">Logger.Level</a></code>.</p>
-                                </div>
-                              </td>
-                            </tr>
-                            <tr>
-                              <td>
-                                <code>
                                 <em>message</em>
                                 </code>
                               </td>
@@ -577,7 +556,7 @@ otherwise nothing will happen.</p>
                         </table>
                       </div>
                       <div class="slightly-smaller">
-                        <a href="https://github.com/apple/swift-log/tree/1.0.0/Sources/Logging/Logging.swift#L138-L142">Show on GitHub</a>
+                        <a href="https://github.com/apple/swift-log/tree/1.1.1/Sources/Logging/Logging.swift#L138-L142">Show on GitHub</a>
                       </div>
                     </section>
                   </div>
@@ -619,18 +598,6 @@ otherwise nothing will happen.</p>
                             <tr>
                               <td>
                                 <code>
-                                <em>level</em>
-                                </code>
-                              </td>
-                              <td>
-                                <div>
-                                  <p>The log level to log <code>message</code> at. For the available log levels, see <code><a href="../Structs/Logger/Level.html">Logger.Level</a></code>.</p>
-                                </div>
-                              </td>
-                            </tr>
-                            <tr>
-                              <td>
-                                <code>
                                 <em>message</em>
                                 </code>
                               </td>
@@ -695,7 +662,7 @@ otherwise nothing will happen.</p>
                         </table>
                       </div>
                       <div class="slightly-smaller">
-                        <a href="https://github.com/apple/swift-log/tree/1.0.0/Sources/Logging/Logging.swift#L160-L164">Show on GitHub</a>
+                        <a href="https://github.com/apple/swift-log/tree/1.1.1/Sources/Logging/Logging.swift#L159-L163">Show on GitHub</a>
                       </div>
                     </section>
                   </div>
@@ -737,18 +704,6 @@ otherwise nothing will happen.</p>
                             <tr>
                               <td>
                                 <code>
-                                <em>level</em>
-                                </code>
-                              </td>
-                              <td>
-                                <div>
-                                  <p>The log level to log <code>message</code> at. For the available log levels, see <code><a href="../Structs/Logger/Level.html">Logger.Level</a></code>.</p>
-                                </div>
-                              </td>
-                            </tr>
-                            <tr>
-                              <td>
-                                <code>
                                 <em>message</em>
                                 </code>
                               </td>
@@ -813,7 +768,7 @@ otherwise nothing will happen.</p>
                         </table>
                       </div>
                       <div class="slightly-smaller">
-                        <a href="https://github.com/apple/swift-log/tree/1.0.0/Sources/Logging/Logging.swift#L182-L186">Show on GitHub</a>
+                        <a href="https://github.com/apple/swift-log/tree/1.1.1/Sources/Logging/Logging.swift#L180-L184">Show on GitHub</a>
                       </div>
                     </section>
                   </div>
@@ -855,18 +810,6 @@ otherwise nothing will happen.</p>
                             <tr>
                               <td>
                                 <code>
-                                <em>level</em>
-                                </code>
-                              </td>
-                              <td>
-                                <div>
-                                  <p>The log level to log <code>message</code> at. For the available log levels, see <code><a href="../Structs/Logger/Level.html">Logger.Level</a></code>.</p>
-                                </div>
-                              </td>
-                            </tr>
-                            <tr>
-                              <td>
-                                <code>
                                 <em>message</em>
                                 </code>
                               </td>
@@ -931,7 +874,7 @@ otherwise nothing will happen.</p>
                         </table>
                       </div>
                       <div class="slightly-smaller">
-                        <a href="https://github.com/apple/swift-log/tree/1.0.0/Sources/Logging/Logging.swift#L204-L208">Show on GitHub</a>
+                        <a href="https://github.com/apple/swift-log/tree/1.1.1/Sources/Logging/Logging.swift#L201-L205">Show on GitHub</a>
                       </div>
                     </section>
                   </div>
@@ -973,18 +916,6 @@ otherwise nothing will happen.</p>
                             <tr>
                               <td>
                                 <code>
-                                <em>level</em>
-                                </code>
-                              </td>
-                              <td>
-                                <div>
-                                  <p>The log level to log <code>message</code> at. For the available log levels, see <code><a href="../Structs/Logger/Level.html">Logger.Level</a></code>.</p>
-                                </div>
-                              </td>
-                            </tr>
-                            <tr>
-                              <td>
-                                <code>
                                 <em>message</em>
                                 </code>
                               </td>
@@ -1049,7 +980,7 @@ otherwise nothing will happen.</p>
                         </table>
                       </div>
                       <div class="slightly-smaller">
-                        <a href="https://github.com/apple/swift-log/tree/1.0.0/Sources/Logging/Logging.swift#L226-L230">Show on GitHub</a>
+                        <a href="https://github.com/apple/swift-log/tree/1.1.1/Sources/Logging/Logging.swift#L222-L226">Show on GitHub</a>
                       </div>
                     </section>
                   </div>
@@ -1090,18 +1021,6 @@ otherwise nothing will happen.</p>
                             <tr>
                               <td>
                                 <code>
-                                <em>level</em>
-                                </code>
-                              </td>
-                              <td>
-                                <div>
-                                  <p>The log level to log <code>message</code> at. For the available log levels, see <code><a href="../Structs/Logger/Level.html">Logger.Level</a></code>.</p>
-                                </div>
-                              </td>
-                            </tr>
-                            <tr>
-                              <td>
-                                <code>
                                 <em>message</em>
                                 </code>
                               </td>
@@ -1166,7 +1085,7 @@ otherwise nothing will happen.</p>
                         </table>
                       </div>
                       <div class="slightly-smaller">
-                        <a href="https://github.com/apple/swift-log/tree/1.0.0/Sources/Logging/Logging.swift#L247-L251">Show on GitHub</a>
+                        <a href="https://github.com/apple/swift-log/tree/1.1.1/Sources/Logging/Logging.swift#L242-L246">Show on GitHub</a>
                       </div>
                     </section>
                   </div>
@@ -1200,7 +1119,7 @@ otherwise nothing will happen.</p>
                         </div>
                       </div>
                       <div class="slightly-smaller">
-                        <a href="https://github.com/apple/swift-log/tree/1.0.0/Sources/Logging/Logging.swift#L286">Show on GitHub</a>
+                        <a href="https://github.com/apple/swift-log/tree/1.1.1/Sources/Logging/Logging.swift#L281">Show on GitHub</a>
                       </div>
                     </section>
                   </div>
@@ -1220,6 +1139,21 @@ otherwise nothing will happen.</p>
                       <div class="abstract">
                         <p>A logging metadata value. <code>Logger.MetadataValue</code> is string, array, and dictionary literal convertible.</p>
 
+<p><code>MetadataValue</code> provides convenient conformances to <code>ExpressibleByStringInterpolation</code>,
+<code>ExpressibleByStringLiteral</code>, <code>ExpressibleByArrayLiteral</code>, and <code>ExpressibleByDictionaryLiteral</code> which means
+that when constructing <code>MetadataValue</code>s you should default to using Swift&rsquo;s usual literals.</p>
+
+<p>Examples:</p>
+
+<ul>
+<li>prefer <code>logger.info(&quot;user logged in&quot;, metadata: [&quot;user-id&quot;: &quot;\(user.id)&quot;])</code> over
+<code>..., metadata: [&quot;user-id&quot;: .string(user.id.description)])</code></li>
+<li>prefer <code>logger.info(&quot;user selected colours&quot;, metadata: [&quot;colors&quot;: [&quot;\(user.topColor)&quot;, &quot;\(user.secondColor)&quot;]])</code>
+over <code>..., metadata: [&quot;colors&quot;: .array([.string(&quot;\(user.topColor)&quot;), .string(&quot;\(user.secondColor)&quot;)])</code></li>
+<li>prefer <code>logger.info(&quot;nested info&quot;, metadata: [&quot;nested&quot;: [&quot;fave-numbers&quot;: [&quot;\(1)&quot;, &quot;\(2)&quot;, &quot;\(3)&quot;], &quot;foo&quot;: &quot;bar&quot;]])</code>
+over <code>..., metadata: [&quot;nested&quot;: .dictionary([&quot;fave-numbers&quot;: ...])])</code></li>
+</ul>
+
                         <a href="../Structs/Logger/MetadataValue.html" class="slightly-smaller">See more</a>
                       </div>
                       <div class="declaration">
@@ -1231,7 +1165,7 @@ otherwise nothing will happen.</p>
                         </div>
                       </div>
                       <div class="slightly-smaller">
-                        <a href="https://github.com/apple/swift-log/tree/1.0.0/Sources/Logging/Logging.swift#L289-L301">Show on GitHub</a>
+                        <a href="https://github.com/apple/swift-log/tree/1.1.1/Sources/Logging/Logging.swift#L296-L317">Show on GitHub</a>
                       </div>
                     </section>
                   </div>
@@ -1251,8 +1185,8 @@ otherwise nothing will happen.</p>
                       <div class="abstract">
                         <p>The log level.</p>
 
-<p>Raw values of log levels correspond to their severity, and are ordered by lowest numeric value (0) being
-the most severe. The raw values match the syslog values.</p>
+<p>Log levels are ordered by their severity, with <code>.trace</code> being the least severe and
+<code>.critical</code> being the most severe.</p>
 
                         <a href="../Structs/Logger/Level.html" class="slightly-smaller">See more</a>
                       </div>
@@ -1260,12 +1194,12 @@ the most severe. The raw values match the syslog values.</p>
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">enum</span> <span class="kt">Level</span> <span class="p">:</span> <span class="kt">CaseIterable</span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">enum</span> <span class="kt">Level</span> <span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="kt">Codable</span><span class="p">,</span> <span class="kt">CaseIterable</span></code></pre>
 
                         </div>
                       </div>
                       <div class="slightly-smaller">
-                        <a href="https://github.com/apple/swift-log/tree/1.0.0/Sources/Logging/Logging.swift#L307-L336">Show on GitHub</a>
+                        <a href="https://github.com/apple/swift-log/tree/1.1.1/Sources/Logging/Logging.swift#L323-L352">Show on GitHub</a>
                       </div>
                     </section>
                   </div>
@@ -1317,7 +1251,7 @@ a datatype.</p>
                         </table>
                       </div>
                       <div class="slightly-smaller">
-                        <a href="https://github.com/apple/swift-log/tree/1.0.0/Sources/Logging/Logging.swift#L345-L347">Show on GitHub</a>
+                        <a href="https://github.com/apple/swift-log/tree/1.1.1/Sources/Logging/Logging.swift#L361-L363">Show on GitHub</a>
                       </div>
                     </section>
                   </div>
@@ -1384,7 +1318,7 @@ using <code>LoggingSystem.bootstrap</code> is not appropriate for this particula
                         </table>
                       </div>
                       <div class="slightly-smaller">
-                        <a href="https://github.com/apple/swift-log/tree/1.0.0/Sources/Logging/Logging.swift#L360-L362">Show on GitHub</a>
+                        <a href="https://github.com/apple/swift-log/tree/1.1.1/Sources/Logging/Logging.swift#L376-L378">Show on GitHub</a>
                       </div>
                     </section>
                   </div>
@@ -1431,7 +1365,7 @@ using <code>LoggingSystem.bootstrap</code> is not appropriate for this particula
                         </div>
                       </div>
                       <div class="slightly-smaller">
-                        <a href="https://github.com/apple/swift-log/tree/1.0.0/Sources/Logging/Logging.swift#L425-L440">Show on GitHub</a>
+                        <a href="https://github.com/apple/swift-log/tree/1.1.1/Sources/Logging/Logging.swift#L441-L456">Show on GitHub</a>
                       </div>
                     </section>
                   </div>
@@ -1444,8 +1378,8 @@ using <code>LoggingSystem.bootstrap</code> is not appropriate for this particula
       </article>
     </div>
     <section class="footer">
-      <p>&copy; 2019 <a class="link" href="https://github.com/apple/swift-log" target="_blank" rel="external">SwiftLog team</a>. All rights reserved. (Last updated: 2019-04-23)</p>
-      <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.9.5</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
+      <p>&copy; 2019 <a class="link" href="https://github.com/apple/swift-log" target="_blank" rel="external">SwiftLog team</a>. All rights reserved. (Last updated: 2019-09-30)</p>
+      <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.10.0</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
     </section>
   </body>
 </div>

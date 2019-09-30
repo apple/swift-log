@@ -23,7 +23,7 @@
         <a class="header-link" href="../../index.html">
           Logging Docs
         </a>
-         (96% documented)
+         (100% documented)
       </p>
     
       <p class="header-col--secondary">
@@ -84,6 +84,9 @@
               <li class="nav-group-task">
                 <a class="nav-group-task-link" href="../../Structs/MultiplexLogHandler.html">MultiplexLogHandler</a>
               </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../../Structs/StreamLogHandler.html">StreamLogHandler</a>
+              </li>
             </ul>
           </li>
         </ul>
@@ -100,6 +103,21 @@
                 </div>
               </div>
             <p>A logging metadata value. <code>Logger.MetadataValue</code> is string, array, and dictionary literal convertible.</p>
+
+<p><code>MetadataValue</code> provides convenient conformances to <code>ExpressibleByStringInterpolation</code>,
+<code>ExpressibleByStringLiteral</code>, <code>ExpressibleByArrayLiteral</code>, and <code>ExpressibleByDictionaryLiteral</code> which means
+that when constructing <code>MetadataValue</code>s you should default to using Swift&rsquo;s usual literals.</p>
+
+<p>Examples:</p>
+
+<ul>
+<li>prefer <code>logger.info(&quot;user logged in&quot;, metadata: [&quot;user-id&quot;: &quot;\(user.id)&quot;])</code> over
+<code>..., metadata: [&quot;user-id&quot;: .string(user.id.description)])</code></li>
+<li>prefer <code>logger.info(&quot;user selected colours&quot;, metadata: [&quot;colors&quot;: [&quot;\(user.topColor)&quot;, &quot;\(user.secondColor)&quot;]])</code>
+over <code>..., metadata: [&quot;colors&quot;: .array([.string(&quot;\(user.topColor)&quot;), .string(&quot;\(user.secondColor)&quot;)])</code></li>
+<li>prefer <code>logger.info(&quot;nested info&quot;, metadata: [&quot;nested&quot;: [&quot;fave-numbers&quot;: [&quot;\(1)&quot;, &quot;\(2)&quot;, &quot;\(3)&quot;], &quot;foo&quot;: &quot;bar&quot;]])</code>
+over <code>..., metadata: [&quot;nested&quot;: .dictionary([&quot;fave-numbers&quot;: ...])])</code></li>
+</ul>
 
           </div>
         </section>
@@ -123,6 +141,9 @@
                       <div class="abstract">
                         <p>A metadata value which is a <code>String</code>.</p>
 
+<p>Because <code>MetadataValue</code> implements <code>ExpressibleByStringInterpolation</code>, and <code>ExpressibleByStringLiteral</code>,
+you don&rsquo;t need to type <code>.string(someType.description)</code> you can use the string interpolation <code>&quot;\(someType)&quot;</code>.</p>
+
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
@@ -133,7 +154,7 @@
                         </div>
                       </div>
                       <div class="slightly-smaller">
-                        <a href="https://github.com/apple/swift-log/tree/1.0.0/Sources/Logging/Logging.swift#L291">Show on GitHub</a>
+                        <a href="https://github.com/apple/swift-log/tree/1.1.1/Sources/Logging/Logging.swift#L301">Show on GitHub</a>
                       </div>
                     </section>
                   </div>
@@ -163,7 +184,7 @@
                         </div>
                       </div>
                       <div class="slightly-smaller">
-                        <a href="https://github.com/apple/swift-log/tree/1.0.0/Sources/Logging/Logging.swift#L294">Show on GitHub</a>
+                        <a href="https://github.com/apple/swift-log/tree/1.1.1/Sources/Logging/Logging.swift#L304">Show on GitHub</a>
                       </div>
                     </section>
                   </div>
@@ -183,6 +204,9 @@
                       <div class="abstract">
                         <p>A metadata value which is a dictionary from <code>String</code> to <code>Logger.MetadataValue</code>.</p>
 
+<p>Because <code>MetadataValue</code> implements <code>ExpressibleByDictionaryLiteral</code>, you don&rsquo;t need to type
+<code>.dictionary([&quot;foo&quot;: .string(&quot;bar \(buz)&quot;)])</code>, you can just use the more natural <code>[&quot;foo&quot;: &quot;bar \(buz)&quot;]</code>.</p>
+
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
@@ -193,7 +217,7 @@
                         </div>
                       </div>
                       <div class="slightly-smaller">
-                        <a href="https://github.com/apple/swift-log/tree/1.0.0/Sources/Logging/Logging.swift#L297">Show on GitHub</a>
+                        <a href="https://github.com/apple/swift-log/tree/1.1.1/Sources/Logging/Logging.swift#L310">Show on GitHub</a>
                       </div>
                     </section>
                   </div>
@@ -213,6 +237,9 @@
                       <div class="abstract">
                         <p>A metadata value which is an array of <code>Logger.MetadataValue</code>s.</p>
 
+<p>Because <code>MetadataValue</code> implements <code>ExpressibleByArrayLiteral</code>, you don&rsquo;t need to type
+<code>.array([.string(&quot;foo&quot;), .string(&quot;bar \(buz)&quot;)])</code>, you can just use the more natural <code>[&quot;foo&quot;, &quot;bar \(buz)&quot;]</code>.</p>
+
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
@@ -223,7 +250,7 @@
                         </div>
                       </div>
                       <div class="slightly-smaller">
-                        <a href="https://github.com/apple/swift-log/tree/1.0.0/Sources/Logging/Logging.swift#L300">Show on GitHub</a>
+                        <a href="https://github.com/apple/swift-log/tree/1.1.1/Sources/Logging/Logging.swift#L316">Show on GitHub</a>
                       </div>
                     </section>
                   </div>
@@ -256,7 +283,7 @@
                         </div>
                       </div>
                       <div class="slightly-smaller">
-                        <a href="https://github.com/apple/swift-log/tree/1.0.0/Sources/Logging/Logging.swift#L397-L410">Show on GitHub</a>
+                        <a href="https://github.com/apple/swift-log/tree/1.1.1/Sources/Logging/Logging.swift#L413-L426">Show on GitHub</a>
                       </div>
                     </section>
                   </div>
@@ -289,7 +316,7 @@
                         </div>
                       </div>
                       <div class="slightly-smaller">
-                        <a href="https://github.com/apple/swift-log/tree/1.0.0/Sources/Logging/Logging.swift#L">Show on GitHub</a>
+                        <a href="https://github.com/apple/swift-log/tree/1.1.1/Sources/Logging/Logging.swift#L">Show on GitHub</a>
                       </div>
                     </section>
                   </div>
@@ -318,7 +345,7 @@
                         </div>
                       </div>
                       <div class="slightly-smaller">
-                        <a href="https://github.com/apple/swift-log/tree/1.0.0/Sources/Logging/Logging.swift#L579-L581">Show on GitHub</a>
+                        <a href="https://github.com/apple/swift-log/tree/1.1.1/Sources/Logging/Logging.swift#L639-L641">Show on GitHub</a>
                       </div>
                     </section>
                   </div>
@@ -351,7 +378,7 @@
                         </div>
                       </div>
                       <div class="slightly-smaller">
-                        <a href="https://github.com/apple/swift-log/tree/1.0.0/Sources/Logging/Logging.swift#L587-L598">Show on GitHub</a>
+                        <a href="https://github.com/apple/swift-log/tree/1.1.1/Sources/Logging/Logging.swift#L647-L658">Show on GitHub</a>
                       </div>
                     </section>
                   </div>
@@ -384,7 +411,7 @@
                         </div>
                       </div>
                       <div class="slightly-smaller">
-                        <a href="https://github.com/apple/swift-log/tree/1.0.0/Sources/Logging/Logging.swift#L">Show on GitHub</a>
+                        <a href="https://github.com/apple/swift-log/tree/1.1.1/Sources/Logging/Logging.swift#L">Show on GitHub</a>
                       </div>
                     </section>
                   </div>
@@ -413,7 +440,7 @@
                         </div>
                       </div>
                       <div class="slightly-smaller">
-                        <a href="https://github.com/apple/swift-log/tree/1.0.0/Sources/Logging/Logging.swift#L">Show on GitHub</a>
+                        <a href="https://github.com/apple/swift-log/tree/1.1.1/Sources/Logging/Logging.swift#L">Show on GitHub</a>
                       </div>
                     </section>
                   </div>
@@ -442,7 +469,7 @@
                         </div>
                       </div>
                       <div class="slightly-smaller">
-                        <a href="https://github.com/apple/swift-log/tree/1.0.0/Sources/Logging/Logging.swift#L611-L613">Show on GitHub</a>
+                        <a href="https://github.com/apple/swift-log/tree/1.1.1/Sources/Logging/Logging.swift#L671-L673">Show on GitHub</a>
                       </div>
                     </section>
                   </div>
@@ -475,7 +502,7 @@
                         </div>
                       </div>
                       <div class="slightly-smaller">
-                        <a href="https://github.com/apple/swift-log/tree/1.0.0/Sources/Logging/Logging.swift#L">Show on GitHub</a>
+                        <a href="https://github.com/apple/swift-log/tree/1.1.1/Sources/Logging/Logging.swift#L">Show on GitHub</a>
                       </div>
                     </section>
                   </div>
@@ -504,7 +531,7 @@
                         </div>
                       </div>
                       <div class="slightly-smaller">
-                        <a href="https://github.com/apple/swift-log/tree/1.0.0/Sources/Logging/Logging.swift#L621-L623">Show on GitHub</a>
+                        <a href="https://github.com/apple/swift-log/tree/1.1.1/Sources/Logging/Logging.swift#L681-L683">Show on GitHub</a>
                       </div>
                     </section>
                   </div>
@@ -517,8 +544,8 @@
       </article>
     </div>
     <section class="footer">
-      <p>&copy; 2019 <a class="link" href="https://github.com/apple/swift-log" target="_blank" rel="external">SwiftLog team</a>. All rights reserved. (Last updated: 2019-04-23)</p>
-      <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.9.5</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
+      <p>&copy; 2019 <a class="link" href="https://github.com/apple/swift-log" target="_blank" rel="external">SwiftLog team</a>. All rights reserved. (Last updated: 2019-09-30)</p>
+      <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.10.0</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
     </section>
   </body>
 </div>

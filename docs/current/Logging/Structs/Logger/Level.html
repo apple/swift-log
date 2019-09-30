@@ -23,7 +23,7 @@
         <a class="header-link" href="../../index.html">
           Logging Docs
         </a>
-         (96% documented)
+         (100% documented)
       </p>
     
       <p class="header-col--secondary">
@@ -84,6 +84,9 @@
               <li class="nav-group-task">
                 <a class="nav-group-task-link" href="../../Structs/MultiplexLogHandler.html">MultiplexLogHandler</a>
               </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../../Structs/StreamLogHandler.html">StreamLogHandler</a>
+              </li>
             </ul>
           </li>
         </ul>
@@ -95,14 +98,14 @@
             <h1>Level</h1>
               <div class="declaration">
                 <div class="language">
-                  <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">enum</span> <span class="kt">Level</span> <span class="p">:</span> <span class="kt">CaseIterable</span></code></pre>
+                  <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">enum</span> <span class="kt">Level</span> <span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="kt">Codable</span><span class="p">,</span> <span class="kt">CaseIterable</span></code></pre>
 
                 </div>
               </div>
             <p>The log level.</p>
 
-<p>Raw values of log levels correspond to their severity, and are ordered by lowest numeric value (0) being
-the most severe. The raw values match the syslog values.</p>
+<p>Log levels are ordered by their severity, with <code>.trace</code> being the least severe and
+<code>.critical</code> being the most severe.</p>
 
           </div>
         </section>
@@ -136,7 +139,7 @@ the most severe. The raw values match the syslog values.</p>
                         </div>
                       </div>
                       <div class="slightly-smaller">
-                        <a href="https://github.com/apple/swift-log/tree/1.0.0/Sources/Logging/Logging.swift#L309">Show on GitHub</a>
+                        <a href="https://github.com/apple/swift-log/tree/1.1.1/Sources/Logging/Logging.swift#L325">Show on GitHub</a>
                       </div>
                     </section>
                   </div>
@@ -167,7 +170,7 @@ debugging a program.</p>
                         </div>
                       </div>
                       <div class="slightly-smaller">
-                        <a href="https://github.com/apple/swift-log/tree/1.0.0/Sources/Logging/Logging.swift#L313">Show on GitHub</a>
+                        <a href="https://github.com/apple/swift-log/tree/1.1.1/Sources/Logging/Logging.swift#L329">Show on GitHub</a>
                       </div>
                     </section>
                   </div>
@@ -197,7 +200,7 @@ debugging a program.</p>
                         </div>
                       </div>
                       <div class="slightly-smaller">
-                        <a href="https://github.com/apple/swift-log/tree/1.0.0/Sources/Logging/Logging.swift#L316">Show on GitHub</a>
+                        <a href="https://github.com/apple/swift-log/tree/1.1.1/Sources/Logging/Logging.swift#L332">Show on GitHub</a>
                       </div>
                     </section>
                   </div>
@@ -228,7 +231,7 @@ special handling.</p>
                         </div>
                       </div>
                       <div class="slightly-smaller">
-                        <a href="https://github.com/apple/swift-log/tree/1.0.0/Sources/Logging/Logging.swift#L320">Show on GitHub</a>
+                        <a href="https://github.com/apple/swift-log/tree/1.1.1/Sources/Logging/Logging.swift#L336">Show on GitHub</a>
                       </div>
                     </section>
                   </div>
@@ -259,7 +262,7 @@ special handling.</p>
                         </div>
                       </div>
                       <div class="slightly-smaller">
-                        <a href="https://github.com/apple/swift-log/tree/1.0.0/Sources/Logging/Logging.swift#L324">Show on GitHub</a>
+                        <a href="https://github.com/apple/swift-log/tree/1.1.1/Sources/Logging/Logging.swift#L340">Show on GitHub</a>
                       </div>
                     </section>
                   </div>
@@ -289,7 +292,7 @@ special handling.</p>
                         </div>
                       </div>
                       <div class="slightly-smaller">
-                        <a href="https://github.com/apple/swift-log/tree/1.0.0/Sources/Logging/Logging.swift#L327">Show on GitHub</a>
+                        <a href="https://github.com/apple/swift-log/tree/1.1.1/Sources/Logging/Logging.swift#L343">Show on GitHub</a>
                       </div>
                     </section>
                   </div>
@@ -324,7 +327,7 @@ debugging.</p>
                         </div>
                       </div>
                       <div class="slightly-smaller">
-                        <a href="https://github.com/apple/swift-log/tree/1.0.0/Sources/Logging/Logging.swift#L335">Show on GitHub</a>
+                        <a href="https://github.com/apple/swift-log/tree/1.1.1/Sources/Logging/Logging.swift#L351">Show on GitHub</a>
                       </div>
                     </section>
                   </div>
@@ -357,7 +360,7 @@ debugging.</p>
                         </div>
                       </div>
                       <div class="slightly-smaller">
-                        <a href="https://github.com/apple/swift-log/tree/1.0.0/Sources/Logging/Logging.swift#L387-L389">Show on GitHub</a>
+                        <a href="https://github.com/apple/swift-log/tree/1.1.1/Sources/Logging/Logging.swift#L403-L405">Show on GitHub</a>
                       </div>
                     </section>
                   </div>
@@ -370,8 +373,8 @@ debugging.</p>
       </article>
     </div>
     <section class="footer">
-      <p>&copy; 2019 <a class="link" href="https://github.com/apple/swift-log" target="_blank" rel="external">SwiftLog team</a>. All rights reserved. (Last updated: 2019-04-23)</p>
-      <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.9.5</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
+      <p>&copy; 2019 <a class="link" href="https://github.com/apple/swift-log" target="_blank" rel="external">SwiftLog team</a>. All rights reserved. (Last updated: 2019-09-30)</p>
+      <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.10.0</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
     </section>
   </body>
 </div>
