@@ -4,6 +4,7 @@
 /*.xcodeproj
 .xcode
 DerivedData
+.swiftpm
 
 .SourceKitten/
 docs/
