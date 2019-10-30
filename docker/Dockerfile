@@ -13,7 +13,7 @@ ENV LANGUAGE en_US.UTF-8
 
 # dependencies
 RUN apt-get update && apt-get install -y wget
-RUN apt-get update && apt-get install -y lsof dnsutils netcat-openbsd net-tools # used by integration tests
+RUN apt-get update && apt-get install -y lsof dnsutils netcat-openbsd net-tools curl jq # used by integration tests
 
 # ruby and jazzy for docs generation
 RUN apt-get update && apt-get install -y ruby ruby-dev libsqlite3-dev
