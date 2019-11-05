@@ -11,3 +11,6 @@ services:
 
   test:
     image: swift-log:18.04-5.0
+
+  shell:
+    image: swift-log:18.04-5.0

@@ -21,8 +21,14 @@ services:
 
   sanity:
     <<: *common
-    command: /bin/bash -cl "./scripts/sanity.sh"
+    command: /bin/bash -xcl "./scripts/sanity.sh"
 
   test:
     <<: *common
-    command: /bin/bash -cl "swift test"
+    command: /bin/bash -xcl "swift test -Xswiftc -warnings-as-errors $${SANITIZER_ARG-}"
+
+  # util
+
+  shell:
+    <<: *common
+    entrypoint: /bin/bash
