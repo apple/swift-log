@@ -11,8 +11,8 @@ services:
 
   test:
     image: swift-log:18.04-5.1
-    environment:
-      - SANITIZER_ARG=--sanitize=thread
+    environment: []
+      #- SANITIZER_ARG=--sanitize=thread
 
   shell:
     image: swift-log:18.04-5.1
