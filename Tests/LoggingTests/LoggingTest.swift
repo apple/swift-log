@@ -450,6 +450,46 @@ class LoggingTest: XCTestCase {
         XCTAssertTrue(messageSucceeded ?? false)
         XCTAssertEqual(interceptStream.strings.count, 1)
     }
+    
+    func testStreamLogHandlerOutputFormat() {
+        let interceptStream = InterceptStream()
+        let label = "testLabel"
+        LoggingSystem.bootstrapInternal { _ in
+            StreamLogHandler(label: label, stream: interceptStream)
+        }
+        let log = Logger(label: label)
+
+        let testString = "my message is better than yours"
+        log.critical("\(testString)")
+        
+        let pattern = "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\+|-)\\d{4}\\s\(Logger.Level.critical)\\s\(label)\\s:\\s\(testString)$"
+
+        let messageSucceeded = interceptStream.interceptedText?.trimmingCharacters(in: .whitespacesAndNewlines).range(of: pattern, options: .regularExpression) != nil
+        
+
+        XCTAssertTrue(messageSucceeded)
+        XCTAssertEqual(interceptStream.strings.count, 1)
+    }
+    
+    func testStreamLogHandlerOutputFormatWithMetaData() {
+        let interceptStream = InterceptStream()
+        let label = "testLabel"
+        LoggingSystem.bootstrapInternal { _ in
+            StreamLogHandler(label: label, stream: interceptStream)
+        }
+        let log = Logger(label: label)
+
+        let testString = "my message is better than yours"
+        log.critical("\(testString)", metadata: ["test": "test"])
+        
+        let pattern = "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\+|-)\\d{4}\\s\(Logger.Level.critical)\\s\(label)\\s:\\stest=test\\s\(testString)$"
+
+        let messageSucceeded = interceptStream.interceptedText?.trimmingCharacters(in: .whitespacesAndNewlines).range(of: pattern, options: .regularExpression) != nil
+        
+
+        XCTAssertTrue(messageSucceeded)
+        XCTAssertEqual(interceptStream.strings.count, 1)
+    }
 
     func testStdioOutputStreamFlush() {
         // flush on every statement

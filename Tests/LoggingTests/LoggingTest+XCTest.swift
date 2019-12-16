@@ -42,6 +42,8 @@ extension LoggingTest {
             ("testLogLevelCases", testLogLevelCases),
             ("testLogLevelOrdering", testLogLevelOrdering),
             ("testStreamLogHandlerWritesToAStream", testStreamLogHandlerWritesToAStream),
+            ("testStreamLogHandlerOutputFormat", testStreamLogHandlerOutputFormat),
+            ("testStreamLogHandlerOutputFormatWithMetaData", testStreamLogHandlerOutputFormatWithMetaData),
             ("testStdioOutputStreamFlush", testStdioOutputStreamFlush),
         ]
     }
