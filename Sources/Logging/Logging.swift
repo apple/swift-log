@@ -578,6 +578,7 @@ public struct StreamLogHandler: LogHandler {
     }
 
     private let stream: TextOutputStream
+    private let label: String
 
     public var logLevel: Logger.Level = .info
 
@@ -599,6 +600,7 @@ public struct StreamLogHandler: LogHandler {
 
     // internal for testing only
     internal init(label: String, stream: TextOutputStream) {
+        self.label = label
         self.stream = stream
     }
 
@@ -611,7 +613,7 @@ public struct StreamLogHandler: LogHandler {
             : self.prettify(self.metadata.merging(metadata!, uniquingKeysWith: { _, new in new }))
 
         var stream = self.stream
-        stream.write("\(self.timestamp()) \(level):\(prettyMetadata.map { " \($0)" } ?? "") \(message)\n")
+        stream.write("\(self.timestamp()) \(level) \(self.label) :\(prettyMetadata.map { " \($0)" } ?? "") \(message)\n")
     }
 
     private func prettify(_ metadata: Logger.Metadata) -> String? {
