@@ -19,8 +19,7 @@ services:
       - ..:/code:z
     working_dir: /code
     cap_drop:
-      - CAP_NET_RAW
-      - CAP_NET_BIND_SERVICE
+      - all
 
   sanity:
     <<: *common
