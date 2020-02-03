@@ -32,7 +32,7 @@ class LoggingTest: XCTestCase {
             XCTFail("trace should not be called")
             return "trace"
         }())
-        logger.debug({
+        logger.trace({
             XCTFail("trace should not be called")
             return "trace"
         }())
