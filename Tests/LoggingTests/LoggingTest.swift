@@ -29,8 +29,8 @@ class LoggingTest: XCTestCase {
         var logger = Logger(label: "test")
         logger.logLevel = .info
         logger.log(level: .debug, {
-            XCTFail("trace should not be called")
-            return "trace"
+            XCTFail("debug should not be called")
+            return "debug"
         }())
         logger.trace({
             XCTFail("trace should not be called")
