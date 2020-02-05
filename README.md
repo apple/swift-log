@@ -46,7 +46,7 @@ logger.info("Hello World!")
 #### Default `Logger` behavior
 
 `SwiftLog` provides for very basic console logging out-of-the-box by way of `StreamLogHandler`. It is possible to switch the default output to `stderr` like so:
-```
+```swift
 LoggingSystem.bootstrap(StreamLogHandler.standardError)
 ```
 
@@ -196,16 +196,22 @@ In most cases, there is only one thing you need to remember: Always use _string 
 
 Good:
 
-    logger.info("hello world")
+```swift
+logger.info("hello world")
+```
 
 Bad:
 
-    let message = "hello world"
-    logger.info(message)
+```swift
+let message = "hello world"
+logger.info(message)
+```
 
 If you have a `String` that you received from elsewhere, please use
 
-    logger.info("\(stringIAlreadyHave)")
+```swift
+logger.info("\(stringIAlreadyHave)")
+```
 
 For more details, have a look in the next section.
 
@@ -227,8 +233,10 @@ Swift 4.0 & 4.1 don't support `@inlinable`, so SwiftLog 0 can't use them.
 Because all Swift 4 versions don't have a (non-deprecated) mechanism for a type to be `ExpressibleByStringInterpolation` we couldn't make `Logger.Message` expressible by string literals. Unfortunately, the most basic form of our logging API is `logger.info("Hello \(world)")`. For this to work however, `"Hello \(world)"` needs to be accepted and because we can't make `Logger.Message` `ExpressibleByStringInterpolation` we added an overload for all the logging methods to also accept `String`. In most cases, you won't even notice that with SwiftLog 0 you're creating a `String` (which is then transformed to a `Logger.Message`) and with SwiftLog 1 you're creating a `Logger.Message` directly. That is because both `String` and `Logger.Message` will accept all forms of string literals and string interpolations.
 Unfortunately, there is code that will make this seemingly small difference visible. If you write
 
-    let message = "Hello world"
-    logger.info(message)
+```swift
+let message = "Hello world"
+logger.info(message)
+```
 
 then this will only work in SwiftLog 0 and not in SwiftLog 1. Why? Because SwiftLog 1 will want a `Logger.Message` but `let message = "Hello world"` will make `message` to be of type `String` and in SwiftLog 1, the logging methods don't accept `String`s.
 
@@ -236,8 +244,10 @@ So if you intend to be compatible with SwiftLog 0 and 1 at the same time, please
 
 In the case that you already have a `String` handy that you want to log, don't worry at all, just use
 
-    let message = "Hello world"
-    logger.info("\(message)")
+```swift
+let message = "Hello world"
+logger.info("\(message)")
+```
 
 and again, you will be okay with SwiftLog 0 and 1.
 
