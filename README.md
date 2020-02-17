@@ -67,6 +67,7 @@ As the API has just launched, not many implementations exist yet. If you are int
 | [Brainfinance/StackdriverLogging](https://github.com/Brainfinance/StackdriverLogging) | a structured JSON logging backend for use on Google Cloud Platform with the [Stackdriver logging agent](https://cloud.google.com/logging/docs/agent) | 
 | [vapor/console-kit](https://github.com/vapor/console-kit/) | print log messages to a terminal with stylized ([ANSI](https://en.wikipedia.org/wiki/ANSI_escape_code)) output |
 | [neallester/swift-log-testing](https://github.com/neallester/swift-log-testing) | provides access to log messages for use in assertions (within test targets) | 
+| [wlisac/swift-log-slack](https://github.com/wlisac/swift-log-slack)  | a logging backend that sends critical log messages to Slack |
 | Your library? | [Get in touch!](https://forums.swift.org/c/server) |
 
 ## What is an API package?
