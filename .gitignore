@@ -8,3 +8,5 @@ DerivedData
 
 .SourceKitten/
 docs/
+
+.*.sw?
