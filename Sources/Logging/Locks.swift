@@ -28,6 +28,8 @@
 
 #if os(macOS) || os(iOS) || os(tvOS) || os(watchOS)
 import Darwin
+#elseif os(Windows)
+import WinSDK
 #else
 import Glibc
 #endif
@@ -38,17 +40,31 @@ import Glibc
 /// of lock is safe to use with `libpthread`-based threading models, such as the
 /// one used by NIO.
 internal final class Lock {
-    fileprivate let mutex: UnsafeMutablePointer<pthread_mutex_t> = UnsafeMutablePointer.allocate(capacity: 1)
+    #if os(Windows)
+    fileprivate let mutex: UnsafeMutablePointer<SRWLOCK> =
+        UnsafeMutablePointer.allocate(capacity: 1)
+    #else
+    fileprivate let mutex: UnsafeMutablePointer<pthread_mutex_t> =
+        UnsafeMutablePointer.allocate(capacity: 1)
+    #endif
 
     /// Create a new lock.
     public init() {
+        #if os(Windows)
+        InitializeSRWLock(self.mutex)
+        #else
         let err = pthread_mutex_init(self.mutex, nil)
         precondition(err == 0)
+        #endif
     }
 
     deinit {
+        #if os(Windows)
+        // SRWLOCK does not need to be free'd
+        #else
         let err = pthread_mutex_destroy(self.mutex)
         precondition(err == 0)
+        #endif
         self.mutex.deallocate()
     }
 
@@ -57,8 +73,12 @@ internal final class Lock {
     /// Whenever possible, consider using `withLock` instead of this method and
     /// `unlock`, to simplify lock handling.
     public func lock() {
+        #if os(Windows)
+        AcquireSRWLockExclusive(self.mutex)
+        #else
         let err = pthread_mutex_lock(self.mutex)
         precondition(err == 0)
+        #endif
     }
 
     /// Release the lock.
@@ -66,8 +86,12 @@ internal final class Lock {
     /// Whenever possible, consider using `withLock` instead of this method and
     /// `lock`, to simplify lock handling.
     public func unlock() {
+        #if os(Windows)
+        ReleaseSRWLockExclusive(self.mutex)
+        #else
         let err = pthread_mutex_unlock(self.mutex)
         precondition(err == 0)
+        #endif
     }
 }
 
@@ -102,17 +126,32 @@ extension Lock {
 /// of lock is safe to use with `libpthread`-based threading models, such as the
 /// one used by NIO.
 internal final class ReadWriteLock {
-    fileprivate let rwlock: UnsafeMutablePointer<pthread_rwlock_t> = UnsafeMutablePointer.allocate(capacity: 1)
+    #if os(Windows)
+    fileprivate let rwlock: UnsafeMutablePointer<SRWLOCK> =
+        UnsafeMutablePointer.allocate(capacity: 1)
+    fileprivate var shared: Bool = true
+    #else
+    fileprivate let rwlock: UnsafeMutablePointer<pthread_rwlock_t> =
+        UnsafeMutablePointer.allocate(capacity: 1)
+    #endif
 
     /// Create a new lock.
     public init() {
+        #if os(Windows)
+        InitializeSRWLock(self.rwlock)
+        #else
         let err = pthread_rwlock_init(self.rwlock, nil)
         precondition(err == 0)
+        #endif
     }
 
     deinit {
+        #if os(Windows)
+        // SRWLOCK does not need to be free'd
+        #else
         let err = pthread_rwlock_destroy(self.rwlock)
         precondition(err == 0)
+        #endif
         self.rwlock.deallocate()
     }
 
@@ -121,8 +160,13 @@ internal final class ReadWriteLock {
     /// Whenever possible, consider using `withLock` instead of this method and
     /// `unlock`, to simplify lock handling.
     public func lockRead() {
+        #if os(Windows)
+        AcquireSRWLockShared(self.rwlock)
+        self.shared = true
+        #else
         let err = pthread_rwlock_rdlock(self.rwlock)
         precondition(err == 0)
+        #endif
     }
 
     /// Acquire a writer lock.
@@ -130,8 +174,13 @@ internal final class ReadWriteLock {
     /// Whenever possible, consider using `withLock` instead of this method and
     /// `unlock`, to simplify lock handling.
     public func lockWrite() {
+        #if os(Windows)
+        AcquireSRWLockExclusive(self.rwlock)
+        self.shared = true
+        #else
         let err = pthread_rwlock_wrlock(self.rwlock)
         precondition(err == 0)
+        #endif
     }
 
     /// Release the lock.
@@ -139,8 +188,16 @@ internal final class ReadWriteLock {
     /// Whenever possible, consider using `withLock` instead of this method and
     /// `lock`, to simplify lock handling.
     public func unlock() {
+        #if os(Windows)
+        if self.shared {
+            ReleaseSRWLockShared(self.rwlock)
+        } else {
+            ReleaseSRWLockExclusive(self.rwlock)
+        }
+        #else
         let err = pthread_rwlock_unlock(self.rwlock)
         precondition(err == 0)
+        #endif
     }
 }
 

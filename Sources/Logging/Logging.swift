@@ -14,6 +14,8 @@
 
 #if os(macOS) || os(iOS) || os(tvOS) || os(watchOS)
 import Darwin
+#elseif os(Windows)
+import MSVCRT
 #else
 import Glibc
 #endif
@@ -528,9 +530,17 @@ internal struct StdioOutputStream: TextOutputStream {
 
     internal func write(_ string: String) {
         string.withCString { ptr in
+            #if os(Windows)
+            _lock_file(self.file)
+            #else
             flockfile(self.file)
+            #endif
             defer {
+                #if os(Windows)
+                _unlock_file(self.file)
+                #else
                 funlockfile(self.file)
+                #endif
             }
             _ = fputs(ptr, self.file)
             if case .always = self.flushMode {
@@ -559,6 +569,9 @@ internal struct StdioOutputStream: TextOutputStream {
 #if os(macOS) || os(tvOS) || os(iOS) || os(watchOS)
 let systemStderr = Darwin.stderr
 let systemStdout = Darwin.stdout
+#elseif os(Windows)
+let systemStderr = MSVCRT.stderr
+let systemStdout = MSVCRT.stdout
 #else
 let systemStderr = Glibc.stderr!
 let systemStdout = Glibc.stdout!
