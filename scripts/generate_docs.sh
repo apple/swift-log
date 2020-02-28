@@ -51,7 +51,12 @@ fi
 if ! command -v jazzy > /dev/null; then
   gem install jazzy --no-ri --no-rdoc
 fi
-module_switcher="docs/$version/README.md"
+
+jazzy_dir="$root_path/.build/jazzy"
+rm -rf "$jazzy_dir"
+mkdir -p "$jazzy_dir"
+
+module_switcher="$jazzy_dir/README.md"
 jazzy_args=(--clean
             --author 'SwiftLog team'
             --readme "$module_switcher"
@@ -68,15 +73,12 @@ SwiftLog is a Swift logging API package.
 To get started with SwiftLog, [`import Logging`](../Logging/index.html). The
 most important type is [`Logger`](https://apple.github.io/swift-log/docs/current/Logging/Structs/Logger.html)
 which you can use to emit log messages.
-
 EOF
 
-jazzy_dir="$root_path/.build/jazzy"
-rm -rf "$jazzy_dir"
-mkdir -p "$jazzy_dir"
-
 for module in "${modules[@]}"; do
-  args=("${jazzy_args[@]}"  --output "$jazzy_dir/docs/$version/$module" --docset-path "$jazzy_dir/docset/$version/$module" --module "$module")
+  args=("${jazzy_args[@]}" --output "$jazzy_dir/docs/$version/$module" --docset-path "$jazzy_dir/docset/$version/$module"
+        --module "$module" --module-version $version
+        --root-url "https://apple.github.io/swift-log/docs/$version/$module/")
   if [[ -f "$root_path/.build/sourcekitten/$module.json" ]]; then
     args+=(--sourcekitten-sourcefile "$root_path/.build/sourcekitten/$module.json")
   fi
@@ -89,8 +91,9 @@ if [[ $PUSH == true ]]; then
   GIT_AUTHOR=$(git --no-pager show -s --format='%an <%ae>' HEAD)
   git fetch origin +gh-pages:gh-pages
   git checkout gh-pages
-  rm -rf "docs"
-  cp -r "$jazzy_dir/docs" .
+  rm -rf "docs/$version"
+  rm -rf "docs/current"
+  cp -r "$jazzy_dir/docs/$version" docs/
   cp -r "docs/$version" docs/current
   git add --all docs
   echo '<html><head><meta http-equiv="refresh" content="0; url=docs/current/Logging/index.html" /></head></html>' > index.html
