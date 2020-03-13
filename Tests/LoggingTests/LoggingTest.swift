@@ -550,4 +550,29 @@ class LoggingTest: XCTestCase {
 
         fds.forEach { close($0) }
     }
+
+    func testOverloadingError() {
+        struct Dummy: Error, LocalizedError {
+            var errorDescription: String? {
+                return "errorDescription"
+            }
+        }
+        // bootstrap with our test logging impl
+        let logging = TestLogging()
+        LoggingSystem.bootstrapInternal(logging.make)
+
+        var logger = Logger(label: "test")
+        logger.logLevel = .error
+        logger.error(Dummy())
+
+        logging.history.assertExist(level: .error, message: "errorDescription")
+    }
+}
+
+extension Logger {
+    public func error(_ error: Error,
+                      metadata: @autoclosure () -> Logger.Metadata? = nil,
+                      file: String = #file, function: String = #function, line: UInt = #line) {
+        self.error("\(error.localizedDescription)", metadata: metadata(), file: file, function: function, line: line)
+    }
 }
