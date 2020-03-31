@@ -10,7 +10,7 @@ What `SwiftLog` provides today can be found in the [API docs][api-docs].
 
 If you have a server-side Swift application, or maybe a cross-platform (for example Linux & macOS) app/library, and you would like to log, we think targeting this logging API package is a great idea. Below you'll find all you need to know to get started.
 
-#### Adding the dependency
+#### <a name="hello">Adding the dependency</a>
 
 `SwiftLog` is designed for Swift 5, the `1.0.0` release requires Swift 5 (however we will soon tag a `0.x` version that will work with Swift 4 for the transition period). To depend on the logging API package, you need to declare your dependency in your `Package.swift`:
 
