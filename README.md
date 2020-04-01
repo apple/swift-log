@@ -54,8 +54,8 @@ LoggingSystem.bootstrap(StreamLogHandler.standardError)
 
 For further information, please check the [API documentation][api-docs].
 
-#### Selecting a logging backend implementation (applications only)
 <a name="backends"></a>
+#### Selecting a logging backend implementation (applications only)
 
 As the API has just launched, not many implementations exist yet. If you are interested in implementing one see the "Implementation considerations" section below explaining how to do so. List of existing SwiftLog API compatible libraries:
 
