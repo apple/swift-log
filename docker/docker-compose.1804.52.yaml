@@ -1,0 +1,18 @@
+version: "3"
+
+services:
+
+  runtime-setup:
+    image: swift-log:18.04-5.2
+    build:
+      args:
+        ubuntu_version: "bionic"
+        swift_version: "5.2"
+
+  test:
+    image: swift-log:18.04-5.2
+    environment: []
+      #- SANITIZER_ARG=--sanitize=thread
+
+  shell:
+    image: swift-log:18.04-5.2

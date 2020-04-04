@@ -440,10 +440,7 @@ extension Logger {
     ///
     ///     logger.info("Hello \(world)")
     ///
-    public struct Message: ExpressibleByStringLiteral,
-        Equatable,
-        CustomStringConvertible,
-        ExpressibleByStringInterpolation {
+    public struct Message: ExpressibleByStringLiteral, Equatable, CustomStringConvertible, ExpressibleByStringInterpolation {
         public typealias StringLiteralType = String
 
         private var value: String
