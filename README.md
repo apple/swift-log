@@ -70,6 +70,7 @@ As the API has just launched, not many implementations exist yet. If you are int
 | [neallester/swift-log-testing](https://github.com/neallester/swift-log-testing) | provides access to log messages for use in assertions (within test targets) | 
 | [wlisac/swift-log-slack](https://github.com/wlisac/swift-log-slack)  | a logging backend that sends critical log messages to Slack |
 | [NSHipster/swift-log-github-actions](https://github.com/NSHipster/swift-log-github-actions) | a logging backend that translates logging messages into [workflow commands for GitHub Actions](https://help.github.com/en/actions/reference/workflow-commands-for-github-actions). |
+| [stevapple/swift-log-telegram](https://github.com/stevapple/swift-log-telegram) | a logging backend that sends log messages to any Telegram chat (Inspired by and forked from [wlisac/swift-log-slack](https://github.com/wlisac/swift-log-slack)) |
 | Your library? | [Get in touch!](https://forums.swift.org/c/server) |
 
 ## What is an API package?
