@@ -323,7 +323,8 @@ extension Logger {
     /// Log levels are ordered by their severity, with `.trace` being the least severe and
     /// `.critical` being the most severe.
     public enum Level: String, Codable, CaseIterable {
-        /// Appropriate for messages that contain information only when debugging a program.
+        /// Appropriate for messages that contain information normally of use only when
+        /// tracing the execution of a program.
         case trace
 
         /// Appropriate for messages that contain information normally of use only when
