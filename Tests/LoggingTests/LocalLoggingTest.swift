@@ -26,7 +26,7 @@ class LocalLoggerTest: XCTestCase {
         let context = Context()
         Struct1().doSomething(context: context)
         // test results
-        logging.history.assertExist(level: .debug, message: "Struct1::doSomething")
+        logging.history.assertExist(level: .debug, message: "Struct1::doSomething", source: "LoggingTests")
         logging.history.assertNotExist(level: .debug, message: "Struct1::doSomethingElse")
         logging.history.assertExist(level: .info, message: "Struct2::doSomething")
         logging.history.assertExist(level: .info, message: "Struct2::doSomethingElse")

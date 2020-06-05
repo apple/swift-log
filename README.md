@@ -182,6 +182,16 @@ However, in special cases, it is acceptable that a `LogHandler` provides some gl
 
 `LogHandler`s do not control if a message should be logged or not. `Logger` will only invoke the `log` function of a `LogHandler` if `Logger` determines that a log message should be emitted given the configured log level.
 
+## Source vs Label
+
+A `Logger` carries an (immutable) `label` and each log message carries a `source` parameter (since SwiftLog 1.3.0). The `Logger`'s label
+identifies the creator of the `Logger`. If you are using structured logging by preserving metadata across multiple modules, the `Logger`'s
+`label` is not a good way to identify where a log message originated from as it identifies the creator of a `Logger` which is often passed
+around between libraries to preserve metadata and the like.
+
+If you want to filter all log messages originating from a certain subsystem, filter by `source` which defaults to the module that is emitting the
+log message.
+
 ## SwiftLog for Swift 4
 <a name="help-i-need-swift-4"></a>
 
