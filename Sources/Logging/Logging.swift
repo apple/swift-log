@@ -291,7 +291,7 @@ extension Logger {
     /// Examples:
     ///  - prefer `logger.info("user logged in", metadata: ["user-id": "\(user.id)"])` over
     ///    `..., metadata: ["user-id": .string(user.id.description)])`
-    ///  - prefer `logger.info("user selected colours", metadata: ["colors": ["\(user.topColor)", "\(user.secondColor)"]])`
+    ///  - prefer `logger.info("user selected colors", metadata: ["colors": ["\(user.topColor)", "\(user.secondColor)"]])`
     ///    over `..., metadata: ["colors": .array([.string("\(user.topColor)"), .string("\(user.secondColor)")])`
     ///  - prefer `logger.info("nested info", metadata: ["nested": ["fave-numbers": ["\(1)", "\(2)", "\(3)"], "foo": "bar"]])`
     ///    over `..., metadata: ["nested": .dictionary(["fave-numbers": ...])])`
