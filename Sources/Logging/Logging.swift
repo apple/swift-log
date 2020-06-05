@@ -258,7 +258,7 @@ public enum LoggingSystem {
 
     /// `bootstrap` is a one-time configuration function which globally selects the desired logging backend
     /// implementation. `bootstrap` can be called at maximum once in any given program, calling it more than once will
-    /// lead to undefined behaviour, most likely a crash.
+    /// lead to undefined behavior, most likely a crash.
     ///
     /// - parameters:
     ///     - factory: A closure that given a `Logger` identifier, produces an instance of the `LogHandler`.
