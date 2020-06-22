@@ -152,8 +152,8 @@ class LoggingTest: XCTestCase {
                                                    "lazy": .stringConvertible(LazyMetadataBox { "rendered-at-first-use" })])
     }
 
-    private func dontEvaluateThisString(file: StaticString = (#file), line: UInt = #line) -> Logger.Message {
-        XCTFail("should not have been evaluated", file: file, line: line)
+    private func dontEvaluateThisString(file: StaticString = #file, line: UInt = #line) -> Logger.Message {
+        XCTFail("should not have been evaluated", file: (file), line: line)
         return "should not have been evaluated"
     }
 
