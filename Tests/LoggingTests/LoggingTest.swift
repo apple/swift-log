@@ -74,6 +74,73 @@ class LoggingTest: XCTestCase {
         logging2.history.assertExist(level: .warning, message: "hello world!", metadata: ["foo": "bar"])
     }
 
+    func testMultiplexLogHandlerWithVariousLogLevels() throws {
+        let logging1 = TestLogging()
+        let logging2 = TestLogging()
+
+        var logger1 = logging1.make(label: "1")
+        logger1.logLevel = .info
+
+        var logger2 = logging2.make(label: "2")
+        logger2.logLevel = .debug
+
+        LoggingSystem.bootstrapInternal { _ in
+            MultiplexLogHandler([logger1, logger2])
+        }
+
+        let multiplexLogger = Logger(label: "test")
+        multiplexLogger.trace("trace")
+        multiplexLogger.debug("debug")
+        multiplexLogger.info("info")
+        multiplexLogger.warning("warning")
+
+        logging1.history.assertNotExist(level: .trace, message: "trace")
+        logging1.history.assertNotExist(level: .debug, message: "debug")
+        logging1.history.assertExist(level: .info, message: "info")
+        logging1.history.assertExist(level: .warning, message: "warning")
+
+        logging2.history.assertNotExist(level: .trace, message: "trace")
+        logging2.history.assertExist(level: .debug, message: "debug")
+        logging2.history.assertExist(level: .info, message: "info")
+        logging2.history.assertExist(level: .warning, message: "warning")
+    }
+
+    func testMultiplexLogHandlerNeedNotMaterializeValuesMultipleTimes() throws {
+        let logging1 = TestLogging()
+        let logging2 = TestLogging()
+
+        var logger1 = logging1.make(label: "1")
+        logger1.logLevel = .info
+
+        var logger2 = logging2.make(label: "2")
+        logger2.logLevel = .info
+
+        LoggingSystem.bootstrapInternal { _ in
+            MultiplexLogHandler([logger1, logger2])
+        }
+
+        var messageMaterializations: Int = 0
+        var metadataMaterializations: Int = 0
+
+        let multiplexLogger = Logger(label: "test")
+        multiplexLogger.info(
+            { () -> Logger.Message in
+                messageMaterializations += 1
+                return "info"
+            }(),
+            metadata: { () ->
+                Logger.Metadata in metadataMaterializations += 1
+                return [:]
+            }()
+        )
+
+        logging1.history.assertExist(level: .info, message: "info")
+        logging2.history.assertExist(level: .info, message: "info")
+
+        XCTAssertEqual(messageMaterializations, 1)
+        XCTAssertEqual(metadataMaterializations, 1)
+    }
+
     enum TestError: Error {
         case boom
     }

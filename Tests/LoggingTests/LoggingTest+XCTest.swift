@@ -27,6 +27,8 @@ extension LoggingTest {
         return [
             ("testAutoclosure", testAutoclosure),
             ("testMultiplex", testMultiplex),
+            ("testMultiplexLogHandlerWithVariousLogLevels", testMultiplexLogHandlerWithVariousLogLevels),
+            ("testMultiplexLogHandlerNeedNotMaterializeValuesMultipleTimes", testMultiplexLogHandlerNeedNotMaterializeValuesMultipleTimes),
             ("testDictionaryMetadata", testDictionaryMetadata),
             ("testListMetadata", testListMetadata),
             ("testStringConvertibleMetadata", testStringConvertibleMetadata),

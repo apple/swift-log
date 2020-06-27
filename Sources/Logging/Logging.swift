@@ -462,6 +462,7 @@ extension Logger {
 /// well as the `metadata` for this `LogHandler`. Any subsequent `LogHandler`s used to initialise a
 /// `MultiplexLogHandler` are merely to emit the log message to another place.
 public struct MultiplexLogHandler: LogHandler {
+    private var effectiveLogLevel: Logger.Level
     private var handlers: [LogHandler]
 
     /// Create a `MultiplexLogHandler`.
@@ -472,24 +473,30 @@ public struct MultiplexLogHandler: LogHandler {
     public init(_ handlers: [LogHandler]) {
         assert(!handlers.isEmpty)
         self.handlers = handlers
+        self.effectiveLogLevel = MultiplexLogHandler.effectiveLogLevel(handlers.map { $0.logLevel })
     }
 
     public var logLevel: Logger.Level {
         get {
-            return self.handlers[0].logLevel
+            return self.effectiveLogLevel
         }
         set {
             self.mutatingForEachHandler {
                 $0.logLevel = newValue
             }
+            self.effectiveLogLevel = MultiplexLogHandler.effectiveLogLevel(self.handlers.map { $0.logLevel })
         }
+    }
+
+    static func effectiveLogLevel(_ levels: [Logger.Level]) -> Logger.Level {
+        levels.min() ?? .trace
     }
 
     public func log(level: Logger.Level,
                     message: Logger.Message,
                     metadata: Logger.Metadata?,
                     file: String, function: String, line: UInt) {
-        self.handlers.forEach { handler in
+        for handler in self.handlers where handler.logLevel <= level {
             handler.log(level: level, message: message, metadata: metadata, file: file, function: function, line: line)
         }
     }
