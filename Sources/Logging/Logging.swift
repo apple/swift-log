@@ -489,7 +489,7 @@ public struct MultiplexLogHandler: LogHandler {
     }
 
     static func effectiveLogLevel(_ levels: [Logger.Level]) -> Logger.Level {
-        levels.min() ?? .trace
+        return levels.min() ?? .trace
     }
 
     public func log(level: Logger.Level,
