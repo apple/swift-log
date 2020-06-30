@@ -55,8 +55,8 @@ internal final class Lock {
         InitializeSRWLock(self.mutex)
         #else
         var attr = pthread_mutexattr_t()
-        pthread_mutexattr_init(&attr);
-        pthread_mutexattr_settype(&attr, .init(PTHREAD_MUTEX_ERRORCHECK));
+        pthread_mutexattr_init(&attr)
+        pthread_mutexattr_settype(&attr, .init(PTHREAD_MUTEX_ERRORCHECK))
 
         let err = pthread_mutex_init(self.mutex, &attr)
         precondition(err == 0, "\(#function) failed in pthread_mutex with error \(err)")
