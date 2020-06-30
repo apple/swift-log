@@ -38,7 +38,8 @@ import Glibc
 ///
 /// This object provides a lock on top of a single `pthread_mutex_t`. This kind
 /// of lock is safe to use with `libpthread`-based threading models, such as the
-/// one used by NIO.
+/// one used by NIO. On Windows, the lock is based on the substantially similar
+/// `SRWLOCK` type.
 internal final class Lock {
     #if os(Windows)
     fileprivate let mutex: UnsafeMutablePointer<SRWLOCK> =
@@ -120,11 +121,12 @@ extension Lock {
     }
 }
 
-/// A threading lock based on `libpthread` instead of `libdispatch`.
+/// A reader/writer threading lock based on `libpthread` instead of `libdispatch`.
 ///
-/// This object provides a lock on top of a single `pthread_mutex_t`. This kind
+/// This object provides a lock on top of a single `pthread_rwlock_t`. This kind
 /// of lock is safe to use with `libpthread`-based threading models, such as the
-/// one used by NIO.
+/// one used by NIO. On Windows, the lock is based on the substantially similar
+/// `SRWLOCK` type.
 internal final class ReadWriteLock {
     #if os(Windows)
     fileprivate let rwlock: UnsafeMutablePointer<SRWLOCK> =
@@ -157,8 +159,8 @@ internal final class ReadWriteLock {
 
     /// Acquire a reader lock.
     ///
-    /// Whenever possible, consider using `withLock` instead of this method and
-    /// `unlock`, to simplify lock handling.
+    /// Whenever possible, consider using `withReaderLock` instead of this
+    /// method and `unlock`, to simplify lock handling.
     public func lockRead() {
         #if os(Windows)
         AcquireSRWLockShared(self.rwlock)
@@ -171,8 +173,8 @@ internal final class ReadWriteLock {
 
     /// Acquire a writer lock.
     ///
-    /// Whenever possible, consider using `withLock` instead of this method and
-    /// `unlock`, to simplify lock handling.
+    /// Whenever possible, consider using `withWriterLock` instead of this
+    /// method and `unlock`, to simplify lock handling.
     public func lockWrite() {
         #if os(Windows)
         AcquireSRWLockExclusive(self.rwlock)
@@ -185,8 +187,9 @@ internal final class ReadWriteLock {
 
     /// Release the lock.
     ///
-    /// Whenever possible, consider using `withLock` instead of this method and
-    /// `lock`, to simplify lock handling.
+    /// Whenever possible, consider using `withReaderLock` and `withWriterLock`
+    /// instead of this method and `lockRead` and `lockWrite`, to simplify lock
+    /// handling.
     public func unlock() {
         #if os(Windows)
         if self.shared {
@@ -204,11 +207,11 @@ internal final class ReadWriteLock {
 extension ReadWriteLock {
     /// Acquire the reader lock for the duration of the given block.
     ///
-    /// This convenience method should be preferred to `lock` and `unlock` in
-    /// most situations, as it ensures that the lock will be released regardless
-    /// of how `body` exits.
+    /// This convenience method should be preferred to `lockRead` and `unlock`
+    /// in most situations, as it ensures that the lock will be released
+    /// regardless of how `body` exits.
     ///
-    /// - Parameter body: The block to execute while holding the lock.
+    /// - Parameter body: The block to execute while holding the reader lock.
     /// - Returns: The value returned by the block.
     @inlinable
     internal func withReaderLock<T>(_ body: () throws -> T) rethrows -> T {
@@ -221,11 +224,11 @@ extension ReadWriteLock {
 
     /// Acquire the writer lock for the duration of the given block.
     ///
-    /// This convenience method should be preferred to `lock` and `unlock` in
-    /// most situations, as it ensures that the lock will be released regardless
-    /// of how `body` exits.
+    /// This convenience method should be preferred to `lockWrite` and `unlock`
+    /// in most situations, as it ensures that the lock will be released
+    /// regardless of how `body` exits.
     ///
-    /// - Parameter body: The block to execute while holding the lock.
+    /// - Parameter body: The block to execute while holding the writer lock.
     /// - Returns: The value returned by the block.
     @inlinable
     internal func withWriterLock<T>(_ body: () throws -> T) rethrows -> T {
