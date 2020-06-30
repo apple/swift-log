@@ -484,11 +484,11 @@ public struct MultiplexLogHandler: LogHandler {
             self.mutatingForEachHandler {
                 $0.logLevel = newValue
             }
-            self.effectiveLogLevel = MultiplexLogHandler.effectiveLogLevel(self.handlers.map { $0.logLevel })
+            self.effectiveLogLevel = newValue
         }
     }
 
-    static func effectiveLogLevel(_ levels: [Logger.Level]) -> Logger.Level {
+    private static func effectiveLogLevel(_ levels: [Logger.Level]) -> Logger.Level {
         return levels.min() ?? .trace
     }
 
