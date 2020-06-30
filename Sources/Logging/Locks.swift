@@ -55,7 +55,7 @@ internal final class Lock {
         InitializeSRWLock(self.mutex)
         #else
         let err = pthread_mutex_init(self.mutex, nil)
-        precondition(err == 0)
+        precondition(err == 0, "\(#function) failed in pthread_mutex with error \(err)")
         #endif
     }
 
@@ -64,7 +64,7 @@ internal final class Lock {
         // SRWLOCK does not need to be free'd
         #else
         let err = pthread_mutex_destroy(self.mutex)
-        precondition(err == 0)
+        precondition(err == 0, "\(#function) failed in pthread_mutex with error \(err)")
         #endif
         self.mutex.deallocate()
     }
@@ -78,7 +78,7 @@ internal final class Lock {
         AcquireSRWLockExclusive(self.mutex)
         #else
         let err = pthread_mutex_lock(self.mutex)
-        precondition(err == 0)
+        precondition(err == 0, "\(#function) failed in pthread_mutex with error \(err)")
         #endif
     }
 
@@ -91,7 +91,7 @@ internal final class Lock {
         ReleaseSRWLockExclusive(self.mutex)
         #else
         let err = pthread_mutex_unlock(self.mutex)
-        precondition(err == 0)
+        precondition(err == 0, "\(#function) failed in pthread_mutex with error \(err)")
         #endif
     }
 }
@@ -143,7 +143,7 @@ internal final class ReadWriteLock {
         InitializeSRWLock(self.rwlock)
         #else
         let err = pthread_rwlock_init(self.rwlock, nil)
-        precondition(err == 0)
+        precondition(err == 0, "\(#function) failed in pthread_rwlock with error \(err)")
         #endif
     }
 
@@ -152,7 +152,7 @@ internal final class ReadWriteLock {
         // SRWLOCK does not need to be free'd
         #else
         let err = pthread_rwlock_destroy(self.rwlock)
-        precondition(err == 0)
+        precondition(err == 0, "\(#function) failed in pthread_rwlock with error \(err)")
         #endif
         self.rwlock.deallocate()
     }
@@ -167,7 +167,7 @@ internal final class ReadWriteLock {
         self.shared = true
         #else
         let err = pthread_rwlock_rdlock(self.rwlock)
-        precondition(err == 0)
+        precondition(err == 0, "\(#function) failed in pthread_rwlock with error \(err)")
         #endif
     }
 
@@ -181,7 +181,7 @@ internal final class ReadWriteLock {
         self.shared = true
         #else
         let err = pthread_rwlock_wrlock(self.rwlock)
-        precondition(err == 0)
+        precondition(err == 0, "\(#function) failed in pthread_rwlock with error \(err)")
         #endif
     }
 
@@ -199,7 +199,7 @@ internal final class ReadWriteLock {
         }
         #else
         let err = pthread_rwlock_unlock(self.rwlock)
-        precondition(err == 0)
+        precondition(err == 0, "\(#function) failed in pthread_rwlock with error \(err)")
         #endif
     }
 }
