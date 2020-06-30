@@ -182,7 +182,7 @@ internal final class ReadWriteLock {
     public func lockWrite() {
         #if os(Windows)
         AcquireSRWLockExclusive(self.rwlock)
-        self.shared = true
+        self.shared = false
         #else
         let err = pthread_rwlock_wrlock(self.rwlock)
         precondition(err == 0, "\(#function) failed in pthread_rwlock with error \(err)")
