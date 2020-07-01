@@ -646,23 +646,23 @@ public struct StreamLogHandler: LogHandler {
 
 /// No operation LogHandler, used when no logging is required
 public struct NoOpLogHandler: LogHandler {
-    public func log(level: Logger.Level, message: Logger.Message, metadata: Logger.Metadata?, file: String, function: String, line: UInt) {}
+    @inlinable public func log(level: Logger.Level, message: Logger.Message, metadata: Logger.Metadata?, file: String, function: String, line: UInt) {}
 
-    public subscript(metadataKey _: String) -> Logger.Metadata.Value? {
+    @inlinable public subscript(metadataKey _: String) -> Logger.Metadata.Value? {
         get {
             return nil
         }
         set {}
     }
 
-    public var metadata: Logger.Metadata {
+    @inlinable public var metadata: Logger.Metadata {
         get {
             return [:]
         }
         set {}
     }
 
-    public var logLevel: Logger.Level {
+    @inlinable public var logLevel: Logger.Level {
         get {
             return .critical
         }
