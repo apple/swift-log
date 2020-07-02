@@ -644,6 +644,32 @@ public struct StreamLogHandler: LogHandler {
     }
 }
 
+/// No operation LogHandler, used when no logging is required
+public struct SwiftLogNoOpLogHandler: LogHandler {
+    @inlinable public func log(level: Logger.Level, message: Logger.Message, metadata: Logger.Metadata?, file: String, function: String, line: UInt) {}
+
+    @inlinable public subscript(metadataKey _: String) -> Logger.Metadata.Value? {
+        get {
+            return nil
+        }
+        set {}
+    }
+
+    @inlinable public var metadata: Logger.Metadata {
+        get {
+            return [:]
+        }
+        set {}
+    }
+
+    @inlinable public var logLevel: Logger.Level {
+        get {
+            return .critical
+        }
+        set {}
+    }
+}
+
 // Extension has to be done on explicit type rather than Logger.Metadata.Value as workaround for
 // https://bugs.swift.org/browse/SR-9686
 extension Logger.MetadataValue: ExpressibleByStringLiteral {
