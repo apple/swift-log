@@ -645,7 +645,7 @@ public struct StreamLogHandler: LogHandler {
 }
 
 /// No operation LogHandler, used when no logging is required
-public struct NoOpLogHandler: LogHandler {
+public struct SwiftLogNoOpLogHandler: LogHandler {
     @inlinable public func log(level: Logger.Level, message: Logger.Message, metadata: Logger.Metadata?, file: String, function: String, line: UInt) {}
 
     @inlinable public subscript(metadataKey _: String) -> Logger.Metadata.Value? {
