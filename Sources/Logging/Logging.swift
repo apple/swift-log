@@ -458,11 +458,52 @@ extension Logger {
 
 /// A pseudo-`LogHandler` that can be used to send messages to multiple other `LogHandler`s.
 ///
-/// The first `LogHandler` passed to the initialisation function of `MultiplexLogHandler` control the `logLevel` as
-/// well as the `metadata` for this `LogHandler`. Any subsequent `LogHandler`s used to initialise a
-/// `MultiplexLogHandler` are merely to emit the log message to another place.
+/// ### Effective Logger.Level
+///
+/// When first initialized the multiplex log handlers' log level is automatically set to the minimum of all the
+/// passed in log handlers. This ensures that each of the handlers will be able to log at their appropriate level
+/// any log events they might be interested in.
+///
+/// Example:
+/// If log handler `A` is logging at `.debug` level, and log handler `B` is logging at `.info` level, the constructed
+/// `MultiplexLogHandler([A, B])`'s effective log level will be set to `.debug`, meaning that debug messages will be
+/// handled by this handler, while only logged by the underlying `A` log handler (since `B`'s log level is `.info`
+/// and thus it would not actually log that log message).
+///
+/// If the log level is _set_ on a `Logger` backed by an `MultiplexLogHandler` the log level will apply to *all*
+/// underlying log handlers, allowing a logger to still select at what level it wants to log regardless of if the underlying
+/// handler is a multiplex or a normal one. If for some reason one might want to not allow changing a log level of a specific
+/// handler passed into the multiplex log handler, this is possible by wrapping it in a handler which ignores any log level changes.
+///
+/// ### Effective Logger.Metadata
+///
+/// Since a `MultiplexLogHandler` is a combination of multiple log handlers, the handling of metadata can be non-obvious.
+/// For example, the underlying log handlers may have metadata of their own set before they are used to initialize the multiplex log handler.
+///
+/// The multiplex log handler acts purely as proxy and does not make any changes to underlying handler metadata other than
+/// proxying writes that users made on a `Logger` instance backed by this handler.
+///
+/// Setting metadata is always proxied through to _all_ underlying handlers, meaning that if a modification like
+/// `logger[metadataKey: "x"] = "y"` is made, all underlying log handlers that this multiplex handler was initiated with
+/// will observe this change.
+///
+/// Reading metadata from the multiplex log handler MAY need to pick one of conflicting values if the underlying log handlers
+/// were already initiated with some metadata before passing them into the multiplex handler. The multiplex handler uses
+/// the order in which the handlers were passed in during its initialization as a priority indicator - the first handler's
+/// values are more important than the next handlers values, etc.
+///
+/// Example:
+/// If the multiplex log handler was initiated with two handlers like this: `MultiplexLogHandler([handler1, handler2])`.
+/// The handlers each have some already set metadata: `handler1` has metadata values for keys `one` and `all`, and `handler2`
+/// has values for keys `two` and `all`.
+///
+/// A query through the multiplex log handler the key `one` naturally returns `handler1`'s value, and a query for `two`
+/// naturally returns `handler2`'s value. Querying for the key `all` will return `handler1`'s value, as that handler was indicated
+/// "more important" than the second handler. The same rule applies when querying for the `metadata` property of the
+/// multiplex log handler - it constructs `Metadata` uniquing values.
 public struct MultiplexLogHandler: LogHandler {
     private var handlers: [LogHandler]
+    private var effectiveLogLevel: Logger.Level
 
     /// Create a `MultiplexLogHandler`.
     ///
@@ -470,18 +511,18 @@ public struct MultiplexLogHandler: LogHandler {
     ///    - handlers: An array of `LogHandler`s, each of which will receive the log messages sent to this `Logger`.
     ///                The array must not be empty.
     public init(_ handlers: [LogHandler]) {
-        assert(!handlers.isEmpty)
+        assert(!handlers.isEmpty, "MultiplexLogHandler.handlers MUST NOT be empty")
         self.handlers = handlers
+        self.effectiveLogLevel = handlers.map { $0.logLevel }.min() ?? .trace
     }
 
     public var logLevel: Logger.Level {
         get {
-            return self.handlers[0].logLevel
+            return self.effectiveLogLevel
         }
         set {
-            self.mutatingForEachHandler {
-                $0.logLevel = newValue
-            }
+            self.mutatingForEachHandler { $0.logLevel = newValue }
+            self.effectiveLogLevel = newValue
         }
     }
 
@@ -489,23 +530,34 @@ public struct MultiplexLogHandler: LogHandler {
                     message: Logger.Message,
                     metadata: Logger.Metadata?,
                     file: String, function: String, line: UInt) {
-        self.handlers.forEach { handler in
+        for handler in self.handlers where handler.logLevel <= level {
             handler.log(level: level, message: message, metadata: metadata, file: file, function: function, line: line)
         }
     }
 
     public var metadata: Logger.Metadata {
         get {
-            return self.handlers[0].metadata
+            var effectiveMetadata: Logger.Metadata = [:]
+            // as a rough estimate we assume that the underlying handlers have a similar metadata count,
+            // and we use the first one's current count to estimate how big of a dictionary we need to allocate:
+            effectiveMetadata.reserveCapacity(self.handlers.first!.metadata.count) // !-safe, we always have at least one handler
+            return self.handlers.reduce(into: effectiveMetadata) { effectiveMetadata, handler in
+                effectiveMetadata.merge(handler.metadata, uniquingKeysWith: { l, _ in l })
+            }
         }
         set {
             self.mutatingForEachHandler { $0.metadata = newValue }
         }
     }
 
-    public subscript(metadataKey metadataKey: String) -> Logger.Metadata.Value? {
+    public subscript(metadataKey metadataKey: Logger.Metadata.Key) -> Logger.Metadata.Value? {
         get {
-            return self.handlers[0].metadata[metadataKey]
+            for handler in self.handlers {
+                if let value = handler[metadataKey: metadataKey] {
+                    return value
+                }
+            }
+            return nil
         }
         set {
             self.mutatingForEachHandler { $0[metadataKey: metadataKey] = newValue }

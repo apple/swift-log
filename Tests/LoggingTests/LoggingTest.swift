@@ -74,6 +74,154 @@ class LoggingTest: XCTestCase {
         logging2.history.assertExist(level: .warning, message: "hello world!", metadata: ["foo": "bar"])
     }
 
+    func testMultiplexLogHandlerWithVariousLogLevels() throws {
+        let logging1 = TestLogging()
+        let logging2 = TestLogging()
+
+        var logger1 = logging1.make(label: "1")
+        logger1.logLevel = .info
+
+        var logger2 = logging2.make(label: "2")
+        logger2.logLevel = .debug
+
+        LoggingSystem.bootstrapInternal { _ in
+            MultiplexLogHandler([logger1, logger2])
+        }
+
+        let multiplexLogger = Logger(label: "test")
+        multiplexLogger.trace("trace")
+        multiplexLogger.debug("debug")
+        multiplexLogger.info("info")
+        multiplexLogger.warning("warning")
+
+        logging1.history.assertNotExist(level: .trace, message: "trace")
+        logging1.history.assertNotExist(level: .debug, message: "debug")
+        logging1.history.assertExist(level: .info, message: "info")
+        logging1.history.assertExist(level: .warning, message: "warning")
+
+        logging2.history.assertNotExist(level: .trace, message: "trace")
+        logging2.history.assertExist(level: .debug, message: "debug")
+        logging2.history.assertExist(level: .info, message: "info")
+        logging2.history.assertExist(level: .warning, message: "warning")
+    }
+
+    func testMultiplexLogHandlerNeedNotMaterializeValuesMultipleTimes() throws {
+        let logging1 = TestLogging()
+        let logging2 = TestLogging()
+
+        var logger1 = logging1.make(label: "1")
+        logger1.logLevel = .info
+
+        var logger2 = logging2.make(label: "2")
+        logger2.logLevel = .info
+
+        LoggingSystem.bootstrapInternal { _ in
+            MultiplexLogHandler([logger1, logger2])
+        }
+
+        var messageMaterializations: Int = 0
+        var metadataMaterializations: Int = 0
+
+        let multiplexLogger = Logger(label: "test")
+        multiplexLogger.info(
+            { () -> Logger.Message in
+                messageMaterializations += 1
+                return "info"
+            }(),
+            metadata: { () ->
+                Logger.Metadata in metadataMaterializations += 1
+                return [:]
+            }()
+        )
+
+        logging1.history.assertExist(level: .info, message: "info")
+        logging2.history.assertExist(level: .info, message: "info")
+
+        XCTAssertEqual(messageMaterializations, 1)
+        XCTAssertEqual(metadataMaterializations, 1)
+    }
+
+    func testMultiplexLogHandlerMetadata_settingMetadataThroughToUnderlyingHandlers() {
+        let logging1 = TestLogging()
+        let logging2 = TestLogging()
+
+        var logger1 = logging1.make(label: "1")
+        logger1.metadata["one"] = "111"
+        logger1.metadata["in"] = "in-1"
+        var logger2 = logging2.make(label: "2")
+        logger2.metadata["two"] = "222"
+        logger2.metadata["in"] = "in-2"
+
+        LoggingSystem.bootstrapInternal { _ in
+            MultiplexLogHandler([logger1, logger2])
+        }
+
+        var multiplexLogger = Logger(label: "test")
+
+        // each logs its own metadata
+        multiplexLogger.info("info")
+        logging1.history.assertExist(level: .info, message: "info", metadata: [
+            "one": "111",
+            "in": "in-1",
+        ])
+        logging2.history.assertExist(level: .info, message: "info", metadata: [
+            "two": "222",
+            "in": "in-2",
+        ])
+
+        // if modified, change applies to both underlying handlers
+        multiplexLogger[metadataKey: "new"] = "new"
+        multiplexLogger.info("info")
+        logging1.history.assertExist(level: .info, message: "info", metadata: [
+            "one": "111",
+            "in": "in-1",
+            "new": "new",
+        ])
+        logging2.history.assertExist(level: .info, message: "info", metadata: [
+            "two": "222",
+            "in": "in-2",
+            "new": "new",
+        ])
+
+        // overriding an existing value works the same way as adding a new one
+        multiplexLogger[metadataKey: "in"] = "multi"
+        multiplexLogger.info("info")
+        logging1.history.assertExist(level: .info, message: "info", metadata: [
+            "one": "111",
+            "in": "multi",
+            "new": "new",
+        ])
+        logging2.history.assertExist(level: .info, message: "info", metadata: [
+            "two": "222",
+            "in": "multi",
+            "new": "new",
+        ])
+    }
+
+    func testMultiplexLogHandlerMetadata_readingHandlerMetadata() {
+        let logging1 = TestLogging()
+        let logging2 = TestLogging()
+
+        var logger1 = logging1.make(label: "1")
+        logger1.metadata["one"] = "111"
+        logger1.metadata["in"] = "in-1"
+        var logger2 = logging2.make(label: "2")
+        logger2.metadata["two"] = "222"
+        logger2.metadata["in"] = "in-2"
+
+        LoggingSystem.bootstrapInternal { _ in
+            MultiplexLogHandler([logger1, logger2])
+        }
+
+        let multiplexLogger = Logger(label: "test")
+
+        XCTAssertEqual(multiplexLogger.handler.metadata, [
+            "one": "111",
+            "two": "222",
+            "in": "in-1",
+        ])
+    }
+
     enum TestError: Error {
         case boom
     }
