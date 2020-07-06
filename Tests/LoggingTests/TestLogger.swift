@@ -43,10 +43,10 @@ internal struct TestLogHandler: LogHandler {
         self.logger.logLevel = .debug
     }
 
-    func log(level: Logger.Level, message: Logger.Message, metadata: Logger.Metadata?, file: String, function: String, line: UInt) {
+    func log(level: Logger.Level, message: Logger.Message, metadata: Logger.Metadata?, source: String, file: String, function: String, line: UInt) {
         let metadata = (self._metadataSet ? self.metadata : MDC.global.metadata).merging(metadata ?? [:], uniquingKeysWith: { _, new in new })
-        self.logger.log(level: level, message, metadata: metadata, file: file, function: function, line: line)
-        self.recorder.record(level: level, metadata: metadata, message: message)
+        self.logger.log(level: level, message, metadata: metadata, source: source, file: file, function: function, line: line)
+        self.recorder.record(level: level, metadata: metadata, message: message, source: source)
     }
 
     private var _logLevel: Logger.Level?
@@ -123,9 +123,9 @@ internal class Recorder: History {
     private let lock = NSLock()
     private var _entries = [LogEntry]()
 
-    func record(level: Logger.Level, metadata: Logger.Metadata?, message: Logger.Message) {
+    func record(level: Logger.Level, metadata: Logger.Metadata?, message: Logger.Message, source: String) {
         return self.lock.withLock {
-            self._entries.append(LogEntry(level: level, metadata: metadata, message: message.description))
+            self._entries.append(LogEntry(level: level, metadata: metadata, message: message.description, source: source))
         }
     }
 
@@ -170,24 +170,40 @@ internal struct LogEntry {
     let level: Logger.Level
     let metadata: Logger.Metadata?
     let message: String
+    let source: String
 }
 
 extension History {
-    func assertExist(level: Logger.Level, message: String, metadata: Logger.Metadata? = nil, file: StaticString = #file, line: UInt = #line) {
-        let entry = self.find(level: level, message: message, metadata: metadata)
-        XCTAssertNotNil(entry, "entry not found: \(level), \(String(describing: metadata)), \(message) ", file: file, line: line)
+    func assertExist(level: Logger.Level,
+                     message: String,
+                     metadata: Logger.Metadata? = nil,
+                     source: String? = nil,
+                     file: StaticString = #file,
+                     line: UInt = #line) {
+        let source = source ?? Logger.currentModule(filePath: "\(file)")
+        let entry = self.find(level: level, message: message, metadata: metadata, source: source)
+        XCTAssertNotNil(entry, "entry not found: \(level), \(source), \(String(describing: metadata)), \(message)",
+                        file: (file), line: line)
     }
 
-    func assertNotExist(level: Logger.Level, message: String, metadata: Logger.Metadata? = nil, file: StaticString = #file, line: UInt = #line) {
-        let entry = self.find(level: level, message: message, metadata: metadata)
-        XCTAssertNil(entry, "entry was found: \(level), \(String(describing: metadata)), \(message)", file: file, line: line)
+    func assertNotExist(level: Logger.Level,
+                        message: String,
+                        metadata: Logger.Metadata? = nil,
+                        source: String? = nil,
+                        file: StaticString = #file,
+                        line: UInt = #line) {
+        let source = source ?? Logger.currentModule(filePath: "\(file)")
+        let entry = self.find(level: level, message: message, metadata: metadata, source: source)
+        XCTAssertNil(entry, "entry was found: \(level), \(source), \(String(describing: metadata)), \(message)",
+                     file: (file), line: line)
     }
 
-    func find(level: Logger.Level, message: String, metadata: Logger.Metadata? = nil) -> LogEntry? {
+    func find(level: Logger.Level, message: String, metadata: Logger.Metadata? = nil, source: String) -> LogEntry? {
         return self.entries.first { entry in
             entry.level == level &&
                 entry.message == message &&
-                entry.metadata ?? [:] == metadata ?? [:]
+                entry.metadata ?? [:] == metadata ?? [:] &&
+                entry.source == source
         }
     }
 }
