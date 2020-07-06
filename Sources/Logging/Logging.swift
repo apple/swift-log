@@ -471,14 +471,14 @@ extension Logger {
 /// and thus it would not actually log that log message).
 ///
 /// If the log level is _set_ on a `Logger` backed by an `MultiplexLogHandler` the log level will apply to *all*
-/// underlying log handlers. Allowing a logger to still select at what level it wants to log, regardless if the underlying
+/// underlying log handlers, allowing a logger to still select at what level it wants to log regardless of if the underlying
 /// handler is a multiplex or a normal one. If for some reason one might want to not allow changing a log level of a specific
-/// handled passed into the multiplex log handler, this is possible by wrapping it in a handler which ignores any log level changes.
+/// handler passed into the multiplex log handler, this is possible by wrapping it in a handler which ignores any log level changes.
 ///
 /// ### Effective Logger.Metadata
 ///
-/// Since a `MultiplexLogHandler` is a combination of multiple log handlers, the handling of metadata can be non-obvious
-/// at first when the underlying log handlers have some metadata of their own set, before they are used to initialize the handler.
+/// Since a `MultiplexLogHandler` is a combination of multiple log handlers, the handling of metadata can be non-obvious.
+/// For example, the underlying log handlers may have metadata of their own set before they are used to initialize the multiplex log handler.
 ///
 /// The multiplex log handler acts purely as proxy and does not make any changes to underlying handler metadata other than
 /// proxying writes that users made on a `Logger` instance backed by this handler.
@@ -500,7 +500,7 @@ extension Logger {
 /// A query through the multiplex log handler the key `one` naturally returns `handler1`'s value, and a query for `two`
 /// naturally returns `handler2`'s value. Querying for the key `all` will return `handler1`'s value, as that handler was indicated
 /// "more important" than the second handler. The same rule applies when querying for the `metadata` property of the
-/// multiplex log handler - it constructs `Metadata` uniquing values
+/// multiplex log handler - it constructs `Metadata` uniquing values.
 public struct MultiplexLogHandler: LogHandler {
     private var handlers: [LogHandler]
     private var effectiveLogLevel: Logger.Level
