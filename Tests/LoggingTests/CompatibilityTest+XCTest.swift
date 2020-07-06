@@ -25,7 +25,6 @@ import XCTest
 extension CompatibilityTest {
     static var allTests: [(String, (CompatibilityTest) -> () throws -> Void)] {
         return [
-            ("testAllLogLevelsWorkWithOldSchoolLogHandlerButSourceIsNotPropagated", testAllLogLevelsWorkWithOldSchoolLogHandlerButSourceIsNotPropagated),
             ("testAllLogLevelsWorkWithOldSchoolLogHandlerWorks", testAllLogLevelsWorkWithOldSchoolLogHandlerWorks),
         ]
     }

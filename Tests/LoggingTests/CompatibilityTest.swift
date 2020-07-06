@@ -16,32 +16,6 @@
 import XCTest
 
 final class CompatibilityTest: XCTestCase {
-    func testAllLogLevelsWorkWithOldSchoolLogHandlerButSourceIsNotPropagated() {
-        let testLogging = OldSchoolTestLogging()
-
-        var logger = LoggerWithSource(Logger(label: "\(#function)",
-                                             factory: testLogging.make),
-                                      source: "my-fancy-source")
-        logger.logLevel = .trace
-
-        logger.trace("yes: trace")
-        logger.debug("yes: debug")
-        logger.info("yes: info")
-        logger.notice("yes: notice")
-        logger.warning("yes: warning")
-        logger.error("yes: error")
-        logger.critical("yes: critical")
-
-        // Please note that the source is _not_ propagated (because the backend doesn't support it).
-        testLogging.history.assertExist(level: .trace, message: "yes: trace", source: "no source")
-        testLogging.history.assertExist(level: .debug, message: "yes: debug", source: "no source")
-        testLogging.history.assertExist(level: .info, message: "yes: info", source: "no source")
-        testLogging.history.assertExist(level: .notice, message: "yes: notice", source: "no source")
-        testLogging.history.assertExist(level: .warning, message: "yes: warning", source: "no source")
-        testLogging.history.assertExist(level: .error, message: "yes: error", source: "no source")
-        testLogging.history.assertExist(level: .critical, message: "yes: critical", source: "no source")
-    }
-
     func testAllLogLevelsWorkWithOldSchoolLogHandlerWorks() {
         let testLogging = OldSchoolTestLogging()
 

@@ -50,8 +50,6 @@ extension LoggingTest {
             ("testStreamLogHandlerOutputFormatWithMetaData", testStreamLogHandlerOutputFormatWithMetaData),
             ("testStdioOutputStreamFlush", testStdioOutputStreamFlush),
             ("testOverloadingError", testOverloadingError),
-            ("testAllLogLevelsWorkOnLoggerWithSource", testAllLogLevelsWorkOnLoggerWithSource),
-            ("testLoggerWithSource", testLoggerWithSource),
         ]
     }
 }

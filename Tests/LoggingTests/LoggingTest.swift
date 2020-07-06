@@ -715,42 +715,6 @@ class LoggingTest: XCTestCase {
 
         logging.history.assertExist(level: .error, message: "errorDescription")
     }
-
-    func testAllLogLevelsWorkOnLoggerWithSource() {
-        let testLogging = TestLogging()
-        LoggingSystem.bootstrapInternal(testLogging.make)
-
-        var logger = LoggerWithSource(Logger(label: "\(#function)"), source: "my-fancy-source")
-        logger.logLevel = .trace
-
-        logger.trace("yes: trace")
-        logger.debug("yes: debug")
-        logger.info("yes: info")
-        logger.notice("yes: notice")
-        logger.warning("yes: warning")
-        logger.error("yes: error")
-        logger.critical("yes: critical")
-
-        testLogging.history.assertExist(level: .trace, message: "yes: trace", source: "my-fancy-source")
-        testLogging.history.assertExist(level: .debug, message: "yes: debug", source: "my-fancy-source")
-        testLogging.history.assertExist(level: .info, message: "yes: info", source: "my-fancy-source")
-        testLogging.history.assertExist(level: .notice, message: "yes: notice", source: "my-fancy-source")
-        testLogging.history.assertExist(level: .warning, message: "yes: warning", source: "my-fancy-source")
-        testLogging.history.assertExist(level: .error, message: "yes: error", source: "my-fancy-source")
-        testLogging.history.assertExist(level: .critical, message: "yes: critical", source: "my-fancy-source")
-    }
-
-    func testLoggerWithSource() {
-        let testLogging = TestLogging()
-        LoggingSystem.bootstrapInternal(testLogging.make)
-
-        var logger = Logger(label: "\(#function)").withSource("source")
-        logger.logLevel = .trace
-
-        logger.critical("yes: critical")
-
-        testLogging.history.assertExist(level: .critical, message: "yes: critical", source: "source")
-    }
 }
 
 extension Logger {
