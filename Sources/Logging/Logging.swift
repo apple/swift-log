@@ -27,8 +27,6 @@ import Glibc
 /// and the selected `LogHandler`). Therefore, `Logger`s are suitable to be passed around between libraries if you want
 /// to preserve metadata across libraries.
 ///
-/// - seeAlso: `LoggerWithSource` if you'd like to attach a customized source to every log message.
-///
 /// The most basic usage of a `Logger` is
 ///
 ///     logger.info("Hello World!")
@@ -410,10 +408,6 @@ extension Logger {
     public init(label: String, factory: (String) -> LogHandler) {
         self = Logger(label: label, factory(label))
     }
-
-    public func withSource(_ source: String) -> LoggerWithSource {
-        return LoggerWithSource(self, source: source)
-    }
 }
 
 extension Logger.Level {
@@ -569,7 +563,7 @@ public struct MultiplexLogHandler: LogHandler {
                     function: String,
                     line: UInt) {
         for handler in self.handlers where handler.logLevel <= level {
-            handler.log(level: level, message: message, metadata: metadata, file: file, function: function, line: line)
+            handler.log(level: level, message: message, metadata: metadata, source: source, file: file, function: function, line: line)
         }
     }
 
