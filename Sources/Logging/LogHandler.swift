@@ -56,9 +56,11 @@
 /// `LogHandlerWithGlobalLogLevelOverride.overrideGlobalLogLevel = .debug`, for example.
 ///
 /// ```swift
+/// import class Foundation.NSLock
+///
 /// public struct LogHandlerWithGlobalLogLevelOverride: LogHandler {
 ///     // the static properties hold the globally overridden log level (if overridden)
-///     private static let overrideLock = Lock()
+///     private static let overrideLock = NSLock()
 ///     private static var overrideLogLevel: Logger.Level? = nil
 ///
 ///     // this holds the log level if not overridden
@@ -74,9 +76,9 @@
 ///     public var logLevel: Logger.Level {
 ///         // when we get asked for the log level, we check if it was globally overridden or not
 ///         get {
-///             return LogHandlerWithGlobalLogLevelOverride.overrideLock.withLock {
-///                 return LogHandlerWithGlobalLogLevelOverride.overrideLogLevel
-///             } ?? self._logLevel
+///             LogHandlerWithGlobalLogLevelOverride.overrideLock.lock()
+///             defer { LogHandlerWithGlobalLogLevelOverride.overrideLock.unlock() }
+///             return LogHandlerWithGlobalLogLevelOverride.overrideLogLevel ?? self._logLevel
 ///         }
 ///         // we set the log level whenever we're asked (note: this might not have an effect if globally
 ///         // overridden)
@@ -101,9 +103,9 @@
 ///
 ///     // this is the function to globally override the log level, it is not part of the `LogHandler` protocol
 ///     public static func overrideGlobalLogLevel(_ logLevel: Logger.Level) {
-///         LogHandlerWithGlobalLogLevelOverride.overrideLock.withLock {
-///             LogHandlerWithGlobalLogLevelOverride.overrideLogLevel = logLevel
-///         }
+///         LogHandlerWithGlobalLogLevelOverride.overrideLock.lock()
+///         defer { LogHandlerWithGlobalLogLevelOverride.overrideLock.unlock() }
+///         LogHandlerWithGlobalLogLevelOverride.overrideLogLevel = logLevel
 ///     }
 /// }
 /// ```
