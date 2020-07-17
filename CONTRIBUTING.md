@@ -67,7 +67,7 @@ For this reason, whenever you add new tests **you have to run a script** that ge
 
 ### Run `./scripts/sanity.sh`
 
-The scripts directory contains a [sanity.sh script](https://github.com/swift-server/swift-service-lifecycle/blob/master/scripts/sanity.sh) 
+The scripts directory contains a [sanity.sh script](https://github.com/apple/swift-log/blob/master/scripts/sanity.sh) 
 that enforces additional checks, like license headers and formatting style.
 
 Please make sure to `./scripts/sanity.sh` before pushing a change upstream, otherwise it is likely the PR validation will fail
