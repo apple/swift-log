@@ -715,7 +715,9 @@ public struct StreamLogHandler: LogHandler {
     }
 
     private func prettify(_ metadata: Logger.Metadata) -> String? {
-        return !metadata.isEmpty ? metadata.map { "\($0)=\($1)" }.joined(separator: " ") : nil
+        return !metadata.isEmpty
+            ? metadata.lazy.sorted(by: { $0.key < $1.key }).map { "\($0)=\($1)" }.joined(separator: " ")
+            : nil
     }
 
     private func timestamp() -> String {
