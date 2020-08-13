@@ -408,6 +408,70 @@ class LoggingTest: XCTestCase {
         testLogging.history.assertExist(level: .critical, message: "yes: critical")
     }
 
+    func testAllLogLevelByFunctionRefWithSource() {
+        let testLogging = TestLogging()
+        LoggingSystem.bootstrapInternal(testLogging.make)
+
+        var logger = Logger(label: "\(#function)")
+        logger.logLevel = .trace
+
+        let trace = logger.trace(_:metadata:source:file:function:line:)
+        let debug = logger.debug(_:metadata:source:file:function:line:)
+        let info = logger.info(_:metadata:source:file:function:line:)
+        let notice = logger.notice(_:metadata:source:file:function:line:)
+        let warning = logger.warning(_:metadata:source:file:function:line:)
+        let error = logger.error(_:metadata:source:file:function:line:)
+        let critical = logger.critical(_:metadata:source:file:function:line:)
+
+        trace("yes: trace", [:], "foo", #file, #function, #line)
+        debug("yes: debug", [:], "foo", #file, #function, #line)
+        info("yes: info", [:], "foo", #file, #function, #line)
+        notice("yes: notice", [:], "foo", #file, #function, #line)
+        warning("yes: warning", [:], "foo", #file, #function, #line)
+        error("yes: error", [:], "foo", #file, #function, #line)
+        critical("yes: critical", [:], "foo", #file, #function, #line)
+
+        testLogging.history.assertExist(level: .trace, message: "yes: trace", source: "foo")
+        testLogging.history.assertExist(level: .debug, message: "yes: debug", source: "foo")
+        testLogging.history.assertExist(level: .info, message: "yes: info", source: "foo")
+        testLogging.history.assertExist(level: .notice, message: "yes: notice", source: "foo")
+        testLogging.history.assertExist(level: .warning, message: "yes: warning", source: "foo")
+        testLogging.history.assertExist(level: .error, message: "yes: error", source: "foo")
+        testLogging.history.assertExist(level: .critical, message: "yes: critical", source: "foo")
+    }
+
+    func testAllLogLevelByFunctionRefWithoutSource() {
+        let testLogging = TestLogging()
+        LoggingSystem.bootstrapInternal(testLogging.make)
+
+        var logger = Logger(label: "\(#function)")
+        logger.logLevel = .trace
+
+        let trace = logger.trace(_:metadata:file:function:line:)
+        let debug = logger.debug(_:metadata:file:function:line:)
+        let info = logger.info(_:metadata:file:function:line:)
+        let notice = logger.notice(_:metadata:file:function:line:)
+        let warning = logger.warning(_:metadata:file:function:line:)
+        let error = logger.error(_:metadata:file:function:line:)
+        let critical = logger.critical(_:metadata:file:function:line:)
+
+        trace("yes: trace", [:], #file, #function, #line)
+        debug("yes: debug", [:], #file, #function, #line)
+        info("yes: info", [:], #file, #function, #line)
+        notice("yes: notice", [:], #file, #function, #line)
+        warning("yes: warning", [:], #file, #function, #line)
+        error("yes: error", [:], #file, #function, #line)
+        critical("yes: critical", [:], #file, #function, #line)
+
+        testLogging.history.assertExist(level: .trace, message: "yes: trace")
+        testLogging.history.assertExist(level: .debug, message: "yes: debug")
+        testLogging.history.assertExist(level: .info, message: "yes: info")
+        testLogging.history.assertExist(level: .notice, message: "yes: notice")
+        testLogging.history.assertExist(level: .warning, message: "yes: warning")
+        testLogging.history.assertExist(level: .error, message: "yes: error")
+        testLogging.history.assertExist(level: .critical, message: "yes: critical")
+    }
+
     func testLogMessageWithStringInterpolation() {
         let testLogging = TestLogging()
         LoggingSystem.bootstrapInternal(testLogging.make)
@@ -711,14 +775,14 @@ class LoggingTest: XCTestCase {
 
         var logger = Logger(label: "test")
         logger.logLevel = .error
-        logger.error(Dummy())
+        logger.error(error: Dummy())
 
         logging.history.assertExist(level: .error, message: "errorDescription")
     }
 }
 
 extension Logger {
-    public func error(_ error: Error,
+    public func error(error: Error,
                       metadata: @autoclosure () -> Logger.Metadata? = nil,
                       file: String = #file, function: String = #function, line: UInt = #line) {
         self.error("\(error.localizedDescription)", metadata: metadata(), file: file, function: function, line: line)
