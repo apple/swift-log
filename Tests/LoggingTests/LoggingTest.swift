@@ -359,6 +359,23 @@ class LoggingTest: XCTestCase {
         let logger2 = Logger(label: "foo", factory: { _ in CustomHandler() })
         XCTAssertTrue(logger2.handler is CustomHandler, "expected custom log handler")
     }
+    
+    func testConfiguringFactory() {
+        struct CustomHandler: LogHandler {
+            func log(level: Logger.Level, message: Logger.Message, metadata: Logger.Metadata?, source: String, file: String, function: String, line: UInt) {}
+            subscript(metadataKey _: String) -> Logger.Metadata.Value? { get { nil } set {} }
+            var metadata: Logger.Metadata { get { .init() } set {} }
+            var logLevel: Logger.Level = .info
+        }
+        LoggingSystem.bootstrapInternal { _ in CustomHandler() }
+        
+        let logger1 = Logger(label: "foo")
+        XCTAssertTrue(logger1.handler is CustomHandler, "expected custom log handler")
+        XCTAssertEqual(logger1.handler.logLevel, .info, "expected default log level")
+        let logger2 = Logger(label: "foo", configuringWith: { handler in handler.logLevel = .notice })
+        XCTAssertTrue(logger2.handler is CustomHandler, "expected custom log handler")
+        XCTAssertEqual(logger2.handler.logLevel, .notice, "expected custom log level")
+    }
 
     func testAllLogLevelsExceptCriticalCanBeBlocked() {
         let testLogging = TestLogging()

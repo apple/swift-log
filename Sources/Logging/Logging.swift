@@ -430,6 +430,28 @@ extension Logger {
     public init(label: String, factory: (String) -> LogHandler) {
         self = Logger(label: label, factory(label))
     }
+    
+    /// Construct a `Logger` given a `label` identifying the creator of the `Logger` and configuring the instantiated
+    /// log handler before using it.
+    ///
+    /// The `label` should identify the creator of the `Logger`. This can be an application, a sub-system, or even
+    /// a datatype.
+    ///
+    /// This initializer provides a less extreme escape hatch than the `init(label:factory:)` initializer, in case the
+    /// global default logging backend implementation (set up using `LoggingSystem.bootstrap`) requires or permits
+    /// additional configuration.
+    ///
+    /// For example, this initializer permits libraries to create loggers with different default logging levels or
+    /// metadata, and allows specialized `LogHandler`s to be individually configurable.
+    public init(label: String, configuringWith handlerConfigurator: (inout LogHandler) -> Void) {
+        self = LoggingSystem.lock.withReaderLock {
+            return Logger(label: label, factory: { label in
+                var handler = LoggingSystem.factory(label)
+                handlerConfigurator(&handler)
+                return handler
+            })
+        }
+    }
 }
 
 extension Logger.Level {

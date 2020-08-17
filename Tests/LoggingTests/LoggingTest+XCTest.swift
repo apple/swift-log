@@ -37,6 +37,7 @@ extension LoggingTest {
             ("testAutoClosuresAreNotForcedUnlessNeeded", testAutoClosuresAreNotForcedUnlessNeeded),
             ("testLocalMetadata", testLocalMetadata),
             ("testCustomFactory", testCustomFactory),
+            ("testConfiguringFactory", testConfiguringFactory),
             ("testAllLogLevelsExceptCriticalCanBeBlocked", testAllLogLevelsExceptCriticalCanBeBlocked),
             ("testAllLogLevelsWork", testAllLogLevelsWork),
             ("testLogMessageWithStringInterpolation", testLogMessageWithStringInterpolation),
