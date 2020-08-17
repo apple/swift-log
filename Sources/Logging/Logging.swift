@@ -430,7 +430,7 @@ extension Logger {
     public init(label: String, factory: (String) -> LogHandler) {
         self = Logger(label: label, factory(label))
     }
-    
+
     /// Construct a `Logger` given a `label` identifying the creator of the `Logger` and configuring the instantiated
     /// log handler before using it.
     ///
@@ -445,7 +445,7 @@ extension Logger {
     /// metadata, and allows specialized `LogHandler`s to be individually configurable.
     public init(label: String, configuringWith handlerConfigurator: (inout LogHandler) -> Void) {
         self = LoggingSystem.lock.withReaderLock {
-            return Logger(label: label, factory: { label in
+            Logger(label: label, factory: { label in
                 var handler = LoggingSystem.factory(label)
                 handlerConfigurator(&handler)
                 return handler
