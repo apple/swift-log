@@ -363,8 +363,8 @@ class LoggingTest: XCTestCase {
     func testConfiguringFactory() {
         struct CustomHandler: LogHandler {
             func log(level: Logger.Level, message: Logger.Message, metadata: Logger.Metadata?, source: String, file: String, function: String, line: UInt) {}
-            subscript(metadataKey _: String) -> Logger.Metadata.Value? { get { nil } set {} }
-            var metadata: Logger.Metadata { get { .init() } set {} }
+            subscript(metadataKey _: String) -> Logger.Metadata.Value? { get { return nil } set {} }
+            var metadata: Logger.Metadata { get { return .init() } set {} }
             var logLevel: Logger.Level = .info
         }
         LoggingSystem.bootstrapInternal { _ in CustomHandler() }
