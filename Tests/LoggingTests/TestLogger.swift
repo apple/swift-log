@@ -216,7 +216,7 @@ public class MDC {
 
     private init() {}
 
-    public subscript(metadataKey: String) -> Logger.Metadata.Value? {
+    public subscript(metadataKey: Logger.Metadata.Key) -> Logger.Metadata.Value? {
         get {
             return self.lock.withLock {
                 self.storage[self.threadId]?[metadataKey]

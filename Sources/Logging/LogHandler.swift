@@ -146,6 +146,11 @@ public protocol LogHandler {
     ///
     /// - parameters:
     ///    - metadataKey: The key for the metadata item
+    subscript(metadataKey _: Logger.Metadata.Key) -> Logger.Metadata.Value? { get set }
+
+    /// SwiftLog 1.4 compatibility method. Please do _not_ implement, implement
+    /// the subscript that uses `Logger.Metadata.Key` instead.
+    @available(*, deprecated, message: "Please use `Logger.Metadata.Key` instead of String-based keys")
     subscript(metadataKey _: String) -> Logger.Metadata.Value? { get set }
 
     /// Get or set the entire metadata storage as a dictionary.
@@ -184,5 +189,17 @@ extension LogHandler {
                  file: file,
                  function: function,
                  line: line)
+    }
+
+    @available(*, deprecated, message: "You should implement this subscript instead of using the default implementation")
+    public subscript(metadataKey metadataKey: Logger.Metadata.Key) -> Logger.Metadata.Value? {
+        get { self[metadataKey: metadataKey.rawValue] }
+        set { self[metadataKey: metadataKey.rawValue] = newValue }
+    }
+
+    @available(*, deprecated, message: "Please use `Logger.Metadata.Key` instead of String-based keys")
+    public subscript(metadataKey metadataKey: String) -> Logger.Metadata.Value? {
+        get { self[metadataKey: .init(rawValue: metadataKey)] }
+        set { self[metadataKey: .init(rawValue: metadataKey)] = newValue }
     }
 }

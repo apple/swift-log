@@ -258,6 +258,17 @@ class LoggingTest: XCTestCase {
                                                    "nested-list": ["l1str", ["l2str1", "l2str2"]]])
     }
 
+    func testMetadataKeyLiteralConformances() {
+        let key1: Logger.Metadata.Key = "abc"
+        let key2: Logger.Metadata.Key = "\(key1)def"
+        let key3: Logger.Metadata.Key = .init("ghi")
+        let key4: Logger.Metadata.Key = .init(rawValue: "jkl")
+        XCTAssertEqual(key1.rawValue, "abc")
+        XCTAssertEqual(key2.rawValue, "abcdef")
+        XCTAssertEqual(key3.rawValue, "ghi")
+        XCTAssertEqual(key4.rawValue, "jkl")
+    }
+
     // Example of custom "box" which may be used to implement "render at most once" semantics
     // Not thread-safe, thus should not be shared across threads.
     internal class LazyMetadataBox: CustomStringConvertible {
@@ -496,7 +507,7 @@ class LoggingTest: XCTestCase {
                 self.recorder.record(level: level, metadata: metadata, message: message, source: source)
             }
 
-            subscript(metadataKey metadataKey: String) -> Logger.Metadata.Value? {
+            subscript(metadataKey metadataKey: Logger.Metadata.Key) -> Logger.Metadata.Value? {
                 get {
                     return self.metadata[metadataKey]
                 }

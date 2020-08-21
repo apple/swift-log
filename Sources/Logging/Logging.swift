@@ -82,7 +82,7 @@ extension Logger {
     /// - note: Logging metadata behaves as a value that means a change to the logging metadata will only affect the
     ///         very `Logger` it was changed on.
     @inlinable
-    public subscript(metadataKey metadataKey: String) -> Logger.Metadata.Value? {
+    public subscript(metadataKey metadataKey: Logger.Metadata.Key) -> Logger.Metadata.Value? {
         get {
             return self.handler[metadataKey: metadataKey]
         }
@@ -308,8 +308,49 @@ public enum LoggingSystem {
 }
 
 extension Logger {
-    /// `Metadata` is a typealias for `[String: Logger.MetadataValue]` the type of the metadata storage.
-    public typealias Metadata = [String: MetadataValue]
+    /// `Metadata` is a typealias for `[Logger.MetadataKey: Logger.MetadataValue]` the type of the metadata storage.
+    public typealias Metadata = [MetadataKey: MetadataValue]
+
+    /// A logging metadata key. `Logger.MetadataKey` is string literal convertible.
+    ///
+    /// `MetadataKey` provides convenient conformances to `ExpressibleByStringInterpolation`
+    /// and `ExpressibleByStringLiteral` which means that when constructing `MetadataKey`s
+    /// you should default to using Swift's usual literals or define constants.
+    ///
+    /// You can define constants on `MetadataKey` to prevent having to type keys over and over again,
+    /// or do some arbitrary namespacing:
+    /// ```swift
+    /// extension Logger.Metadata.Key {
+    ///     static let myMetadataKey = Logger.Metadata.Key("some-key")
+    /// }
+    ///
+    /// var logger = Logger(label: "some-label")
+    /// logger[metadataKey: .myMetadataKey] = "my metadata"
+    /// ```
+    public struct MetadataKey: RawRepresentable, Hashable, CustomStringConvertible, ExpressibleByStringLiteral, ExpressibleByStringInterpolation {
+        public typealias RawValue = String
+
+        public let rawValue: RawValue
+
+        public var description: String { rawValue }
+
+        public init(rawValue: RawValue) {
+            self.rawValue = rawValue
+        }
+
+        /// Creates a new MetadataKey with the given rawValue.
+        /// - Parameter rawValue: The rawValue for this key.
+        /// - SeeAlso: `MetadataKey.init(rawValue:)`
+        @inlinable
+        public init(_ rawValue: RawValue) {
+            self.init(rawValue: rawValue)
+        }
+
+        @inlinable
+        public init(stringLiteral value: RawValue) {
+            self.init(rawValue: value)
+        }
+    }
 
     /// A logging metadata value. `Logger.MetadataValue` is string, array, and dictionary literal convertible.
     ///
@@ -684,7 +725,7 @@ public struct StreamLogHandler: LogHandler {
         }
     }
 
-    public subscript(metadataKey metadataKey: String) -> Logger.Metadata.Value? {
+    public subscript(metadataKey metadataKey: Logger.Metadata.Key) -> Logger.Metadata.Value? {
         get {
             return self.metadata[metadataKey]
         }
@@ -737,7 +778,7 @@ public struct SwiftLogNoOpLogHandler: LogHandler {
 
     @inlinable public func log(level: Logger.Level, message: Logger.Message, metadata: Logger.Metadata?, file: String, function: String, line: UInt) {}
 
-    @inlinable public subscript(metadataKey _: String) -> Logger.Metadata.Value? {
+    @inlinable public subscript(metadataKey _: Logger.Metadata.Key) -> Logger.Metadata.Value? {
         get {
             return nil
         }
@@ -807,10 +848,10 @@ extension Logger.MetadataValue: ExpressibleByStringInterpolation {}
 // Extension has to be done on explicit type rather than Logger.Metadata.Value as workaround for
 // https://bugs.swift.org/browse/SR-9686
 extension Logger.MetadataValue: ExpressibleByDictionaryLiteral {
-    public typealias Key = String
+    public typealias Key = Logger.Metadata.Key
     public typealias Value = Logger.Metadata.Value
 
-    public init(dictionaryLiteral elements: (String, Logger.Metadata.Value)...) {
+    public init(dictionaryLiteral elements: (Key, Value)...) {
         self = .dictionary(.init(uniqueKeysWithValues: elements))
     }
 }
@@ -820,7 +861,7 @@ extension Logger.MetadataValue: ExpressibleByDictionaryLiteral {
 extension Logger.MetadataValue: ExpressibleByArrayLiteral {
     public typealias ArrayLiteralElement = Logger.Metadata.Value
 
-    public init(arrayLiteral elements: Logger.Metadata.Value...) {
+    public init(arrayLiteral elements: ArrayLiteralElement...) {
         self = .array(elements)
     }
 }

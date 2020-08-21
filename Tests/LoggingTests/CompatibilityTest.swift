@@ -70,7 +70,7 @@ private struct OldSchoolLogHandler: LogHandler {
         self.recorder.record(level: level, metadata: metadata, message: message, source: "no source")
     }
 
-    subscript(metadataKey metadataKey: String) -> Logger.Metadata.Value? {
+    subscript(metadataKey metadataKey: Logger.Metadata.Key) -> Logger.Metadata.Value? {
         get {
             return self.metadata[metadataKey]
         }

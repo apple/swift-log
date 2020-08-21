@@ -83,7 +83,7 @@ private struct Context {
     }
 
     // since logger is a value type, we can reuse our copy to manage metadata
-    subscript(metadataKey: String) -> Logger.Metadata.Value? {
+    subscript(metadataKey: Logger.Metadata.Key) -> Logger.Metadata.Value? {
         get { return self.logger[metadataKey: metadataKey] }
         set { self.logger[metadataKey: metadataKey] = newValue }
     }
