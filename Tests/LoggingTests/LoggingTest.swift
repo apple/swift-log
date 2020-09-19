@@ -629,9 +629,9 @@ class LoggingTest: XCTestCase {
         let testString = "my message is better than yours"
         log.critical("\(testString)", metadata: ["test": "test"])
 
-        let pattern = "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\+|-)\\d{4}\\s\(Logger.Level.critical)\\s\(label)\\s:\\stest=test\\s\(testString)$"
+        let pattern = "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\+|-)\\d{4}\\s\(Logger.Level.critical)\\s\(label)\\s:\\s\(testString)\\n\\stest=test\\n"
 
-        let messageSucceeded = interceptStream.interceptedText?.trimmingCharacters(in: .whitespacesAndNewlines).range(of: pattern, options: .regularExpression) != nil
+        let messageSucceeded = interceptStream.interceptedText?.trimmingCharacters(in: .whitespaces).range(of: pattern, options: .regularExpression) != nil
 
         XCTAssertTrue(messageSucceeded)
         XCTAssertEqual(interceptStream.strings.count, 1)
@@ -655,8 +655,8 @@ class LoggingTest: XCTestCase {
             return
         }
 
-        XCTAssert(interceptStream.strings[0].contains("a=a0 b=b0"))
-        XCTAssert(interceptStream.strings[1].contains("a=a1 b=b1"))
+        XCTAssert(interceptStream.strings[0].contains("a=a0\n\tb=b0"))
+        XCTAssert(interceptStream.strings[1].contains("a=a1\n\tb=b1"))
     }
 
     func testStdioOutputStreamFlush() {

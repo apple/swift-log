@@ -711,12 +711,12 @@ public struct StreamLogHandler: LogHandler {
             : self.prettify(self.metadata.merging(metadata!, uniquingKeysWith: { _, new in new }))
 
         var stream = self.stream
-        stream.write("\(self.timestamp()) \(level) \(self.label) :\(prettyMetadata.map { " \($0)" } ?? "") \(message)\n")
+        stream.write("\(self.timestamp()) \(level) \(self.label) : \(message)\n\(prettyMetadata.map { "\t\($0)\n" } ?? "\n")")
     }
 
     private func prettify(_ metadata: Logger.Metadata) -> String? {
         return !metadata.isEmpty
-            ? metadata.lazy.sorted(by: { $0.key < $1.key }).map { "\($0)=\($1)" }.joined(separator: " ")
+            ? metadata.lazy.sorted(by: { $0.key < $1.key }).map { "\($0)=\($1)" }.joined(separator: "\n\t")
             : nil
     }
 
