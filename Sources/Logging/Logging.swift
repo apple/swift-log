@@ -15,7 +15,7 @@
 #if os(macOS) || os(iOS) || os(tvOS) || os(watchOS)
 import Darwin
 #elseif os(Windows)
-import MSVCRT
+import CRT
 #else
 import Glibc
 #endif
@@ -652,8 +652,8 @@ internal struct StdioOutputStream: TextOutputStream {
 let systemStderr = Darwin.stderr
 let systemStdout = Darwin.stdout
 #elseif os(Windows)
-let systemStderr = MSVCRT.stderr
-let systemStdout = MSVCRT.stdout
+let systemStderr = CRT.stderr
+let systemStdout = CRT.stdout
 #else
 let systemStderr = Glibc.stderr!
 let systemStdout = Glibc.stdout!
