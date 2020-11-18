@@ -76,6 +76,7 @@ As the API has just launched, not many implementations exist yet. If you are int
 | [google/SwiftLogFireCloud](https://github.com/google/swiftlogfirecloud)  | a logging backend for time series logging which pushes logs as flat files to Firebase Cloud Storage. |
 | [crspybits/swift-log-file](https://github.com/crspybits/swift-log-file)  | a simple local file logger (using `Foundation` `FileManager`) |
 | [sushichop/Puppy](https://github.com/sushichop/Puppy) | a logging backend that supports multiple transports(console, file, syslog, etc.) and has the feature with formatting and file log rotation |
+| [luoxiu/LogDog](https://github.com/luoxiu/LogDog) | user-friendly logging with sinks and appenders |
 | Your library? | [Get in touch!](https://forums.swift.org/c/server) |
 
 ## What is an API package?
