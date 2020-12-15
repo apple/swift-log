@@ -21,8 +21,16 @@ If you have a server-side Swift application, or maybe a cross-platform (for exam
 and to your application/library target, add `"Logging"` to your `dependencies`, e.g. like this:
 
 ```swift
+// Target syntax for Swift up to version 5.1
 .target(name: "BestExampleApp", dependencies: ["Logging"]),
+
+// Target for Swift 5.2
+.target(name: "BestExampleApp", dependencies: [
+    .product(name: "Logging", package: "swift-log")
+],
+
 ```
+
 
 #### Let's log
 
