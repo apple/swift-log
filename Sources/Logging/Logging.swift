@@ -94,7 +94,7 @@ extension Logger {
     /// Get or set the log level configured for this `Logger`.
     ///
     /// - note: `Logger`s treat `logLevel` as a value. This means that a change in `logLevel` will only affect this
-    ///         very `Logger`. It it acceptable for logging backends to have some form of global log level override
+    ///         very `Logger`. It is acceptable for logging backends to have some form of global log level override
     ///         that affects multiple or even all loggers. This means a change in `logLevel` to one `Logger` might in
     ///         certain cases have no effect.
     @inlinable
