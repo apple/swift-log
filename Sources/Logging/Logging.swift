@@ -19,6 +19,11 @@ import CRT
 #elseif canImport(Glibc)
 import Glibc
 #elseif canImport(WASILibc)
+// WASILibc doesn't have stdio, e.g. things like `FILE` yet
+// WASILibc doesn't have `strftime`, but Foundation `DateFormatter`
+import struct Foundation.Date
+import class  Foundation.DateFormatter
+let sharedDateFormatter = DateFormatter()
 #else
 #error("Unsupported runtime")
 #endif
@@ -750,6 +755,10 @@ public struct StreamLogHandler: LogHandler {
     }
 
     private func timestamp() -> String {
+        #if canImport(WASILibc)
+        // WASI doesn't have `strftime`, but Foundation `DateFormatter`
+        return sharedDateFormatter.string(from: Date())
+        #else
         var buffer = [Int8](repeating: 0, count: 255)
         var timestamp = time(nil)
         let localTime = localtime(&timestamp)
@@ -759,6 +768,7 @@ public struct StreamLogHandler: LogHandler {
                 String(cString: $0.baseAddress!)
             }
         }
+        #endif
     }
 }
 
