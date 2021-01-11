@@ -16,8 +16,12 @@
 import Darwin
 #elseif os(Windows)
 import CRT
-#else
+#elseif canImport(Glibc)
 import Glibc
+#elseif canImport(WASILibc)
+import struct WASILibc.FILE
+#else
+#error("Unsupported runtime")
 #endif
 
 /// A `Logger` is the central type in `SwiftLog`. Its central function is to emit log messages using one of the methods
@@ -614,12 +618,16 @@ internal struct StdioOutputStream: TextOutputStream {
         string.withCString { ptr in
             #if os(Windows)
             _lock_file(self.file)
+            #elseif canImport(WASILibc)
+            // no file locking on WASI
             #else
             flockfile(self.file)
             #endif
             defer {
                 #if os(Windows)
                 _unlock_file(self.file)
+                #elseif canImport(WASILibc)
+                // no file locking on WASI
                 #else
                 funlockfile(self.file)
                 #endif
@@ -654,9 +662,14 @@ let systemStdout = Darwin.stdout
 #elseif os(Windows)
 let systemStderr = CRT.stderr
 let systemStdout = CRT.stdout
-#else
+#elseif canImport(Glibc)
 let systemStderr = Glibc.stderr!
 let systemStdout = Glibc.stdout!
+#elseif canImport(WASILibc)
+let systemStderr = WASILibc.stderr!
+let systemStdout = WASILibc.stdout!
+#else
+#error("Unsupported runtime")
 #endif
 
 /// `StreamLogHandler` is a simple implementation of `LogHandler` for directing
