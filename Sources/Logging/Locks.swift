@@ -30,7 +30,7 @@
 import Darwin
 #elseif os(Windows)
 import WinSDK
-#else
+#elseif canImport(Glibc)
 import Glibc
 #endif
 
@@ -44,6 +44,8 @@ internal final class Lock {
     #if os(Windows)
     fileprivate let mutex: UnsafeMutablePointer<SRWLOCK> =
         UnsafeMutablePointer.allocate(capacity: 1)
+    #elseif canImport(WASILibc)
+    fileprivate let mutex : Void
     #else
     fileprivate let mutex: UnsafeMutablePointer<pthread_mutex_t> =
         UnsafeMutablePointer.allocate(capacity: 1)
@@ -53,6 +55,8 @@ internal final class Lock {
     public init() {
         #if os(Windows)
         InitializeSRWLock(self.mutex)
+        #elseif canImport(WASILibc)
+        // no threading on WASI yet
         #else
         var attr = pthread_mutexattr_t()
         pthread_mutexattr_init(&attr)
@@ -66,11 +70,14 @@ internal final class Lock {
     deinit {
         #if os(Windows)
         // SRWLOCK does not need to be free'd
+        self.mutex.deallocate()
+        #elseif canImport(WASILibc)
+        // no threading on WASI yet
         #else
         let err = pthread_mutex_destroy(self.mutex)
         precondition(err == 0, "\(#function) failed in pthread_mutex with error \(err)")
-        #endif
         self.mutex.deallocate()
+        #endif
     }
 
     /// Acquire the lock.
@@ -80,6 +87,8 @@ internal final class Lock {
     public func lock() {
         #if os(Windows)
         AcquireSRWLockExclusive(self.mutex)
+        #elseif canImport(WASILibc)
+        // no threading on WASI yet
         #else
         let err = pthread_mutex_lock(self.mutex)
         precondition(err == 0, "\(#function) failed in pthread_mutex with error \(err)")
@@ -93,6 +102,8 @@ internal final class Lock {
     public func unlock() {
         #if os(Windows)
         ReleaseSRWLockExclusive(self.mutex)
+        #elseif canImport(WASILibc)
+        // no threading on WASI yet
         #else
         let err = pthread_mutex_unlock(self.mutex)
         precondition(err == 0, "\(#function) failed in pthread_mutex with error \(err)")
@@ -136,6 +147,9 @@ internal final class ReadWriteLock {
     fileprivate let rwlock: UnsafeMutablePointer<SRWLOCK> =
         UnsafeMutablePointer.allocate(capacity: 1)
     fileprivate var shared: Bool = true
+    #elseif canImport(WASILibc)
+    // no threading on WASI yet
+    fileprivate let rwlock: Void
     #else
     fileprivate let rwlock: UnsafeMutablePointer<pthread_rwlock_t> =
         UnsafeMutablePointer.allocate(capacity: 1)
@@ -145,6 +159,8 @@ internal final class ReadWriteLock {
     public init() {
         #if os(Windows)
         InitializeSRWLock(self.rwlock)
+        #elseif canImport(WASILibc)
+        // no threading on WASI yet
         #else
         let err = pthread_rwlock_init(self.rwlock, nil)
         precondition(err == 0, "\(#function) failed in pthread_rwlock with error \(err)")
@@ -154,11 +170,14 @@ internal final class ReadWriteLock {
     deinit {
         #if os(Windows)
         // SRWLOCK does not need to be free'd
+        self.rwlock.deallocate()
+        #elseif canImport(WASILibc)
+        // no threading on WASI yet
         #else
         let err = pthread_rwlock_destroy(self.rwlock)
         precondition(err == 0, "\(#function) failed in pthread_rwlock with error \(err)")
-        #endif
         self.rwlock.deallocate()
+        #endif
     }
 
     /// Acquire a reader lock.
@@ -169,6 +188,8 @@ internal final class ReadWriteLock {
         #if os(Windows)
         AcquireSRWLockShared(self.rwlock)
         self.shared = true
+        #elseif canImport(WASILibc)
+        // no threading on WASI yet
         #else
         let err = pthread_rwlock_rdlock(self.rwlock)
         precondition(err == 0, "\(#function) failed in pthread_rwlock with error \(err)")
@@ -183,6 +204,8 @@ internal final class ReadWriteLock {
         #if os(Windows)
         AcquireSRWLockExclusive(self.rwlock)
         self.shared = false
+        #elseif canImport(WASILibc)
+        // no threading on WASI yet
         #else
         let err = pthread_rwlock_wrlock(self.rwlock)
         precondition(err == 0, "\(#function) failed in pthread_rwlock with error \(err)")
@@ -201,6 +224,8 @@ internal final class ReadWriteLock {
         } else {
             ReleaseSRWLockExclusive(self.rwlock)
         }
+        #elseif canImport(WASILibc)
+        // no threading on WASI yet
         #else
         let err = pthread_rwlock_unlock(self.rwlock)
         precondition(err == 0, "\(#function) failed in pthread_rwlock with error \(err)")
