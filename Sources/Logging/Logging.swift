@@ -19,10 +19,7 @@ import CRT
 #elseif canImport(Glibc)
 import Glibc
 #elseif canImport(WASILibc)
-// WASILibc doesn't have stdio, e.g. things like `FILE` yet
-import func WASILibc.strftime
-import func WASILibc.time
-import func WASILibc.localtime
+import WASILibc
 #else
 #error("Unsupported runtime")
 #endif
@@ -628,20 +625,15 @@ public struct MultiplexLogHandler: LogHandler {
     }
 }
 
-#if canImport(WASILibc)
-// There is no stdio/FILE in WASI yet, neither stdout/err. But it does
-// support `print`.
-internal struct PrintOutputStream: TextOutputStream {
-    internal func write(_ string: String) {
-        print(string)
-    }
-}
-#else
 /// A wrapper to facilitate `print`-ing to stderr and stdio that
 /// ensures access to the underlying `FILE` is locked to prevent
 /// cross-thread interleaving of output.
 internal struct StdioOutputStream: TextOutputStream {
+    #if canImport(WASILibc)
+    internal let file: OpaquePointer
+    #else
     internal let file: UnsafeMutablePointer<FILE>
+    #endif
     internal let flushMode: FlushMode
 
     internal func write(_ string: String) {
@@ -684,7 +676,6 @@ internal struct StdioOutputStream: TextOutputStream {
         case always
     }
 }
-#endif
 
 // Prevent name clashes
 #if os(macOS) || os(tvOS) || os(iOS) || os(watchOS)
@@ -697,7 +688,8 @@ let systemStdout = CRT.stdout
 let systemStderr = Glibc.stderr!
 let systemStdout = Glibc.stdout!
 #elseif canImport(WASILibc)
-// no stdio on WASI yet
+let systemStderr = WASILibc.stderr!
+let systemStdout = WASILibc.stdout!
 #else
 #error("Unsupported runtime")
 #endif
@@ -707,20 +699,12 @@ let systemStdout = Glibc.stdout!
 public struct StreamLogHandler: LogHandler {
     /// Factory that makes a `StreamLogHandler` to directs its output to `stdout`
     public static func standardOutput(label: String) -> StreamLogHandler {
-        #if canImport(WASILibc)
-            return StreamLogHandler(label: label, stream: PrintOutputStream())
-        #else
-            return StreamLogHandler(label: label, stream: StdioOutputStream.stdout)
-        #endif
+        return StreamLogHandler(label: label, stream: StdioOutputStream.stdout)
     }
 
     /// Factory that makes a `StreamLogHandler` to directs its output to `stderr`
     public static func standardError(label: String) -> StreamLogHandler {
-        #if canImport(WASILibc)
-            return standardOutput(label: label)
-        #else
-            return StreamLogHandler(label: label, stream: StdioOutputStream.stderr)
-        #endif
+        return StreamLogHandler(label: label, stream: StdioOutputStream.stderr)
     }
 
     private let stream: TextOutputStream
