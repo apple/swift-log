@@ -72,12 +72,11 @@ internal final class Lock {
     deinit {
         #if os(Windows)
         // SRWLOCK does not need to be free'd
-        self.mutex.deallocate()
         #else
         let err = pthread_mutex_destroy(self.mutex)
         precondition(err == 0, "\(#function) failed in pthread_mutex with error \(err)")
-        self.mutex.deallocate()
         #endif
+        self.mutex.deallocate()
     }
 
     /// Acquire the lock.
@@ -161,12 +160,11 @@ internal final class ReadWriteLock {
     deinit {
         #if os(Windows)
         // SRWLOCK does not need to be free'd
-        self.rwlock.deallocate()
         #else
         let err = pthread_rwlock_destroy(self.rwlock)
         precondition(err == 0, "\(#function) failed in pthread_rwlock with error \(err)")
-        self.rwlock.deallocate()
         #endif
+        self.rwlock.deallocate()
     }
 
     /// Acquire a reader lock.
