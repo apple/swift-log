@@ -26,12 +26,18 @@
 //
 //===----------------------------------------------------------------------===//
 
+#if canImport(WASILibc)
+// No locking on WASILibc
+#else
+
 #if os(macOS) || os(iOS) || os(tvOS) || os(watchOS)
 import Darwin
 #elseif os(Windows)
 import WinSDK
-#else
+#elseif canImport(Glibc)
 import Glibc
+#else
+#error("Unsupported runtime")
 #endif
 
 /// A threading lock based on `libpthread` instead of `libdispatch`.
@@ -255,3 +261,4 @@ extension ReadWriteLock {
         try self.withWriterLock(body)
     }
 }
+#endif
