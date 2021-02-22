@@ -15,9 +15,13 @@
 #if os(macOS) || os(iOS) || os(tvOS) || os(watchOS)
 import Darwin
 #elseif os(Windows)
-import MSVCRT
-#else
+import CRT
+#elseif canImport(Glibc)
 import Glibc
+#elseif canImport(WASILibc)
+import WASILibc
+#else
+#error("Unsupported runtime")
 #endif
 
 /// A `Logger` is the central type in `SwiftLog`. Its central function is to emit log messages using one of the methods
@@ -117,7 +121,7 @@ extension Logger {
     /// Get or set the log level configured for this `Logger`.
     ///
     /// - note: `Logger`s treat `logLevel` as a value. This means that a change in `logLevel` will only affect this
-    ///         very `Logger`. It it acceptable for logging backends to have some form of global log level override
+    ///         very `Logger`. It is acceptable for logging backends to have some form of global log level override
     ///         that affects multiple or even all loggers. This means a change in `logLevel` to one `Logger` might in
     ///         certain cases have no effect.
     @inlinable
@@ -452,7 +456,11 @@ extension Logger {
 /// configured. `LoggingSystem` is set up just once in a given program to set up the desired logging backend
 /// implementation.
 public enum LoggingSystem {
+    #if canImport(WASILibc)
+    // WASILibc is single threaded, provides no locks
+    #else
     fileprivate static let lock = ReadWriteLock()
+    #endif
     fileprivate static var factory: (String) -> LogHandler = StreamLogHandler.standardOutput
     fileprivate static var initialized = false
 
@@ -463,18 +471,28 @@ public enum LoggingSystem {
     /// - parameters:
     ///     - factory: A closure that given a `Logger` identifier, produces an instance of the `LogHandler`.
     public static func bootstrap(_ factory: @escaping (String) -> LogHandler) {
+        #if canImport(WASILibc)
+        precondition(!self.initialized, "logging system can only be initialized once per process.")
+        self.factory = factory
+        self.initialized = true
+        #else
         self.lock.withWriterLock {
             precondition(!self.initialized, "logging system can only be initialized once per process.")
             self.factory = factory
             self.initialized = true
         }
+        #endif
     }
 
     // for our testing we want to allow multiple bootstraping
     internal static func bootstrapInternal(_ factory: @escaping (String) -> LogHandler) {
+        #if canImport(WASILibc)
+        self.factory = factory
+        #else
         self.lock.withWriterLock {
             self.factory = factory
         }
+        #endif
     }
 }
 
@@ -562,7 +580,11 @@ extension Logger {
     /// - parameters:
     ///     - label: An identifier for the creator of a `Logger`.
     public init(label: String) {
+        #if canImport(WASILibc)
+        self.init(label: label, LoggingSystem.factory(label))
+        #else
         self = LoggingSystem.lock.withReaderLock { Logger(label: label, LoggingSystem.factory(label)) }
+        #endif
     }
 
     /// Construct a `Logger` given a `label` identifying the creator of the `Logger` or a non-standard `LogHandler`.
@@ -778,19 +800,27 @@ public struct MultiplexLogHandler: LogHandler {
 /// ensures access to the underlying `FILE` is locked to prevent
 /// cross-thread interleaving of output.
 internal struct StdioOutputStream: TextOutputStream {
+    #if canImport(WASILibc)
+    internal let file: OpaquePointer
+    #else
     internal let file: UnsafeMutablePointer<FILE>
+    #endif
     internal let flushMode: FlushMode
 
     internal func write(_ string: String) {
         string.withCString { ptr in
             #if os(Windows)
             _lock_file(self.file)
+            #elseif canImport(WASILibc)
+            // no file locking on WASI
             #else
             flockfile(self.file)
             #endif
             defer {
                 #if os(Windows)
                 _unlock_file(self.file)
+                #elseif canImport(WASILibc)
+                // no file locking on WASI
                 #else
                 funlockfile(self.file)
                 #endif
@@ -823,11 +853,16 @@ internal struct StdioOutputStream: TextOutputStream {
 let systemStderr = Darwin.stderr
 let systemStdout = Darwin.stdout
 #elseif os(Windows)
-let systemStderr = MSVCRT.stderr
-let systemStdout = MSVCRT.stdout
-#else
+let systemStderr = CRT.stderr
+let systemStdout = CRT.stdout
+#elseif canImport(Glibc)
 let systemStderr = Glibc.stderr!
 let systemStdout = Glibc.stdout!
+#elseif canImport(WASILibc)
+let systemStderr = WASILibc.stderr!
+let systemStdout = WASILibc.stdout!
+#else
+#error("Unsupported runtime")
 #endif
 
 /// `StreamLogHandler` is a simple implementation of `LogHandler` for directing
@@ -886,7 +921,9 @@ public struct StreamLogHandler: LogHandler {
     }
 
     private func prettify(_ metadata: Logger.Metadata) -> String? {
-        return !metadata.isEmpty ? metadata.map { "\($0)=\($1)" }.joined(separator: " ") : nil
+        return !metadata.isEmpty
+            ? metadata.lazy.sorted(by: { $0.key < $1.key }).map { "\($0)=\($1)" }.joined(separator: " ")
+            : nil
     }
 
     private func timestamp() -> String {

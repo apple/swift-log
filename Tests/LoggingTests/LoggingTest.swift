@@ -701,6 +701,28 @@ class LoggingTest: XCTestCase {
         XCTAssertEqual(interceptStream.strings.count, 1)
     }
 
+    func testStreamLogHandlerOutputFormatWithOrderedMetadata() {
+        let interceptStream = InterceptStream()
+        let label = "testLabel"
+        LoggingSystem.bootstrapInternal { _ in
+            StreamLogHandler(label: label, stream: interceptStream)
+        }
+        let log = Logger(label: label)
+
+        let testString = "my message is better than yours"
+        log.critical("\(testString)", metadata: ["a": "a0", "b": "b0"])
+        log.critical("\(testString)", metadata: ["b": "b1", "a": "a1"])
+
+        XCTAssertEqual(interceptStream.strings.count, 2)
+        guard interceptStream.strings.count == 2 else {
+            XCTFail("Intercepted \(interceptStream.strings.count) logs, expected 2")
+            return
+        }
+
+        XCTAssert(interceptStream.strings[0].contains("a=a0 b=b0"))
+        XCTAssert(interceptStream.strings[1].contains("a=a1 b=b1"))
+    }
+
     func testStdioOutputStreamFlush() {
         // flush on every statement
         self.withWriteReadFDsAndReadBuffer { writeFD, readFD, readBuffer in
