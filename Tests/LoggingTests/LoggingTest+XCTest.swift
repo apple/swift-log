@@ -39,6 +39,8 @@ extension LoggingTest {
             ("testCustomFactory", testCustomFactory),
             ("testAllLogLevelsExceptCriticalCanBeBlocked", testAllLogLevelsExceptCriticalCanBeBlocked),
             ("testAllLogLevelsWork", testAllLogLevelsWork),
+            ("testAllLogLevelByFunctionRefWithSource", testAllLogLevelByFunctionRefWithSource),
+            ("testAllLogLevelByFunctionRefWithoutSource", testAllLogLevelByFunctionRefWithoutSource),
             ("testLogMessageWithStringInterpolation", testLogMessageWithStringInterpolation),
             ("testLoggingAString", testLoggingAString),
             ("testMultiplexerIsValue", testMultiplexerIsValue),
