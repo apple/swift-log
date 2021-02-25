@@ -825,7 +825,7 @@ internal struct StdioOutputStream: TextOutputStream {
                 funlockfile(self.file)
                 #endif
             }
-            _ = fputs(ptr, self.file)
+            _ = fwrite(ptr, 1, strlen(ptr), self.file)
             if case .always = self.flushMode {
                 self.flush()
             }
