@@ -1,0 +1,17 @@
+version: "3"
+
+services:
+
+  runtime-setup:
+    image: swift-log:20.04-main
+    build:
+      args:
+        base_image: "swiftlang/swift:nightly-main-focal"
+
+  test:
+    image: swift-log:20.04-main
+    environment: []
+      #- SANITIZER_ARG=--sanitize=thread
+
+  shell:
+    image: swift-log:20.04-main
