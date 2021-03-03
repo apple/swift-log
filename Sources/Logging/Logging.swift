@@ -176,7 +176,7 @@ extension Logger {
     public func trace(_ message: @autoclosure () -> Logger.Message,
                       metadata: @autoclosure () -> Logger.Metadata? = nil,
                       file: String = #file, function: String = #function, line: UInt = #line) {
-        self.trace(message(), metadata: metadata(), source: nil, file: file, line: line)
+        self.trace(message(), metadata: metadata(), source: nil, file: file, function: function, line: line)
     }
 
     /// Log a message passing with the `Logger.Level.debug` log level.
