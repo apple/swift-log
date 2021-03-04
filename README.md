@@ -10,7 +10,7 @@ If you have a server-side Swift application, or maybe a cross-platform (for exam
 
 #### Adding the dependency
 
-`SwiftLog` is designed for Swift 5, the `1.0.0` release requires Swift 5 (however we will soon tag a `0.x` version that will work with Swift 4 for the transition period). To depend on the logging API package, you need to declare your dependency in your `Package.swift`:
+`SwiftLog` is designed for Swift 5. To depend on the logging API package, you need to declare your dependency in your `Package.swift`:
 
 ```swift
 .package(url: "https://github.com/apple/swift-log.git", from: "1.0.0"),
