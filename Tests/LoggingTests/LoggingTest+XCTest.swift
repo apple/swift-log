@@ -41,6 +41,7 @@ extension LoggingTest {
             ("testAllLogLevelsWork", testAllLogLevelsWork),
             ("testAllLogLevelByFunctionRefWithSource", testAllLogLevelByFunctionRefWithSource),
             ("testAllLogLevelByFunctionRefWithoutSource", testAllLogLevelByFunctionRefWithoutSource),
+            ("testLogsEmittedFromSubdirectoryGetCorrectModuleInNewerSwifts", testLogsEmittedFromSubdirectoryGetCorrectModuleInNewerSwifts),
             ("testLogMessageWithStringInterpolation", testLogMessageWithStringInterpolation),
             ("testLoggingAString", testLoggingAString),
             ("testMultiplexerIsValue", testMultiplexerIsValue),
