@@ -725,6 +725,22 @@ class LoggingTest: XCTestCase {
         XCTAssert(interceptStream.strings[1].contains("a=a1 b=b1"))
     }
 
+    func testStdioOutputStreamWrite() {
+        self.withWriteReadFDsAndReadBuffer { writeFD, readFD, readBuffer in
+            let logStream = StdioOutputStream(file: writeFD, flushMode: .always)
+            LoggingSystem.bootstrapInternal { StreamLogHandler(label: $0, stream: logStream) }
+            let log = Logger(label: "test")
+            let testString = "hello\u{0} world"
+            log.critical("\(testString)")
+
+            let size = read(readFD, readBuffer, 256)
+
+            let output = String(decoding: UnsafeRawBufferPointer(start: UnsafeRawPointer(readBuffer), count: size), as: UTF8.self)
+            let messageSucceeded = output.trimmingCharacters(in: .whitespacesAndNewlines).hasSuffix(testString)
+            XCTAssertTrue(messageSucceeded)
+        }
+    }
+
     func testStdioOutputStreamFlush() {
         // flush on every statement
         self.withWriteReadFDsAndReadBuffer { writeFD, readFD, readBuffer in
@@ -758,7 +774,7 @@ class LoggingTest: XCTestCase {
         var fds: [Int32] = [-1, -1]
         fds.withUnsafeMutableBufferPointer { ptr in
             let err = pipe(ptr.baseAddress!)
-            XCTAssertEqual(err, 0, "pipe faild \(err)")
+            XCTAssertEqual(err, 0, "pipe failed \(err)")
         }
 
         let writeFD = fdopen(fds[1], "w")
@@ -769,11 +785,11 @@ class LoggingTest: XCTestCase {
         }
 
         var err = setvbuf(writeFD, writeBuffer, _IOFBF, 256)
-        XCTAssertEqual(err, 0, "setvbuf faild \(err)")
+        XCTAssertEqual(err, 0, "setvbuf failed \(err)")
 
         let readFD = fds[0]
         err = fcntl(readFD, F_SETFL, fcntl(readFD, F_GETFL) | O_NONBLOCK)
-        XCTAssertEqual(err, 0, "fcntl faild \(err)")
+        XCTAssertEqual(err, 0, "fcntl failed \(err)")
 
         let readBuffer = UnsafeMutablePointer<Int8>.allocate(capacity: 256)
         defer {
