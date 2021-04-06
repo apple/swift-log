@@ -301,7 +301,7 @@ class LoggingTest: XCTestCase {
     }
 
     private func dontEvaluateThisString(file: StaticString = #file, line: UInt = #line) -> Logger.Message {
-        XCTFail("should not have been evaluated", file: (file), line: line)
+        XCTFail("should not have been evaluated", file: file, line: line)
         return "should not have been evaluated"
     }
 
@@ -455,6 +455,15 @@ class LoggingTest: XCTestCase {
         let error = logger.error(_:metadata:file:function:line:)
         let critical = logger.critical(_:metadata:file:function:line:)
 
+        #if compiler(>=5.3)
+        trace("yes: trace", [:], #fileID, #function, #line)
+        debug("yes: debug", [:], #fileID, #function, #line)
+        info("yes: info", [:], #fileID, #function, #line)
+        notice("yes: notice", [:], #fileID, #function, #line)
+        warning("yes: warning", [:], #fileID, #function, #line)
+        error("yes: error", [:], #fileID, #function, #line)
+        critical("yes: critical", [:], #fileID, #function, #line)
+        #else
         trace("yes: trace", [:], #file, #function, #line)
         debug("yes: debug", [:], #file, #function, #line)
         info("yes: info", [:], #file, #function, #line)
@@ -462,6 +471,7 @@ class LoggingTest: XCTestCase {
         warning("yes: warning", [:], #file, #function, #line)
         error("yes: error", [:], #file, #function, #line)
         critical("yes: critical", [:], #file, #function, #line)
+        #endif
 
         testLogging.history.assertExist(level: .trace, message: "yes: trace")
         testLogging.history.assertExist(level: .debug, message: "yes: debug")
@@ -470,6 +480,30 @@ class LoggingTest: XCTestCase {
         testLogging.history.assertExist(level: .warning, message: "yes: warning")
         testLogging.history.assertExist(level: .error, message: "yes: error")
         testLogging.history.assertExist(level: .critical, message: "yes: critical")
+    }
+
+    func testLogsEmittedFromSubdirectoryGetCorrectModuleInNewerSwifts() {
+        let testLogging = TestLogging()
+        LoggingSystem.bootstrapInternal(testLogging.make)
+
+        var logger = Logger(label: "\(#function)")
+        logger.logLevel = .trace
+
+        emitLogMessage("hello", to: logger)
+
+        #if compiler(>=5.3)
+        let moduleName = "LoggingTests" // the actual name
+        #else
+        let moduleName = "SubDirectoryOfLoggingTests" // the last path component of `#file` showing the failure mode
+        #endif
+
+        testLogging.history.assertExist(level: .trace, message: "hello", source: moduleName)
+        testLogging.history.assertExist(level: .debug, message: "hello", source: moduleName)
+        testLogging.history.assertExist(level: .info, message: "hello", source: moduleName)
+        testLogging.history.assertExist(level: .notice, message: "hello", source: moduleName)
+        testLogging.history.assertExist(level: .warning, message: "hello", source: moduleName)
+        testLogging.history.assertExist(level: .error, message: "hello", source: moduleName)
+        testLogging.history.assertExist(level: .critical, message: "hello", source: moduleName)
     }
 
     func testLogMessageWithStringInterpolation() {
@@ -822,9 +856,18 @@ class LoggingTest: XCTestCase {
 }
 
 extension Logger {
+    #if compiler(>=5.3)
+    public func error(error: Error,
+                      metadata: @autoclosure () -> Logger.Metadata? = nil,
+                      file: String = #fileID, function: String = #function, line: UInt = #line) {
+        self.error("\(error.localizedDescription)", metadata: metadata(), file: file, function: function, line: line)
+    }
+
+    #else
     public func error(error: Error,
                       metadata: @autoclosure () -> Logger.Metadata? = nil,
                       file: String = #file, function: String = #function, line: UInt = #line) {
         self.error("\(error.localizedDescription)", metadata: metadata(), file: file, function: function, line: line)
     }
+    #endif
 }
