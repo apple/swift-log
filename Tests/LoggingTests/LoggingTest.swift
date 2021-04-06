@@ -669,12 +669,13 @@ class LoggingTest: XCTestCase {
         LoggingSystem.bootstrapInternal { _ in
             StreamLogHandler(label: label, stream: interceptStream)
         }
+        let source = "testSource"
         let log = Logger(label: label)
 
         let testString = "my message is better than yours"
-        log.critical("\(testString)")
+        log.critical("\(testString)", source: source)
 
-        let pattern = "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\+|-)\\d{4}\\s\(Logger.Level.critical)\\s\(label)\\s:\\s\(testString)$"
+        let pattern = "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\+|-)\\d{4}\\s\(Logger.Level.critical)\\s\(label)\\s:\\s\\[\(source)\\]\\s\(testString)$"
 
         let messageSucceeded = interceptStream.interceptedText?.trimmingCharacters(in: .whitespacesAndNewlines).range(of: pattern, options: .regularExpression) != nil
 
@@ -688,12 +689,13 @@ class LoggingTest: XCTestCase {
         LoggingSystem.bootstrapInternal { _ in
             StreamLogHandler(label: label, stream: interceptStream)
         }
+        let source = "testSource"
         let log = Logger(label: label)
 
         let testString = "my message is better than yours"
-        log.critical("\(testString)", metadata: ["test": "test"])
+        log.critical("\(testString)", metadata: ["test": "test"], source: source)
 
-        let pattern = "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\+|-)\\d{4}\\s\(Logger.Level.critical)\\s\(label)\\s:\\stest=test\\s\(testString)$"
+        let pattern = "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\+|-)\\d{4}\\s\(Logger.Level.critical)\\s\(label)\\s:\\stest=test\\s\\[\(source)\\]\\s\(testString)$"
 
         let messageSucceeded = interceptStream.interceptedText?.trimmingCharacters(in: .whitespacesAndNewlines).range(of: pattern, options: .regularExpression) != nil
 
