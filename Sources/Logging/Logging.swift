@@ -808,7 +808,7 @@ internal struct StdioOutputStream: TextOutputStream {
     internal let flushMode: FlushMode
 
     internal func write(_ string: String) {
-        contiguousUTF8(string).withContiguousStorageIfAvailable { utf8Bytes in
+        self.contiguousUTF8(string).withContiguousStorageIfAvailable { utf8Bytes in
             #if os(Windows)
             _lock_file(self.file)
             #elseif canImport(WASILibc)
