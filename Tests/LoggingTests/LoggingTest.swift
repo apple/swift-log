@@ -736,7 +736,6 @@ class LoggingTest: XCTestCase {
             let output = String(decoding: UnsafeRawBufferPointer(start: UnsafeRawPointer(readBuffer), count: size), as: UTF8.self)
             let messageSucceeded = output.trimmingCharacters(in: .whitespacesAndNewlines).hasSuffix(testString)
             XCTAssertTrue(messageSucceeded)
-
         }
     }
 
