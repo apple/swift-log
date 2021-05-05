@@ -1147,6 +1147,8 @@ public struct StreamLogHandler: LogHandler {
 public struct SwiftLogNoOpLogHandler: LogHandler {
     public init() {}
 
+    public init(_: String) {}
+
     @inlinable public func log(level: Logger.Level, message: Logger.Message, metadata: Logger.Metadata?, file: String, function: String, line: UInt) {}
 
     @inlinable public subscript(metadataKey _: String) -> Logger.Metadata.Value? {
