@@ -202,6 +202,10 @@ around between libraries to preserve metadata and the like.
 If you want to filter all log messages originating from a certain subsystem, filter by `source` which defaults to the module that is emitting the
 log message.
 
+## Security
+
+Please see [SECURITY.md](SECURITY.md) for SwiftLog's security process.
+
 ## Design
 
 This logging API was designed with the contributors to the Swift on Server community and approved by the [SSWG (Swift Server Work Group)](https://swift.org/server/) to the 'sandbox level' of the SSWG's [incubation process](https://github.com/swift-server/sswg/blob/master/process/incubation.md).
