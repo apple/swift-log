@@ -1132,9 +1132,19 @@ public struct StreamLogHandler: LogHandler {
 
     private func timestamp() -> String {
         var buffer = [Int8](repeating: 0, count: 255)
+        #if os(Windows)
+        var timestamp: __time64_t = __time64_t()
+        _ = _time64(&timestamp)
+
+        var localTime: tm = tm()
+        _ = _localtime64_s(&localTime, &timestamp)
+
+        _ = strftime(&buffer, buffer.count, "%Y-%m-%dT%H:%M:%S%z", &localTime)
+        #else
         var timestamp = time(nil)
         let localTime = localtime(&timestamp)
         strftime(&buffer, buffer.count, "%Y-%m-%dT%H:%M:%S%z", localTime)
+        #endif
         return buffer.withUnsafeBufferPointer {
             $0.withMemoryRebound(to: CChar.self) {
                 String(cString: $0.baseAddress!)
