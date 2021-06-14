@@ -14,6 +14,9 @@
 import Foundation
 @testable import Logging
 import XCTest
+#if os(Windows)
+import WinSDK
+#endif
 
 internal struct TestLogging {
     private let _config = Config() // shared among loggers
@@ -299,6 +302,8 @@ public class MDC {
     private var threadId: Int {
         #if os(macOS) || os(iOS) || os(tvOS) || os(watchOS)
         return Int(pthread_mach_thread_np(pthread_self()))
+        #elseif os(Windows)
+        return Int(GetCurrentThreadId())
         #else
         return Int(pthread_self())
         #endif

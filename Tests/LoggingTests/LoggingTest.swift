@@ -16,6 +16,8 @@ import XCTest
 
 #if os(macOS) || os(iOS) || os(tvOS) || os(watchOS)
 import Darwin
+#elseif os(Windows)
+import WinSDK
 #else
 import Glibc
 #endif
@@ -769,7 +771,7 @@ class LoggingTest: XCTestCase {
 
             let size = read(readFD, readBuffer, 256)
 
-            let output = String(decoding: UnsafeRawBufferPointer(start: UnsafeRawPointer(readBuffer), count: size), as: UTF8.self)
+            let output = String(decoding: UnsafeRawBufferPointer(start: UnsafeRawPointer(readBuffer), count: numericCast(size)), as: UTF8.self)
             let messageSucceeded = output.trimmingCharacters(in: .whitespacesAndNewlines).hasSuffix(testString)
             XCTAssertTrue(messageSucceeded)
         }
@@ -806,10 +808,17 @@ class LoggingTest: XCTestCase {
 
     func withWriteReadFDsAndReadBuffer(_ body: (UnsafeMutablePointer<FILE>, CInt, UnsafeMutablePointer<Int8>) -> Void) {
         var fds: [Int32] = [-1, -1]
+        #if os(Windows)
+        fds.withUnsafeMutableBufferPointer {
+            let err = _pipe($0.baseAddress, 256, _O_BINARY)
+            XCTAssertEqual(err, 0, "_pipe failed \(err)")
+        }
+        #else
         fds.withUnsafeMutableBufferPointer { ptr in
             let err = pipe(ptr.baseAddress!)
             XCTAssertEqual(err, 0, "pipe failed \(err)")
         }
+        #endif
 
         let writeFD = fdopen(fds[1], "w")
         let writeBuffer = UnsafeMutablePointer<Int8>.allocate(capacity: 256)
@@ -822,8 +831,17 @@ class LoggingTest: XCTestCase {
         XCTAssertEqual(err, 0, "setvbuf failed \(err)")
 
         let readFD = fds[0]
+        #if os(Windows)
+        let hPipe: HANDLE = HANDLE(bitPattern: _get_osfhandle(readFD))!
+        XCTAssertFalse(hPipe == INVALID_HANDLE_VALUE)
+
+        var dwMode: DWORD = DWORD(PIPE_NOWAIT)
+        let bSucceeded = SetNamedPipeHandleState(hPipe, &dwMode, nil, nil)
+        XCTAssertTrue(bSucceeded)
+        #else
         err = fcntl(readFD, F_SETFL, fcntl(readFD, F_GETFL) | O_NONBLOCK)
         XCTAssertEqual(err, 0, "fcntl failed \(err)")
+        #endif
 
         let readBuffer = UnsafeMutablePointer<Int8>.allocate(capacity: 256)
         defer {
