@@ -1,4 +1,4 @@
-One line description of your change
+One line description of your change (72 characters) : Github truncates any subject line greater than that.
 
 Motivation:
 
@@ -12,3 +12,10 @@ Describe the modifications you've done.
 Result:
 
 After your change, what will change.
+
+
+Resolves:
+#tracking_no
+
+Referendes:
+See also: #456, #789
