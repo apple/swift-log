@@ -82,7 +82,7 @@ for language in swift-or-c bash dtrace; do
   printf "   * $language... "
   declare -a matching_files
   declare -a exceptions
-  expections=( )
+  exceptions=( )
   matching_files=( -name '*' )
   case "$language" in
       swift-or-c)
