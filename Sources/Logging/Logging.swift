@@ -1103,8 +1103,7 @@ public struct StreamLogHandler: LogHandler {
         }
     }
 
-    // internal for testing only
-    internal init(label: String, stream: TextOutputStream) {
+    public init(label: String, stream: TextOutputStream) {
         self.label = label
         self.stream = stream
     }
