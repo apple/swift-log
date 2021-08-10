@@ -83,6 +83,7 @@ As the API has just launched, not many implementations exist yet. If you are int
 | [sushichop/Puppy](https://github.com/sushichop/Puppy) | a logging backend that supports multiple transports(console, file, syslog, etc.) and has the feature with formatting and file log rotation |
 | [luoxiu/LogDog](https://github.com/luoxiu/LogDog) | user-friendly logging with sinks and appenders |
 | [ShivaHuang/swift-log-SwiftyBeaver](https://github.com/ShivaHuang/swift-log-SwiftyBeaver) | a logging backend for printing colored logging to Xcode console / file, or sending encrypted logging to [SwiftyBeaver](https://swiftybeaver.com) platform. |
+| [Apodini/swift-log-elk](https://github.com/Apodini/swift-log-elk) | a logging backend that formats, caches and sends log data to [elastic/logstash](https://github.com/elastic/logstash) |
 | Your library? | [Get in touch!](https://forums.swift.org/c/server) |
 
 ## What is an API package?
