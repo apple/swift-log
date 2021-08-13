@@ -23,6 +23,10 @@ import Glibc
 #endif
 
 class LoggingTest: XCTestCase {
+    override func tearDown() {
+        LoggingSystem.removeMetadataProviders()
+    }
+
     func testAutoclosure() throws {
         // bootstrap with our test logging impl
         let logging = TestLogging()
@@ -870,6 +874,61 @@ class LoggingTest: XCTestCase {
         logger.error(error: Dummy())
 
         logging.history.assertExist(level: .error, message: "errorDescription")
+    }
+
+    func testMetadataProvider() {
+        let logging = TestLogging()
+        LoggingSystem.bootstrapInternal(logging.make)
+
+        // tracer
+        LoggingSystem.provideMetadata {
+            ["trace-id": "abc"]
+        }
+
+        // application
+        LoggingSystem.provideMetadata {
+            ["my-app-id": "123"]
+        }
+
+        var logger = Logger(label: "test")
+        logger.logLevel = .info
+        logger.info("test")
+
+        logging.history.assertExist(level: .info, message: "test", metadata: ["trace-id": "abc", "my-app-id": "123"])
+    }
+
+    func testMetadataProviderLocalProviderOverwrite() {
+        let logging = TestLogging()
+        LoggingSystem.bootstrapInternal(logging.make)
+
+        // tracer
+        LoggingSystem.provideMetadata {
+            ["trace-id": "abc"]
+        }
+
+        var logger = Logger(label: "test", metadataProvider: {
+            ["trace-id": "123"]
+        })
+        logger.logLevel = .info
+        logger.info("test")
+
+        logging.history.assertExist(level: .info, message: "test", metadata: ["trace-id": "123"])
+    }
+
+    func testMetadataProviderLocalMetadataOverwrite() {
+        let logging = TestLogging()
+        LoggingSystem.bootstrapInternal(logging.make)
+
+        // tracer
+        LoggingSystem.provideMetadata {
+            ["trace-id": "abc"]
+        }
+
+        var logger = Logger(label: "test")
+        logger.logLevel = .info
+        logger.info("test", metadata: ["trace-id": "123"])
+
+        logging.history.assertExist(level: .info, message: "test", metadata: ["trace-id": "123"])
     }
 }
 

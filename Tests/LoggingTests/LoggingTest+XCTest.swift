@@ -55,6 +55,9 @@ extension LoggingTest {
             ("testStdioOutputStreamWrite", testStdioOutputStreamWrite),
             ("testStdioOutputStreamFlush", testStdioOutputStreamFlush),
             ("testOverloadingError", testOverloadingError),
+            ("testMetadataProvider", testMetadataProvider),
+            ("testMetadataProviderLocalProviderOverwrite", testMetadataProviderLocalProviderOverwrite),
+            ("testMetadataProviderLocalMetadataOverwrite", testMetadataProviderLocalMetadataOverwrite),
         ]
     }
 }

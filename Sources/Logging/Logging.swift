@@ -39,12 +39,19 @@ public struct Logger {
     @usableFromInline
     var handler: LogHandler
 
+    @usableFromInline
+    var metadataProvider: MetadataProvider
+
     /// An identifier of the creator of this `Logger`.
     public let label: String
 
-    internal init(label: String, _ handler: LogHandler) {
+    /// A closure invoked for each log statement to attach additional metadata.
+    public typealias MetadataProvider = () -> Metadata?
+
+    internal init(label: String, _ handler: LogHandler, metadataProvider: @escaping MetadataProvider) {
         self.label = label
         self.handler = handler
+        self.metadataProvider = metadataProvider
     }
 }
 
@@ -76,9 +83,24 @@ extension Logger {
                     source: @autoclosure () -> String? = nil,
                     file: String = #fileID, function: String = #function, line: UInt = #line) {
         if self.logLevel <= level {
+            let providerMetadata = self.metadataProvider()
+            let m: Metadata? = {
+                if let metadata = metadata() {
+                    if let providerMetadata = providerMetadata {
+                        // one-off metadata overwrites provider metadata
+                        return providerMetadata.merging(metadata) { _, b in
+                            b
+                        }
+                    } else {
+                        return metadata
+                    }
+                } else {
+                    return providerMetadata
+                }
+            }()
             self.handler.log(level: level,
                              message: message(),
-                             metadata: metadata(),
+                             metadata: m,
                              source: source() ?? Logger.currentModule(fileID: (file)),
                              file: file, function: function, line: line)
         }
@@ -92,9 +114,24 @@ extension Logger {
                     source: @autoclosure () -> String? = nil,
                     file: String = #file, function: String = #function, line: UInt = #line) {
         if self.logLevel <= level {
+            let providerMetadata = self.metadataProvider()
+            let m: Metadata? = {
+                if let metadata = metadata() {
+                    if let providerMetadata = providerMetadata {
+                        // one-off metadata overwrites provider metadata
+                        return providerMetadata.merging(metadata) { _, b in
+                            b
+                        }
+                    } else {
+                        return metadata
+                    }
+                } else {
+                    return providerMetadata
+                }
+            }()
             self.handler.log(level: level,
                              message: message(),
-                             metadata: metadata(),
+                             metadata: m,
                              source: source() ?? Logger.currentModule(filePath: (file)),
                              file: file, function: function, line: line)
         }
@@ -657,6 +694,23 @@ public enum LoggingSystem {
     #endif
     fileprivate static var factory: (String) -> LogHandler = StreamLogHandler.standardOutput
     fileprivate static var initialized = false
+    fileprivate static var metadataProvider: () -> Logger.Metadata? = {
+        LoggingSystem.lock.withReaderLock {
+            _metadataProviders.reduce(nil) { metadata, provider in
+                if let providedMetadata = provider() {
+                    if let existingMetadata = metadata {
+                        return existingMetadata.merging(providedMetadata) { _, b in
+                            b
+                        }
+                    }
+                    return providedMetadata
+                }
+                return metadata
+            }
+        }
+    }
+
+    fileprivate static var _metadataProviders = [Logger.MetadataProvider]()
 
     /// `bootstrap` is a one-time configuration function which globally selects the desired logging backend
     /// implementation. `bootstrap` can be called at maximum once in any given program, calling it more than once will
@@ -678,6 +732,12 @@ public enum LoggingSystem {
         #endif
     }
 
+    public static func provideMetadata(_ provider: @escaping () -> Logger.Metadata?) {
+        self.lock.withWriterLock {
+            _metadataProviders.append(provider)
+        }
+    }
+
     // for our testing we want to allow multiple bootstraping
     internal static func bootstrapInternal(_ factory: @escaping (String) -> LogHandler) {
         #if canImport(WASILibc)
@@ -685,6 +745,16 @@ public enum LoggingSystem {
         #else
         self.lock.withWriterLock {
             self.factory = factory
+        }
+        #endif
+    }
+
+    internal static func removeMetadataProviders() {
+        #if canImport(WASILibc)
+        self._metadataProviders.removeAll()
+        #else
+        self.lock.withWriterLock {
+            self._metadataProviders.removeAll()
         }
         #endif
     }
@@ -775,10 +845,16 @@ extension Logger {
     ///     - label: An identifier for the creator of a `Logger`.
     public init(label: String) {
         #if canImport(WASILibc)
-        self.init(label: label, LoggingSystem.factory(label))
+        self.init(label: label, LoggingSystem.factory(label), metadataProvider: LoggingSystem.metadataProvider)
         #else
-        self = LoggingSystem.lock.withReaderLock { Logger(label: label, LoggingSystem.factory(label)) }
+        self = LoggingSystem.lock.withReaderLock {
+            Logger(label: label, LoggingSystem.factory(label), metadataProvider: LoggingSystem.metadataProvider)
+        }
         #endif
+    }
+
+    public init(label: String, metadataProvider: @escaping MetadataProvider) {
+        self.init(label: label, LoggingSystem.factory(label), metadataProvider: metadataProvider)
     }
 
     /// Construct a `Logger` given a `label` identifying the creator of the `Logger` or a non-standard `LogHandler`.
@@ -793,7 +869,11 @@ extension Logger {
     ///     - label: An identifier for the creator of a `Logger`.
     ///     - factory: A closure creating non-standard `LogHandler`s.
     public init(label: String, factory: (String) -> LogHandler) {
-        self = Logger(label: label, factory(label))
+        self = Logger(label: label, factory: factory, metadataProvider: LoggingSystem.metadataProvider)
+    }
+
+    public init(label: String, factory: (String) -> LogHandler, metadataProvider: @escaping MetadataProvider) {
+        self = Logger(label: label, factory(label), metadataProvider: metadataProvider)
     }
 }
 
