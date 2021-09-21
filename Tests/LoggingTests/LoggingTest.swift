@@ -806,7 +806,7 @@ class LoggingTest: XCTestCase {
         }
     }
 
-    func withWriteReadFDsAndReadBuffer(_ body: (UnsafeMutablePointer<FILE>, CInt, UnsafeMutablePointer<Int8>) -> Void) {
+    func withWriteReadFDsAndReadBuffer(_ body: (CFilePointer, CInt, UnsafeMutablePointer<Int8>) -> Void) {
         var fds: [Int32] = [-1, -1]
         #if os(Windows)
         fds.withUnsafeMutableBufferPointer {

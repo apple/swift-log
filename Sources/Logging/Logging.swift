@@ -990,15 +990,17 @@ public struct MultiplexLogHandler: LogHandler {
     }
 }
 
+#if canImport(WASILibc) || os(Android)
+internal typealias CFilePointer = OpaquePointer
+#else
+internal typealias CFilePointer = UnsafeMutablePointer<FILE>
+#endif
+
 /// A wrapper to facilitate `print`-ing to stderr and stdio that
 /// ensures access to the underlying `FILE` is locked to prevent
 /// cross-thread interleaving of output.
 internal struct StdioOutputStream: TextOutputStream {
-    #if canImport(WASILibc)
-    internal let file: OpaquePointer
-    #else
-    internal let file: UnsafeMutablePointer<FILE>
-    #endif
+    internal let file: CFilePointer
     internal let flushMode: FlushMode
 
     internal func write(_ string: String) {
