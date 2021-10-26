@@ -94,7 +94,7 @@ def createLinuxMain(testsDirectory, allTestSubDirectories, files)
     file.write header(fileName)
     file.write "\n"
 
-    file.write "#if os(Linux) || os(FreeBSD) || os(Windows)\n"
+    file.write "#if os(Linux) || os(FreeBSD) || os(Windows) || os(Android)\n"
     for testSubDirectory in allTestSubDirectories.sort { |x, y| x <=> y }
       file.write '@testable import ' + testSubDirectory + "\n"
     end
