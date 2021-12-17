@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <title>StreamLogHandler Structure Reference</title>
+    <title>SwiftLogNoOpLogHandler Structure Reference</title>
     <link rel="stylesheet" type="text/css" href="../css/jazzy.css" />
     <link rel="stylesheet" type="text/css" href="../css/highlight.css" />
     <meta charset="utf-8">
@@ -14,9 +14,9 @@
   </head>
   <body>
 
-    <a name="//apple_ref/swift/Struct/StreamLogHandler" class="dashAnchor"></a>
+    <a name="//apple_ref/swift/Struct/SwiftLogNoOpLogHandler" class="dashAnchor"></a>
 
-    <a title="StreamLogHandler Structure Reference"></a>
+    <a title="SwiftLogNoOpLogHandler Structure Reference"></a>
 
     <header class="header">
       <p class="header-col header-col--primary">
@@ -50,7 +50,7 @@
     <p class="breadcrumbs">
       <a class="breadcrumb" href="../index.html">Logging Reference</a>
       <img class="carat" src="../img/carat.png" alt=""/>
-      StreamLogHandler Structure Reference
+      SwiftLogNoOpLogHandler Structure Reference
     </p>
 
     <div class="content-wrapper">
@@ -104,19 +104,18 @@
 
         <section class="section">
           <div class="section-content top-matter">
-            <h1>StreamLogHandler</h1>
+            <h1>SwiftLogNoOpLogHandler</h1>
               <div class="declaration">
                 <div class="language">
                   
-                  <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">struct</span> <span class="kt">StreamLogHandler</span> <span class="p">:</span> <span class="kt"><a href="../Protocols/LogHandler.html">LogHandler</a></span></code></pre>
+                  <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">struct</span> <span class="kt">SwiftLogNoOpLogHandler</span> <span class="p">:</span> <span class="kt"><a href="../Protocols/LogHandler.html">LogHandler</a></span></code></pre>
 
                 </div>
               </div>
-            <p><code>StreamLogHandler</code> is a simple implementation of <code><a href="../Protocols/LogHandler.html">LogHandler</a></code> for directing
-<code><a href="../Structs/Logger.html">Logger</a></code> output to either <code>stderr</code> or <code>stdout</code> via the factory methods.</p>
+            <p>No operation LogHandler, used when no logging is required</p>
 
               <div class="slightly-smaller">
-                <a href="https://github.com/apple/swift-log/tree/1.4.2/Sources/Logging/Logging.swift#L1076-L1156">Show on GitHub</a>
+                <a href="https://github.com/apple/swift-log/tree/1.4.2/Sources/Logging/Logging.swift#L1159-L1186">Show on GitHub</a>
               </div>
           </div>
         </section>
@@ -128,9 +127,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:7Logging16StreamLogHandlerV14standardOutput5labelACSS_tFZ"></a>
-                    <a name="//apple_ref/swift/Method/standardOutput(label:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:7Logging16StreamLogHandlerV14standardOutput5labelACSS_tFZ">standardOutput(label:<wbr>)</a>
+                    <a name="/s:7Logging012SwiftLogNoOpC7HandlerVACycfc"></a>
+                    <a name="//apple_ref/swift/Method/init()" class="dashAnchor"></a>
+                    <a class="token" href="#/s:7Logging012SwiftLogNoOpC7HandlerVACycfc">init()</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -138,19 +137,19 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Factory that makes a <code>StreamLogHandler</code> to directs its output to <code>stdout</code></p>
+                        <p>Undocumented</p>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">static</span> <span class="kd">func</span> <span class="nf">standardOutput</span><span class="p">(</span><span class="nv">label</span><span class="p">:</span> <span class="kt">String</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">StreamLogHandler</span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="nf">init</span><span class="p">()</span></code></pre>
 
                         </div>
                       </div>
                       <div class="slightly-smaller">
-                        <a href="https://github.com/apple/swift-log/tree/1.4.2/Sources/Logging/Logging.swift#L1078-L1080">Show on GitHub</a>
+                        <a href="https://github.com/apple/swift-log/tree/1.4.2/Sources/Logging/Logging.swift#L">Show on GitHub</a>
                       </div>
                     </section>
                   </div>
@@ -158,9 +157,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:7Logging16StreamLogHandlerV13standardError5labelACSS_tFZ"></a>
-                    <a name="//apple_ref/swift/Method/standardError(label:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:7Logging16StreamLogHandlerV13standardError5labelACSS_tFZ">standardError(label:<wbr>)</a>
+                    <a name="/s:7Logging012SwiftLogNoOpC7HandlerVyACSScfc"></a>
+                    <a name="//apple_ref/swift/Method/init(_:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:7Logging012SwiftLogNoOpC7HandlerVyACSScfc">init(_:<wbr>)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -168,19 +167,19 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Factory that makes a <code>StreamLogHandler</code> to directs its output to <code>stderr</code></p>
+                        <p>Undocumented</p>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">static</span> <span class="kd">func</span> <span class="nf">standardError</span><span class="p">(</span><span class="nv">label</span><span class="p">:</span> <span class="kt">String</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">StreamLogHandler</span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="nf">init</span><span class="p">(</span><span class="nv">_</span><span class="p">:</span> <span class="kt">String</span><span class="p">)</span></code></pre>
 
                         </div>
                       </div>
                       <div class="slightly-smaller">
-                        <a href="https://github.com/apple/swift-log/tree/1.4.2/Sources/Logging/Logging.swift#L1083-L1085">Show on GitHub</a>
+                        <a href="https://github.com/apple/swift-log/tree/1.4.2/Sources/Logging/Logging.swift#L">Show on GitHub</a>
                       </div>
                     </section>
                   </div>
@@ -188,9 +187,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:7Logging10LogHandlerP8logLevelAA6LoggerV0E0Ovp"></a>
-                    <a name="//apple_ref/swift/Property/logLevel" class="dashAnchor"></a>
-                    <a class="token" href="#/s:7Logging10LogHandlerP8logLevelAA6LoggerV0E0Ovp">logLevel</a>
+                    <a name="/s:7Logging10LogHandlerP3log5level7message8metadata4file8function4lineyAA6LoggerV5LevelO_AL7MessageVSDySSAL13MetadataValueOGSgS2SSutF"></a>
+                    <a name="//apple_ref/swift/Method/log(level:message:metadata:file:function:line:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:7Logging10LogHandlerP3log5level7message8metadata4file8function4lineyAA6LoggerV5LevelO_AL7MessageVSDySSAL13MetadataValueOGSgS2SSutF">log(level:<wbr>message:<wbr>metadata:<wbr>file:<wbr>function:<wbr>line:<wbr>)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -204,41 +203,14 @@
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">var</span> <span class="nv">logLevel</span><span class="p">:</span> <span class="kt"><a href="../Structs/Logger.html">Logger</a></span><span class="o">.</span><span class="kt">Level</span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">@available</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">deprecated</span><span class="p">,</span> <span class="nv">renamed</span><span class="p">:</span> <span class="s">"log(level:message:metadata:source:file:function:line:﹚"</span><span class="p">)</span>
+<span class="kd">@inlinable</span>
+<span class="kd">public</span> <span class="kd">func</span> <span class="nf">log</span><span class="p">(</span><span class="nv">level</span><span class="p">:</span> <span class="kt"><a href="../Structs/Logger.html">Logger</a></span><span class="o">.</span><span class="kt">Level</span><span class="p">,</span> <span class="nv">message</span><span class="p">:</span> <span class="kt"><a href="../Structs/Logger.html">Logger</a></span><span class="o">.</span><span class="kt">Message</span><span class="p">,</span> <span class="nv">metadata</span><span class="p">:</span> <span class="kt"><a href="../Structs/Logger.html">Logger</a></span><span class="o">.</span><span class="kt">Metadata</span><span class="p">?,</span> <span class="nv">file</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">function</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">line</span><span class="p">:</span> <span class="kt">UInt</span><span class="p">)</span></code></pre>
 
                         </div>
                       </div>
                       <div class="slightly-smaller">
-                        <a href="https://github.com/apple/swift-log/tree/1.4.2/Sources/Logging/Logging.swift#L163">Show on GitHub</a>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/s:7Logging10LogHandlerP8metadataSDySSAA6LoggerV13MetadataValueOGvp"></a>
-                    <a name="//apple_ref/swift/Property/metadata" class="dashAnchor"></a>
-                    <a class="token" href="#/s:7Logging10LogHandlerP8metadataSDySSAA6LoggerV13MetadataValueOGvp">metadata</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">var</span> <span class="nv">metadata</span><span class="p">:</span> <span class="kt"><a href="../Structs/Logger.html">Logger</a></span><span class="o">.</span><span class="kt">Metadata</span> <span class="p">{</span> <span class="k">get</span> <span class="k">set</span> <span class="p">}</span></code></pre>
-
-                        </div>
-                      </div>
-                      <div class="slightly-smaller">
-                        <a href="https://github.com/apple/swift-log/tree/1.4.2/Sources/Logging/Logging.swift#L1093-L1097">Show on GitHub</a>
+                        <a href="https://github.com/apple/swift-log/tree/1.4.2/Sources/Logging/Logging.swift#L140">Show on GitHub</a>
                       </div>
                     </section>
                   </div>
@@ -262,12 +234,13 @@
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="nf">subscript</span><span class="p">(</span><span class="n">metadataKey</span> <span class="nv">metadataKey</span><span class="p">:</span> <span class="kt">String</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt"><a href="../Structs/Logger.html">Logger</a></span><span class="o">.</span><span class="kt">Metadata</span><span class="o">.</span><span class="kt">Value</span><span class="p">?</span> <span class="p">{</span> <span class="k">get</span> <span class="k">set</span> <span class="p">}</span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">@inlinable</span>
+<span class="kd">public</span> <span class="nf">subscript</span><span class="p">(</span><span class="n">metadataKey</span> <span class="nv">_</span><span class="p">:</span> <span class="kt">String</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt"><a href="../Structs/Logger.html">Logger</a></span><span class="o">.</span><span class="kt">Metadata</span><span class="o">.</span><span class="kt">Value</span><span class="p">?</span> <span class="p">{</span> <span class="k">get</span> <span class="k">set</span> <span class="p">}</span></code></pre>
 
                         </div>
                       </div>
                       <div class="slightly-smaller">
-                        <a href="https://github.com/apple/swift-log/tree/1.4.2/Sources/Logging/Logging.swift#L1099-L1106">Show on GitHub</a>
+                        <a href="https://github.com/apple/swift-log/tree/1.4.2/Sources/Logging/Logging.swift#L1166-L1171">Show on GitHub</a>
                       </div>
                     </section>
                   </div>
@@ -275,9 +248,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:7Logging10LogHandlerP3log5level7message8metadata6source4file8function4lineyAA6LoggerV5LevelO_AM7MessageVSDySSAM13MetadataValueOGSgS3SSutF"></a>
-                    <a name="//apple_ref/swift/Method/log(level:message:metadata:source:file:function:line:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:7Logging10LogHandlerP3log5level7message8metadata6source4file8function4lineyAA6LoggerV5LevelO_AM7MessageVSDySSAM13MetadataValueOGSgS3SSutF">log(level:<wbr>message:<wbr>metadata:<wbr>source:<wbr>file:<wbr>function:<wbr>line:<wbr>)</a>
+                    <a name="/s:7Logging10LogHandlerP8metadataSDySSAA6LoggerV13MetadataValueOGvp"></a>
+                    <a name="//apple_ref/swift/Property/metadata" class="dashAnchor"></a>
+                    <a class="token" href="#/s:7Logging10LogHandlerP8metadataSDySSAA6LoggerV13MetadataValueOGvp">metadata</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -291,18 +264,43 @@
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">log</span><span class="p">(</span><span class="nv">level</span><span class="p">:</span> <span class="kt"><a href="../Structs/Logger.html">Logger</a></span><span class="o">.</span><span class="kt">Level</span><span class="p">,</span>
-                <span class="nv">message</span><span class="p">:</span> <span class="kt"><a href="../Structs/Logger.html">Logger</a></span><span class="o">.</span><span class="kt">Message</span><span class="p">,</span>
-                <span class="nv">metadata</span><span class="p">:</span> <span class="kt"><a href="../Structs/Logger.html">Logger</a></span><span class="o">.</span><span class="kt">Metadata</span><span class="p">?,</span>
-                <span class="nv">source</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span>
-                <span class="nv">file</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span>
-                <span class="nv">function</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span>
-                <span class="nv">line</span><span class="p">:</span> <span class="kt">UInt</span><span class="p">)</span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">@inlinable</span>
+<span class="kd">public</span> <span class="k">var</span> <span class="nv">metadata</span><span class="p">:</span> <span class="kt"><a href="../Structs/Logger.html">Logger</a></span><span class="o">.</span><span class="kt">Metadata</span> <span class="p">{</span> <span class="k">get</span> <span class="k">set</span> <span class="p">}</span></code></pre>
 
                         </div>
                       </div>
                       <div class="slightly-smaller">
-                        <a href="https://github.com/apple/swift-log/tree/1.4.2/Sources/Logging/Logging.swift#L1114-L1127">Show on GitHub</a>
+                        <a href="https://github.com/apple/swift-log/tree/1.4.2/Sources/Logging/Logging.swift#L1173-L1178">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:7Logging10LogHandlerP8logLevelAA6LoggerV0E0Ovp"></a>
+                    <a name="//apple_ref/swift/Property/logLevel" class="dashAnchor"></a>
+                    <a class="token" href="#/s:7Logging10LogHandlerP8logLevelAA6LoggerV0E0Ovp">logLevel</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">@inlinable</span>
+<span class="kd">public</span> <span class="k">var</span> <span class="nv">logLevel</span><span class="p">:</span> <span class="kt"><a href="../Structs/Logger.html">Logger</a></span><span class="o">.</span><span class="kt">Level</span> <span class="p">{</span> <span class="k">get</span> <span class="k">set</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/apple/swift-log/tree/1.4.2/Sources/Logging/Logging.swift#L1180-L1185">Show on GitHub</a>
                       </div>
                     </section>
                   </div>
