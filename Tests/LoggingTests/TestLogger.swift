@@ -30,7 +30,7 @@ internal struct TestLogging {
     var history: History { return self.recorder }
 }
 
-internal struct TestLogHandler: LogHandler {
+internal struct TestLogHandler: LogHandler, @unchecked Sendable {
     private let logLevelLock = NSLock()
     private let metadataLock = NSLock()
     private let recorder: Recorder
@@ -96,7 +96,7 @@ internal struct TestLogHandler: LogHandler {
     }
 }
 
-internal class Config {
+internal class Config: @unchecked Sendable {
     private static let ALL = "*"
 
     private let lock = NSLock()
@@ -122,7 +122,7 @@ internal class Config {
     }
 }
 
-internal class Recorder: History {
+internal class Recorder: History, @unchecked Sendable {
     private let lock = NSLock()
     private var _entries = [LogEntry]()
 

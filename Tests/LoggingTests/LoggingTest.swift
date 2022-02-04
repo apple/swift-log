@@ -262,24 +262,28 @@ class LoggingTest: XCTestCase {
 
     // Example of custom "box" which may be used to implement "render at most once" semantics
     // Not thread-safe, thus should not be shared across threads.
-    internal class LazyMetadataBox: CustomStringConvertible {
-        private var makeValue: (() -> String)?
+    internal class LazyMetadataBox: CustomStringConvertible, @unchecked Sendable {
+        typealias ValueMaker = @Sendable () -> String
+        let lock = NSLock()
+        private var makeValue: ValueMaker?
         private var _value: String?
 
-        public init(_ makeValue: @escaping () -> String) {
+        public init(_ makeValue: @escaping ValueMaker) {
             self.makeValue = makeValue
         }
 
         /// This allows caching a value in case it is accessed via an by name subscript,
         // rather than as part of rendering all metadata that a LoggingContext was carrying
         public var value: String {
-            if let f = self.makeValue {
-                self._value = f()
-                self.makeValue = nil
-            }
+            self.lock.withLock {
+                if let f = self.makeValue {
+                    self._value = f()
+                    self.makeValue = nil
+                }
 
-            assert(self._value != nil, "_value MUST NOT be nil once `lazyValue` has run.")
-            return self._value!
+                assert(self._value != nil, "_value MUST NOT be nil once `lazyValue` has run.")
+                return self._value!
+            }
         }
 
         public var description: String {
@@ -672,14 +676,17 @@ class LoggingTest: XCTestCase {
         XCTAssertLessThan(Logger.Level.error, Logger.Level.critical)
     }
 
-    final class InterceptStream: TextOutputStream {
+    final class InterceptStream: TextOutputStream, @unchecked Sendable {
+        let lock = NSLock()
         var interceptedText: String?
         var strings = [String]()
 
         func write(_ string: String) {
-            // This is a test implementation, a real implementation would include locking
-            self.strings.append(string)
-            self.interceptedText = (self.interceptedText ?? "") + string
+            lock.withLock {
+                // This is a test implementation, a real implementation would include locking
+                self.strings.append(string)
+                self.interceptedText = (self.interceptedText ?? "") + string
+            }
         }
     }
 

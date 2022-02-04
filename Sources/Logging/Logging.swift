@@ -35,7 +35,7 @@ import WASILibc
 ///
 ///     logger.info("Hello World!")
 ///
-public struct Logger {
+public struct Logger: Sendable {
     @usableFromInline
     var handler: LogHandler
 
@@ -707,7 +707,7 @@ extension Logger {
     ///    over `..., metadata: ["colors": .array([.string("\(user.topColor)"), .string("\(user.secondColor)")])`
     ///  - prefer `logger.info("nested info", metadata: ["nested": ["fave-numbers": ["\(1)", "\(2)", "\(3)"], "foo": "bar"]])`
     ///    over `..., metadata: ["nested": .dictionary(["fave-numbers": ...])])`
-    public enum MetadataValue {
+    public enum MetadataValue: Sendable {
         /// A metadata value which is a `String`.
         ///
         /// Because `MetadataValue` implements `ExpressibleByStringInterpolation`, and `ExpressibleByStringLiteral`,
@@ -715,7 +715,7 @@ extension Logger {
         case string(String)
 
         /// A metadata value which is some `CustomStringConvertible`.
-        case stringConvertible(CustomStringConvertible)
+        case stringConvertible(CustomStringConvertible & Sendable)
 
         /// A metadata value which is a dictionary from `String` to `Logger.MetadataValue`.
         ///
@@ -734,7 +734,7 @@ extension Logger {
     ///
     /// Log levels are ordered by their severity, with `.trace` being the least severe and
     /// `.critical` being the most severe.
-    public enum Level: String, Codable, CaseIterable {
+    public enum Level: String, Codable, CaseIterable, Sendable {
         /// Appropriate for messages that contain information normally of use only when
         /// tracing the execution of a program.
         case trace
@@ -999,7 +999,7 @@ internal typealias CFilePointer = UnsafeMutablePointer<FILE>
 /// A wrapper to facilitate `print`-ing to stderr and stdio that
 /// ensures access to the underlying `FILE` is locked to prevent
 /// cross-thread interleaving of output.
-internal struct StdioOutputStream: TextOutputStream {
+internal struct StdioOutputStream: TextOutputStream, Sendable {
     internal let file: CFilePointer
     internal let flushMode: FlushMode
 
@@ -1074,6 +1074,8 @@ let systemStdout = WASILibc.stdout!
 /// `StreamLogHandler` is a simple implementation of `LogHandler` for directing
 /// `Logger` output to either `stderr` or `stdout` via the factory methods.
 public struct StreamLogHandler: LogHandler {
+    public typealias Stream = TextOutputStream & Sendable
+    
     /// Factory that makes a `StreamLogHandler` to directs its output to `stdout`
     public static func standardOutput(label: String) -> StreamLogHandler {
         return StreamLogHandler(label: label, stream: StdioOutputStream.stdout)
@@ -1084,7 +1086,7 @@ public struct StreamLogHandler: LogHandler {
         return StreamLogHandler(label: label, stream: StdioOutputStream.stderr)
     }
 
-    private let stream: TextOutputStream
+    private let stream: Stream
     private let label: String
 
     public var logLevel: Logger.Level = .info
@@ -1106,7 +1108,7 @@ public struct StreamLogHandler: LogHandler {
     }
 
     // internal for testing only
-    internal init(label: String, stream: TextOutputStream) {
+    internal init(label: String, stream: Stream) {
         self.label = label
         self.stream = stream
     }

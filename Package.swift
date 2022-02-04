@@ -1,4 +1,4 @@
-// swift-tools-version:5.0
+// swift-tools-version:5.5
 //===----------------------------------------------------------------------===//
 //
 // This source file is part of the Swift Logging API open source project
@@ -17,6 +17,10 @@ import PackageDescription
 
 let package = Package(
     name: "swift-log",
+    platforms: [
+        .iOS(.v13),
+        .macOS(.v10_15),
+    ],
     products: [
         .library(name: "Logging", targets: ["Logging"]),
     ],

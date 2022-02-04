@@ -113,7 +113,7 @@
 /// Please note that the above `LogHandler` will still pass the 'log level is a value' test above it iff the global log
 /// level has not been overridden. And most importantly it passes the requirement listed above: A change to the log
 /// level on one `Logger` should not affect the log level of another `Logger` variable.
-public protocol LogHandler {
+public protocol LogHandler: Sendable {
     /// This method is called when a `LogHandler` must emit a log message. There is no need for the `LogHandler` to
     /// check if the `level` is above or below the configured `logLevel` as `Logger` already performed this check and
     /// determined that a message should be logged.
@@ -126,7 +126,7 @@ public protocol LogHandler {
     ///     - file: The file the log message was emitted from.
     ///     - function: The function the log line was emitted from.
     ///     - line: The line the log message was emitted from.
-    func log(level: Logger.Level,
+    @Sendable func log(level: Logger.Level,
              message: Logger.Message,
              metadata: Logger.Metadata?,
              source: String,
