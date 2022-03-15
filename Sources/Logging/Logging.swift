@@ -12,6 +12,19 @@
 //
 //===----------------------------------------------------------------------===//
 
+#if compiler(>=5.6)
+#if os(macOS) || os(iOS) || os(tvOS) || os(watchOS)
+@preconcurrency import Darwin
+#elseif os(Windows)
+@preconcurrency import CRT
+#elseif canImport(Glibc)
+@preconcurrency import Glibc
+#elseif canImport(WASILibc)
+@preconcurrency import WASILibc
+#else
+#error("Unsupported runtime")
+#endif
+#else
 #if os(macOS) || os(iOS) || os(tvOS) || os(watchOS)
 import Darwin
 #elseif os(Windows)
@@ -22,6 +35,7 @@ import Glibc
 import WASILibc
 #else
 #error("Unsupported runtime")
+#endif
 #endif
 
 /// A `Logger` is the central type in `SwiftLog`. Its central function is to emit log messages using one of the methods
@@ -35,7 +49,7 @@ import WASILibc
 ///
 ///     logger.info("Hello World!")
 ///
-public struct Logger {
+public struct Logger: _SwiftLogSendable {
     @usableFromInline
     var handler: LogHandler
 
@@ -713,7 +727,7 @@ extension Logger {
     ///    over `..., metadata: ["colors": .array([.string("\(user.topColor)"), .string("\(user.secondColor)")])`
     ///  - prefer `logger.info("nested info", metadata: ["nested": ["fave-numbers": ["\(1)", "\(2)", "\(3)"], "foo": "bar"]])`
     ///    over `..., metadata: ["nested": .dictionary(["fave-numbers": ...])])`
-    public enum MetadataValue {
+    public enum MetadataValue: _SwiftLogSendable {
         /// A metadata value which is a `String`.
         ///
         /// Because `MetadataValue` implements `ExpressibleByStringInterpolation`, and `ExpressibleByStringLiteral`,
@@ -721,8 +735,11 @@ extension Logger {
         case string(String)
 
         /// A metadata value which is some `CustomStringConvertible`.
+        #if compiler(>=5.6)
+        case stringConvertible(CustomStringConvertible & Sendable)
+        #else
         case stringConvertible(CustomStringConvertible)
-
+        #endif
         /// A metadata value which is a dictionary from `String` to `Logger.MetadataValue`.
         ///
         /// Because `MetadataValue` implements `ExpressibleByDictionaryLiteral`, you don't need to type
@@ -740,7 +757,7 @@ extension Logger {
     ///
     /// Log levels are ordered by their severity, with `.trace` being the least severe and
     /// `.critical` being the most severe.
-    public enum Level: String, Codable, CaseIterable {
+    public enum Level: String, Codable, CaseIterable, _SwiftLogSendable {
         /// Appropriate for messages that contain information normally of use only when
         /// tracing the execution of a program.
         case trace
@@ -859,7 +876,7 @@ extension Logger {
     ///
     ///     logger.info("Hello \(world)")
     ///
-    public struct Message: ExpressibleByStringLiteral, Equatable, CustomStringConvertible, ExpressibleByStringInterpolation {
+    public struct Message: ExpressibleByStringLiteral, Equatable, CustomStringConvertible, ExpressibleByStringInterpolation, _SwiftLogSendable {
         public typealias StringLiteralType = String
 
         private var value: String
@@ -1086,7 +1103,7 @@ public struct StreamLogHandler: LogHandler {
         return StreamLogHandler(label: label, stream: StdioOutputStream.stderr)
     }
 
-    private let stream: TextOutputStream
+    private let stream: TextOutputStream & _SwiftLogSendable
     private let label: String
 
     public var logLevel: Logger.Level = .info
@@ -1108,7 +1125,7 @@ public struct StreamLogHandler: LogHandler {
     }
 
     // internal for testing only
-    internal init(label: String, stream: TextOutputStream) {
+    internal init(label: String, stream: TextOutputStream & _SwiftLogSendable) {
         self.label = label
         self.stream = stream
     }

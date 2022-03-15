@@ -262,7 +262,9 @@ class LoggingTest: XCTestCase {
 
     // Example of custom "box" which may be used to implement "render at most once" semantics
     // Not thread-safe, thus should not be shared across threads.
-    internal class LazyMetadataBox: CustomStringConvertible {
+    // @unchecked Sendable since not thread-safe by definition
+    #if compiler(>=5.6)
+    internal final class LazyMetadataBox: CustomStringConvertible, @unchecked Sendable {
         private var makeValue: (() -> String)?
         private var _value: String?
 
@@ -286,6 +288,33 @@ class LoggingTest: XCTestCase {
             return "\(self.value)"
         }
     }
+
+    #else
+    internal final class LazyMetadataBox: CustomStringConvertible {
+        private var makeValue: (() -> String)?
+        private var _value: String?
+
+        public init(_ makeValue: @escaping () -> String) {
+            self.makeValue = makeValue
+        }
+
+        /// This allows caching a value in case it is accessed via an by name subscript,
+        // rather than as part of rendering all metadata that a LoggingContext was carrying
+        public var value: String {
+            if let f = self.makeValue {
+                self._value = f()
+                self.makeValue = nil
+            }
+
+            assert(self._value != nil, "_value MUST NOT be nil once `lazyValue` has run.")
+            return self._value!
+        }
+
+        public var description: String {
+            return "\(self.value)"
+        }
+    }
+    #endif
 
     func testStringConvertibleMetadata() {
         let testLogging = TestLogging()
@@ -672,6 +701,20 @@ class LoggingTest: XCTestCase {
         XCTAssertLessThan(Logger.Level.error, Logger.Level.critical)
     }
 
+    #if compiler(>=5.6)
+    // @unchecked Sendable since non-thread safe by design
+    final class InterceptStream: TextOutputStream, @unchecked Sendable {
+        var interceptedText: String?
+        var strings = [String]()
+
+        func write(_ string: String) {
+            // This is a test implementation, a real implementation would include locking
+            self.strings.append(string)
+            self.interceptedText = (self.interceptedText ?? "") + string
+        }
+    }
+
+    #else
     final class InterceptStream: TextOutputStream {
         var interceptedText: String?
         var strings = [String]()
@@ -682,6 +725,7 @@ class LoggingTest: XCTestCase {
             self.interceptedText = (self.interceptedText ?? "") + string
         }
     }
+    #endif
 
     func testStreamLogHandlerWritesToAStream() {
         let interceptStream = InterceptStream()
