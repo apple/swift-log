@@ -6,7 +6,8 @@ services:
     image: swift-log:20.04-5.6
     build:
       args:
-        base_image: "swiftlang/swift:nightly-5.6-focal"
+        ubuntu_version: "focal"
+        swift_version: "5.6"
 
   test:
     image: swift-log:20.04-5.6
