@@ -84,6 +84,7 @@ As the API has just launched, not many implementations exist yet. If you are int
 | [luoxiu/LogDog](https://github.com/luoxiu/LogDog) | user-friendly logging with sinks and appenders |
 | [ShivaHuang/swift-log-SwiftyBeaver](https://github.com/ShivaHuang/swift-log-SwiftyBeaver) | a logging backend for printing colored logging to Xcode console / file, or sending encrypted logging to [SwiftyBeaver](https://swiftybeaver.com) platform. |
 | [Apodini/swift-log-elk](https://github.com/Apodini/swift-log-elk) | a logging backend that formats, caches and sends log data to [elastic/logstash](https://github.com/elastic/logstash) |
+| [binaryscraping/swift-log-supabase](https://github.com/binaryscraping/swift-log-supabase) | a logging backend that sends log entries to [Supabase](https://github.com/supabase/supbase). |
 | Your library? | [Get in touch!](https://forums.swift.org/c/server) |
 
 ## What is an API package?
