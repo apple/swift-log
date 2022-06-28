@@ -34,4 +34,4 @@ services:
 
   shell:
     <<: *common
-    entrypoint: /bin/bash
+    entrypoint: /bin/bash -l

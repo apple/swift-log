@@ -271,3 +271,9 @@ extension ReadWriteLock {
         try self.withWriterLock(body)
     }
 }
+
+// Sendable
+
+#if compiler(>=5.6)
+extension Lock: Sendable {}
+#endif

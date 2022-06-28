@@ -16,6 +16,3 @@ services:
 
   shell:
     image: swift-log:20.04-5.6
-
-  soundness:
-    image: swift-log:20.04-5.6

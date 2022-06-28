@@ -12,19 +12,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-#if compiler(>=5.6)
-#if os(macOS) || os(iOS) || os(tvOS) || os(watchOS)
-@preconcurrency import Darwin
-#elseif os(Windows)
-@preconcurrency import CRT
-#elseif canImport(Glibc)
-@preconcurrency import Glibc
-#elseif canImport(WASILibc)
-@preconcurrency import WASILibc
-#else
-#error("Unsupported runtime")
-#endif
-#else
 #if os(macOS) || os(iOS) || os(tvOS) || os(watchOS)
 import Darwin
 #elseif os(Windows)
@@ -35,7 +22,6 @@ import Glibc
 import WASILibc
 #else
 #error("Unsupported runtime")
-#endif
 #endif
 
 /// A `Logger` is the central type in `SwiftLog`. Its central function is to emit log messages using one of the methods
@@ -49,7 +35,7 @@ import WASILibc
 ///
 ///     logger.info("Hello World!")
 ///
-public struct Logger: _SwiftLogSendable {
+public struct Logger {
     @usableFromInline
     var handler: LogHandler
 
@@ -727,7 +713,7 @@ extension Logger {
     ///    over `..., metadata: ["colors": .array([.string("\(user.topColor)"), .string("\(user.secondColor)")])`
     ///  - prefer `logger.info("nested info", metadata: ["nested": ["fave-numbers": ["\(1)", "\(2)", "\(3)"], "foo": "bar"]])`
     ///    over `..., metadata: ["nested": .dictionary(["fave-numbers": ...])])`
-    public enum MetadataValue: _SwiftLogSendable {
+    public enum MetadataValue {
         /// A metadata value which is a `String`.
         ///
         /// Because `MetadataValue` implements `ExpressibleByStringInterpolation`, and `ExpressibleByStringLiteral`,
@@ -757,7 +743,7 @@ extension Logger {
     ///
     /// Log levels are ordered by their severity, with `.trace` being the least severe and
     /// `.critical` being the most severe.
-    public enum Level: String, Codable, CaseIterable, _SwiftLogSendable {
+    public enum Level: String, Codable, CaseIterable {
         /// Appropriate for messages that contain information normally of use only when
         /// tracing the execution of a program.
         case trace
@@ -876,7 +862,7 @@ extension Logger {
     ///
     ///     logger.info("Hello \(world)")
     ///
-    public struct Message: ExpressibleByStringLiteral, Equatable, CustomStringConvertible, ExpressibleByStringInterpolation, _SwiftLogSendable {
+    public struct Message: ExpressibleByStringLiteral, Equatable, CustomStringConvertible, ExpressibleByStringInterpolation {
         public typealias StringLiteralType = String
 
         private var value: String
@@ -1093,6 +1079,12 @@ let systemStdout = WASILibc.stdout!
 /// `StreamLogHandler` is a simple implementation of `LogHandler` for directing
 /// `Logger` output to either `stderr` or `stdout` via the factory methods.
 public struct StreamLogHandler: LogHandler {
+    #if compiler(>=5.6)
+    internal typealias _SendableTextOutputStream = TextOutputStream & Sendable
+    #else
+    internal typealias _SendableTextOutputStream = TextOutputStream
+    #endif
+
     /// Factory that makes a `StreamLogHandler` to directs its output to `stdout`
     public static func standardOutput(label: String) -> StreamLogHandler {
         return StreamLogHandler(label: label, stream: StdioOutputStream.stdout)
@@ -1103,7 +1095,7 @@ public struct StreamLogHandler: LogHandler {
         return StreamLogHandler(label: label, stream: StdioOutputStream.stderr)
     }
 
-    private let stream: TextOutputStream & _SwiftLogSendable
+    private let stream: _SendableTextOutputStream
     private let label: String
 
     public var logLevel: Logger.Level = .info
@@ -1125,7 +1117,7 @@ public struct StreamLogHandler: LogHandler {
     }
 
     // internal for testing only
-    internal init(label: String, stream: TextOutputStream & _SwiftLogSendable) {
+    internal init(label: String, stream: _SendableTextOutputStream) {
         self.label = label
         self.stream = stream
     }
@@ -1281,3 +1273,12 @@ extension Logger.MetadataValue: ExpressibleByArrayLiteral {
         self = .array(elements)
     }
 }
+
+// MARK: - Sendable support helpers
+
+#if compiler(>=5.6)
+extension Logger: Sendable {}
+extension Logger.MetadataValue: Sendable {}
+extension Logger.Level: Sendable {}
+extension Logger.Message: Sendable {}
+#endif

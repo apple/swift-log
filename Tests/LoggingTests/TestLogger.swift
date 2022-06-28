@@ -31,8 +31,6 @@ internal struct TestLogging {
 }
 
 internal struct TestLogHandler: LogHandler {
-    private let logLevelLock = NSLock()
-    private let metadataLock = NSLock()
     private let recorder: Recorder
     private let config: Config
     private var logger: Logger // the actual logger
@@ -56,10 +54,10 @@ internal struct TestLogHandler: LogHandler {
     var logLevel: Logger.Level {
         get {
             // get from config unless set
-            return self.logLevelLock.withLock { self._logLevel } ?? self.config.get(key: self.label)
+            return self._logLevel ?? self.config.get(key: self.label)
         }
         set {
-            self.logLevelLock.withLock { self._logLevel = newValue }
+            self._logLevel = newValue
         }
     }
 
@@ -72,26 +70,20 @@ internal struct TestLogHandler: LogHandler {
 
     public var metadata: Logger.Metadata {
         get {
-            // return self.logger.metadata
-            return self.metadataLock.withLock { self._metadata }
+            return self._metadata
         }
         set {
-            // self.logger.metadata = newValue
-            self.metadataLock.withLock { self._metadata = newValue }
+            self._metadata = newValue
         }
     }
 
     // TODO: would be nice to delegate to local copy of logger but StdoutLogger is a reference type. why?
     subscript(metadataKey metadataKey: Logger.Metadata.Key) -> Logger.Metadata.Value? {
         get {
-            // return self.logger[metadataKey: metadataKey]
-            return self.metadataLock.withLock { self._metadata[metadataKey] }
+            return self._metadata[metadataKey]
         }
         set {
-            // return logger[metadataKey: metadataKey] = newValue
-            self.metadataLock.withLock {
-                self._metadata[metadataKey] = newValue
-            }
+            self._metadata[metadataKey] = newValue
         }
     }
 }
@@ -342,3 +334,12 @@ internal struct TestLibrary {
         }
     }
 }
+
+// Sendable
+
+#if compiler(>=5.6)
+extension TestLogHandler: @unchecked Sendable {}
+extension Recorder: @unchecked Sendable {}
+extension Config: @unchecked Sendable {}
+extension MDC: @unchecked Sendable {}
+#endif

@@ -893,9 +893,11 @@ extension Logger {
 // Sendable
 
 #if compiler(>=5.6)
-// @unchecked Sendable since not thread-safe by definition
+// used to test logging metadata which requires Sendable conformance
+// @unchecked Sendable since manages it own state
 extension LoggingTest.LazyMetadataBox: @unchecked Sendable {}
 
-// @unchecked Sendable since non-thread safe by design
+// used to test logging stream which requires Sendable conformance
+// @unchecked Sendable since manages it own state
 extension LoggingTest.InterceptStream: @unchecked Sendable {}
 #endif
