@@ -672,11 +672,7 @@ public enum LoggingSystem {
     }
 
     private final class FactoryBox {
-        #if canImport(WASILibc)
-        // WASILibc is single threaded, provides no locks
-        #else
         private let lock = ReadWriteLock()
-        #endif
         fileprivate var _underlying: (String) -> LogHandler
         private var initialized = false
 
@@ -685,27 +681,17 @@ public enum LoggingSystem {
         }
 
         func replaceFactory(_ factory: @escaping (String) -> LogHandler, validate: Bool) {
-            #if canImport(WASILibc)
-            precondition(!validate || !self.initialized, "logging system can only be initialized once per process.")
-            self._underlying = factory
-            self.initialized = true
-            #else
             self.lock.withWriterLock {
                 precondition(!validate || !self.initialized, "logging system can only be initialized once per process.")
                 self._underlying = factory
                 self.initialized = true
             }
-            #endif
         }
 
         var underlying: (String) -> LogHandler {
-            #if canImport(WASILibc)
-            return self._underlying
-            #else
             return self.lock.withReaderLock {
                 return self._underlying
             }
-            #endif
         }
     }
 }
