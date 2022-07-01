@@ -262,7 +262,7 @@ class LoggingTest: XCTestCase {
 
     // Example of custom "box" which may be used to implement "render at most once" semantics
     // Not thread-safe, thus should not be shared across threads.
-    internal class LazyMetadataBox: CustomStringConvertible {
+    internal final class LazyMetadataBox: CustomStringConvertible {
         private var makeValue: (() -> String)?
         private var _value: String?
 
@@ -889,3 +889,15 @@ extension Logger {
     }
     #endif
 }
+
+// Sendable
+
+#if compiler(>=5.6)
+// used to test logging metadata which requires Sendable conformance
+// @unchecked Sendable since manages it own state
+extension LoggingTest.LazyMetadataBox: @unchecked Sendable {}
+
+// used to test logging stream which requires Sendable conformance
+// @unchecked Sendable since manages it own state
+extension LoggingTest.InterceptStream: @unchecked Sendable {}
+#endif

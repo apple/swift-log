@@ -721,8 +721,11 @@ extension Logger {
         case string(String)
 
         /// A metadata value which is some `CustomStringConvertible`.
+        #if compiler(>=5.6)
+        case stringConvertible(CustomStringConvertible & Sendable)
+        #else
         case stringConvertible(CustomStringConvertible)
-
+        #endif
         /// A metadata value which is a dictionary from `String` to `Logger.MetadataValue`.
         ///
         /// Because `MetadataValue` implements `ExpressibleByDictionaryLiteral`, you don't need to type
@@ -1076,6 +1079,12 @@ let systemStdout = WASILibc.stdout!
 /// `StreamLogHandler` is a simple implementation of `LogHandler` for directing
 /// `Logger` output to either `stderr` or `stdout` via the factory methods.
 public struct StreamLogHandler: LogHandler {
+    #if compiler(>=5.6)
+    internal typealias _SendableTextOutputStream = TextOutputStream & Sendable
+    #else
+    internal typealias _SendableTextOutputStream = TextOutputStream
+    #endif
+
     /// Factory that makes a `StreamLogHandler` to directs its output to `stdout`
     public static func standardOutput(label: String) -> StreamLogHandler {
         return StreamLogHandler(label: label, stream: StdioOutputStream.stdout)
@@ -1086,7 +1095,7 @@ public struct StreamLogHandler: LogHandler {
         return StreamLogHandler(label: label, stream: StdioOutputStream.stderr)
     }
 
-    private let stream: TextOutputStream
+    private let stream: _SendableTextOutputStream
     private let label: String
 
     public var logLevel: Logger.Level = .info
@@ -1108,7 +1117,7 @@ public struct StreamLogHandler: LogHandler {
     }
 
     // internal for testing only
-    internal init(label: String, stream: TextOutputStream) {
+    internal init(label: String, stream: _SendableTextOutputStream) {
         self.label = label
         self.stream = stream
     }
@@ -1264,3 +1273,12 @@ extension Logger.MetadataValue: ExpressibleByArrayLiteral {
         self = .array(elements)
     }
 }
+
+// MARK: - Sendable support helpers
+
+#if compiler(>=5.6)
+extension Logger: Sendable {}
+extension Logger.MetadataValue: Sendable {}
+extension Logger.Level: Sendable {}
+extension Logger.Message: Sendable {}
+#endif
