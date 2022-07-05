@@ -667,7 +667,7 @@ public enum LoggingSystem {
         self._factory.replaceFactory(factory, validate: false)
     }
 
-    fileprivate static var factory: (String) -> LogHandler {
+    public static var factory: (String) -> LogHandler {
         return self._factory.underlying
     }
 
