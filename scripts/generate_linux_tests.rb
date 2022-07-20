@@ -94,6 +94,7 @@ def createLinuxMain(testsDirectory, allTestSubDirectories, files)
     file.write header(fileName)
     file.write "\n"
 
+    file.write "#if swift(<5.6)\n"
     file.write "#if os(Linux) || os(FreeBSD) || os(Windows) || os(Android)\n"
     for testSubDirectory in allTestSubDirectories.sort { |x, y| x <=> y }
       file.write '@testable import ' + testSubDirectory + "\n"
@@ -112,6 +113,7 @@ def createLinuxMain(testsDirectory, allTestSubDirectories, files)
       file.write '    testCase(' + testCase + ".allTests),\n"
     end
     file.write "])\n"
+    file.write "#endif\n"
     file.write "#endif\n"
   end
 end
