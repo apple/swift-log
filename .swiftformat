@@ -13,4 +13,3 @@
 # rules
 
 --disable redundantParens # https://github.com/nicklockwood/SwiftFormat/issues/638
-

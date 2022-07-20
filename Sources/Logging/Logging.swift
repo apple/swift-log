@@ -1146,10 +1146,10 @@ public struct StreamLogHandler: LogHandler {
     private func timestamp() -> String {
         var buffer = [Int8](repeating: 0, count: 255)
         #if os(Windows)
-        var timestamp = __time64_t()
+        var timestamp: __time64_t = __time64_t()
         _ = _time64(&timestamp)
 
-        var localTime = tm()
+        var localTime: tm = tm()
         _ = _localtime64_s(&localTime, &timestamp)
 
         _ = strftime(&buffer, buffer.count, "%Y-%m-%dT%H:%M:%S%z", &localTime)

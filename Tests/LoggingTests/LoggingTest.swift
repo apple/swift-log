@@ -832,10 +832,10 @@ class LoggingTest: XCTestCase {
 
         let readFD = fds[0]
         #if os(Windows)
-        let hPipe = HANDLE(bitPattern: _get_osfhandle(readFD))!
+        let hPipe: HANDLE = HANDLE(bitPattern: _get_osfhandle(readFD))!
         XCTAssertFalse(hPipe == INVALID_HANDLE_VALUE)
 
-        var dwMode = DWORD(PIPE_NOWAIT)
+        var dwMode: DWORD = DWORD(PIPE_NOWAIT)
         let bSucceeded = SetNamedPipeHandleState(hPipe, &dwMode, nil, nil)
         XCTAssertTrue(bSucceeded)
         #else
