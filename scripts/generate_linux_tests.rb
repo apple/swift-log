@@ -71,6 +71,7 @@ def createExtensionFile(fileName, classes)
     file.write "\n"
 
     for classArray in classes
+      file.write "#if swift(<5.6)\n"
       file.write 'extension ' + classArray[0] + " {\n"
       file.write '    static var allTests: [(String, (' + classArray[0] + ") -> () throws -> Void)] {\n"
       file.write "        return [\n"
@@ -82,6 +83,7 @@ def createExtensionFile(fileName, classes)
       file.write "        ]\n"
       file.write "    }\n"
       file.write "}\n"
+      file.write "#endif\n"
     end
   end
 end
