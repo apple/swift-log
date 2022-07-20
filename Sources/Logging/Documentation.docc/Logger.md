@@ -2,12 +2,12 @@
 
 ## Topics
 
-### Log Levels
+### Log levels
 
-- ``Logging/Logger/Level/trace``
-- ``Logging/Logger/Level/debug``
-- ``Logging/Logger/Level/info``
-- ``Logging/Logger/Level/notice``
-- ``Logging/Logger/Level/warning``
-- ``Logging/Logger/Level/error``
-- ``Logging/Logger/Level/critical``
+- ``trace``
+- ``debug``
+- ``info``
+- ``notice``
+- ``warning``
+- ``error``
+- ``critical``
