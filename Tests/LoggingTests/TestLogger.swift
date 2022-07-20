@@ -133,30 +133,30 @@ internal protocol History {
     var entries: [LogEntry] { get }
 }
 
-internal extension History {
-    func atLevel(level: Logger.Level) -> [LogEntry] {
+extension History {
+    internal func atLevel(level: Logger.Level) -> [LogEntry] {
         return self.entries.filter { entry in
             level == entry.level
         }
     }
 
-    var trace: [LogEntry] {
+    internal var trace: [LogEntry] {
         return self.atLevel(level: .debug)
     }
 
-    var debug: [LogEntry] {
+    internal var debug: [LogEntry] {
         return self.atLevel(level: .debug)
     }
 
-    var info: [LogEntry] {
+    internal var info: [LogEntry] {
         return self.atLevel(level: .info)
     }
 
-    var warning: [LogEntry] {
+    internal var warning: [LogEntry] {
         return self.atLevel(level: .warning)
     }
 
-    var error: [LogEntry] {
+    internal var error: [LogEntry] {
         return self.atLevel(level: .error)
     }
 }
@@ -302,8 +302,8 @@ public class MDC {
     }
 }
 
-internal extension NSLock {
-    func withLock<T>(_ body: () -> T) -> T {
+extension NSLock {
+    internal func withLock<T>(_ body: () -> T) -> T {
         self.lock()
         defer {
             self.unlock()

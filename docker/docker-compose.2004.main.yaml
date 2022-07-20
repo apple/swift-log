@@ -10,7 +10,8 @@ services:
 
   test:
     image: swift-log:20.04-main
-    environment: []
+    environment:
+      - FORCE_TEST_DISCOVERY=--enable-test-discovery
       #- SANITIZER_ARG=--sanitize=thread
 
   shell:
