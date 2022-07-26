@@ -15,14 +15,14 @@
 /// A `LogHandler` is an implementation of a logging backend.
 ///
 /// This type is an implementation detail and should not normally be used, unless implementing your own logging backend.
-/// To use the SwiftLog API, please refer to the documentation of `Logger`.
+/// To use the SwiftLog API, please refer to the documentation of ``Logger``.
 ///
 /// # Implementation requirements
 ///
 /// To implement your own `LogHandler` you should respect a few requirements that are necessary so applications work
 /// as expected regardless of the selected `LogHandler` implementation.
 ///
-/// - The `LogHandler` must be a `struct`.
+/// - The ``LogHandler`` must be a `struct`.
 /// - The metadata and `logLevel` properties must be implemented so that setting them on a `Logger` does not affect
 ///   other `Logger`s.
 ///
