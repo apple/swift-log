@@ -104,7 +104,7 @@ extension Logger {
 
     /// Log a message passing the log level as a parameter.
     ///
-    /// If the ``logLevel`` passed to this method is more severe than the `Logger`'s `logLevel`, it will be logged,
+    /// If the ``logLevel`` passed to this method is more severe than the `Logger`'s ``logLevel``, it will be logged,
     /// otherwise nothing will happen.
     ///
     /// - parameters:
