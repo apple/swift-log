@@ -1276,9 +1276,14 @@ extension Logger.MetadataValue: ExpressibleByArrayLiteral {
 
 // MARK: - Sendable support helpers
 
+#if compiler(>=5.7.0)
+extension Logger.MetadataValue: Sendable {} // on 5.7 `stringConvertible`'s value marked as Sendable; but if a value not conforming to Sendable is passed there, a warning is emitted. We are okay with warnings, but on 5.6 for the same situation an error is emitted (!)
+#elseif compiler(>=5.6)
+extension Logger.MetadataValue: @unchecked Sendable {} // sadly, On 5.6 a missing Sendable conformance causes an 'error' (specifically this is about `stringConvertible`'s value)
+#endif
+
 #if compiler(>=5.6)
 extension Logger: Sendable {}
-extension Logger.MetadataValue: Sendable {}
 extension Logger.Level: Sendable {}
 extension Logger.Message: Sendable {}
 #endif
