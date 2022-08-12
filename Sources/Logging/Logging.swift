@@ -721,7 +721,7 @@ extension Logger {
         case string(String)
 
         /// A metadata value which is some `CustomStringConvertible`.
-        #if compiler(>=5.6)
+        #if compiler(>=5.7)
         case stringConvertible(CustomStringConvertible & Sendable)
         #else
         case stringConvertible(CustomStringConvertible)
