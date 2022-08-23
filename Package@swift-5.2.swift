@@ -1,4 +1,4 @@
-// swift-tools-version:5.7
+// swift-tools-version:5.2
 //===----------------------------------------------------------------------===//
 //
 // This source file is part of the Swift Logging API open source project
@@ -19,9 +19,6 @@ let package = Package(
     name: "swift-log",
     products: [
         .library(name: "Logging", targets: ["Logging"]),
-
-        // ~~~ SwiftPM Plugins ~~~
-        .package(url: "https://github.com/apple/swift-docc-plugin", from: "1.0.0"),
     ],
     targets: [
         .target(
