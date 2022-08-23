@@ -53,7 +53,7 @@ extension Logger {
     #if compiler(>=5.3)
     /// Log a message passing the log level as a parameter.
     ///
-    /// If the `logLevel` passed to this method is more severe than the `Logger`'s `logLevel`, it will be logged,
+    /// If the `logLevel` passed to this method is more severe than the `Logger`'s ``logLevel``, it will be logged,
     /// otherwise nothing will happen.
     ///
     /// - parameters:
@@ -168,9 +168,9 @@ extension Logger {
 }
 
 extension Logger {
-    /// Log a message passing with the `Logger.Level.trace` log level.
+    /// Log a message passing with the ``Logger/Level/trace`` log level.
     ///
-    /// If `.trace` is at least as severe as the `Logger`'s `logLevel`, it will be logged,
+    /// If `.trace` is at least as severe as the `Logger`'s ``logLevel``, it will be logged,
     /// otherwise nothing will happen.
     ///
     /// - parameters:
@@ -205,7 +205,9 @@ extension Logger {
     }
     #endif
 
-    /// If `.trace` is at least as severe as the `Logger`'s `logLevel`, it will be logged,
+    /// Log a message passing with the ``Logger/Level/trace`` log level.
+    ///
+    /// If `.trace` is at least as severe as the `Logger`'s ``logLevel``, it will be logged,
     /// otherwise nothing will happen.
     ///
     /// - parameters:
@@ -234,9 +236,9 @@ extension Logger {
     }
     #endif
 
-    /// Log a message passing with the `Logger.Level.debug` log level.
+    /// Log a message passing with the ``Logger/Level/debug`` log level.
     ///
-    /// If `.debug` is at least as severe as the `Logger`'s `logLevel`, it will be logged,
+    /// If `.debug` is at least as severe as the `Logger`'s ``logLevel``, it will be logged,
     /// otherwise nothing will happen.
     ///
     /// - parameters:
@@ -270,9 +272,9 @@ extension Logger {
     }
     #endif
 
-    /// Log a message passing with the `Logger.Level.debug` log level.
+    /// Log a message passing with the ``Logger/Level/debug`` log level.
     ///
-    /// If `.debug` is at least as severe as the `Logger`'s `logLevel`, it will be logged,
+    /// If `.debug` is at least as severe as the `Logger`'s ``logLevel``, it will be logged,
     /// otherwise nothing will happen.
     ///
     /// - parameters:
@@ -301,9 +303,9 @@ extension Logger {
     }
     #endif
 
-    /// Log a message passing with the `Logger.Level.info` log level.
+    /// Log a message passing with the ``Logger/Level/info`` log level.
     ///
-    /// If `.info` is at least as severe as the `Logger`'s `logLevel`, it will be logged,
+    /// If `.info` is at least as severe as the `Logger`'s ``logLevel``, it will be logged,
     /// otherwise nothing will happen.
     ///
     /// - parameters:
@@ -338,9 +340,9 @@ extension Logger {
     }
     #endif
 
-    /// Log a message passing with the `Logger.Level.info` log level.
+    /// Log a message passing with the ``Logger/Level/info`` log level.
     ///
-    /// If `.info` is at least as severe as the `Logger`'s `logLevel`, it will be logged,
+    /// If `.info` is at least as severe as the `Logger`'s ``logLevel``, it will be logged,
     /// otherwise nothing will happen.
     ///
     /// - parameters:
@@ -369,9 +371,9 @@ extension Logger {
     }
     #endif
 
-    /// Log a message passing with the `Logger.Level.notice` log level.
+    /// Log a message passing with the ``Logger/Level/notice`` log level.
     ///
-    /// If `.notice` is at least as severe as the `Logger`'s `logLevel`, it will be logged,
+    /// If `.notice` is at least as severe as the `Logger`'s ``logLevel``, it will be logged,
     /// otherwise nothing will happen.
     ///
     /// - parameters:
@@ -406,9 +408,9 @@ extension Logger {
     }
     #endif
 
-    /// Log a message passing with the `Logger.Level.notice` log level.
+    /// Log a message passing with the ``Logger/Level/notice`` log level.
     ///
-    /// If `.notice` is at least as severe as the `Logger`'s `logLevel`, it will be logged,
+    /// If `.notice` is at least as severe as the `Logger`'s ``logLevel``, it will be logged,
     /// otherwise nothing will happen.
     ///
     /// - parameters:
@@ -440,9 +442,9 @@ extension Logger {
     }
     #endif
 
-    /// Log a message passing with the `Logger.Level.warning` log level.
+    /// Log a message passing with the ``Logger/Level/warning`` log level.
     ///
-    /// If `.warning` is at least as severe as the `Logger`'s `logLevel`, it will be logged,
+    /// If `.warning` is at least as severe as the `Logger`'s ``logLevel``, it will be logged,
     /// otherwise nothing will happen.
     ///
     /// - parameters:
@@ -477,9 +479,9 @@ extension Logger {
     }
     #endif
 
-    /// Log a message passing with the `Logger.Level.warning` log level.
+    /// Log a message passing with the ``Logger/Level/warning`` log level.
     ///
-    /// If `.warning` is at least as severe as the `Logger`'s `logLevel`, it will be logged,
+    /// If `.warning` is at least as severe as the `Logger`'s ``logLevel``, it will be logged,
     /// otherwise nothing will happen.
     ///
     /// - parameters:
@@ -508,9 +510,9 @@ extension Logger {
     }
     #endif
 
-    /// Log a message passing with the `Logger.Level.error` log level.
+    /// Log a message passing with the ``Logger/Level/error`` log level.
     ///
-    /// If `.error` is at least as severe as the `Logger`'s `logLevel`, it will be logged,
+    /// If `.error` is at least as severe as the `Logger`'s ``logLevel``, it will be logged,
     /// otherwise nothing will happen.
     ///
     /// - parameters:
@@ -545,9 +547,9 @@ extension Logger {
     }
     #endif
 
-    /// Log a message passing with the `Logger.Level.error` log level.
+    /// Log a message passing with the ``Logger/Level/error`` log level.
     ///
-    /// If `.error` is at least as severe as the `Logger`'s `logLevel`, it will be logged,
+    /// If `.error` is at least as severe as the `Logger`'s ``logLevel``, it will be logged,
     /// otherwise nothing will happen.
     ///
     /// - parameters:
@@ -576,7 +578,7 @@ extension Logger {
     }
     #endif
 
-    /// Log a message passing with the `Logger.Level.critical` log level.
+    /// Log a message passing with the ``Logger/Level/critical`` log level.
     ///
     /// `.critical` messages will always be logged.
     ///
@@ -612,7 +614,7 @@ extension Logger {
     }
     #endif
 
-    /// Log a message passing with the `Logger.Level.critical` log level.
+    /// Log a message passing with the ``Logger/Level/critical`` log level.
     ///
     /// `.critical` messages will always be logged.
     ///
