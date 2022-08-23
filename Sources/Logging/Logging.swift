@@ -27,14 +27,15 @@ import WASILibc
 /// A `Logger` is the central type in `SwiftLog`. Its central function is to emit log messages using one of the methods
 /// corresponding to a log level.
 ///
-/// `Logger`s are value types with respect to the `logLevel` and the `metadata` (as well as the immutable `label`
-/// and the selected `LogHandler`). Therefore, `Logger`s are suitable to be passed around between libraries if you want
+/// `Logger`s are value types with respect to the ``logLevel`` and the ``metadata`` (as well as the immutable `label`
+/// and the selected ``LogHandler``). Therefore, `Logger`s are suitable to be passed around between libraries if you want
 /// to preserve metadata across libraries.
 ///
 /// The most basic usage of a `Logger` is
 ///
-///     logger.info("Hello World!")
-///
+/// ```swift
+/// logger.info("Hello World!")
+/// ```
 public struct Logger {
     @usableFromInline
     var handler: LogHandler
@@ -103,7 +104,7 @@ extension Logger {
 
     /// Log a message passing the log level as a parameter.
     ///
-    /// If the `logLevel` passed to this method is more severe than the `Logger`'s `logLevel`, it will be logged,
+    /// If the ``logLevel`` passed to this method is more severe than the `Logger`'s ``logLevel``, it will be logged,
     /// otherwise nothing will happen.
     ///
     /// - parameters:
