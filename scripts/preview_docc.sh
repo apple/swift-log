@@ -13,4 +13,4 @@
 ##
 ##===----------------------------------------------------------------------===##
 
-xcrun swift package --disable-sandbox preview-documentation --target Logging
+swift package --disable-sandbox preview-documentation --target Logging
