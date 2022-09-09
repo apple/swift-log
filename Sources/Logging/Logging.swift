@@ -24,6 +24,8 @@ import WASILibc
 #error("Unsupported runtime")
 #endif
 
+import InstrumentationBaggage
+
 /// A `Logger` is the central type in `SwiftLog`. Its central function is to emit log messages using one of the methods
 /// corresponding to a log level.
 ///
@@ -40,17 +42,46 @@ public struct Logger {
     @usableFromInline
     var handler: LogHandler
 
+    @usableFromInline
+    var metadataProvider: (@Sendable (Baggage?) -> Metadata?)?
+
     /// An identifier of the creator of this `Logger`.
     public let label: String
 
-    internal init(label: String, _ handler: LogHandler) {
+    internal init(label: String, _ handler: LogHandler, metadataProvider: (@Sendable (Baggage?) -> Metadata?)? = nil) {
         self.label = label
         self.handler = handler
+        self.metadataProvider = metadataProvider
     }
 }
 
 extension Logger {
-    #if compiler(>=5.3)
+    #if compiler(>=5.5)
+    @available(macOS 10.15, iOS 13.0, watchOS 6.0, tvOS 13.0, *)
+    @inlinable
+    public func log(level: Logger.Level,
+                    _ message: @autoclosure () -> Logger.Message,
+                    metadata: @autoclosure () -> Logger.Metadata? = nil,
+                    baggage: Baggage? = .current,
+                    source: @autoclosure () -> String? = nil,
+                    file: String = #fileID, function: String = #function, line: UInt = #line) {
+        if self.logLevel <= level {
+            let providerMetadata = self.metadataProvider?(baggage)
+            let metadata: Metadata? = {
+                guard let metadata = metadata(), !metadata.isEmpty else { return providerMetadata }
+                guard let providerMetadata = providerMetadata else { return metadata }
+                return providerMetadata.merging(metadata, uniquingKeysWith: { _, oneOffMetadata in oneOffMetadata })
+            }()
+
+            self.handler.log(level: level,
+                             message: message(),
+                             metadata: metadata,
+                             source: source() ?? Logger.currentModule(fileID: (file)),
+                             file: file, function: function, line: line)
+        }
+    }
+
+    #elseif compiler(>=5.3)
     /// Log a message passing the log level as a parameter.
     ///
     /// If the `logLevel` passed to this method is more severe than the `Logger`'s ``logLevel``, it will be logged,
@@ -102,6 +133,18 @@ extension Logger {
     }
     #endif
 
+    #if compiler(>=5.5) && canImport(_Concurrency)
+    @available(macOS 10.15, iOS 13.0, watchOS 6.0, tvOS 13.0, *)
+    @inlinable
+    public func log(level: Logger.Level,
+                    _ message: @autoclosure () -> Logger.Message,
+                    metadata: @autoclosure () -> Logger.Metadata? = nil,
+                    baggage: Baggage? = .current,
+                    file: String = #fileID, function: String = #function, line: UInt = #line) {
+        self.log(level: level, message(), metadata: metadata(), baggage: baggage, source: nil, file: file, function: function, line: line)
+    }
+
+    #elseif compiler(>=5.3)
     /// Log a message passing the log level as a parameter.
     ///
     /// If the ``logLevel`` passed to this method is more severe than the `Logger`'s ``logLevel``, it will be logged,
@@ -117,7 +160,6 @@ extension Logger {
     ///                it defaults to `#function`).
     ///    - line: The line this log message originates from (there's usually no need to pass it explicitly as it
     ///            defaults to `#line`).
-    #if compiler(>=5.3)
     @inlinable
     public func log(level: Logger.Level,
                     _ message: @autoclosure () -> Logger.Message,
@@ -127,6 +169,21 @@ extension Logger {
     }
 
     #else
+    /// Log a message passing the log level as a parameter.
+    ///
+    /// If the ``logLevel`` passed to this method is more severe than the `Logger`'s ``logLevel``, it will be logged,
+    /// otherwise nothing will happen.
+    ///
+    /// - parameters:
+    ///    - level: The log level to log `message` at. For the available log levels, see `Logger.Level`.
+    ///    - message: The message to be logged. `message` can be used with any string interpolation literal.
+    ///    - metadata: One-off metadata to attach to this log message.
+    ///    - file: The file this log message originates from (there's usually no need to pass it explicitly as it
+    ///            defaults to `#fileID` (on Swift 5.3 or newer and `#file` on Swift 5.2 or older).
+    ///    - function: The function this log message originates from (there's usually no need to pass it explicitly as
+    ///                it defaults to `#function`).
+    ///    - line: The line this log message originates from (there's usually no need to pass it explicitly as it
+    ///            defaults to `#line`).
     @inlinable
     public func log(level: Logger.Level,
                     _ message: @autoclosure () -> Logger.Message,
@@ -168,6 +225,18 @@ extension Logger {
 }
 
 extension Logger {
+    #if compiler(>=5.5) && canImport(_Concurrency)
+    @available(macOS 10.15, iOS 13.0, watchOS 6.0, tvOS 13.0, *)
+    @inlinable
+    public func trace(_ message: @autoclosure () -> Logger.Message,
+                      metadata: @autoclosure () -> Logger.Metadata? = nil,
+                      baggage: Baggage? = .current,
+                      source: @autoclosure () -> String? = nil,
+                      file: String = #fileID, function: String = #function, line: UInt = #line) {
+        self.log(level: .trace, message(), metadata: metadata(), baggage: baggage, source: source(), file: file, function: function, line: line)
+    }
+
+    #elseif compiler(>=5.3)
     /// Log a message passing with the ``Logger/Level/trace`` log level.
     ///
     /// If `.trace` is at least as severe as the `Logger`'s ``logLevel``, it will be logged,
@@ -186,7 +255,6 @@ extension Logger {
     ///                it defaults to `#function`).
     ///    - line: The line this log message originates from (there's usually no need to pass it explicitly as it
     ///            defaults to `#line`).
-    #if compiler(>=5.3)
     @inlinable
     public func trace(_ message: @autoclosure () -> Logger.Message,
                       metadata: @autoclosure () -> Logger.Metadata? = nil,
@@ -196,6 +264,25 @@ extension Logger {
     }
 
     #else
+    /// Log a message passing with the ``Logger/Level/trace`` log level.
+    ///
+    /// If `.trace` is at least as severe as the `Logger`'s ``logLevel``, it will be logged,
+    /// otherwise nothing will happen.
+    ///
+    /// - parameters:
+    ///    - message: The message to be logged. `message` can be used with any string interpolation literal.
+    ///    - metadata: One-off metadata to attach to this log message
+    ///    - source: The source this log messages originates from. Defaults
+    ///              to the module emitting the log message (on Swift 5.3 or
+    ///              newer and the folder name containing the log emitting file on Swift 5.2 or
+    ///              older).
+    ///    - file: The file this log message originates from (there's usually no need to pass it explicitly as it
+    ///            defaults to `#fileID` (on Swift 5.3 or newer and `#file` on Swift 5.2 or older).
+    ///    - function: The function this log message originates from (there's usually no need to pass it explicitly as
+    ///                it defaults to `#function`).
+    ///    - line: The line this log message originates from (there's usually no need to pass it explicitly as it
+    ///            defaults to `#line`).
+
     @inlinable
     public func trace(_ message: @autoclosure () -> Logger.Message,
                       metadata: @autoclosure () -> Logger.Metadata? = nil,
@@ -204,6 +291,16 @@ extension Logger {
         self.log(level: .trace, message(), metadata: metadata(), source: source(), file: file, function: function, line: line)
     }
     #endif
+
+    #if compiler(>=5.5) && canImport(_Concurrency)
+    @available(macOS 10.15, iOS 13.0, watchOS 6.0, tvOS 13.0, *)
+    @inlinable
+    public func trace(_ message: @autoclosure () -> Logger.Message,
+                      metadata: @autoclosure () -> Logger.Metadata? = nil,
+                      baggage: Baggage? = .current,
+                      file: String = #fileID, function: String = #function, line: UInt = #line) {
+        self.trace(message(), metadata: metadata(), baggage: baggage, source: nil, file: file, function: function, line: line)
+    }
 
     /// Log a message passing with the ``Logger/Level/trace`` log level.
     ///
@@ -219,7 +316,7 @@ extension Logger {
     ///                it defaults to `#function`).
     ///    - line: The line this log message originates from (there's usually no need to pass it explicitly as it
     ///            defaults to `#line`).
-    #if compiler(>=5.3)
+    #elseif compiler(>=5.3)
     @inlinable
     public func trace(_ message: @autoclosure () -> Logger.Message,
                       metadata: @autoclosure () -> Logger.Metadata? = nil,
@@ -235,6 +332,17 @@ extension Logger {
         self.trace(message(), metadata: metadata(), source: nil, file: file, function: function, line: line)
     }
     #endif
+
+    #if compiler(>=5.5) && canImport(_Concurrency)
+    @available(macOS 10.15, iOS 13.0, watchOS 6.0, tvOS 13.0, *)
+    @inlinable
+    public func debug(_ message: @autoclosure () -> Logger.Message,
+                      metadata: @autoclosure () -> Logger.Metadata? = nil,
+                      baggage: Baggage? = .current,
+                      source: @autoclosure () -> String? = nil,
+                      file: String = #fileID, function: String = #function, line: UInt = #line) {
+        self.log(level: .debug, message(), metadata: metadata(), baggage: baggage, source: source(), file: file, function: function, line: line)
+    }
 
     /// Log a message passing with the ``Logger/Level/debug`` log level.
     ///
@@ -254,7 +362,7 @@ extension Logger {
     ///                it defaults to `#function`).
     ///    - line: The line this log message originates from (there's usually no need to pass it explicitly as it
     ///            defaults to `#line`).
-    #if compiler(>=5.3)
+    #elseif compiler(>=5.3)
     @inlinable
     public func debug(_ message: @autoclosure () -> Logger.Message,
                       metadata: @autoclosure () -> Logger.Metadata? = nil,
@@ -271,6 +379,16 @@ extension Logger {
         self.log(level: .debug, message(), metadata: metadata(), source: source(), file: file, function: function, line: line)
     }
     #endif
+
+    #if compiler(>=5.5) && canImport(_Concurrency)
+    @available(macOS 10.15, iOS 13.0, watchOS 6.0, tvOS 13.0, *)
+    @inlinable
+    public func debug(_ message: @autoclosure () -> Logger.Message,
+                      metadata: @autoclosure () -> Logger.Metadata? = nil,
+                      baggage: Baggage? = .current,
+                      file: String = #fileID, function: String = #function, line: UInt = #line) {
+        self.debug(message(), metadata: metadata(), baggage: baggage, source: nil, file: file, function: function, line: line)
+    }
 
     /// Log a message passing with the ``Logger/Level/debug`` log level.
     ///
@@ -286,7 +404,7 @@ extension Logger {
     ///                it defaults to `#function`).
     ///    - line: The line this log message originates from (there's usually no need to pass it explicitly as it
     ///            defaults to `#line`).
-    #if compiler(>=5.3)
+    #elseif compiler(>=5.3)
     @inlinable
     public func debug(_ message: @autoclosure () -> Logger.Message,
                       metadata: @autoclosure () -> Logger.Metadata? = nil,
@@ -303,6 +421,18 @@ extension Logger {
     }
     #endif
 
+    #if compiler(>=5.5) && canImport(_Concurrency)
+    @available(macOS 10.15, iOS 13.0, watchOS 6.0, tvOS 13.0, *)
+    @inlinable
+    public func info(_ message: @autoclosure () -> Logger.Message,
+                     metadata: @autoclosure () -> Logger.Metadata? = nil,
+                     baggage: Baggage? = .current,
+                     source: @autoclosure () -> String? = nil,
+                     file: String = #fileID, function: String = #function, line: UInt = #line) {
+        self.log(level: .info, message(), metadata: metadata(), baggage: baggage, source: source(), file: file, function: function, line: line)
+    }
+
+    #elseif compiler(>=5.3)
     /// Log a message passing with the ``Logger/Level/info`` log level.
     ///
     /// If `.info` is at least as severe as the `Logger`'s ``logLevel``, it will be logged,
@@ -321,7 +451,6 @@ extension Logger {
     ///                it defaults to `#function`).
     ///    - line: The line this log message originates from (there's usually no need to pass it explicitly as it
     ///            defaults to `#line`).
-    #if compiler(>=5.3)
     @inlinable
     public func info(_ message: @autoclosure () -> Logger.Message,
                      metadata: @autoclosure () -> Logger.Metadata? = nil,
@@ -331,6 +460,24 @@ extension Logger {
     }
 
     #else
+    /// Log a message passing with the ``Logger/Level/info`` log level.
+    ///
+    /// If `.info` is at least as severe as the `Logger`'s ``logLevel``, it will be logged,
+    /// otherwise nothing will happen.
+    ///
+    /// - parameters:
+    ///    - message: The message to be logged. `message` can be used with any string interpolation literal.
+    ///    - metadata: One-off metadata to attach to this log message.
+    ///    - source: The source this log messages originates from. Defaults
+    ///              to the module emitting the log message (on Swift 5.3 or
+    ///              newer and the folder name containing the log emitting file on Swift 5.2 or
+    ///              older).
+    ///    - file: The file this log message originates from (there's usually no need to pass it explicitly as it
+    ///            defaults to `#fileID` (on Swift 5.3 or newer and `#file` on Swift 5.2 or older).
+    ///    - function: The function this log message originates from (there's usually no need to pass it explicitly as
+    ///                it defaults to `#function`).
+    ///    - line: The line this log message originates from (there's usually no need to pass it explicitly as it
+    ///            defaults to `#line`).
     @inlinable
     public func info(_ message: @autoclosure () -> Logger.Message,
                      metadata: @autoclosure () -> Logger.Metadata? = nil,
@@ -340,6 +487,17 @@ extension Logger {
     }
     #endif
 
+    #if compiler(>=5.5) && canImport(_Concurrency)
+    @available(macOS 10.15, iOS 13.0, watchOS 6.0, tvOS 13.0, *)
+    @inlinable
+    public func info(_ message: @autoclosure () -> Logger.Message,
+                     metadata: @autoclosure () -> Logger.Metadata? = nil,
+                     baggage: Baggage? = .current,
+                     file: String = #fileID, function: String = #function, line: UInt = #line) {
+        self.info(message(), metadata: metadata(), baggage: baggage, source: nil, file: file, function: function, line: line)
+    }
+
+    #elseif compiler(>=5.3)
     /// Log a message passing with the ``Logger/Level/info`` log level.
     ///
     /// If `.info` is at least as severe as the `Logger`'s ``logLevel``, it will be logged,
@@ -354,7 +512,6 @@ extension Logger {
     ///                it defaults to `#function`).
     ///    - line: The line this log message originates from (there's usually no need to pass it explicitly as it
     ///            defaults to `#line`).
-    #if compiler(>=5.3)
     @inlinable
     public func info(_ message: @autoclosure () -> Logger.Message,
                      metadata: @autoclosure () -> Logger.Metadata? = nil,
@@ -363,6 +520,20 @@ extension Logger {
     }
 
     #else
+    /// Log a message passing with the ``Logger/Level/info`` log level.
+    ///
+    /// If `.info` is at least as severe as the `Logger`'s ``logLevel``, it will be logged,
+    /// otherwise nothing will happen.
+    ///
+    /// - parameters:
+    ///    - message: The message to be logged. `message` can be used with any string interpolation literal.
+    ///    - metadata: One-off metadata to attach to this log message.
+    ///    - file: The file this log message originates from (there's usually no need to pass it explicitly as it
+    ///            defaults to `#fileID` (on Swift 5.3 or newer and `#file` on Swift 5.2 or older).
+    ///    - function: The function this log message originates from (there's usually no need to pass it explicitly as
+    ///                it defaults to `#function`).
+    ///    - line: The line this log message originates from (there's usually no need to pass it explicitly as it
+    ///            defaults to `#line`).
     @inlinable
     public func info(_ message: @autoclosure () -> Logger.Message,
                      metadata: @autoclosure () -> Logger.Metadata? = nil,
@@ -371,6 +542,18 @@ extension Logger {
     }
     #endif
 
+    #if compiler(>=5.5) && canImport(_Concurrency)
+    @available(macOS 10.15, iOS 13.0, watchOS 6.0, tvOS 13.0, *)
+    @inlinable
+    public func notice(_ message: @autoclosure () -> Logger.Message,
+                       metadata: @autoclosure () -> Logger.Metadata? = nil,
+                       baggage: Baggage? = .current,
+                       source: @autoclosure () -> String? = nil,
+                       file: String = #fileID, function: String = #function, line: UInt = #line) {
+        self.log(level: .notice, message(), metadata: metadata(), baggage: baggage, source: source(), file: file, function: function, line: line)
+    }
+
+    #elseif compiler(>=5.3)
     /// Log a message passing with the ``Logger/Level/notice`` log level.
     ///
     /// If `.notice` is at least as severe as the `Logger`'s ``logLevel``, it will be logged,
@@ -389,7 +572,6 @@ extension Logger {
     ///                it defaults to `#function`).
     ///    - line: The line this log message originates from (there's usually no need to pass it explicitly as it
     ///            defaults to `#line`).
-    #if compiler(>=5.3)
     @inlinable
     public func notice(_ message: @autoclosure () -> Logger.Message,
                        metadata: @autoclosure () -> Logger.Metadata? = nil,
@@ -399,15 +581,6 @@ extension Logger {
     }
 
     #else
-    @inlinable
-    public func notice(_ message: @autoclosure () -> Logger.Message,
-                       metadata: @autoclosure () -> Logger.Metadata? = nil,
-                       source: @autoclosure () -> String? = nil,
-                       file: String = #file, function: String = #function, line: UInt = #line) {
-        self.log(level: .notice, message(), metadata: metadata(), source: source(), file: file, function: function, line: line)
-    }
-    #endif
-
     /// Log a message passing with the ``Logger/Level/notice`` log level.
     ///
     /// If `.notice` is at least as severe as the `Logger`'s ``logLevel``, it will be logged,
@@ -426,7 +599,44 @@ extension Logger {
     ///                it defaults to `#function`).
     ///    - line: The line this log message originates from (there's usually no need to pass it explicitly as it
     ///            defaults to `#line`).
-    #if compiler(>=5.3)
+    @inlinable
+    public func notice(_ message: @autoclosure () -> Logger.Message,
+                       metadata: @autoclosure () -> Logger.Metadata? = nil,
+                       source: @autoclosure () -> String? = nil,
+                       file: String = #file, function: String = #function, line: UInt = #line) {
+        self.log(level: .notice, message(), metadata: metadata(), source: source(), file: file, function: function, line: line)
+    }
+    #endif
+
+    #if compiler(>=5.5) && canImport(_Concurrency)
+    @available(macOS 10.15, iOS 13.0, watchOS 6.0, tvOS 13.0, *)
+    @inlinable
+    public func notice(_ message: @autoclosure () -> Logger.Message,
+                       metadata: @autoclosure () -> Logger.Metadata? = nil,
+                       baggage: Baggage? = .current,
+                       file: String = #fileID, function: String = #function, line: UInt = #line) {
+        self.notice(message(), metadata: metadata(), baggage: baggage, source: nil, file: file, function: function, line: line)
+    }
+
+    #elseif compiler(>=5.3)
+    /// Log a message passing with the ``Logger/Level/notice`` log level.
+    ///
+    /// If `.notice` is at least as severe as the `Logger`'s ``logLevel``, it will be logged,
+    /// otherwise nothing will happen.
+    ///
+    /// - parameters:
+    ///    - message: The message to be logged. `message` can be used with any string interpolation literal.
+    ///    - metadata: One-off metadata to attach to this log message.
+    ///    - source: The source this log messages originates from. Defaults
+    ///              to the module emitting the log message (on Swift 5.3 or
+    ///              newer and the folder name containing the log emitting file on Swift 5.2 or
+    ///              older).
+    ///    - file: The file this log message originates from (there's usually no need to pass it explicitly as it
+    ///            defaults to `#fileID` (on Swift 5.3 or newer and `#file` on Swift 5.2 or older).
+    ///    - function: The function this log message originates from (there's usually no need to pass it explicitly as
+    ///                it defaults to `#function`).
+    ///    - line: The line this log message originates from (there's usually no need to pass it explicitly as it
+    ///            defaults to `#line`).
     @inlinable
     public func notice(_ message: @autoclosure () -> Logger.Message,
                        metadata: @autoclosure () -> Logger.Metadata? = nil,
@@ -435,6 +645,24 @@ extension Logger {
     }
 
     #else
+    /// Log a message passing with the ``Logger/Level/notice`` log level.
+    ///
+    /// If `.notice` is at least as severe as the `Logger`'s ``logLevel``, it will be logged,
+    /// otherwise nothing will happen.
+    ///
+    /// - parameters:
+    ///    - message: The message to be logged. `message` can be used with any string interpolation literal.
+    ///    - metadata: One-off metadata to attach to this log message.
+    ///    - source: The source this log messages originates from. Defaults
+    ///              to the module emitting the log message (on Swift 5.3 or
+    ///              newer and the folder name containing the log emitting file on Swift 5.2 or
+    ///              older).
+    ///    - file: The file this log message originates from (there's usually no need to pass it explicitly as it
+    ///            defaults to `#fileID` (on Swift 5.3 or newer and `#file` on Swift 5.2 or older).
+    ///    - function: The function this log message originates from (there's usually no need to pass it explicitly as
+    ///                it defaults to `#function`).
+    ///    - line: The line this log message originates from (there's usually no need to pass it explicitly as it
+    ///            defaults to `#line`).
     public func notice(_ message: @autoclosure () -> Logger.Message,
                        metadata: @autoclosure () -> Logger.Metadata? = nil,
                        file: String = #file, function: String = #function, line: UInt = #line) {
@@ -442,6 +670,18 @@ extension Logger {
     }
     #endif
 
+    #if compiler(>=5.5) && canImport(_Concurrency)
+    @available(macOS 10.15, iOS 13.0, watchOS 6.0, tvOS 13.0, *)
+    @inlinable
+    public func warning(_ message: @autoclosure () -> Logger.Message,
+                        metadata: @autoclosure () -> Logger.Metadata? = nil,
+                        baggage: Baggage? = .current,
+                        source: @autoclosure () -> String? = nil,
+                        file: String = #fileID, function: String = #function, line: UInt = #line) {
+        self.log(level: .warning, message(), metadata: metadata(), baggage: baggage, source: source(), file: file, function: function, line: line)
+    }
+
+    #elseif compiler(>=5.3)
     /// Log a message passing with the ``Logger/Level/warning`` log level.
     ///
     /// If `.warning` is at least as severe as the `Logger`'s ``logLevel``, it will be logged,
@@ -460,7 +700,6 @@ extension Logger {
     ///                it defaults to `#function`).
     ///    - line: The line this log message originates from (there's usually no need to pass it explicitly as it
     ///            defaults to `#line`).
-    #if compiler(>=5.3)
     @inlinable
     public func warning(_ message: @autoclosure () -> Logger.Message,
                         metadata: @autoclosure () -> Logger.Metadata? = nil,
@@ -470,6 +709,24 @@ extension Logger {
     }
 
     #else
+    /// Log a message passing with the ``Logger/Level/warning`` log level.
+    ///
+    /// If `.warning` is at least as severe as the `Logger`'s ``logLevel``, it will be logged,
+    /// otherwise nothing will happen.
+    ///
+    /// - parameters:
+    ///    - message: The message to be logged. `message` can be used with any string interpolation literal.
+    ///    - metadata: One-off metadata to attach to this log message.
+    ///    - source: The source this log messages originates from. Defaults
+    ///              to the module emitting the log message (on Swift 5.3 or
+    ///              newer and the folder name containing the log emitting file on Swift 5.2 or
+    ///              older).
+    ///    - file: The file this log message originates from (there's usually no need to pass it explicitly as it
+    ///            defaults to `#fileID` (on Swift 5.3 or newer and `#file` on Swift 5.2 or older).
+    ///    - function: The function this log message originates from (there's usually no need to pass it explicitly as
+    ///                it defaults to `#function`).
+    ///    - line: The line this log message originates from (there's usually no need to pass it explicitly as it
+    ///            defaults to `#line`).
     @inlinable
     public func warning(_ message: @autoclosure () -> Logger.Message,
                         metadata: @autoclosure () -> Logger.Metadata? = nil,
@@ -479,6 +736,17 @@ extension Logger {
     }
     #endif
 
+    #if compiler(>=5.5) && canImport(_Concurrency)
+    @available(macOS 10.15, iOS 13.0, watchOS 6.0, tvOS 13.0, *)
+    @inlinable
+    public func warning(_ message: @autoclosure () -> Logger.Message,
+                        metadata: @autoclosure () -> Logger.Metadata? = nil,
+                        baggage: Baggage? = .current,
+                        file: String = #fileID, function: String = #function, line: UInt = #line) {
+        self.warning(message(), metadata: metadata(), baggage: baggage, source: nil, file: file, function: function, line: line)
+    }
+
+    #elseif compiler(>=5.3)
     /// Log a message passing with the ``Logger/Level/warning`` log level.
     ///
     /// If `.warning` is at least as severe as the `Logger`'s ``logLevel``, it will be logged,
@@ -493,7 +761,6 @@ extension Logger {
     ///                it defaults to `#function`).
     ///    - line: The line this log message originates from (there's usually no need to pass it explicitly as it
     ///            defaults to `#line`).
-    #if compiler(>=5.3)
     @inlinable
     public func warning(_ message: @autoclosure () -> Logger.Message,
                         metadata: @autoclosure () -> Logger.Metadata? = nil,
@@ -502,6 +769,20 @@ extension Logger {
     }
 
     #else
+    /// Log a message passing with the ``Logger/Level/warning`` log level.
+    ///
+    /// If `.warning` is at least as severe as the `Logger`'s ``logLevel``, it will be logged,
+    /// otherwise nothing will happen.
+    ///
+    /// - parameters:
+    ///    - message: The message to be logged. `message` can be used with any string interpolation literal.
+    ///    - metadata: One-off metadata to attach to this log message.
+    ///    - file: The file this log message originates from (there's usually no need to pass it explicitly as it
+    ///            defaults to `#fileID` (on Swift 5.3 or newer and `#file` on Swift 5.2 or older).
+    ///    - function: The function this log message originates from (there's usually no need to pass it explicitly as
+    ///                it defaults to `#function`).
+    ///    - line: The line this log message originates from (there's usually no need to pass it explicitly as it
+    ///            defaults to `#line`).
     @inlinable
     public func warning(_ message: @autoclosure () -> Logger.Message,
                         metadata: @autoclosure () -> Logger.Metadata? = nil,
@@ -510,6 +791,18 @@ extension Logger {
     }
     #endif
 
+    #if compiler(>=5.5) && canImport(_Concurrency)
+    @available(macOS 10.15, iOS 13.0, watchOS 6.0, tvOS 13.0, *)
+    @inlinable
+    public func error(_ message: @autoclosure () -> Logger.Message,
+                      metadata: @autoclosure () -> Logger.Metadata? = nil,
+                      baggage: Baggage? = .current,
+                      source: @autoclosure () -> String? = nil,
+                      file: String = #fileID, function: String = #function, line: UInt = #line) {
+        self.log(level: .error, message(), metadata: metadata(), baggage: baggage, source: source(), file: file, function: function, line: line)
+    }
+
+    #elseif compiler(>=5.3)
     /// Log a message passing with the ``Logger/Level/error`` log level.
     ///
     /// If `.error` is at least as severe as the `Logger`'s ``logLevel``, it will be logged,
@@ -528,7 +821,6 @@ extension Logger {
     ///                it defaults to `#function`).
     ///    - line: The line this log message originates from (there's usually no need to pass it explicitly as it
     ///            defaults to `#line`).
-    #if compiler(>=5.3)
     @inlinable
     public func error(_ message: @autoclosure () -> Logger.Message,
                       metadata: @autoclosure () -> Logger.Metadata? = nil,
@@ -538,6 +830,24 @@ extension Logger {
     }
 
     #else
+    /// Log a message passing with the ``Logger/Level/error`` log level.
+    ///
+    /// If `.error` is at least as severe as the `Logger`'s ``logLevel``, it will be logged,
+    /// otherwise nothing will happen.
+    ///
+    /// - parameters:
+    ///    - message: The message to be logged. `message` can be used with any string interpolation literal.
+    ///    - metadata: One-off metadata to attach to this log message.
+    ///    - source: The source this log messages originates from. Defaults
+    ///              to the module emitting the log message (on Swift 5.3 or
+    ///              newer and the folder name containing the log emitting file on Swift 5.2 or
+    ///              older).
+    ///    - file: The file this log message originates from (there's usually no need to pass it explicitly as it
+    ///            defaults to `#fileID` (on Swift 5.3 or newer and `#file` on Swift 5.2 or older).
+    ///    - function: The function this log message originates from (there's usually no need to pass it explicitly as
+    ///                it defaults to `#function`).
+    ///    - line: The line this log message originates from (there's usually no need to pass it explicitly as it
+    ///            defaults to `#line`).
     @inlinable
     public func error(_ message: @autoclosure () -> Logger.Message,
                       metadata: @autoclosure () -> Logger.Metadata? = nil,
@@ -547,6 +857,17 @@ extension Logger {
     }
     #endif
 
+    #if compiler(>=5.5) && canImport(_Concurrency)
+    @available(macOS 10.15, iOS 13.0, watchOS 6.0, tvOS 13.0, *)
+    @inlinable
+    public func error(_ message: @autoclosure () -> Logger.Message,
+                      metadata: @autoclosure () -> Logger.Metadata? = nil,
+                      baggage: Baggage? = .current,
+                      file: String = #fileID, function: String = #function, line: UInt = #line) {
+        self.error(message(), metadata: metadata(), baggage: baggage, source: nil, file: file, function: function, line: line)
+    }
+
+    #elseif compiler(>=5.3)
     /// Log a message passing with the ``Logger/Level/error`` log level.
     ///
     /// If `.error` is at least as severe as the `Logger`'s ``logLevel``, it will be logged,
@@ -561,7 +882,6 @@ extension Logger {
     ///                it defaults to `#function`).
     ///    - line: The line this log message originates from (there's usually no need to pass it explicitly as it
     ///            defaults to `#line`).
-    #if compiler(>=5.3)
     @inlinable
     public func error(_ message: @autoclosure () -> Logger.Message,
                       metadata: @autoclosure () -> Logger.Metadata? = nil,
@@ -570,6 +890,20 @@ extension Logger {
     }
 
     #else
+    /// Log a message passing with the ``Logger/Level/error`` log level.
+    ///
+    /// If `.error` is at least as severe as the `Logger`'s ``logLevel``, it will be logged,
+    /// otherwise nothing will happen.
+    ///
+    /// - parameters:
+    ///    - message: The message to be logged. `message` can be used with any string interpolation literal.
+    ///    - metadata: One-off metadata to attach to this log message.
+    ///    - file: The file this log message originates from (there's usually no need to pass it explicitly as it
+    ///            defaults to `#fileID` (on Swift 5.3 or newer and `#file` on Swift 5.2 or older).
+    ///    - function: The function this log message originates from (there's usually no need to pass it explicitly as
+    ///                it defaults to `#function`).
+    ///    - line: The line this log message originates from (there's usually no need to pass it explicitly as it
+    ///            defaults to `#line`).
     @inlinable
     public func error(_ message: @autoclosure () -> Logger.Message,
                       metadata: @autoclosure () -> Logger.Metadata? = nil,
@@ -578,6 +912,18 @@ extension Logger {
     }
     #endif
 
+    #if compiler(>=5.5) && canImport(_Concurrency)
+    @available(macOS 10.15, iOS 13.0, watchOS 6.0, tvOS 13.0, *)
+    @inlinable
+    public func critical(_ message: @autoclosure () -> Logger.Message,
+                         metadata: @autoclosure () -> Logger.Metadata? = nil,
+                         baggage: Baggage? = .current,
+                         source: @autoclosure () -> String? = nil,
+                         file: String = #fileID, function: String = #function, line: UInt = #line) {
+        self.log(level: .critical, message(), metadata: metadata(), baggage: baggage, source: source(), file: file, function: function, line: line)
+    }
+
+    #elseif compiler(>=5.3)
     /// Log a message passing with the ``Logger/Level/critical`` log level.
     ///
     /// `.critical` messages will always be logged.
@@ -595,7 +941,6 @@ extension Logger {
     ///                it defaults to `#function`).
     ///    - line: The line this log message originates from (there's usually no need to pass it explicitly as it
     ///            defaults to `#line`).
-    #if compiler(>=5.3)
     @inlinable
     public func critical(_ message: @autoclosure () -> Logger.Message,
                          metadata: @autoclosure () -> Logger.Metadata? = nil,
@@ -605,6 +950,23 @@ extension Logger {
     }
 
     #else
+    /// Log a message passing with the ``Logger/Level/critical`` log level.
+    ///
+    /// `.critical` messages will always be logged.
+    ///
+    /// - parameters:
+    ///    - message: The message to be logged. `message` can be used with any string interpolation literal.
+    ///    - metadata: One-off metadata to attach to this log message.
+    ///    - source: The source this log messages originates from. Defaults
+    ///              to the module emitting the log message (on Swift 5.3 or
+    ///              newer and the folder name containing the log emitting file on Swift 5.2 or
+    ///              older).
+    ///    - file: The file this log message originates from (there's usually no need to pass it explicitly as it
+    ///            defaults to `#fileID` (on Swift 5.3 or newer and `#file` on Swift 5.2 or older).
+    ///    - function: The function this log message originates from (there's usually no need to pass it explicitly as
+    ///                it defaults to `#function`).
+    ///    - line: The line this log message originates from (there's usually no need to pass it explicitly as it
+    ///            defaults to `#line`).
     @inlinable
     public func critical(_ message: @autoclosure () -> Logger.Message,
                          metadata: @autoclosure () -> Logger.Metadata? = nil,
@@ -614,6 +976,17 @@ extension Logger {
     }
     #endif
 
+    #if compiler(>=5.5) && canImport(_Concurrency)
+    @available(macOS 10.15, iOS 13.0, watchOS 6.0, tvOS 13.0, *)
+    @inlinable
+    public func critical(_ message: @autoclosure () -> Logger.Message,
+                         metadata: @autoclosure () -> Logger.Metadata? = nil,
+                         baggage: Baggage? = .current,
+                         file: String = #fileID, function: String = #function, line: UInt = #line) {
+        self.critical(message(), metadata: metadata(), baggage: baggage, source: nil, file: file, function: function, line: line)
+    }
+
+    #elseif compiler(>=5.3)
     /// Log a message passing with the ``Logger/Level/critical`` log level.
     ///
     /// `.critical` messages will always be logged.
@@ -631,7 +1004,6 @@ extension Logger {
     ///                it defaults to `#function`).
     ///    - line: The line this log message originates from (there's usually no need to pass it explicitly as it
     ///            defaults to `#line`).
-    #if compiler(>=5.3)
     @inlinable
     public func critical(_ message: @autoclosure () -> Logger.Message,
                          metadata: @autoclosure () -> Logger.Metadata? = nil,
@@ -640,6 +1012,23 @@ extension Logger {
     }
 
     #else
+    /// Log a message passing with the ``Logger/Level/critical`` log level.
+    ///
+    /// `.critical` messages will always be logged.
+    ///
+    /// - parameters:
+    ///    - message: The message to be logged. `message` can be used with any string interpolation literal.
+    ///    - metadata: One-off metadata to attach to this log message.
+    ///    - source: The source this log messages originates from. Defaults
+    ///              to the module emitting the log message (on Swift 5.3 or
+    ///              newer and the folder name containing the log emitting file on Swift 5.2 or
+    ///              older).
+    ///    - file: The file this log message originates from (there's usually no need to pass it explicitly as it
+    ///            defaults to `#fileID` (on Swift 5.3 or newer and `#file` on Swift 5.2 or older).
+    ///    - function: The function this log message originates from (there's usually no need to pass it explicitly as
+    ///                it defaults to `#function`).
+    ///    - line: The line this log message originates from (there's usually no need to pass it explicitly as it
+    ///            defaults to `#line`).
     @inlinable
     public func critical(_ message: @autoclosure () -> Logger.Message,
                          metadata: @autoclosure () -> Logger.Metadata? = nil,
@@ -785,8 +1174,9 @@ extension Logger {
     ///
     /// - parameters:
     ///     - label: An identifier for the creator of a `Logger`.
-    public init(label: String) {
-        self.init(label: label, LoggingSystem.factory(label))
+    ///     - metadataProvider: A function that turns `Baggage` into `Metadata`, defaults to nil.
+    public init(label: String, metadataProvider: (@Sendable (Baggage?) -> Metadata?)? = nil) {
+        self.init(label: label, LoggingSystem.factory(label), metadataProvider: metadataProvider)
     }
 
     /// Construct a `Logger` given a `label` identifying the creator of the `Logger` or a non-standard `LogHandler`.
@@ -800,8 +1190,11 @@ extension Logger {
     /// - parameters:
     ///     - label: An identifier for the creator of a `Logger`.
     ///     - factory: A closure creating non-standard `LogHandler`s.
-    public init(label: String, factory: (String) -> LogHandler) {
-        self = Logger(label: label, factory(label))
+    ///     - metadataProvider: A function that turns `Baggage` into `Metadata`, defaults to nil.
+    public init(label: String,
+                factory: (String) -> LogHandler,
+                metadataProvider: (@Sendable (Baggage?) -> Metadata?)? = nil) {
+        self = Logger(label: label, factory(label), metadataProvider: metadataProvider)
     }
 }
 
