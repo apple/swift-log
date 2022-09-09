@@ -40,7 +40,7 @@ extension LoggingTest {
             ("testAllLogLevelsExceptCriticalCanBeBlocked", testAllLogLevelsExceptCriticalCanBeBlocked),
             ("testAllLogLevelsWork", testAllLogLevelsWork),
             ("testAllLogLevelByFunctionRefWithSource", testAllLogLevelByFunctionRefWithSource),
-            ("testAllLogLevelByFunctionRefWithoutSource", testAllLogLevelByFunctionRefWithoutSource),
+//            ("testAllLogLevelByFunctionRefWithoutSource", testAllLogLevelByFunctionRefWithoutSource),
             ("testLogsEmittedFromSubdirectoryGetCorrectModuleInNewerSwifts", testLogsEmittedFromSubdirectoryGetCorrectModuleInNewerSwifts),
             ("testLogMessageWithStringInterpolation", testLogMessageWithStringInterpolation),
             ("testLoggingAString", testLoggingAString),
