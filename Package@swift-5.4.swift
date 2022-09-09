@@ -20,10 +20,15 @@ let package = Package(
     products: [
         .library(name: "Logging", targets: ["Logging"]),
     ],
+    dependencies: [
+        .package(url: "https://github.com/apple/swift-distributed-tracing-baggage", from: "0.3.0"),
+    ],
     targets: [
         .target(
             name: "Logging",
-            dependencies: []
+            dependencies: [
+                .product(name: "InstrumentationBaggage", package: "swift-distributed-tracing-baggage"),
+            ]
         ),
         .testTarget(
             name: "LoggingTests",
