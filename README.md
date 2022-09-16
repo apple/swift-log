@@ -157,7 +157,7 @@ A `LogHandler` or logging backend implementation is anything that conforms to th
 
 ```swift
 public protocol LogHandler {
-    func log(level: Logger.Level, message: Logger.Message, metadata: Logger.Metadata?, file: String, function: String, line: UInt)
+    func log(level: Logger.Level, message: Logger.Message, metadata: Logger.Metadata?, source: String, file: String, function: String, line: UInt)
 
     subscript(metadataKey _: String) -> Logger.Metadata.Value? { get set }
 
