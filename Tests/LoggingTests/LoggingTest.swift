@@ -418,21 +418,21 @@ class LoggingTest: XCTestCase {
         var logger = Logger(label: "\(#function)")
         logger.logLevel = .trace
 
-        let trace = logger.trace(_:metadata:baggage:source:file:function:line:)
-        let debug = logger.debug(_:metadata:baggage:source:file:function:line:)
-        let info = logger.info(_:metadata:baggage:source:file:function:line:)
-        let notice = logger.notice(_:metadata:baggage:source:file:function:line:)
-        let warning = logger.warning(_:metadata:baggage:source:file:function:line:)
-        let error = logger.error(_:metadata:baggage:source:file:function:line:)
-        let critical = logger.critical(_:metadata:baggage:source:file:function:line:)
+        let trace = logger.trace(_:metadata:source:file:function:line:)
+        let debug = logger.debug(_:metadata:source:file:function:line:)
+        let info = logger.info(_:metadata:source:file:function:line:)
+        let notice = logger.notice(_:metadata:source:file:function:line:)
+        let warning = logger.warning(_:metadata:source:file:function:line:)
+        let error = logger.error(_:metadata:source:file:function:line:)
+        let critical = logger.critical(_:metadata:source:file:function:line:)
 
-        trace("yes: trace", [:], nil, "foo", #file, #function, #line)
-        debug("yes: debug", [:], nil, "foo", #file, #function, #line)
-        info("yes: info", [:], nil, "foo", #file, #function, #line)
-        notice("yes: notice", [:], nil, "foo", #file, #function, #line)
-        warning("yes: warning", [:], nil, "foo", #file, #function, #line)
-        error("yes: error", [:], nil, "foo", #file, #function, #line)
-        critical("yes: critical", [:], nil, "foo", #file, #function, #line)
+        trace("yes: trace", [:], "foo", #file, #function, #line)
+        debug("yes: debug", [:], "foo", #file, #function, #line)
+        info("yes: info", [:], "foo", #file, #function, #line)
+        notice("yes: notice", [:], "foo", #file, #function, #line)
+        warning("yes: warning", [:], "foo", #file, #function, #line)
+        error("yes: error", [:], "foo", #file, #function, #line)
+        critical("yes: critical", [:], "foo", #file, #function, #line)
 
         testLogging.history.assertExist(level: .trace, message: "yes: trace", source: "foo")
         testLogging.history.assertExist(level: .debug, message: "yes: debug", source: "foo")
@@ -538,6 +538,7 @@ class LoggingTest: XCTestCase {
         testLogging.history.assertExist(level: .debug, message: "hello world!")
     }
 
+    @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
     func testLoggingWithMetadataProviderMergesOneOffMetadata() throws {
         let logging = TestLogging()
         LoggingSystem.bootstrapInternal(logging.make)
@@ -552,7 +553,10 @@ class LoggingTest: XCTestCase {
 
         var baggage = Baggage.topLevel
         baggage[TestIDKey.self] = "42"
-        logger.log(level: .info, "test", metadata: ["one-off": "42"], baggage: baggage)
+
+        Baggage.$current.withValue(baggage) {
+            logger.log(level: .info, "test", metadata: ["one-off": "42"])
+        }
 
         logging.history.assertExist(level: .info, message: "test", metadata: ["one-off": "42", "provider": "42"])
 
@@ -561,6 +565,7 @@ class LoggingTest: XCTestCase {
         }
     }
 
+    @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
     func testLoggingWithMetadataProviderPrefersOneOffMetadataOverProviderMetadata() throws {
         let logging = TestLogging()
         LoggingSystem.bootstrapInternal(logging.make)
@@ -572,7 +577,9 @@ class LoggingTest: XCTestCase {
             ]
         })
 
-        logger.log(level: .info, "test", metadata: ["one-off": "42", "common": "one-off"], baggage: .topLevel)
+        Baggage.$current.withValue(.topLevel) {
+            logger.log(level: .info, "test", metadata: ["one-off": "42", "common": "one-off"])
+        }
 
         logging.history.assertExist(level: .info,
                                     message: "test",
@@ -583,7 +590,6 @@ class LoggingTest: XCTestCase {
         }
     }
 
-    #if compiler(>=5.5) && canImport(_Concurrency)
     @available(macOS 10.15, iOS 13.0, watchOS 6.0, tvOS 13.0, *)
     func testLoggingDefaultsToTaskLocalBaggage() throws {
         let logging = TestLogging()
@@ -622,7 +628,6 @@ class LoggingTest: XCTestCase {
             typealias Value = String
         }
     }
-    #endif
 
     func testMultiplexerIsValue() {
         let multi = MultiplexLogHandler([StreamLogHandler.standardOutput(label: "x"), StreamLogHandler.standardOutput(label: "y")])
