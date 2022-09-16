@@ -21,7 +21,7 @@ This comes with a couple of downsides:
 
 ### Error-prone and repetetive
 
-It's easy to forget passing this metadata to _all_ log statements, resulting in an inconsistent debugging experience leading to log statements, resulting in log statements which cannot be found using correlation IDs.
+It's easy to forget passing this metadata to _all_ log statements, resulting in an inconsistent debugging experience as these log statements cannot be found using correlation IDs.
 
 The repetetiveness and verboseness of logging multiple metadata in-line quickly becomes annoying and vastly decreases the signal-to-noise ratio of Swift code trying to be a good citizen and making use of log correlation techniques such as distributed tracing.
 
@@ -73,7 +73,7 @@ log.provideMetadata { baggage in
 }
 ```
 
-Once a metadata providers have been set up, they will be invoked when a log statement is about to be emitted.
+Once metadata providers have been set up, they will be invoked when a log statement is about to be emitted.
 Multiple metadata providers may be configured, and they are invoked in registration order.
 
 Next, when a log statement is about to be emitted, the logger will obtain the task-local `Baggage.current`, 
@@ -96,11 +96,11 @@ func test() {
 
 We propose that swift-log should use [Swift Distributed Tracing Baggage](https://github.com/apple/swift-distributed-tracing-baggage) for its contextual metadata propagation type, meaning that swift-log would depend on this package.
 
-The `Baggage` type is modeled after the [Propagation format for distributed context: Baggage](https://www.w3.org/TR/baggage/), a W3C working draft, and is intended for all kinds of instrumentation of Swift applications both within and across processes. It is also used by [Swift Distributed Tracing](https://github.com/apple/swift-distributed-tracing-baggage), however it is usable even without tracing infrastructure. The baggage package contains the single `Baggage` type, and is expected to have a stable, unchanging API, fit for swift-log to depend upon.
+The `Baggage` type is modeled after the [Propagation format for distributed context: Baggage](https://www.w3.org/TR/baggage/), a W3C working draft, and is intended for all kinds of instrumentation of Swift applications both within and across processes. It is also used by [Swift Distributed Tracing](https://github.com/apple/swift-distributed-tracing), however it is usable even without tracing infrastructure. The baggage package contains the single `Baggage` type, and is expected to have a stable, unchanging API, fit for swift-log to depend upon.
 
-> NOTE: We could potentially even rename the baggage package, if the tracing wording in it is causing confusion here. But realistically, this is its primary purpose: to enable tracing in logging systems, so we think swift-log dependin on `swift-distributed-tracing-baggage` is fine.
+> NOTE: We could potentially even rename the baggage package, if the tracing wording in it is causing confusion here. But realistically, this is its primary purpose: to enable tracing in logging systems, so we think swift-log depending on `swift-distributed-tracing-baggage` is fine.
 
-To start using contextual metadata, end-users configure a metadata provider on the entire logging on a specific `Logger` via a new initializer parameter:
+To start using contextual metadata, end-users configure a metadata provider on the entire logging system or on a specific `Logger` via a new initializer parameter:
 
 ```swift
 let logger = Logger(label: "example", metadataProvider: { baggage in
@@ -183,7 +183,7 @@ Baggage.$current.withValue(baggage) {
 This has the advantage of not having to specify the global metadata explicitly anymore. 
 
 The task-local baggage is often going to be set by e.g. tracing libraries or frameworks, so end-users do not need to do anything to benefit from tracing,
-other than setting up the metadata providers when they bootstrap their logging and tracing systems. For example, assuming some imaginary http framework where http requests are forwarded to an actor for handling, all the end-users of this framework would to to benefit from contextual metadata, propagated with baggage is log, as usual:
+other than setting up the metadata providers when they bootstrap their logging and tracing systems. For example, assuming some imaginary http framework where http requests are forwarded to an actor for handling, all the end-users of this framework would benefit from contextual metadata, propagated with baggage by logging, as usual:
 
 ```swift
 actor MyHTTPHandler { 
@@ -200,7 +200,7 @@ the values are stored inside the task-local `Baggage`.
 
 ### Using Baggage in callback APIs
 
-Many libraries which provide a `async` APIs, are implemented on top of Swift NIO, or other callback-heavy libraries (e.g. when wrapping existing non-async database libraries or similar). 
+Many libraries which provide `async` APIs, are implemented on top of Swift NIO, or other callback-heavy libraries (e.g. when wrapping existing non-async database libraries or similar). 
 
 The proposed API must work well with such libraries, in the sense that a metadata provider configured by an end-user, should still be useful in such libraries where setting a Task-local baggage is either impossible, or very weird (continiously wrapping every call into "restoring" the current baggage upon every re-entry from a callback).
 
@@ -208,7 +208,7 @@ We propose the following strategy for such libraries:
 
 - entry points into such libraries should assume the presence of task-local `Baggage`
   - this is the same as with tracing -- e.g. a `startWork()` method, does not need to accept a baggage parameter, but simply query `Baggage.current` if in need of any contextual metadata.
-- when the library is forced to exit the world of structured concurrency wheretask-locals work well `*`, they should _get and store_ the current baggage from the user's calling context, e.g. by storing it in a state machine driving class, handler, or actor: `self.baggage = Baggage.current`
+- when the library is forced to exit the world of structured concurrency where task-locals work well `*`, they should _get and store_ the current baggage from the user's calling context, e.g. by storing it in a state machine driving class, handler, or actor: `self.baggage = Baggage.current`
   - `*` situations where task-local baggage just works include: plain synchronous methods, asynchronous methods, as all forms of structured concurrency (async lets and task groups), as well as un-structured (but _not_ detached) tasks (created by calling `Task { ... }`).
 - the libraries are then free to continue using their callback or delegate-style APIs, and whenever needing to log or restore the baggage they can, either:
   - explicitly pass it to a logger: `log.info("Request finished", metadata: [...], baggage: self.baggage)`
@@ -238,5 +238,5 @@ Baggage is designed for use cases like distributed tracing, or similar instrumen
 Specifically in logging, this means that _every_ call site for _every_ log statement would have to pass it explicitly resulting in annoying noisy code:
 
 ```swift
-log.info
+log.info("example", baggage: baggage)
 ```
