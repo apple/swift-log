@@ -543,7 +543,7 @@ class LoggingTest: XCTestCase {
         let logging = TestLogging()
         LoggingSystem.bootstrapInternal(logging.make)
 
-        let logger = Logger(label: #function, metadataProvider: { baggage in
+        let logger = Logger(label: #function, metadataProvider: .init { baggage in
             guard let baggage = baggage, let testID = baggage[TestIDKey.self] else {
                 XCTFail("Expected Baggage to be passed along to the metadata provider.")
                 return nil
@@ -570,7 +570,7 @@ class LoggingTest: XCTestCase {
         let logging = TestLogging()
         LoggingSystem.bootstrapInternal(logging.make)
 
-        let logger = Logger(label: #function, metadataProvider: { _ in
+        let logger = Logger(label: #function, metadataProvider: .init { _ in
             return [
                 "common": "provider",
                 "provider": "42",
@@ -595,7 +595,7 @@ class LoggingTest: XCTestCase {
         let logging = TestLogging()
         LoggingSystem.bootstrapInternal(logging.make)
 
-        var logger = Logger(label: #function, metadataProvider: { baggage in
+        var logger = Logger(label: #function, metadataProvider: .init { baggage in
             guard let baggage = baggage, let testID = baggage[TestIDKey.self] else {
                 XCTFail("Expected Baggage to be passed along to the metadata provider.")
                 return nil
@@ -627,6 +627,21 @@ class LoggingTest: XCTestCase {
         enum TestIDKey: BaggageKey {
             typealias Value = String
         }
+    }
+
+    func testMultiplexMetadataProviderMergesInSpecifiedOrder() {
+        let logging = TestLogging()
+        LoggingSystem.bootstrapInternal(logging.make)
+
+        let providerA = Logger.MetadataProvider { _ in ["provider": "a", "a": "foo"] }
+        let providerB = Logger.MetadataProvider { _ in ["provider": "b", "b": "bar"] }
+        let logger = Logger(label: #function, metadataProvider: .multiplex([providerA, providerB]))
+
+        logger.log(level: .info, "test", metadata: ["one-off": "42"])
+
+        logging.history.assertExist(level: .info,
+                                    message: "test",
+                                    metadata: ["provider": "b", "a": "foo", "b": "bar", "one-off": "42"])
     }
 
     func testMultiplexerIsValue() {
