@@ -80,20 +80,27 @@ extension Logger {
     public func log(level: Logger.Level,
                     _ message: @autoclosure () -> Logger.Message,
                     metadata: @autoclosure () -> Logger.Metadata? = nil,
+                    baggage: Baggage? = nil,
                     source: @autoclosure () -> String? = nil,
                     file: String = #fileID, function: String = #function, line: UInt = #line) {
         if self.logLevel <= level {
-            let baggage: Baggage?
-            #if compiler(>=5.5) && canImport(_Concurrency)
-            if #available(macOS 10.15, iOS 13.0, watchOS 6.0, tvOS 13.0, *), self.metadataProvider != nil {
-                baggage = Baggage.current
-            } else {
-                baggage = nil
-            }
-            #else
-            baggage = nil
-            #endif
-            let providerMetadata = metadataProvider?.metadata(baggage)
+            let effectiveBaggage: Baggage? = {
+                guard baggage == nil else { return baggage }
+
+                let taskLocalBaggage: Baggage?
+                #if compiler(>=5.5) && canImport(_Concurrency)
+                if #available(macOS 10.15, iOS 13.0, watchOS 6.0, tvOS 13.0, *), self.metadataProvider != nil {
+                    taskLocalBaggage = Baggage.current
+                } else {
+                    taskLocalBaggage = nil
+                }
+                #else
+                taskLocalBaggage = nil
+                #endif
+
+                return taskLocalBaggage
+            }()
+            let providerMetadata = metadataProvider?.metadata(effectiveBaggage)
             let metadata: Metadata? = {
                 guard let metadata = metadata(), !metadata.isEmpty else { return providerMetadata }
                 guard let providerMetadata = providerMetadata else { return metadata }
@@ -199,6 +206,7 @@ extension Logger {
     /// - parameters:
     ///    - message: The message to be logged. `message` can be used with any string interpolation literal.
     ///    - metadata: One-off metadata to attach to this log message
+    ///    - baggage: `Baggage` containing propagated runtime-generated metadata.
     ///    - source: The source this log messages originates from. Defaults
     ///              to the module emitting the log message (on Swift 5.3 or
     ///              newer and the folder name containing the log emitting file on Swift 5.2 or
@@ -213,18 +221,20 @@ extension Logger {
     @inlinable
     public func trace(_ message: @autoclosure () -> Logger.Message,
                       metadata: @autoclosure () -> Logger.Metadata? = nil,
+                      baggage: Baggage? = nil,
                       source: @autoclosure () -> String? = nil,
                       file: String = #fileID, function: String = #function, line: UInt = #line) {
-        self.log(level: .trace, message(), metadata: metadata(), source: source(), file: file, function: function, line: line)
+        self.log(level: .trace, message(), metadata: metadata(), baggage: baggage, source: source(), file: file, function: function, line: line)
     }
 
     #else
     @inlinable
     public func trace(_ message: @autoclosure () -> Logger.Message,
                       metadata: @autoclosure () -> Logger.Metadata? = nil,
+                      baggage: Baggage? = nil,
                       source: @autoclosure () -> String? = nil,
                       file: String = #file, function: String = #function, line: UInt = #line) {
-        self.log(level: .trace, message(), metadata: metadata(), source: source(), file: file, function: function, line: line)
+        self.log(level: .trace, message(), metadata: metadata(), baggage: baggage, source: source(), file: file, function: function, line: line)
     }
     #endif
 
@@ -236,6 +246,7 @@ extension Logger {
     /// - parameters:
     ///    - message: The message to be logged. `message` can be used with any string interpolation literal.
     ///    - metadata: One-off metadata to attach to this log message
+    ///    - baggage: `Baggage` containing propagated runtime-generated metadata.
     ///    - file: The file this log message originates from (there's usually no need to pass it explicitly as it
     ///            defaults to `#fileID` (on Swift 5.3 or newer and `#file` on Swift 5.2 or older).
     ///    - function: The function this log message originates from (there's usually no need to pass it explicitly as
@@ -246,16 +257,18 @@ extension Logger {
     @inlinable
     public func trace(_ message: @autoclosure () -> Logger.Message,
                       metadata: @autoclosure () -> Logger.Metadata? = nil,
+                      baggage: Baggage? = nil,
                       file: String = #fileID, function: String = #function, line: UInt = #line) {
-        self.trace(message(), metadata: metadata(), source: nil, file: file, function: function, line: line)
+        self.trace(message(), metadata: metadata(), baggage: baggage, source: nil, file: file, function: function, line: line)
     }
 
     #else
     @inlinable
     public func trace(_ message: @autoclosure () -> Logger.Message,
                       metadata: @autoclosure () -> Logger.Metadata? = nil,
+                      baggage: Baggage? = nil,
                       file: String = #file, function: String = #function, line: UInt = #line) {
-        self.trace(message(), metadata: metadata(), source: nil, file: file, function: function, line: line)
+        self.trace(message(), metadata: metadata(), baggage: baggage, source: nil, file: file, function: function, line: line)
     }
     #endif
 
@@ -267,6 +280,7 @@ extension Logger {
     /// - parameters:
     ///    - message: The message to be logged. `message` can be used with any string interpolation literal.
     ///    - metadata: One-off metadata to attach to this log message.
+    ///    - baggage: `Baggage` containing propagated runtime-generated metadata.
     ///    - source: The source this log messages originates from. Defaults
     ///              to the module emitting the log message (on Swift 5.3 or
     ///              newer and the folder name containing the log emitting file on Swift 5.2 or
@@ -281,17 +295,19 @@ extension Logger {
     @inlinable
     public func debug(_ message: @autoclosure () -> Logger.Message,
                       metadata: @autoclosure () -> Logger.Metadata? = nil,
+                      baggage: Baggage? = nil,
                       source: @autoclosure () -> String? = nil,
                       file: String = #fileID, function: String = #function, line: UInt = #line) {
-        self.log(level: .debug, message(), metadata: metadata(), source: source(), file: file, function: function, line: line)
+        self.log(level: .debug, message(), metadata: metadata(), baggage: baggage, source: source(), file: file, function: function, line: line)
     }
 
     #else
     public func debug(_ message: @autoclosure () -> Logger.Message,
                       metadata: @autoclosure () -> Logger.Metadata? = nil,
+                      baggage: Baggage? = nil,
                       source: @autoclosure () -> String? = nil,
                       file: String = #file, function: String = #function, line: UInt = #line) {
-        self.log(level: .debug, message(), metadata: metadata(), source: source(), file: file, function: function, line: line)
+        self.log(level: .debug, message(), metadata: metadata(), baggage: baggage, source: source(), file: file, function: function, line: line)
     }
     #endif
 
@@ -303,6 +319,7 @@ extension Logger {
     /// - parameters:
     ///    - message: The message to be logged. `message` can be used with any string interpolation literal.
     ///    - metadata: One-off metadata to attach to this log message.
+    ///    - baggage: `Baggage` containing propagated runtime-generated metadata.
     ///    - file: The file this log message originates from (there's usually no need to pass it explicitly as it
     ///            defaults to `#fileID` (on Swift 5.3 or newer and `#file` on Swift 5.2 or older).
     ///    - function: The function this log message originates from (there's usually no need to pass it explicitly as
@@ -313,16 +330,18 @@ extension Logger {
     @inlinable
     public func debug(_ message: @autoclosure () -> Logger.Message,
                       metadata: @autoclosure () -> Logger.Metadata? = nil,
+                      baggage: Baggage? = nil,
                       file: String = #fileID, function: String = #function, line: UInt = #line) {
-        self.debug(message(), metadata: metadata(), source: nil, file: file, function: function, line: line)
+        self.debug(message(), metadata: metadata(), baggage: baggage, source: nil, file: file, function: function, line: line)
     }
 
     #else
     @inlinable
     public func debug(_ message: @autoclosure () -> Logger.Message,
                       metadata: @autoclosure () -> Logger.Metadata? = nil,
+                      baggage: Baggage? = nil,
                       file: String = #file, function: String = #function, line: UInt = #line) {
-        self.debug(message(), metadata: metadata(), source: nil, file: file, function: function, line: line)
+        self.debug(message(), metadata: metadata(), baggage: baggage, source: nil, file: file, function: function, line: line)
     }
     #endif
 
@@ -334,10 +353,12 @@ extension Logger {
     /// - parameters:
     ///    - message: The message to be logged. `message` can be used with any string interpolation literal.
     ///    - metadata: One-off metadata to attach to this log message.
+    ///    - baggage: `Baggage` containing propagated runtime-generated metadata.
     ///    - source: The source this log messages originates from. Defaults
     ///              to the module emitting the log message (on Swift 5.3 or
     ///              newer and the folder name containing the log emitting file on Swift 5.2 or
     ///              older).
+    ///    - baggage: Baggage.
     ///    - file: The file this log message originates from (there's usually no need to pass it explicitly as it
     ///            defaults to `#fileID` (on Swift 5.3 or newer and `#file` on Swift 5.2 or older).
     ///    - function: The function this log message originates from (there's usually no need to pass it explicitly as
@@ -348,18 +369,20 @@ extension Logger {
     @inlinable
     public func info(_ message: @autoclosure () -> Logger.Message,
                      metadata: @autoclosure () -> Logger.Metadata? = nil,
+                     baggage: Baggage? = nil,
                      source: @autoclosure () -> String? = nil,
                      file: String = #fileID, function: String = #function, line: UInt = #line) {
-        self.log(level: .info, message(), metadata: metadata(), source: source(), file: file, function: function, line: line)
+        self.log(level: .info, message(), metadata: metadata(), baggage: baggage, source: source(), file: file, function: function, line: line)
     }
 
     #else
     @inlinable
     public func info(_ message: @autoclosure () -> Logger.Message,
                      metadata: @autoclosure () -> Logger.Metadata? = nil,
+                     baggage: Baggage? = nil,
                      source: @autoclosure () -> String? = nil,
                      file: String = #file, function: String = #function, line: UInt = #line) {
-        self.log(level: .info, message(), metadata: metadata(), source: source(), file: file, function: function, line: line)
+        self.log(level: .info, message(), metadata: metadata(), baggage: baggage, source: source(), file: file, function: function, line: line)
     }
     #endif
 
@@ -371,6 +394,7 @@ extension Logger {
     /// - parameters:
     ///    - message: The message to be logged. `message` can be used with any string interpolation literal.
     ///    - metadata: One-off metadata to attach to this log message.
+    ///    - baggage: `Baggage` containing propagated runtime-generated metadata.
     ///    - file: The file this log message originates from (there's usually no need to pass it explicitly as it
     ///            defaults to `#fileID` (on Swift 5.3 or newer and `#file` on Swift 5.2 or older).
     ///    - function: The function this log message originates from (there's usually no need to pass it explicitly as
@@ -381,16 +405,18 @@ extension Logger {
     @inlinable
     public func info(_ message: @autoclosure () -> Logger.Message,
                      metadata: @autoclosure () -> Logger.Metadata? = nil,
+                     baggage: Baggage? = nil,
                      file: String = #fileID, function: String = #function, line: UInt = #line) {
-        self.info(message(), metadata: metadata(), source: nil, file: file, function: function, line: line)
+        self.info(message(), metadata: metadata(), baggage: baggage, source: nil, file: file, function: function, line: line)
     }
 
     #else
     @inlinable
     public func info(_ message: @autoclosure () -> Logger.Message,
                      metadata: @autoclosure () -> Logger.Metadata? = nil,
+                     baggage: Baggage? = nil,
                      file: String = #file, function: String = #function, line: UInt = #line) {
-        self.info(message(), metadata: metadata(), source: nil, file: file, function: function, line: line)
+        self.info(message(), metadata: metadata(), baggage: baggage, source: nil, file: file, function: function, line: line)
     }
     #endif
 
@@ -402,6 +428,7 @@ extension Logger {
     /// - parameters:
     ///    - message: The message to be logged. `message` can be used with any string interpolation literal.
     ///    - metadata: One-off metadata to attach to this log message.
+    ///    - baggage: `Baggage` containing propagated runtime-generated metadata.
     ///    - source: The source this log messages originates from. Defaults
     ///              to the module emitting the log message (on Swift 5.3 or
     ///              newer and the folder name containing the log emitting file on Swift 5.2 or
@@ -416,18 +443,20 @@ extension Logger {
     @inlinable
     public func notice(_ message: @autoclosure () -> Logger.Message,
                        metadata: @autoclosure () -> Logger.Metadata? = nil,
+                       baggage: Baggage? = nil,
                        source: @autoclosure () -> String? = nil,
                        file: String = #fileID, function: String = #function, line: UInt = #line) {
-        self.log(level: .notice, message(), metadata: metadata(), source: source(), file: file, function: function, line: line)
+        self.log(level: .notice, message(), metadata: metadata(), baggage: baggage, source: source(), file: file, function: function, line: line)
     }
 
     #else
     @inlinable
     public func notice(_ message: @autoclosure () -> Logger.Message,
                        metadata: @autoclosure () -> Logger.Metadata? = nil,
+                       baggage: Baggage? = nil,
                        source: @autoclosure () -> String? = nil,
                        file: String = #file, function: String = #function, line: UInt = #line) {
-        self.log(level: .notice, message(), metadata: metadata(), source: source(), file: file, function: function, line: line)
+        self.log(level: .notice, message(), metadata: metadata(), baggage: baggage, source: source(), file: file, function: function, line: line)
     }
     #endif
 
@@ -439,6 +468,7 @@ extension Logger {
     /// - parameters:
     ///    - message: The message to be logged. `message` can be used with any string interpolation literal.
     ///    - metadata: One-off metadata to attach to this log message.
+    ///    - baggage: `Baggage` containing propagated runtime-generated metadata.
     ///    - source: The source this log messages originates from. Defaults
     ///              to the module emitting the log message (on Swift 5.3 or
     ///              newer and the folder name containing the log emitting file on Swift 5.2 or
@@ -453,15 +483,17 @@ extension Logger {
     @inlinable
     public func notice(_ message: @autoclosure () -> Logger.Message,
                        metadata: @autoclosure () -> Logger.Metadata? = nil,
+                       baggage: Baggage? = nil,
                        file: String = #fileID, function: String = #function, line: UInt = #line) {
-        self.notice(message(), metadata: metadata(), source: nil, file: file, function: function, line: line)
+        self.notice(message(), metadata: metadata(), baggage: baggage, source: nil, file: file, function: function, line: line)
     }
 
     #else
     public func notice(_ message: @autoclosure () -> Logger.Message,
                        metadata: @autoclosure () -> Logger.Metadata? = nil,
+                       baggage: Baggage? = nil,
                        file: String = #file, function: String = #function, line: UInt = #line) {
-        self.notice(message(), metadata: metadata(), source: nil, file: file, function: function, line: line)
+        self.notice(message(), metadata: metadata(), baggage: baggage, source: nil, file: file, function: function, line: line)
     }
     #endif
 
@@ -473,6 +505,7 @@ extension Logger {
     /// - parameters:
     ///    - message: The message to be logged. `message` can be used with any string interpolation literal.
     ///    - metadata: One-off metadata to attach to this log message.
+    ///    - baggage: `Baggage` containing propagated runtime-generated metadata.
     ///    - source: The source this log messages originates from. Defaults
     ///              to the module emitting the log message (on Swift 5.3 or
     ///              newer and the folder name containing the log emitting file on Swift 5.2 or
@@ -487,18 +520,20 @@ extension Logger {
     @inlinable
     public func warning(_ message: @autoclosure () -> Logger.Message,
                         metadata: @autoclosure () -> Logger.Metadata? = nil,
+                        baggage: Baggage? = nil,
                         source: @autoclosure () -> String? = nil,
                         file: String = #fileID, function: String = #function, line: UInt = #line) {
-        self.log(level: .warning, message(), metadata: metadata(), source: source(), file: file, function: function, line: line)
+        self.log(level: .warning, message(), metadata: metadata(), baggage: baggage, source: source(), file: file, function: function, line: line)
     }
 
     #else
     @inlinable
     public func warning(_ message: @autoclosure () -> Logger.Message,
                         metadata: @autoclosure () -> Logger.Metadata? = nil,
+                        baggage: Baggage? = nil,
                         source: @autoclosure () -> String? = nil,
                         file: String = #file, function: String = #function, line: UInt = #line) {
-        self.log(level: .warning, message(), metadata: metadata(), source: source(), file: file, function: function, line: line)
+        self.log(level: .warning, message(), metadata: metadata(), baggage: baggage, source: source(), file: file, function: function, line: line)
     }
     #endif
 
@@ -510,6 +545,7 @@ extension Logger {
     /// - parameters:
     ///    - message: The message to be logged. `message` can be used with any string interpolation literal.
     ///    - metadata: One-off metadata to attach to this log message.
+    ///    - baggage: `Baggage` containing propagated runtime-generated metadata.
     ///    - file: The file this log message originates from (there's usually no need to pass it explicitly as it
     ///            defaults to `#fileID` (on Swift 5.3 or newer and `#file` on Swift 5.2 or older).
     ///    - function: The function this log message originates from (there's usually no need to pass it explicitly as
@@ -520,16 +556,18 @@ extension Logger {
     @inlinable
     public func warning(_ message: @autoclosure () -> Logger.Message,
                         metadata: @autoclosure () -> Logger.Metadata? = nil,
+                        baggage: Baggage? = nil,
                         file: String = #fileID, function: String = #function, line: UInt = #line) {
-        self.warning(message(), metadata: metadata(), source: nil, file: file, function: function, line: line)
+        self.warning(message(), metadata: metadata(), baggage: baggage, source: nil, file: file, function: function, line: line)
     }
 
     #else
     @inlinable
     public func warning(_ message: @autoclosure () -> Logger.Message,
                         metadata: @autoclosure () -> Logger.Metadata? = nil,
+                        baggage: Baggage? = nil,
                         file: String = #file, function: String = #function, line: UInt = #line) {
-        self.warning(message(), metadata: metadata(), source: nil, file: file, function: function, line: line)
+        self.warning(message(), metadata: metadata(), baggage: baggage, source: nil, file: file, function: function, line: line)
     }
     #endif
 
@@ -541,6 +579,7 @@ extension Logger {
     /// - parameters:
     ///    - message: The message to be logged. `message` can be used with any string interpolation literal.
     ///    - metadata: One-off metadata to attach to this log message.
+    ///    - baggage: `Baggage` containing propagated runtime-generated metadata.
     ///    - source: The source this log messages originates from. Defaults
     ///              to the module emitting the log message (on Swift 5.3 or
     ///              newer and the folder name containing the log emitting file on Swift 5.2 or
@@ -555,18 +594,20 @@ extension Logger {
     @inlinable
     public func error(_ message: @autoclosure () -> Logger.Message,
                       metadata: @autoclosure () -> Logger.Metadata? = nil,
+                      baggage: Baggage? = nil,
                       source: @autoclosure () -> String? = nil,
                       file: String = #fileID, function: String = #function, line: UInt = #line) {
-        self.log(level: .error, message(), metadata: metadata(), source: source(), file: file, function: function, line: line)
+        self.log(level: .error, message(), metadata: metadata(), baggage: baggage, source: source(), file: file, function: function, line: line)
     }
 
     #else
     @inlinable
     public func error(_ message: @autoclosure () -> Logger.Message,
                       metadata: @autoclosure () -> Logger.Metadata? = nil,
+                      baggage: Baggage? = nil,
                       source: @autoclosure () -> String? = nil,
                       file: String = #file, function: String = #function, line: UInt = #line) {
-        self.log(level: .error, message(), metadata: metadata(), source: source(), file: file, function: function, line: line)
+        self.log(level: .error, message(), metadata: metadata(), baggage: baggage, source: source(), file: file, function: function, line: line)
     }
     #endif
 
@@ -578,6 +619,7 @@ extension Logger {
     /// - parameters:
     ///    - message: The message to be logged. `message` can be used with any string interpolation literal.
     ///    - metadata: One-off metadata to attach to this log message.
+    ///    - baggage: `Baggage` containing propagated runtime-generated metadata.
     ///    - file: The file this log message originates from (there's usually no need to pass it explicitly as it
     ///            defaults to `#fileID` (on Swift 5.3 or newer and `#file` on Swift 5.2 or older).
     ///    - function: The function this log message originates from (there's usually no need to pass it explicitly as
@@ -588,16 +630,18 @@ extension Logger {
     @inlinable
     public func error(_ message: @autoclosure () -> Logger.Message,
                       metadata: @autoclosure () -> Logger.Metadata? = nil,
+                      baggage: Baggage? = nil,
                       file: String = #fileID, function: String = #function, line: UInt = #line) {
-        self.error(message(), metadata: metadata(), source: nil, file: file, function: function, line: line)
+        self.error(message(), metadata: metadata(), baggage: baggage, source: nil, file: file, function: function, line: line)
     }
 
     #else
     @inlinable
     public func error(_ message: @autoclosure () -> Logger.Message,
                       metadata: @autoclosure () -> Logger.Metadata? = nil,
+                      baggage: Baggage? = nil,
                       file: String = #file, function: String = #function, line: UInt = #line) {
-        self.error(message(), metadata: metadata(), source: nil, file: file, function: function, line: line)
+        self.error(message(), metadata: metadata(), baggage: baggage, source: nil, file: file, function: function, line: line)
     }
     #endif
 
@@ -608,6 +652,7 @@ extension Logger {
     /// - parameters:
     ///    - message: The message to be logged. `message` can be used with any string interpolation literal.
     ///    - metadata: One-off metadata to attach to this log message.
+    ///    - baggage: `Baggage` containing propagated runtime-generated metadata.
     ///    - source: The source this log messages originates from. Defaults
     ///              to the module emitting the log message (on Swift 5.3 or
     ///              newer and the folder name containing the log emitting file on Swift 5.2 or
@@ -622,18 +667,20 @@ extension Logger {
     @inlinable
     public func critical(_ message: @autoclosure () -> Logger.Message,
                          metadata: @autoclosure () -> Logger.Metadata? = nil,
+                         baggage: Baggage? = nil,
                          source: @autoclosure () -> String? = nil,
                          file: String = #fileID, function: String = #function, line: UInt = #line) {
-        self.log(level: .critical, message(), metadata: metadata(), source: source(), file: file, function: function, line: line)
+        self.log(level: .critical, message(), metadata: metadata(), baggage: baggage, source: source(), file: file, function: function, line: line)
     }
 
     #else
     @inlinable
     public func critical(_ message: @autoclosure () -> Logger.Message,
                          metadata: @autoclosure () -> Logger.Metadata? = nil,
+                         baggage: Baggage? = nil,
                          source: @autoclosure () -> String? = nil,
                          file: String = #file, function: String = #function, line: UInt = #line) {
-        self.log(level: .critical, message(), metadata: metadata(), source: source(), file: file, function: function, line: line)
+        self.log(level: .critical, message(), metadata: metadata(), baggage: baggage, source: source(), file: file, function: function, line: line)
     }
     #endif
 
@@ -644,6 +691,7 @@ extension Logger {
     /// - parameters:
     ///    - message: The message to be logged. `message` can be used with any string interpolation literal.
     ///    - metadata: One-off metadata to attach to this log message.
+    ///    - baggage: `Baggage` containing propagated runtime-generated metadata.
     ///    - source: The source this log messages originates from. Defaults
     ///              to the module emitting the log message (on Swift 5.3 or
     ///              newer and the folder name containing the log emitting file on Swift 5.2 or
@@ -658,16 +706,18 @@ extension Logger {
     @inlinable
     public func critical(_ message: @autoclosure () -> Logger.Message,
                          metadata: @autoclosure () -> Logger.Metadata? = nil,
+                         baggage: Baggage? = nil,
                          file: String = #fileID, function: String = #function, line: UInt = #line) {
-        self.critical(message(), metadata: metadata(), source: nil, file: file, function: function, line: line)
+        self.critical(message(), metadata: metadata(), baggage: baggage, source: nil, file: file, function: function, line: line)
     }
 
     #else
     @inlinable
     public func critical(_ message: @autoclosure () -> Logger.Message,
                          metadata: @autoclosure () -> Logger.Metadata? = nil,
+                         baggage: Baggage? = nil,
                          file: String = #file, function: String = #function, line: UInt = #line) {
-        self.critical(message(), metadata: metadata(), source: nil, file: file, function: function, line: line)
+        self.critical(message(), metadata: metadata(), baggage: baggage, source: nil, file: file, function: function, line: line)
     }
     #endif
 }
