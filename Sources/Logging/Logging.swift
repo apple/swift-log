@@ -43,12 +43,12 @@ public struct Logger {
     var handler: LogHandler
 
     @usableFromInline
-    var metadataProvider: (@Sendable (Baggage?) -> Metadata?)?
+    let metadataProvider: MetadataProvider?
 
     /// An identifier of the creator of this `Logger`.
     public let label: String
 
-    internal init(label: String, _ handler: LogHandler, metadataProvider: (@Sendable (Baggage?) -> Metadata?)? = nil) {
+    internal init(label: String, _ handler: LogHandler, metadataProvider: MetadataProvider? = nil) {
         self.label = label
         self.handler = handler
         self.metadataProvider = metadataProvider
@@ -93,7 +93,7 @@ extension Logger {
             #else
             baggage = nil
             #endif
-            let providerMetadata = self.metadataProvider?(baggage)
+            let providerMetadata = metadataProvider?.metadata(baggage)
             let metadata: Metadata? = {
                 guard let metadata = metadata(), !metadata.isEmpty else { return providerMetadata }
                 guard let providerMetadata = providerMetadata else { return metadata }
@@ -808,8 +808,8 @@ extension Logger {
     ///
     /// - parameters:
     ///     - label: An identifier for the creator of a `Logger`.
-    ///     - metadataProvider: A function that turns `Baggage` into `Metadata`, defaults to nil.
-    public init(label: String, metadataProvider: (@Sendable (Baggage?) -> Metadata?)? = nil) {
+    ///     - metadataProvider: The `MetadataProvider` used to inject runtime-generated metadata, defaults to nil.
+    public init(label: String, metadataProvider: MetadataProvider? = nil) {
         self.init(label: label, LoggingSystem.factory(label), metadataProvider: metadataProvider)
     }
 
@@ -824,11 +824,69 @@ extension Logger {
     /// - parameters:
     ///     - label: An identifier for the creator of a `Logger`.
     ///     - factory: A closure creating non-standard `LogHandler`s.
-    ///     - metadataProvider: A function that turns `Baggage` into `Metadata`, defaults to nil.
+    ///     - metadataProvider: The `MetadataProvider` used to inject runtime-generated metadata, defaults to nil.
     public init(label: String,
                 factory: (String) -> LogHandler,
-                metadataProvider: (@Sendable (Baggage?) -> Metadata?)? = nil) {
+                metadataProvider: MetadataProvider? = nil) {
         self = Logger(label: label, factory(label), metadataProvider: metadataProvider)
+    }
+}
+
+extension Logger {
+    /// A `MetadataProvider` is used to automatically inject runtime-generated metadata
+    /// to all logs emitted by a logger.
+    ///
+    /// ### Example
+    /// A metadata provider may be used to automatically inject metadata such as
+    /// trace IDs:
+    /// ```swift
+    /// let metadataProvider = MetadataProvider { baggage in
+    ///     guard let traceID = baggage?.traceID else { return nil }
+    ///     return ["traceID": "\(traceID)"]
+    /// }
+    /// let logger = Logger(label: "example", metadataProvider: metadataProvider)
+    /// var baggage = Baggage.topLevel
+    /// baggage.traceID = 42
+    /// Baggage.$current.withValue(baggage) {
+    ///     logger.info("hello") // automatically includes ["traceID": "42"] metadata
+    /// }
+    /// ```
+    public struct MetadataProvider: Sendable {
+        /// Extract `Metadata` from the given `Baggage`.
+        public var metadata: @Sendable (_ baggage: Baggage?) -> Metadata?
+
+        /// Create a new `MetadataProvider`.
+        ///
+        /// - Parameter metadata: A closure extracting metadata from a given `Baggage`.
+        public init(metadata: @escaping @Sendable (Baggage?) -> Metadata?) {
+            self.metadata = metadata
+        }
+    }
+}
+
+extension Logger.MetadataProvider {
+    /// A pseudo-`MetadataProvider` that can be used to merge metadata from multiple other `MetadataProvider`s.
+    ///
+    /// ### Merging conflicting keys
+    ///
+    /// `MetadataProvider`s are invoked left to right in the order specified in the `providers` argument.
+    /// In case multiple providers try to add a value for the same key, the last provider "wins" and its value is being used.
+    ///
+    /// - Parameter providers: An array of `MetadataProvider`s to delegate to. The array must not be empty.
+    /// - Returns: A pseudo-`MetadataProvider` merging metadata from the given `MetadataProvider`s.
+    public static func multiplex(_ providers: [Logger.MetadataProvider]) -> Logger.MetadataProvider {
+        assert(!providers.isEmpty, "providers MUST NOT be empty")
+        return Logger.MetadataProvider { baggage in
+            providers.reduce(into: nil) { metadata, provider in
+                if let providedMetadata = provider.metadata(baggage) {
+                    if metadata != nil {
+                        metadata!.merge(providedMetadata, uniquingKeysWith: { _, rhs in rhs })
+                    } else {
+                        metadata = providedMetadata
+                    }
+                }
+            }
+        }
     }
 }
 
