@@ -674,17 +674,44 @@ class LoggingTest: XCTestCase {
 
     func testMultiplexMetadataProviderMergesInSpecifiedOrder() {
         let logging = TestLogging()
-        LoggingSystem.bootstrapInternal(logging.make)
 
         let providerA = Logger.MetadataProvider { _ in ["provider": "a", "a": "foo"] }
         let providerB = Logger.MetadataProvider { _ in ["provider": "b", "b": "bar"] }
-        let logger = Logger(label: #function, metadataProvider: .multiplex([providerA, providerB]))
+        let logger = Logger(label: #function,
+                            factory: logging.make,
+                            metadataProvider: .multiplex([providerA, providerB]))
 
         logger.log(level: .info, "test", metadata: ["one-off": "42"])
 
         logging.history.assertExist(level: .info,
                                     message: "test",
                                     metadata: ["provider": "b", "a": "foo", "b": "bar", "one-off": "42"])
+    }
+
+    func testLoggerWithoutFactoryOverrideDefaultsToUsingLoggingSystemMetadataProvider() {
+        let logging = TestLogging()
+        LoggingSystem.bootstrapInternal(metadataProvider: .init(metadata: { _ in ["provider": "42"] }), logging.make)
+
+        let logger = Logger(label: #function)
+
+        logger.log(level: .info, "test", metadata: ["one-off": "42"])
+
+        logging.history.assertExist(level: .info,
+                                    message: "test",
+                                    metadata: ["provider": "42", "one-off": "42"])
+    }
+
+    func testLoggerWithFactoryOverrideDefaultsToUsingLoggingSystemMetadataProvider() {
+        let logging = TestLogging()
+        LoggingSystem.bootstrapInternal(metadataProvider: .init(metadata: { _ in ["provider": "42"] }), logging.make)
+
+        let logger = Logger(label: #function, factory: logging.make)
+
+        logger.log(level: .info, "test", metadata: ["one-off": "42"])
+
+        logging.history.assertExist(level: .info,
+                                    message: "test",
+                                    metadata: ["provider": "42", "one-off": "42"])
     }
 
     func testMultiplexerIsValue() {

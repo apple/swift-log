@@ -48,7 +48,7 @@ public struct Logger {
     /// An identifier of the creator of this `Logger`.
     public let label: String
 
-    internal init(label: String, _ handler: LogHandler, metadataProvider: MetadataProvider? = nil) {
+    internal init(label: String, _ handler: LogHandler, metadataProvider: MetadataProvider?) {
         self.label = label
         self.handler = handler
         self.metadataProvider = metadataProvider
@@ -727,24 +727,58 @@ extension Logger {
 /// implementation.
 public enum LoggingSystem {
     private static let _factory = FactoryBox(StreamLogHandler.standardOutput)
+    private static let _metadataProvider = MetadataProviderBox(nil)
 
     /// `bootstrap` is a one-time configuration function which globally selects the desired logging backend
     /// implementation. `bootstrap` can be called at maximum once in any given program, calling it more than once will
     /// lead to undefined behavior, most likely a crash.
     ///
     /// - parameters:
+    ///     - metadataProvider: The `MetadataProvider` used to inject runtime-generated metadata, defaults to nil.
     ///     - factory: A closure that given a `Logger` identifier, produces an instance of the `LogHandler`.
-    public static func bootstrap(_ factory: @escaping (String) -> LogHandler) {
+    public static func bootstrap(metadataProvider: Logger.MetadataProvider? = nil,
+                                 _ factory: @escaping (String) -> LogHandler) {
+        self._metadataProvider.replaceMetadataProvider(metadataProvider, validate: true)
         self._factory.replaceFactory(factory, validate: true)
     }
 
     // for our testing we want to allow multiple bootstraping
-    internal static func bootstrapInternal(_ factory: @escaping (String) -> LogHandler) {
+    internal static func bootstrapInternal(metadataProvider: Logger.MetadataProvider? = nil,
+                                           _ factory: @escaping (String) -> LogHandler) {
+        self._metadataProvider.replaceMetadataProvider(metadataProvider, validate: false)
         self._factory.replaceFactory(factory, validate: false)
+    }
+
+    fileprivate static var metadataProvider: Logger.MetadataProvider? {
+        return self._metadataProvider.underlying
     }
 
     fileprivate static var factory: (String) -> LogHandler {
         return self._factory.underlying
+    }
+
+    private final class MetadataProviderBox {
+        private let lock = ReadWriteLock()
+        fileprivate var _underlying: Logger.MetadataProvider?
+        private var initialized = false
+
+        init(_ underlying: Logger.MetadataProvider?) {
+            self._underlying = underlying
+        }
+
+        func replaceMetadataProvider(_ metadataProvider: Logger.MetadataProvider?, validate: Bool) {
+            self.lock.withWriterLock {
+                precondition(!validate || !self.initialized, "logging system can only be initialized once per process.")
+                self._underlying = metadataProvider
+                self.initialized = true
+            }
+        }
+
+        var underlying: Logger.MetadataProvider? {
+            return self.lock.withReaderLock {
+                return self._underlying
+            }
+        }
     }
 
     private final class FactoryBox {
@@ -858,8 +892,19 @@ extension Logger {
     ///
     /// - parameters:
     ///     - label: An identifier for the creator of a `Logger`.
+    public init(label: String) {
+        self.init(label: label, LoggingSystem.factory(label), metadataProvider: LoggingSystem.metadataProvider)
+    }
+
+    /// Construct a `Logger` given a `label` identifying the creator of the `Logger` and a `MetadataProvider`.
+    ///
+    /// The `label` should identify the creator of the `Logger`. This can be an application, a sub-system, or even
+    /// a datatype.
+    ///
+    /// - parameters:
+    ///     - label: An identifier for the creator of a `Logger`.
     ///     - metadataProvider: The `MetadataProvider` used to inject runtime-generated metadata, defaults to nil.
-    public init(label: String, metadataProvider: MetadataProvider? = nil) {
+    public init(label: String, metadataProvider: MetadataProvider) {
         self.init(label: label, LoggingSystem.factory(label), metadataProvider: metadataProvider)
     }
 
@@ -874,10 +919,26 @@ extension Logger {
     /// - parameters:
     ///     - label: An identifier for the creator of a `Logger`.
     ///     - factory: A closure creating non-standard `LogHandler`s.
-    ///     - metadataProvider: The `MetadataProvider` used to inject runtime-generated metadata, defaults to nil.
+    public init(label: String,
+                factory: (String) -> LogHandler) {
+        self = Logger(label: label, factory(label), metadataProvider: LoggingSystem.metadataProvider)
+    }
+
+    /// Construct a `Logger` given a `label` identifying the creator of the `Logger` or a non-standard `LogHandler` and a `MetadataProvider`.
+    ///
+    /// The `label` should identify the creator of the `Logger`. This can be an application, a sub-system, or even
+    /// a datatype.
+    ///
+    /// This initializer provides an escape hatch in case the global default logging backend implementation (set up
+    /// using `LoggingSystem.bootstrap` is not appropriate for this particular logger.
+    ///
+    /// - parameters:
+    ///     - label: An identifier for the creator of a `Logger`.
+    ///     - factory: A closure creating non-standard `LogHandler`s.
+    ///     - metadataProvider: The `MetadataProvider` used to inject runtime-generated metadata.
     public init(label: String,
                 factory: (String) -> LogHandler,
-                metadataProvider: MetadataProvider? = nil) {
+                metadataProvider: MetadataProvider) {
         self = Logger(label: label, factory(label), metadataProvider: metadataProvider)
     }
 }
