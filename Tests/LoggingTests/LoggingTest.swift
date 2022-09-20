@@ -539,59 +539,7 @@ class LoggingTest: XCTestCase {
     }
 
     @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
-    func testLoggingWithMetadataProviderMergesOneOffMetadata() throws {
-        let logging = TestLogging()
-        LoggingSystem.bootstrapInternal(logging.make)
-
-        let logger = Logger(label: #function, metadataProvider: .init { baggage in
-            guard let baggage = baggage, let testID = baggage[TestIDKey.self] else {
-                XCTFail("Expected Baggage to be passed along to the metadata provider.")
-                return nil
-            }
-            return ["provider": .string(testID)]
-        })
-
-        var baggage = Baggage.topLevel
-        baggage[TestIDKey.self] = "42"
-
-        Baggage.$current.withValue(baggage) {
-            logger.log(level: .info, "test", metadata: ["one-off": "42"])
-        }
-
-        logging.history.assertExist(level: .info, message: "test", metadata: ["one-off": "42", "provider": "42"])
-
-        enum TestIDKey: BaggageKey {
-            typealias Value = String
-        }
-    }
-
-    @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
-    func testLoggingWithMetadataProviderPrefersOneOffMetadataOverProviderMetadata() throws {
-        let logging = TestLogging()
-        LoggingSystem.bootstrapInternal(logging.make)
-
-        let logger = Logger(label: #function, metadataProvider: .init { _ in
-            return [
-                "common": "provider",
-                "provider": "42",
-            ]
-        })
-
-        Baggage.$current.withValue(.topLevel) {
-            logger.log(level: .info, "test", metadata: ["one-off": "42", "common": "one-off"])
-        }
-
-        logging.history.assertExist(level: .info,
-                                    message: "test",
-                                    metadata: ["common": "one-off", "one-off": "42", "provider": "42"])
-
-        enum TestIDKey: BaggageKey {
-            typealias Value = String
-        }
-    }
-
-    @available(macOS 10.15, iOS 13.0, watchOS 6.0, tvOS 13.0, *)
-    func testLoggingDefaultsToTaskLocalBaggage() throws {
+    func testLoggingCallsMetadataProviderWithTaskLocalBaggage() throws {
         let logging = TestLogging()
         LoggingSystem.bootstrapInternal(logging.make)
 
@@ -606,23 +554,61 @@ class LoggingTest: XCTestCase {
 
         var baggage = Baggage.topLevel
         baggage[TestIDKey.self] = "42"
+
         Baggage.$current.withValue(baggage) {
-            logger.trace("test", metadata: ["one-off": "42"])
-            logger.debug("test", metadata: ["one-off": "42"])
-            logger.info("test", metadata: ["one-off": "42"])
-            logger.notice("test", metadata: ["one-off": "42"])
-            logger.warning("test", metadata: ["one-off": "42"])
-            logger.error("test", metadata: ["one-off": "42"])
-            logger.critical("test", metadata: ["one-off": "42"])
+            logger.trace("test")
+            logger.debug("test")
+            logger.info("test")
+            logger.notice("test")
+            logger.warning("test")
+            logger.error("test")
+            logger.critical("test")
         }
 
-        logging.history.assertExist(level: .trace, message: "test", metadata: ["one-off": "42", "provider": "42"])
-        logging.history.assertExist(level: .debug, message: "test", metadata: ["one-off": "42", "provider": "42"])
-        logging.history.assertExist(level: .info, message: "test", metadata: ["one-off": "42", "provider": "42"])
-        logging.history.assertExist(level: .notice, message: "test", metadata: ["one-off": "42", "provider": "42"])
-        logging.history.assertExist(level: .warning, message: "test", metadata: ["one-off": "42", "provider": "42"])
-        logging.history.assertExist(level: .error, message: "test", metadata: ["one-off": "42", "provider": "42"])
-        logging.history.assertExist(level: .critical, message: "test", metadata: ["one-off": "42", "provider": "42"])
+        logging.history.assertExist(level: .trace, message: "test", metadata: ["provider": "42"])
+        logging.history.assertExist(level: .debug, message: "test", metadata: ["provider": "42"])
+        logging.history.assertExist(level: .info, message: "test", metadata: ["provider": "42"])
+        logging.history.assertExist(level: .notice, message: "test", metadata: ["provider": "42"])
+        logging.history.assertExist(level: .warning, message: "test", metadata: ["provider": "42"])
+        logging.history.assertExist(level: .error, message: "test", metadata: ["provider": "42"])
+        logging.history.assertExist(level: .critical, message: "test", metadata: ["provider": "42"])
+
+        enum TestIDKey: BaggageKey {
+            typealias Value = String
+        }
+    }
+
+    func testLoggingCallsMetadataProviderWithExplicitlyPassedBaggage() throws {
+        let logging = TestLogging()
+        LoggingSystem.bootstrapInternal(logging.make)
+
+        var logger = Logger(label: #function, metadataProvider: .init { baggage in
+            guard let baggage = baggage, let testID = baggage[TestIDKey.self] else {
+                XCTFail("Expected Baggage to be passed along to the metadata provider.")
+                return nil
+            }
+            return ["provider": .string(testID)]
+        })
+        logger.logLevel = .trace
+
+        var baggage = Baggage.topLevel
+        baggage[TestIDKey.self] = "42"
+
+        logger.trace("test", baggage: baggage)
+        logger.debug("test", baggage: baggage)
+        logger.info("test", baggage: baggage)
+        logger.notice("test", baggage: baggage)
+        logger.warning("test", baggage: baggage)
+        logger.error("test", baggage: baggage)
+        logger.critical("test", baggage: baggage)
+
+        logging.history.assertExist(level: .trace, message: "test", metadata: ["provider": "42"])
+        logging.history.assertExist(level: .debug, message: "test", metadata: ["provider": "42"])
+        logging.history.assertExist(level: .info, message: "test", metadata: ["provider": "42"])
+        logging.history.assertExist(level: .notice, message: "test", metadata: ["provider": "42"])
+        logging.history.assertExist(level: .warning, message: "test", metadata: ["provider": "42"])
+        logging.history.assertExist(level: .error, message: "test", metadata: ["provider": "42"])
+        logging.history.assertExist(level: .critical, message: "test", metadata: ["provider": "42"])
 
         enum TestIDKey: BaggageKey {
             typealias Value = String
@@ -630,7 +616,46 @@ class LoggingTest: XCTestCase {
     }
 
     @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
-    func testLoggingWithMetadataProviderPrefersExplicitBaggageOverTaskLocal() {
+    func testLoggingMergesOneOffMetadataWithProvidedMetadataFromTaskLocalBaggage() throws {
+        let logging = TestLogging()
+        LoggingSystem.bootstrapInternal(logging.make)
+
+        let logger = Logger(label: #function, metadataProvider: .init { _ in
+            return [
+                "common": "provider",
+                "provider": "42"
+            ]
+        })
+
+        Baggage.$current.withValue(.topLevel) {
+            logger.log(level: .info, "test", metadata: ["one-off": "42", "common": "one-off"])
+        }
+
+        logging.history.assertExist(level: .info,
+                                    message: "test",
+                                    metadata: ["common": "one-off", "one-off": "42", "provider": "42"])
+    }
+
+    func testLoggingMergesOneOffMetadataWithProvidedMetadataFromExplicitlyPassedBaggage() throws {
+        let logging = TestLogging()
+        LoggingSystem.bootstrapInternal(logging.make)
+
+        let logger = Logger(label: #function, metadataProvider: .init { _ in
+            return [
+                "common": "provider",
+                "provider": "42"
+            ]
+        })
+
+        logger.log(level: .info, "test", metadata: ["one-off": "42", "common": "one-off"], baggage: .topLevel)
+
+        logging.history.assertExist(level: .info,
+                                    message: "test",
+                                    metadata: ["common": "one-off", "one-off": "42", "provider": "42"])
+    }
+
+    @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
+    func testLoggingPrefersExplicitBaggageOverTaskLocal() {
         let logging = TestLogging()
         LoggingSystem.bootstrapInternal(logging.make)
 
@@ -670,6 +695,23 @@ class LoggingTest: XCTestCase {
         enum TestIDKey: BaggageKey {
             typealias Value = String
         }
+    }
+
+    @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
+    func testLoggingWithExplicitlyPassedNilBaggageDoesNotPickUpTaskLocalBaggage() {
+        let logging = TestLogging()
+        LoggingSystem.bootstrapInternal(logging.make)
+
+        let logger = Logger(label: #function, metadataProvider: .init { baggage in
+            XCTAssertNil(baggage)
+            return ["provider": .string("42")]
+        })
+
+        Baggage.$current.withValue(.topLevel) {
+            logger.log(level: .info, "test", baggage: nil)
+        }
+
+        logging.history.assertExist(level: .info, message: "test", metadata: ["provider": "42"])
     }
 
     func testMultiplexMetadataProviderMergesInSpecifiedOrder() {
