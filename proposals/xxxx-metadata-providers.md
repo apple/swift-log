@@ -75,8 +75,8 @@ extension Logger.MetadataProvider {
     static let tracer = Logger.MetadataProvider { baggage in
         guard let spanContext = baggage?.spanContext else { return nil }
         return [
-          "traceID": .stringConvertible(spanContext.traceID),
-          "spanID": .stringConvertible(spanContext.spanID),
+          "traceID": "\(spanContext.traceID)",
+          "spanID": "\(spanContext.spanID)",
         ]
     }
 }
