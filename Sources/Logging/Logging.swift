@@ -43,7 +43,7 @@ public struct Logger {
     var handler: LogHandler
 
     @usableFromInline
-    let metadataProvider: MetadataProvider?
+    var metadataProvider: MetadataProvider?
 
     /// An identifier of the creator of this `Logger`.
     public let label: String
@@ -1503,7 +1503,7 @@ extension Logger {
     /// ```
     public struct MetadataProvider: Sendable {
         /// Extract `Metadata` from the given `Baggage`.
-        public var metadata: @Sendable (_ baggage: Baggage?) -> Metadata?
+        public let metadata: @Sendable (_ baggage: Baggage?) -> Metadata?
 
         /// Create a new `MetadataProvider`.
         ///
