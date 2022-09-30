@@ -43,12 +43,6 @@ To support this kind of runtime-generated metadata in `swift-log`, we need to ex
 
 To solve this, we propose the extension of swift-log APIs with a new concept: _metadata providers_.
 
-<!-- Generally speaking, a metadata provider takes the form of the following function signature:
-
-```swift
-typealias MetadataProvider = (Baggage?) -> Metadata?
-``` -->
-
 `MetadataProvider` is struct nested in the `Logger` type, sitting alongside `MetadataValue`
 and the `Metadata` typealias. It has a single property `metadata` which is a closure from `Baggage?` to `Metadata?`:
 
@@ -280,21 +274,147 @@ actor MyHTTPHandler {
 This also solves the issue of libraries not being able to include this kind of metadata since it is done automatically in the background, as long as
 the values are stored inside the task-local `Baggage`.
 
+### When to use `Baggage` vs. `Logger[metadataKey:]`
+
+While `Baggage` is context-dependend and changes depending on where the log methods are being called from, the metadata set on a `Logger` is static and not context-dependent. E.g, if you wanted to add things like an instance ID or a subsystem name to a `Logger`, that could be seen as static information and set via `Logger[metadataKey:]`.
+
+```swift
+var logger = Logger(label: "org.swift.my-service")
+logger[metadataKey: "instanceId"] = "123"
+
+logger.info("Service started.")
+// [instanceId: 123] Service started.
+```
+
+On the other hand, things like a trace ID are dynamic and context-dependent, therefore would be obtained via `Baggage`:
+
+```swift
+logger.info("Product fetched.")
+// [traceId: 42] Product fetched.
+```
+
+Inline-metadata is suitable for one-offs such as a `productId` or a `paymentMethod` in an online store service, but are not enough to corralate the following log statements, i.e. tying them both to the same request:
+
+```swift
+logger.info("Product fetched.", metadata: ["productId": "42"])
+logger.info("Product purchased.", metadata: ["paymentMethod": "apple-pay"])
+
+// [productId: 42] Product fetched.
+// [paymentMethod: apple-pay] Product fetched.
+```
+
+If there was a `Baggage` value with a trace ID surrounding these log statements, they would be automatically correlatable:
+
+```swift
+var baggage = Baggage.topLevel
+baggage.traceID = 42
+Baggage.$current.withValue(baggage) {
+    logger.info("Product fetched.", metadata: ["productId": "42"])
+    logger.info("Product purchased.", metadata: ["paymentMethod": "apple-pay"])
+}
+
+// [trace-id: 42, productId: 42] Product fetched.
+// [trace-id: 42, paymentMethod: apple-pay] Product fetched.
+```
+
 ### Using Baggage in callback APIs
 
 Many libraries which provide `async` APIs, are implemented on top of Swift NIO, or other callback-heavy libraries (e.g. when wrapping existing non-async database libraries or similar).
 
-The proposed API must work well with such libraries, in the sense that a metadata provider configured by an end-user, should still be useful in such libraries where setting a Task-local baggage is either impossible, or very weird (continiously wrapping every call into "restoring" the current baggage upon every re-entry from a callback).
+The proposed API must work well with such libraries, in the sense that a metadata provider configured by an end-user, should still be useful in such libraries where setting a Task-local baggage is either impossible, or very weird (continiously wrapping every call into "restoring" the current baggage upon every re-entry from a callback):
+
+```swift
+class RequestStateMachine: ChannelInboundHandler {
+    let logger: Logger
+
+    func channelActive(context: ChannelHandlerContext) {
+        logger.debug("Channel active.")
+        // debug [trace-id: ???] Channel active.
+    }
+
+    func channelRead(context: ChannelHandlerContext, data: NIOAny) {
+        logger.debug("Received request part.")
+        // debug [trace-id: ???] Received request part.
+    }
+}
+```
+
+In the above example, we want the logger to capture the trace ID of the task that created `MyChannel`, but the delegate methods are called on the NIO event-loop which doesn't set any task-local `Baggage`.
 
 We propose the following strategy for such libraries:
 
-- entry points into such libraries should assume the presence of task-local `Baggage`
-  - this is the same as with tracing -- e.g. a `startWork()` method, does not need to accept a baggage parameter, but simply query `Baggage.current` if in need of any contextual metadata.
-- when the library is forced to exit the world of structured concurrency where task-locals work well `*`, they should _get and store_ the current baggage from the user's calling context, e.g. by storing it in a state machine driving class, handler, or actor: `self.baggage = Baggage.current`
-  - `*` situations where task-local baggage just works include: plain synchronous methods, asynchronous methods, as all forms of structured concurrency (async lets and task groups), as well as un-structured (but _not_ detached) tasks (created by calling `Task { ... }`).
-- the libraries are then free to continue using their callback or delegate-style APIs, and whenever needing to log or restore the baggage they can, either:
-  - explicitly pass it to a logger: `log.info("Request finished", metadata: [...], baggage: self.baggage)`
-  - restore the contextual task-local baggage and wrap subsequent calls with: `Baggage.current.withValue(self.baggage) { moreThings() }`
+Entry points into such libraries should assume the presence of task-local `Baggage`.
+This is the same as with tracing -- e.g. a `startWork()` method, does not need to accept a baggage parameter, but simply query `Baggage.current` if in need of any contextual metadata.
+
+When the library is forced to exit the world of structured concurrency where task-locals work well `*`, they should _get and store_ the current baggage from the user's calling context, e.g. by storing it in a state machine driving class, handler, or actor: `self.baggage = Baggage.current`:
+
+```swift
+class RequestStateMachine: ChannelInboundHandler {
+    let logger: Logger
+    var baggage: Baggage?
+
+    init(logger: Logger) {
+        self.logger = logger
+        // in here we can still access the task-local Baggage
+        self.baggage = Baggage.current
+    }
+
+    func channelActive(context: ChannelHandlerContext) {
+        logger.debug("Channel active.", baggage: self.baggage)
+        // debug [trace-id: 42] Channel active.
+    }
+
+    func channelRead(context: ChannelHandlerContext, data: NIOAny) {
+        logger.debug("Received request part.", baggage: self.baggage)
+        // debug [trace-id: 42] Received request part.
+    }
+}
+```
+
+> `*` situations where task-local baggage just works include: plain synchronous methods, asynchronous methods, as all forms of structured concurrency (async lets and task groups), as well as un-structured (but _not_ detached) tasks (created by calling `Task { ... }`).
+
+The libraries are then free to continue using their callback or delegate-style APIs, and whenever needing to log or restore the baggage they can, either:
+
+- explicitly pass it to a logger: `log.info("Request finished", metadata: [...], baggage: self.baggage)`
+- restore the contextual task-local baggage and wrap subsequent calls with: `Baggage.current.withValue(self.baggage) { moreThings() }`
+
+### Rendering provider metadata only once in performance-critical code
+
+In some performance-critical code, you may want to render the provider metadata only once. In such cases, you can call the metadata provider explicitly at the point of entry and instead of passing `Baggage` you'd use the `Logger`'s metadata:
+
+```swift
+class PerformanceCriticalRequestStateMachine: ChannelInboundHandler {
+    let logger: Logger
+
+    init(logger: Logger) {
+        var logger = logger
+        // in here we can still access the task-local Baggage
+        if let baggage = Baggage.current, let metadataProvider = logger.metadataProvider {
+            let metadata = metadataProvider(baggage)
+            for (key, value) in metadata {
+                logger[metadataKey: key] = value
+            }
+        }
+        self.logger = logger
+    }
+
+    func channelActive(context: ChannelHandlerContext) {
+        logger.debug("Channel active.", baggage: nil)
+        // debug [trace-id: 42] Channel active.
+    }
+
+    func channelRead(context: ChannelHandlerContext, data: NIOAny) {
+        logger.debug("Received request part.", baggage: nil)
+        // debug [trace-id: 42] Received request part.
+    }
+}
+```
+
+Passing `nil` as the `Baggage` will prevent task-local look-ups in these performance sensitive situations.
+
+> NOTE: Most applications shouldn't need to worry about this and just rely on automatic Baggage propagation using task-locals
+
+> WARNING: The context-dependent metadata becomes static which makes it hard to recover the dynamic information back into `Baggage`, e.g. if you wanted to create a child span in one of those callbacks.
 
 ## Alternatives considered
 
@@ -319,5 +439,51 @@ Baggage is designed for use cases like distributed tracing, or similar instrumen
 Specifically in logging, this means that _every_ call site for _every_ log statement would have to pass it explicitly resulting in annoying noisy code:
 
 ```swift
-log.info("example", baggage: baggage)
+class StoresRepository {
+    func store(byID id: String, eventLoop: EventLoop, logger: Logger, baggage: Baggage) async throws -> Store {
+        InstrumentationSystem.tracer.withSpan("Fetch Store", baggage: baggage) { span in
+            logger.info("Fetched store.", baggage: span.baggage)
+        }
+    }
+}
+
+try await storesRepository.store(
+    byID: storeID,
+    eventLoop: eventLoop,
+    logger: logger,
+    baggage: baggage
+)
 ```
+
+### Explicitly passing `Logger` always
+
+Imagine we don't have metadata providers, we'd have to manually set trace IDs on loggers which doesn't really work as all libraries involved would need to know about the same specific trace ID. Event if we inverted the dependency to have `Tracing` depend on `Logging` so that we'd be able to define something like "Tracing, please populate this logger with metadata", we'd have to make sure this thing is called in all places to avoid dropping contextual metadata.
+
+```swift
+import Tracing
+import Logging
+
+let contextualLogger = InstrumentationSystem.tracer.populateTraceMetadata(logger, baggage: baggage)
+contextualLogger.info("Request received.")
+```
+
+### Tracing providing extensions on Logger
+
+Instead of having `swift-log` depend on `swift-distributed-tracing-baggage` we could also create extensions for `Logger` inside `swift-distributed-tracing` and have users call these new overloaded methods instead:
+
+```swift
+extension Logger {
+    func tinfo(_ message: ..., baggage: Baggage?) {
+        // ...
+    }
+}
+```
+
+Such extensions could work like the currently-proposed APIs, but the risk of users calling the wrong methods is incredibly high and we cannot overload the existing methods' signatures because of ambiguity of call-sides without explicit Baggage being passed:
+
+```swift
+logger.info("Hello")
+// we want this to pick up Baggage, but the signature would be ambiguous
+```
+
+Also, this extension-based contextual metadata would require basically everyone in Server-side Swift to adapt their usage of `Logging` to use these extensions instead. With the proposed APIs, we'd only need to modify `Logging` and any NIO-based libraries such as `AsyncHTTPClient`, `Vapor`, etc. and not every single log statement in every application.
