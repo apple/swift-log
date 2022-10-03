@@ -540,6 +540,7 @@ class LoggingTest: XCTestCase {
 
     @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
     func testLoggingCallsMetadataProviderWithTaskLocalBaggage() throws {
+        #if swift(>=5.5) && canImport(_Concurrency)
         let logging = TestLogging()
         LoggingSystem.bootstrapInternal(logging.make)
 
@@ -576,6 +577,7 @@ class LoggingTest: XCTestCase {
         enum TestIDKey: BaggageKey {
             typealias Value = String
         }
+        #endif
     }
 
     func testLoggingCallsMetadataProviderWithExplicitlyPassedBaggage() throws {
@@ -617,6 +619,7 @@ class LoggingTest: XCTestCase {
 
     @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
     func testLoggingMergesOneOffMetadataWithProvidedMetadataFromTaskLocalBaggage() throws {
+        #if swift(>=5.5) && canImport(_Concurrency)
         let logging = TestLogging()
         LoggingSystem.bootstrapInternal(logging.make)
 
@@ -634,6 +637,7 @@ class LoggingTest: XCTestCase {
         logging.history.assertExist(level: .info,
                                     message: "test",
                                     metadata: ["common": "one-off", "one-off": "42", "provider": "42"])
+        #endif
     }
 
     func testLoggingMergesOneOffMetadataWithProvidedMetadataFromExplicitlyPassedBaggage() throws {
@@ -656,6 +660,7 @@ class LoggingTest: XCTestCase {
 
     @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
     func testLoggingPrefersExplicitBaggageOverTaskLocal() {
+        #if swift(>=5.5) && canImport(_Concurrency)
         let logging = TestLogging()
         LoggingSystem.bootstrapInternal(logging.make)
 
@@ -695,10 +700,12 @@ class LoggingTest: XCTestCase {
         enum TestIDKey: BaggageKey {
             typealias Value = String
         }
+        #endif
     }
 
     @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
     func testLoggingWithExplicitlyPassedNilBaggageDoesNotPickUpTaskLocalBaggage() {
+        #if swift(>=5.5) && canImport(_Concurrency)
         let logging = TestLogging()
         LoggingSystem.bootstrapInternal(logging.make)
 
@@ -712,6 +719,7 @@ class LoggingTest: XCTestCase {
         }
 
         logging.history.assertExist(level: .info, message: "test", metadata: ["provider": "42"])
+        #endif
     }
 
     func testMultiplexMetadataProviderMergesInSpecifiedOrder() {
