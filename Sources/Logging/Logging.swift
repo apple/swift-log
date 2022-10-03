@@ -1501,6 +1501,7 @@ extension Logger {
     ///     logger.info("hello") // automatically includes ["traceID": "42"] metadata
     /// }
     /// ```
+    #if swift(>=5.5) && canImport(_Concurrency)
     public struct MetadataProvider: Sendable {
         /// Extract `Metadata` from the given `Baggage`.
         public let metadata: @Sendable (_ baggage: Baggage?) -> Metadata?
@@ -1512,6 +1513,20 @@ extension Logger {
             self.metadata = metadata
         }
     }
+
+    #else
+    public struct MetadataProvider {
+        /// Extract `Metadata` from the given `Baggage`.
+        public let metadata: (_ baggage: Baggage?) -> Metadata?
+
+        /// Create a new `MetadataProvider`.
+        ///
+        /// - Parameter metadata: A closure extracting metadata from a given `Baggage`.
+        public init(metadata: @escaping (Baggage?) -> Metadata?) {
+            self.metadata = metadata
+        }
+    }
+    #endif
 }
 
 extension Logger.MetadataProvider {
