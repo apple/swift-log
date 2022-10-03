@@ -1,3 +1,4 @@
+import InstrumentationBaggage
 //===----------------------------------------------------------------------===//
 //
 // This source file is part of the Swift Logging API open source project
@@ -12,7 +13,6 @@
 //
 //===----------------------------------------------------------------------===//
 @testable import Logging
-import InstrumentationBaggage
 import XCTest
 
 #if os(macOS) || os(iOS) || os(tvOS) || os(watchOS)
@@ -624,9 +624,9 @@ class LoggingTest: XCTestCase {
         LoggingSystem.bootstrapInternal(logging.make)
 
         let logger = Logger(label: #function, metadataProvider: .init { _ in
-            return [
+            [
                 "common": "provider",
-                "provider": "42"
+                "provider": "42",
             ]
         })
 
@@ -645,9 +645,9 @@ class LoggingTest: XCTestCase {
         LoggingSystem.bootstrapInternal(logging.make)
 
         let logger = Logger(label: #function, metadataProvider: .init { _ in
-            return [
+            [
                 "common": "provider",
-                "provider": "42"
+                "provider": "42",
             ]
         })
 
