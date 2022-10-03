@@ -93,7 +93,7 @@ extension Logger {
             #else
             taskLocalBaggage = nil
             #endif
-            let providerMetadata = metadataProvider?.metadata(taskLocalBaggage)
+            let providerMetadata = self.metadataProvider?.metadata(taskLocalBaggage)
             let metadata: Metadata? = {
                 guard let metadata = metadata(), !metadata.isEmpty else { return providerMetadata }
                 guard let providerMetadata = providerMetadata else { return metadata }
@@ -154,7 +154,7 @@ extension Logger {
                     source: @autoclosure () -> String? = nil,
                     file: String = #fileID, function: String = #function, line: UInt = #line) {
         if self.logLevel <= level {
-            let providerMetadata = metadataProvider?.metadata(baggage)
+            let providerMetadata = self.metadataProvider?.metadata(baggage)
             let metadata: Metadata? = {
                 guard let metadata = metadata(), !metadata.isEmpty else { return providerMetadata }
                 guard let providerMetadata = providerMetadata else { return metadata }
@@ -178,7 +178,7 @@ extension Logger {
                     source: @autoclosure () -> String? = nil,
                     file: String = #file, function: String = #function, line: UInt = #line) {
         if self.logLevel <= level {
-            let providerMetadata = metadataProvider?.metadata(baggage)
+            let providerMetadata = self.metadataProvider?.metadata(baggage)
             let metadata: Metadata? = {
                 guard let metadata = metadata(), !metadata.isEmpty else { return providerMetadata }
                 guard let providerMetadata = providerMetadata else { return metadata }
@@ -566,20 +566,20 @@ extension Logger {
     #if compiler(>=5.3)
     @inlinable
     public func info(_ message: @autoclosure () -> Logger.Message,
-                      metadata: @autoclosure () -> Logger.Metadata? = nil,
-                      baggage: Baggage?,
-                      source: @autoclosure () -> String? = nil,
-                      file: String = #fileID, function: String = #function, line: UInt = #line) {
+                     metadata: @autoclosure () -> Logger.Metadata? = nil,
+                     baggage: Baggage?,
+                     source: @autoclosure () -> String? = nil,
+                     file: String = #fileID, function: String = #function, line: UInt = #line) {
         self.log(level: .info, message(), metadata: metadata(), baggage: baggage, source: source(), file: file, function: function, line: line)
     }
 
     #else
     @inlinable
     public func info(_ message: @autoclosure () -> Logger.Message,
-                      metadata: @autoclosure () -> Logger.Metadata? = nil,
-                      baggage: Baggage?,
-                      source: @autoclosure () -> String? = nil,
-                      file: String = #file, function: String = #function, line: UInt = #line) {
+                     metadata: @autoclosure () -> Logger.Metadata? = nil,
+                     baggage: Baggage?,
+                     source: @autoclosure () -> String? = nil,
+                     file: String = #file, function: String = #function, line: UInt = #line) {
         self.log(level: .info, message(), metadata: metadata(), baggage: baggage, source: source(), file: file, function: function, line: line)
     }
     #endif
@@ -605,18 +605,18 @@ extension Logger {
     #if compiler(>=5.3)
     @inlinable
     public func info(_ message: @autoclosure () -> Logger.Message,
-                      metadata: @autoclosure () -> Logger.Metadata? = nil,
-                      source: @autoclosure () -> String? = nil,
-                      file: String = #fileID, function: String = #function, line: UInt = #line) {
+                     metadata: @autoclosure () -> Logger.Metadata? = nil,
+                     source: @autoclosure () -> String? = nil,
+                     file: String = #fileID, function: String = #function, line: UInt = #line) {
         self.log(level: .info, message(), metadata: metadata(), source: source(), file: file, function: function, line: line)
     }
 
     #else
     @inlinable
     public func info(_ message: @autoclosure () -> Logger.Message,
-                      metadata: @autoclosure () -> Logger.Metadata? = nil,
-                      source: @autoclosure () -> String? = nil,
-                      file: String = #file, function: String = #function, line: UInt = #line) {
+                     metadata: @autoclosure () -> Logger.Metadata? = nil,
+                     source: @autoclosure () -> String? = nil,
+                     file: String = #file, function: String = #function, line: UInt = #line) {
         self.log(level: .info, message(), metadata: metadata(), source: source(), file: file, function: function, line: line)
     }
     #endif
@@ -639,18 +639,18 @@ extension Logger {
     #if compiler(>=5.3)
     @inlinable
     public func info(_ message: @autoclosure () -> Logger.Message,
-                      metadata: @autoclosure () -> Logger.Metadata? = nil,
-                      baggage: Baggage?,
-                      file: String = #fileID, function: String = #function, line: UInt = #line) {
+                     metadata: @autoclosure () -> Logger.Metadata? = nil,
+                     baggage: Baggage?,
+                     file: String = #fileID, function: String = #function, line: UInt = #line) {
         self.info(message(), metadata: metadata(), baggage: baggage, source: nil, file: file, function: function, line: line)
     }
 
     #else
     @inlinable
     public func info(_ message: @autoclosure () -> Logger.Message,
-                      metadata: @autoclosure () -> Logger.Metadata? = nil,
-                      baggage: Baggage?,
-                      file: String = #file, function: String = #function, line: UInt = #line) {
+                     metadata: @autoclosure () -> Logger.Metadata? = nil,
+                     baggage: Baggage?,
+                     file: String = #file, function: String = #function, line: UInt = #line) {
         self.info(message(), metadata: metadata(), baggage: baggage, source: nil, file: file, function: function, line: line)
     }
     #endif
@@ -672,16 +672,16 @@ extension Logger {
     #if compiler(>=5.3)
     @inlinable
     public func info(_ message: @autoclosure () -> Logger.Message,
-                      metadata: @autoclosure () -> Logger.Metadata? = nil,
-                      file: String = #fileID, function: String = #function, line: UInt = #line) {
+                     metadata: @autoclosure () -> Logger.Metadata? = nil,
+                     file: String = #fileID, function: String = #function, line: UInt = #line) {
         self.info(message(), metadata: metadata(), source: nil, file: file, function: function, line: line)
     }
 
     #else
     @inlinable
     public func info(_ message: @autoclosure () -> Logger.Message,
-                      metadata: @autoclosure () -> Logger.Metadata? = nil,
-                      file: String = #file, function: String = #function, line: UInt = #line) {
+                     metadata: @autoclosure () -> Logger.Metadata? = nil,
+                     file: String = #file, function: String = #function, line: UInt = #line) {
         self.info(message(), metadata: metadata(), source: nil, file: file, function: function, line: line)
     }
     #endif
@@ -708,20 +708,20 @@ extension Logger {
     #if compiler(>=5.3)
     @inlinable
     public func notice(_ message: @autoclosure () -> Logger.Message,
-                      metadata: @autoclosure () -> Logger.Metadata? = nil,
-                      baggage: Baggage?,
-                      source: @autoclosure () -> String? = nil,
-                      file: String = #fileID, function: String = #function, line: UInt = #line) {
+                       metadata: @autoclosure () -> Logger.Metadata? = nil,
+                       baggage: Baggage?,
+                       source: @autoclosure () -> String? = nil,
+                       file: String = #fileID, function: String = #function, line: UInt = #line) {
         self.log(level: .notice, message(), metadata: metadata(), baggage: baggage, source: source(), file: file, function: function, line: line)
     }
 
     #else
     @inlinable
     public func notice(_ message: @autoclosure () -> Logger.Message,
-                      metadata: @autoclosure () -> Logger.Metadata? = nil,
-                      baggage: Baggage?,
-                      source: @autoclosure () -> String? = nil,
-                      file: String = #file, function: String = #function, line: UInt = #line) {
+                       metadata: @autoclosure () -> Logger.Metadata? = nil,
+                       baggage: Baggage?,
+                       source: @autoclosure () -> String? = nil,
+                       file: String = #file, function: String = #function, line: UInt = #line) {
         self.log(level: .notice, message(), metadata: metadata(), baggage: baggage, source: source(), file: file, function: function, line: line)
     }
     #endif
@@ -747,18 +747,18 @@ extension Logger {
     #if compiler(>=5.3)
     @inlinable
     public func notice(_ message: @autoclosure () -> Logger.Message,
-                      metadata: @autoclosure () -> Logger.Metadata? = nil,
-                      source: @autoclosure () -> String? = nil,
-                      file: String = #fileID, function: String = #function, line: UInt = #line) {
+                       metadata: @autoclosure () -> Logger.Metadata? = nil,
+                       source: @autoclosure () -> String? = nil,
+                       file: String = #fileID, function: String = #function, line: UInt = #line) {
         self.log(level: .notice, message(), metadata: metadata(), source: source(), file: file, function: function, line: line)
     }
 
     #else
     @inlinable
     public func notice(_ message: @autoclosure () -> Logger.Message,
-                      metadata: @autoclosure () -> Logger.Metadata? = nil,
-                      source: @autoclosure () -> String? = nil,
-                      file: String = #file, function: String = #function, line: UInt = #line) {
+                       metadata: @autoclosure () -> Logger.Metadata? = nil,
+                       source: @autoclosure () -> String? = nil,
+                       file: String = #file, function: String = #function, line: UInt = #line) {
         self.log(level: .notice, message(), metadata: metadata(), source: source(), file: file, function: function, line: line)
     }
     #endif
@@ -781,18 +781,18 @@ extension Logger {
     #if compiler(>=5.3)
     @inlinable
     public func notice(_ message: @autoclosure () -> Logger.Message,
-                      metadata: @autoclosure () -> Logger.Metadata? = nil,
-                      baggage: Baggage?,
-                      file: String = #fileID, function: String = #function, line: UInt = #line) {
+                       metadata: @autoclosure () -> Logger.Metadata? = nil,
+                       baggage: Baggage?,
+                       file: String = #fileID, function: String = #function, line: UInt = #line) {
         self.notice(message(), metadata: metadata(), baggage: baggage, source: nil, file: file, function: function, line: line)
     }
 
     #else
     @inlinable
     public func notice(_ message: @autoclosure () -> Logger.Message,
-                      metadata: @autoclosure () -> Logger.Metadata? = nil,
-                      baggage: Baggage?,
-                      file: String = #file, function: String = #function, line: UInt = #line) {
+                       metadata: @autoclosure () -> Logger.Metadata? = nil,
+                       baggage: Baggage?,
+                       file: String = #file, function: String = #function, line: UInt = #line) {
         self.notice(message(), metadata: metadata(), baggage: baggage, source: nil, file: file, function: function, line: line)
     }
     #endif
@@ -814,16 +814,16 @@ extension Logger {
     #if compiler(>=5.3)
     @inlinable
     public func notice(_ message: @autoclosure () -> Logger.Message,
-                      metadata: @autoclosure () -> Logger.Metadata? = nil,
-                      file: String = #fileID, function: String = #function, line: UInt = #line) {
+                       metadata: @autoclosure () -> Logger.Metadata? = nil,
+                       file: String = #fileID, function: String = #function, line: UInt = #line) {
         self.notice(message(), metadata: metadata(), source: nil, file: file, function: function, line: line)
     }
 
     #else
     @inlinable
     public func notice(_ message: @autoclosure () -> Logger.Message,
-                      metadata: @autoclosure () -> Logger.Metadata? = nil,
-                      file: String = #file, function: String = #function, line: UInt = #line) {
+                       metadata: @autoclosure () -> Logger.Metadata? = nil,
+                       file: String = #file, function: String = #function, line: UInt = #line) {
         self.notice(message(), metadata: metadata(), source: nil, file: file, function: function, line: line)
     }
     #endif
@@ -850,20 +850,20 @@ extension Logger {
     #if compiler(>=5.3)
     @inlinable
     public func warning(_ message: @autoclosure () -> Logger.Message,
-                      metadata: @autoclosure () -> Logger.Metadata? = nil,
-                      baggage: Baggage?,
-                      source: @autoclosure () -> String? = nil,
-                      file: String = #fileID, function: String = #function, line: UInt = #line) {
+                        metadata: @autoclosure () -> Logger.Metadata? = nil,
+                        baggage: Baggage?,
+                        source: @autoclosure () -> String? = nil,
+                        file: String = #fileID, function: String = #function, line: UInt = #line) {
         self.log(level: .warning, message(), metadata: metadata(), baggage: baggage, source: source(), file: file, function: function, line: line)
     }
 
     #else
     @inlinable
     public func warning(_ message: @autoclosure () -> Logger.Message,
-                      metadata: @autoclosure () -> Logger.Metadata? = nil,
-                      baggage: Baggage?,
-                      source: @autoclosure () -> String? = nil,
-                      file: String = #file, function: String = #function, line: UInt = #line) {
+                        metadata: @autoclosure () -> Logger.Metadata? = nil,
+                        baggage: Baggage?,
+                        source: @autoclosure () -> String? = nil,
+                        file: String = #file, function: String = #function, line: UInt = #line) {
         self.log(level: .warning, message(), metadata: metadata(), baggage: baggage, source: source(), file: file, function: function, line: line)
     }
     #endif
@@ -889,18 +889,18 @@ extension Logger {
     #if compiler(>=5.3)
     @inlinable
     public func warning(_ message: @autoclosure () -> Logger.Message,
-                      metadata: @autoclosure () -> Logger.Metadata? = nil,
-                      source: @autoclosure () -> String? = nil,
-                      file: String = #fileID, function: String = #function, line: UInt = #line) {
+                        metadata: @autoclosure () -> Logger.Metadata? = nil,
+                        source: @autoclosure () -> String? = nil,
+                        file: String = #fileID, function: String = #function, line: UInt = #line) {
         self.log(level: .warning, message(), metadata: metadata(), source: source(), file: file, function: function, line: line)
     }
 
     #else
     @inlinable
     public func warning(_ message: @autoclosure () -> Logger.Message,
-                      metadata: @autoclosure () -> Logger.Metadata? = nil,
-                      source: @autoclosure () -> String? = nil,
-                      file: String = #file, function: String = #function, line: UInt = #line) {
+                        metadata: @autoclosure () -> Logger.Metadata? = nil,
+                        source: @autoclosure () -> String? = nil,
+                        file: String = #file, function: String = #function, line: UInt = #line) {
         self.log(level: .warning, message(), metadata: metadata(), source: source(), file: file, function: function, line: line)
     }
     #endif
@@ -923,18 +923,18 @@ extension Logger {
     #if compiler(>=5.3)
     @inlinable
     public func warning(_ message: @autoclosure () -> Logger.Message,
-                      metadata: @autoclosure () -> Logger.Metadata? = nil,
-                      baggage: Baggage?,
-                      file: String = #fileID, function: String = #function, line: UInt = #line) {
+                        metadata: @autoclosure () -> Logger.Metadata? = nil,
+                        baggage: Baggage?,
+                        file: String = #fileID, function: String = #function, line: UInt = #line) {
         self.warning(message(), metadata: metadata(), baggage: baggage, source: nil, file: file, function: function, line: line)
     }
 
     #else
     @inlinable
     public func warning(_ message: @autoclosure () -> Logger.Message,
-                      metadata: @autoclosure () -> Logger.Metadata? = nil,
-                      baggage: Baggage?,
-                      file: String = #file, function: String = #function, line: UInt = #line) {
+                        metadata: @autoclosure () -> Logger.Metadata? = nil,
+                        baggage: Baggage?,
+                        file: String = #file, function: String = #function, line: UInt = #line) {
         self.warning(message(), metadata: metadata(), baggage: baggage, source: nil, file: file, function: function, line: line)
     }
     #endif
@@ -956,16 +956,16 @@ extension Logger {
     #if compiler(>=5.3)
     @inlinable
     public func warning(_ message: @autoclosure () -> Logger.Message,
-                      metadata: @autoclosure () -> Logger.Metadata? = nil,
-                      file: String = #fileID, function: String = #function, line: UInt = #line) {
+                        metadata: @autoclosure () -> Logger.Metadata? = nil,
+                        file: String = #fileID, function: String = #function, line: UInt = #line) {
         self.warning(message(), metadata: metadata(), source: nil, file: file, function: function, line: line)
     }
 
     #else
     @inlinable
     public func warning(_ message: @autoclosure () -> Logger.Message,
-                      metadata: @autoclosure () -> Logger.Metadata? = nil,
-                      file: String = #file, function: String = #function, line: UInt = #line) {
+                        metadata: @autoclosure () -> Logger.Metadata? = nil,
+                        file: String = #file, function: String = #function, line: UInt = #line) {
         self.warning(message(), metadata: metadata(), source: nil, file: file, function: function, line: line)
     }
     #endif
@@ -1134,20 +1134,20 @@ extension Logger {
     #if compiler(>=5.3)
     @inlinable
     public func critical(_ message: @autoclosure () -> Logger.Message,
-                      metadata: @autoclosure () -> Logger.Metadata? = nil,
-                      baggage: Baggage?,
-                      source: @autoclosure () -> String? = nil,
-                      file: String = #fileID, function: String = #function, line: UInt = #line) {
+                         metadata: @autoclosure () -> Logger.Metadata? = nil,
+                         baggage: Baggage?,
+                         source: @autoclosure () -> String? = nil,
+                         file: String = #fileID, function: String = #function, line: UInt = #line) {
         self.log(level: .critical, message(), metadata: metadata(), baggage: baggage, source: source(), file: file, function: function, line: line)
     }
 
     #else
     @inlinable
     public func critical(_ message: @autoclosure () -> Logger.Message,
-                      metadata: @autoclosure () -> Logger.Metadata? = nil,
-                      baggage: Baggage?,
-                      source: @autoclosure () -> String? = nil,
-                      file: String = #file, function: String = #function, line: UInt = #line) {
+                         metadata: @autoclosure () -> Logger.Metadata? = nil,
+                         baggage: Baggage?,
+                         source: @autoclosure () -> String? = nil,
+                         file: String = #file, function: String = #function, line: UInt = #line) {
         self.log(level: .critical, message(), metadata: metadata(), baggage: baggage, source: source(), file: file, function: function, line: line)
     }
     #endif
@@ -1173,18 +1173,18 @@ extension Logger {
     #if compiler(>=5.3)
     @inlinable
     public func critical(_ message: @autoclosure () -> Logger.Message,
-                      metadata: @autoclosure () -> Logger.Metadata? = nil,
-                      source: @autoclosure () -> String? = nil,
-                      file: String = #fileID, function: String = #function, line: UInt = #line) {
+                         metadata: @autoclosure () -> Logger.Metadata? = nil,
+                         source: @autoclosure () -> String? = nil,
+                         file: String = #fileID, function: String = #function, line: UInt = #line) {
         self.log(level: .critical, message(), metadata: metadata(), source: source(), file: file, function: function, line: line)
     }
 
     #else
     @inlinable
     public func critical(_ message: @autoclosure () -> Logger.Message,
-                      metadata: @autoclosure () -> Logger.Metadata? = nil,
-                      source: @autoclosure () -> String? = nil,
-                      file: String = #file, function: String = #function, line: UInt = #line) {
+                         metadata: @autoclosure () -> Logger.Metadata? = nil,
+                         source: @autoclosure () -> String? = nil,
+                         file: String = #file, function: String = #function, line: UInt = #line) {
         self.log(level: .critical, message(), metadata: metadata(), source: source(), file: file, function: function, line: line)
     }
     #endif
@@ -1207,18 +1207,18 @@ extension Logger {
     #if compiler(>=5.3)
     @inlinable
     public func critical(_ message: @autoclosure () -> Logger.Message,
-                      metadata: @autoclosure () -> Logger.Metadata? = nil,
-                      baggage: Baggage?,
-                      file: String = #fileID, function: String = #function, line: UInt = #line) {
+                         metadata: @autoclosure () -> Logger.Metadata? = nil,
+                         baggage: Baggage?,
+                         file: String = #fileID, function: String = #function, line: UInt = #line) {
         self.critical(message(), metadata: metadata(), baggage: baggage, source: nil, file: file, function: function, line: line)
     }
 
     #else
     @inlinable
     public func critical(_ message: @autoclosure () -> Logger.Message,
-                      metadata: @autoclosure () -> Logger.Metadata? = nil,
-                      baggage: Baggage?,
-                      file: String = #file, function: String = #function, line: UInt = #line) {
+                         metadata: @autoclosure () -> Logger.Metadata? = nil,
+                         baggage: Baggage?,
+                         file: String = #file, function: String = #function, line: UInt = #line) {
         self.critical(message(), metadata: metadata(), baggage: baggage, source: nil, file: file, function: function, line: line)
     }
     #endif
@@ -1240,16 +1240,16 @@ extension Logger {
     #if compiler(>=5.3)
     @inlinable
     public func critical(_ message: @autoclosure () -> Logger.Message,
-                      metadata: @autoclosure () -> Logger.Metadata? = nil,
-                      file: String = #fileID, function: String = #function, line: UInt = #line) {
+                         metadata: @autoclosure () -> Logger.Metadata? = nil,
+                         file: String = #fileID, function: String = #function, line: UInt = #line) {
         self.critical(message(), metadata: metadata(), source: nil, file: file, function: function, line: line)
     }
 
     #else
     @inlinable
     public func critical(_ message: @autoclosure () -> Logger.Message,
-                      metadata: @autoclosure () -> Logger.Metadata? = nil,
-                      file: String = #file, function: String = #function, line: UInt = #line) {
+                         metadata: @autoclosure () -> Logger.Metadata? = nil,
+                         file: String = #file, function: String = #function, line: UInt = #line) {
         self.critical(message(), metadata: metadata(), source: nil, file: file, function: function, line: line)
     }
     #endif
@@ -1512,12 +1512,12 @@ extension Logger {
     #if swift(>=5.5) && canImport(_Concurrency)
     public struct MetadataProvider: Sendable {
         /// Extract `Metadata` from the given `Baggage`.
-        public let metadata: @Sendable (_ baggage: Baggage?) -> Metadata?
+        public let metadata: @Sendable(_ baggage: Baggage?) -> Metadata?
 
         /// Create a new `MetadataProvider`.
         ///
         /// - Parameter metadata: A closure extracting metadata from a given `Baggage`.
-        public init(metadata: @escaping @Sendable (Baggage?) -> Metadata?) {
+        public init(metadata: @escaping @Sendable(Baggage?) -> Metadata?) {
             self.metadata = metadata
         }
     }
