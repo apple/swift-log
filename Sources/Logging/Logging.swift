@@ -174,12 +174,20 @@ extension Logger {
     public func log(level: Logger.Level,
                     _ message: @autoclosure () -> Logger.Message,
                     metadata: @autoclosure () -> Logger.Metadata? = nil,
+                    baggage: Baggage?,
                     source: @autoclosure () -> String? = nil,
                     file: String = #file, function: String = #function, line: UInt = #line) {
         if self.logLevel <= level {
+            let providerMetadata = metadataProvider?.metadata(baggage)
+            let metadata: Metadata? = {
+                guard let metadata = metadata(), !metadata.isEmpty else { return providerMetadata }
+                guard let providerMetadata = providerMetadata else { return metadata }
+                return providerMetadata.merging(metadata, uniquingKeysWith: { _, oneOffMetadata in oneOffMetadata })
+            }()
+
             self.handler.log(level: level,
                              message: message(),
-                             metadata: metadata(),
+                             metadata: metadata,
                              source: source() ?? Logger.currentModule(filePath: (file)),
                              file: file, function: function, line: line)
         }
