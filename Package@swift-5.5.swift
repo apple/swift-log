@@ -21,7 +21,7 @@ let package = Package(
         .library(name: "Logging", targets: ["Logging"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/apple/swift-distributed-tracing-baggage", from: "0.3.0"),
+        .package(url: "https://github.com/slashmo/swift-distributed-tracing-baggage", branch: "support/swift-5.0"),
     ],
     targets: [
         .target(
