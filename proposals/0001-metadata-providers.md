@@ -21,7 +21,7 @@ logger.info("... now this", metadata: ["trace-id": MyTracingLibrary.currentTrace
 
 This comes with a couple of downsides:
 
-### Error-prone and repetetive
+### Error-prone and repetitive
 
 It's easy to forget passing this metadata to _all_ log statements, resulting in an inconsistent debugging experience as these log statements cannot be found using correlation IDs.
 
