@@ -25,7 +25,7 @@ This comes with a couple of downsides:
 
 It's easy to forget passing this metadata to _all_ log statements, resulting in an inconsistent debugging experience as these log statements cannot be found using correlation IDs.
 
-The repetetiveness and verboseness of logging multiple metadata in-line quickly becomes annoying and vastly decreases the signal-to-noise ratio of Swift code trying to be a good citizen and making use of log correlation techniques such as distributed tracing.
+The repetitiveness and verboseness of logging multiple metadata in-line quickly becomes annoying and vastly decreases the signal-to-noise ratio of Swift code trying to be a good citizen and making use of log correlation techniques such as distributed tracing.
 
 ### Impossible to implement for libraries
 
