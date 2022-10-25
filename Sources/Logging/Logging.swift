@@ -42,8 +42,10 @@ public struct Logger {
     @usableFromInline
     var handler: LogHandler
 
-    @usableFromInline
-    var metadataProvider: MetadataProvider?
+    /// Metadata provider which will be used to convert contextual ``Baggage`` to ``Logger.Metadata`` when a log message is to be emitted.
+    /// The provider configured on the ``LoggingSystem`` level will be passed to a `Logger` on initialization, however it is possible to replace 
+    /// the provider on specific instances, in case they should treat contextual baggage information in some other way (e.g. ignore it).
+    public var metadataProvider: MetadataProvider?
 
     /// An identifier of the creator of this `Logger`.
     public let label: String
