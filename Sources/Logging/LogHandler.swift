@@ -129,6 +129,18 @@ public protocol LogHandler: _SwiftLogSendableLogHandler {
     func log(level: Logger.Level,
              message: Logger.Message,
              metadata: Logger.Metadata?,
+             baggage: Logger.BaggageStrategy,
+             source: String,
+             file: String,
+             function: String,
+             line: UInt)
+
+    /// SwiftLog 1.4 compatibility method. Please do _not_ implement, implement
+    /// `log(level:message:metadata:baggage:source:file:function:line:)` instead.
+    @available(*, deprecated, renamed: "log(level:message:metadata:baggage:source:file:function:line:)")
+    func log(level: Logger.Level,
+             message: Logger.Message,
+             metadata: Logger.Metadata?,
              source: String,
              file: String,
              function: String,
@@ -168,15 +180,30 @@ extension LogHandler {
     public func log(level: Logger.Level,
                     message: Logger.Message,
                     metadata: Logger.Metadata?,
+                    baggage: Logger.BaggageStrategy,
                     source: String,
                     file: String,
                     function: String,
                     line: UInt) {
+        /// This implementation drops the `baggage` parameter
+        self.log(level: level, message: message, metadata: metadata, source: source, file: file, function: function, line: line)
+    }
+
+    @available(*, deprecated, renamed: "log(level:message:metadata:baggage:source:file:function:line:)")
+    public func log(level: Logger.Level,
+                    message: Logger.Message,
+                    metadata: Logger.Metadata?,
+                    source: String,
+                    file: String,
+                    function: String,
+                    line: UInt) {
+        /// This implementation drops the `source` parameter
         self.log(level: level, message: message, metadata: metadata, file: file, function: function, line: line)
     }
 
     @available(*, deprecated, renamed: "log(level:message:metadata:source:file:function:line:)")
     public func log(level: Logging.Logger.Level, message: Logging.Logger.Message, metadata: Logging.Logger.Metadata?, file: String, function: String, line: UInt) {
+        /// This implementation obtains the source from the `file` parameter
         self.log(level: level,
                  message: message,
                  metadata: metadata,

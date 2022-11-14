@@ -42,18 +42,12 @@ public struct Logger {
     @usableFromInline
     var handler: LogHandler
 
-    /// Metadata provider which will be used to convert contextual ``Baggage`` to ``Logger.Metadata`` when a log message is to be emitted.
-    /// The provider configured on the ``LoggingSystem`` level will be passed to a `Logger` on initialization, however it is possible to replace 
-    /// the provider on specific instances, in case they should treat contextual baggage information in some other way (e.g. ignore it).
-    public var metadataProvider: MetadataProvider?
-
     /// An identifier of the creator of this `Logger`.
     public let label: String
 
-    internal init(label: String, _ handler: LogHandler, metadataProvider: MetadataProvider?) {
+    internal init(label: String, _ handler: LogHandler) {
         self.label = label
         self.handler = handler
-        self.metadataProvider = metadataProvider
     }
 }
 
@@ -85,26 +79,10 @@ extension Logger {
                     source: @autoclosure () -> String? = nil,
                     file: String = #fileID, function: String = #function, line: UInt = #line) {
         if self.logLevel <= level {
-            let taskLocalBaggage: Baggage?
-            #if compiler(>=5.5) && canImport(_Concurrency)
-            if #available(macOS 10.15, iOS 13.0, watchOS 6.0, tvOS 13.0, *), self.metadataProvider != nil {
-                taskLocalBaggage = Baggage.current
-            } else {
-                taskLocalBaggage = nil
-            }
-            #else
-            taskLocalBaggage = nil
-            #endif
-            let providerMetadata = self.metadataProvider?.metadata(taskLocalBaggage)
-            let metadata: Metadata? = {
-                guard let metadata = metadata(), !metadata.isEmpty else { return providerMetadata }
-                guard let providerMetadata = providerMetadata else { return metadata }
-                return providerMetadata.merging(metadata, uniquingKeysWith: { _, oneOffMetadata in oneOffMetadata })
-            }()
-
             self.handler.log(level: level,
                              message: message(),
-                             metadata: metadata,
+                             metadata: metadata(),
+                             baggage: .taskLocal,
                              source: source() ?? Logger.currentModule(fileID: (file)),
                              file: file, function: function, line: line)
         }
@@ -121,6 +99,7 @@ extension Logger {
             self.handler.log(level: level,
                              message: message(),
                              metadata: metadata(),
+                             baggage: .taskLocal,
                              source: source() ?? Logger.currentModule(filePath: (file)),
                              file: file, function: function, line: line)
         }
@@ -152,20 +131,14 @@ extension Logger {
     public func log(level: Logger.Level,
                     _ message: @autoclosure () -> Logger.Message,
                     metadata: @autoclosure () -> Logger.Metadata? = nil,
-                    baggage: Baggage?,
+                    baggage: BaggageStrategy = .taskLocal,
                     source: @autoclosure () -> String? = nil,
                     file: String = #fileID, function: String = #function, line: UInt = #line) {
         if self.logLevel <= level {
-            let providerMetadata = self.metadataProvider?.metadata(baggage)
-            let metadata: Metadata? = {
-                guard let metadata = metadata(), !metadata.isEmpty else { return providerMetadata }
-                guard let providerMetadata = providerMetadata else { return metadata }
-                return providerMetadata.merging(metadata, uniquingKeysWith: { _, oneOffMetadata in oneOffMetadata })
-            }()
-
             self.handler.log(level: level,
                              message: message(),
-                             metadata: metadata,
+                             metadata: metadata(),
+                             baggage: baggage,
                              source: source() ?? Logger.currentModule(fileID: (file)),
                              file: file, function: function, line: line)
         }
@@ -176,20 +149,14 @@ extension Logger {
     public func log(level: Logger.Level,
                     _ message: @autoclosure () -> Logger.Message,
                     metadata: @autoclosure () -> Logger.Metadata? = nil,
-                    baggage: Baggage?,
+                    baggage: ContextualBaggage = .taskLocal,
                     source: @autoclosure () -> String? = nil,
                     file: String = #file, function: String = #function, line: UInt = #line) {
         if self.logLevel <= level {
-            let providerMetadata = self.metadataProvider?.metadata(baggage)
-            let metadata: Metadata? = {
-                guard let metadata = metadata(), !metadata.isEmpty else { return providerMetadata }
-                guard let providerMetadata = providerMetadata else { return metadata }
-                return providerMetadata.merging(metadata, uniquingKeysWith: { _, oneOffMetadata in oneOffMetadata })
-            }()
-
             self.handler.log(level: level,
                              message: message(),
-                             metadata: metadata,
+                             metadata: metadata(),
+                             baggage: baggage,
                              source: source() ?? Logger.currentModule(filePath: (file)),
                              file: file, function: function, line: line)
         }
@@ -226,7 +193,7 @@ extension Logger {
                     _ message: @autoclosure () -> Logger.Message,
                     metadata: @autoclosure () -> Logger.Metadata? = nil,
                     file: String = #file, function: String = #function, line: UInt = #line) {
-        self.log(level: level, message(), metadata: metadata(), source: nil, file: file, function: function, line: line)
+        self.log(level: level, message(), metadata: metadata(), baggage: .taskLocal, source: nil, file: file, function: function, line: line)
     }
     #endif
 
@@ -285,20 +252,31 @@ extension Logger {
     @inlinable
     public func trace(_ message: @autoclosure () -> Logger.Message,
                       metadata: @autoclosure () -> Logger.Metadata? = nil,
-                      baggage: Baggage?,
+                      baggage: Baggage,
                       source: @autoclosure () -> String? = nil,
                       file: String = #fileID, function: String = #function, line: UInt = #line) {
-        self.log(level: .trace, message(), metadata: metadata(), baggage: baggage, source: source(), file: file, function: function, line: line)
+        self.log(level: .trace, message(), metadata: metadata(), baggage: .explicitlyPassed(baggage), source: source(), file: file, function: function, line: line)
     }
 
     #else
     @inlinable
     public func trace(_ message: @autoclosure () -> Logger.Message,
                       metadata: @autoclosure () -> Logger.Metadata? = nil,
-                      baggage: Baggage?,
+                      baggage: ContextualBaggage,
                       source: @autoclosure () -> String? = nil,
                       file: String = #file, function: String = #function, line: UInt = #line) {
         self.log(level: .trace, message(), metadata: metadata(), baggage: baggage, source: source(), file: file, function: function, line: line)
+    }
+    #endif
+
+    #if swift(>=5.5.0)
+    @inlinable
+    public func trace(_ message: @autoclosure () -> Logger.Message,
+                      metadata: @autoclosure () -> Logger.Metadata? = nil,
+                      baggage: ContextualBaggage,
+                      source: @autoclosure () -> String? = nil,
+                      file: String = #fileID, function: String = #function, line: UInt = #line) {
+      self.log(level: .trace, message(), metadata: metadata(), baggage: baggage, source: source(), file: file, function: function, line: line)
     }
     #endif
 
@@ -358,7 +336,7 @@ extension Logger {
     @inlinable
     public func trace(_ message: @autoclosure () -> Logger.Message,
                       metadata: @autoclosure () -> Logger.Metadata? = nil,
-                      baggage: Baggage?,
+                      baggage: BaggageStrategy,
                       file: String = #fileID, function: String = #function, line: UInt = #line) {
         self.trace(message(), metadata: metadata(), baggage: baggage, source: nil, file: file, function: function, line: line)
     }
@@ -367,7 +345,7 @@ extension Logger {
     @inlinable
     public func trace(_ message: @autoclosure () -> Logger.Message,
                       metadata: @autoclosure () -> Logger.Metadata? = nil,
-                      baggage: Baggage?,
+                      baggage: ContextualBaggage,
                       file: String = #file, function: String = #function, line: UInt = #line) {
         self.trace(message(), metadata: metadata(), baggage: baggage, source: nil, file: file, function: function, line: line)
     }
@@ -427,20 +405,31 @@ extension Logger {
     @inlinable
     public func debug(_ message: @autoclosure () -> Logger.Message,
                       metadata: @autoclosure () -> Logger.Metadata? = nil,
-                      baggage: Baggage?,
+                      baggage: Baggage,
                       source: @autoclosure () -> String? = nil,
                       file: String = #fileID, function: String = #function, line: UInt = #line) {
-        self.log(level: .debug, message(), metadata: metadata(), baggage: baggage, source: source(), file: file, function: function, line: line)
+        self.log(level: .debug, message(), metadata: metadata(), baggage: .explicitlyPassed(baggage), source: source(), file: file, function: function, line: line)
     }
 
     #else
     @inlinable
     public func debug(_ message: @autoclosure () -> Logger.Message,
                       metadata: @autoclosure () -> Logger.Metadata? = nil,
-                      baggage: Baggage?,
+                      baggage: ContextualBaggage,
                       source: @autoclosure () -> String? = nil,
                       file: String = #file, function: String = #function, line: UInt = #line) {
         self.log(level: .debug, message(), metadata: metadata(), baggage: baggage, source: source(), file: file, function: function, line: line)
+    }
+    #endif
+
+    #if swift(>=5.5.0)
+    @inlinable
+    public func debug(_ message: @autoclosure () -> Logger.Message,
+                      metadata: @autoclosure () -> Logger.Metadata? = nil,
+                      baggage: ContextualBaggage = .taskLocal,
+                      source: @autoclosure () -> String? = nil,
+                      file: String = #fileID, function: String = #function, line: UInt = #line) {
+      self.log(level: .debug, message(), metadata: metadata(), baggage: baggage, source: source(), file: file, function: function, line: line)
     }
     #endif
 
@@ -500,7 +489,7 @@ extension Logger {
     @inlinable
     public func debug(_ message: @autoclosure () -> Logger.Message,
                       metadata: @autoclosure () -> Logger.Metadata? = nil,
-                      baggage: Baggage?,
+                      baggage: BaggageStrategy,
                       file: String = #fileID, function: String = #function, line: UInt = #line) {
         self.debug(message(), metadata: metadata(), baggage: baggage, source: nil, file: file, function: function, line: line)
     }
@@ -509,7 +498,7 @@ extension Logger {
     @inlinable
     public func debug(_ message: @autoclosure () -> Logger.Message,
                       metadata: @autoclosure () -> Logger.Metadata? = nil,
-                      baggage: Baggage?,
+                      baggage: ContextualBaggage,
                       file: String = #file, function: String = #function, line: UInt = #line) {
         self.debug(message(), metadata: metadata(), baggage: baggage, source: nil, file: file, function: function, line: line)
     }
@@ -569,20 +558,31 @@ extension Logger {
     @inlinable
     public func info(_ message: @autoclosure () -> Logger.Message,
                      metadata: @autoclosure () -> Logger.Metadata? = nil,
-                     baggage: Baggage?,
+                     baggage: Baggage,
                      source: @autoclosure () -> String? = nil,
                      file: String = #fileID, function: String = #function, line: UInt = #line) {
-        self.log(level: .info, message(), metadata: metadata(), baggage: baggage, source: source(), file: file, function: function, line: line)
+        self.log(level: .info, message(), metadata: metadata(), baggage: .explicitlyPassed(baggage), source: source(), file: file, function: function, line: line)
     }
 
     #else
     @inlinable
     public func info(_ message: @autoclosure () -> Logger.Message,
                      metadata: @autoclosure () -> Logger.Metadata? = nil,
-                     baggage: Baggage?,
+                     baggage: ContextualBaggage,
                      source: @autoclosure () -> String? = nil,
                      file: String = #file, function: String = #function, line: UInt = #line) {
         self.log(level: .info, message(), metadata: metadata(), baggage: baggage, source: source(), file: file, function: function, line: line)
+    }
+    #endif
+
+    #if swift(>=5.5.0)
+    @inlinable
+    public func info(_ message: @autoclosure () -> Logger.Message,
+                      metadata: @autoclosure () -> Logger.Metadata? = nil,
+                      baggage: ContextualBaggage = .taskLocal,
+                      source: @autoclosure () -> String? = nil,
+                      file: String = #fileID, function: String = #function, line: UInt = #line) {
+      self.log(level: .info, message(), metadata: metadata(), baggage: baggage, source: source(), file: file, function: function, line: line)
     }
     #endif
 
@@ -642,7 +642,7 @@ extension Logger {
     @inlinable
     public func info(_ message: @autoclosure () -> Logger.Message,
                      metadata: @autoclosure () -> Logger.Metadata? = nil,
-                     baggage: Baggage?,
+                     baggage: BaggageStrategy,
                      file: String = #fileID, function: String = #function, line: UInt = #line) {
         self.info(message(), metadata: metadata(), baggage: baggage, source: nil, file: file, function: function, line: line)
     }
@@ -651,7 +651,7 @@ extension Logger {
     @inlinable
     public func info(_ message: @autoclosure () -> Logger.Message,
                      metadata: @autoclosure () -> Logger.Metadata? = nil,
-                     baggage: Baggage?,
+                     baggage: ContextualBaggage,
                      file: String = #file, function: String = #function, line: UInt = #line) {
         self.info(message(), metadata: metadata(), baggage: baggage, source: nil, file: file, function: function, line: line)
     }
@@ -711,20 +711,31 @@ extension Logger {
     @inlinable
     public func notice(_ message: @autoclosure () -> Logger.Message,
                        metadata: @autoclosure () -> Logger.Metadata? = nil,
-                       baggage: Baggage?,
+                       baggage: Baggage,
                        source: @autoclosure () -> String? = nil,
                        file: String = #fileID, function: String = #function, line: UInt = #line) {
-        self.log(level: .notice, message(), metadata: metadata(), baggage: baggage, source: source(), file: file, function: function, line: line)
+        self.log(level: .notice, message(), metadata: metadata(), baggage: .explicitlyPassed(baggage), source: source(), file: file, function: function, line: line)
     }
 
     #else
     @inlinable
     public func notice(_ message: @autoclosure () -> Logger.Message,
                        metadata: @autoclosure () -> Logger.Metadata? = nil,
-                       baggage: Baggage?,
+                       baggage: ContextualBaggage,
                        source: @autoclosure () -> String? = nil,
                        file: String = #file, function: String = #function, line: UInt = #line) {
         self.log(level: .notice, message(), metadata: metadata(), baggage: baggage, source: source(), file: file, function: function, line: line)
+    }
+    #endif
+
+    #if swift(>=5.5.0)
+    @inlinable
+    public func notice(_ message: @autoclosure () -> Logger.Message,
+                      metadata: @autoclosure () -> Logger.Metadata? = nil,
+                      baggage: ContextualBaggage = .taskLocal,
+                      source: @autoclosure () -> String? = nil,
+                      file: String = #fileID, function: String = #function, line: UInt = #line) {
+      self.log(level: .notice, message(), metadata: metadata(), baggage: baggage, source: source(), file: file, function: function, line: line)
     }
     #endif
 
@@ -784,7 +795,7 @@ extension Logger {
     @inlinable
     public func notice(_ message: @autoclosure () -> Logger.Message,
                        metadata: @autoclosure () -> Logger.Metadata? = nil,
-                       baggage: Baggage?,
+                       baggage: BaggageStrategy,
                        file: String = #fileID, function: String = #function, line: UInt = #line) {
         self.notice(message(), metadata: metadata(), baggage: baggage, source: nil, file: file, function: function, line: line)
     }
@@ -793,7 +804,7 @@ extension Logger {
     @inlinable
     public func notice(_ message: @autoclosure () -> Logger.Message,
                        metadata: @autoclosure () -> Logger.Metadata? = nil,
-                       baggage: Baggage?,
+                       baggage: ContextualBaggage,
                        file: String = #file, function: String = #function, line: UInt = #line) {
         self.notice(message(), metadata: metadata(), baggage: baggage, source: nil, file: file, function: function, line: line)
     }
@@ -853,20 +864,31 @@ extension Logger {
     @inlinable
     public func warning(_ message: @autoclosure () -> Logger.Message,
                         metadata: @autoclosure () -> Logger.Metadata? = nil,
-                        baggage: Baggage?,
+                        baggage: Baggage,
                         source: @autoclosure () -> String? = nil,
                         file: String = #fileID, function: String = #function, line: UInt = #line) {
-        self.log(level: .warning, message(), metadata: metadata(), baggage: baggage, source: source(), file: file, function: function, line: line)
+        self.log(level: .warning, message(), metadata: metadata(), baggage: .explicitlyPassed(baggage), source: source(), file: file, function: function, line: line)
     }
 
     #else
     @inlinable
     public func warning(_ message: @autoclosure () -> Logger.Message,
                         metadata: @autoclosure () -> Logger.Metadata? = nil,
-                        baggage: Baggage?,
+                        baggage: ContextualBaggage,
                         source: @autoclosure () -> String? = nil,
                         file: String = #file, function: String = #function, line: UInt = #line) {
         self.log(level: .warning, message(), metadata: metadata(), baggage: baggage, source: source(), file: file, function: function, line: line)
+    }
+    #endif
+
+    #if swift(>=5.5.0)
+    @inlinable
+    public func warning(_ message: @autoclosure () -> Logger.Message,
+                      metadata: @autoclosure () -> Logger.Metadata? = nil,
+                      baggage: ContextualBaggage = .taskLocal,
+                      source: @autoclosure () -> String? = nil,
+                      file: String = #fileID, function: String = #function, line: UInt = #line) {
+      self.log(level: .warning, message(), metadata: metadata(), baggage: baggage, source: source(), file: file, function: function, line: line)
     }
     #endif
 
@@ -926,7 +948,7 @@ extension Logger {
     @inlinable
     public func warning(_ message: @autoclosure () -> Logger.Message,
                         metadata: @autoclosure () -> Logger.Metadata? = nil,
-                        baggage: Baggage?,
+                        baggage: BaggageStrategy,
                         file: String = #fileID, function: String = #function, line: UInt = #line) {
         self.warning(message(), metadata: metadata(), baggage: baggage, source: nil, file: file, function: function, line: line)
     }
@@ -935,7 +957,7 @@ extension Logger {
     @inlinable
     public func warning(_ message: @autoclosure () -> Logger.Message,
                         metadata: @autoclosure () -> Logger.Metadata? = nil,
-                        baggage: Baggage?,
+                        baggage: ContextualBaggage,
                         file: String = #file, function: String = #function, line: UInt = #line) {
         self.warning(message(), metadata: metadata(), baggage: baggage, source: nil, file: file, function: function, line: line)
     }
@@ -995,20 +1017,31 @@ extension Logger {
     @inlinable
     public func error(_ message: @autoclosure () -> Logger.Message,
                       metadata: @autoclosure () -> Logger.Metadata? = nil,
-                      baggage: Baggage?,
+                      baggage: Baggage,
                       source: @autoclosure () -> String? = nil,
                       file: String = #fileID, function: String = #function, line: UInt = #line) {
-        self.log(level: .error, message(), metadata: metadata(), baggage: baggage, source: source(), file: file, function: function, line: line)
+        self.log(level: .error, message(), metadata: metadata(), baggage: .explicitlyPassed(baggage), source: source(), file: file, function: function, line: line)
     }
 
     #else
     @inlinable
     public func error(_ message: @autoclosure () -> Logger.Message,
                       metadata: @autoclosure () -> Logger.Metadata? = nil,
-                      baggage: Baggage?,
+                      baggage: ContextualBaggage,
                       source: @autoclosure () -> String? = nil,
                       file: String = #file, function: String = #function, line: UInt = #line) {
         self.log(level: .error, message(), metadata: metadata(), baggage: baggage, source: source(), file: file, function: function, line: line)
+    }
+    #endif
+
+    #if swift(>=5.5.0)
+    @inlinable
+    public func error(_ message: @autoclosure () -> Logger.Message,
+                      metadata: @autoclosure () -> Logger.Metadata? = nil,
+                      baggage: ContextualBaggage = .taskLocal,
+                      source: @autoclosure () -> String? = nil,
+                      file: String = #fileID, function: String = #function, line: UInt = #line) {
+      self.log(level: .error, message(), metadata: metadata(), baggage: baggage, source: source(), file: file, function: function, line: line)
     }
     #endif
 
@@ -1068,7 +1101,7 @@ extension Logger {
     @inlinable
     public func error(_ message: @autoclosure () -> Logger.Message,
                       metadata: @autoclosure () -> Logger.Metadata? = nil,
-                      baggage: Baggage?,
+                      baggage: BaggageStrategy,
                       file: String = #fileID, function: String = #function, line: UInt = #line) {
         self.error(message(), metadata: metadata(), baggage: baggage, source: nil, file: file, function: function, line: line)
     }
@@ -1077,7 +1110,7 @@ extension Logger {
     @inlinable
     public func error(_ message: @autoclosure () -> Logger.Message,
                       metadata: @autoclosure () -> Logger.Metadata? = nil,
-                      baggage: Baggage?,
+                      baggage: ContextualBaggage,
                       file: String = #file, function: String = #function, line: UInt = #line) {
         self.error(message(), metadata: metadata(), baggage: baggage, source: nil, file: file, function: function, line: line)
     }
@@ -1137,20 +1170,31 @@ extension Logger {
     @inlinable
     public func critical(_ message: @autoclosure () -> Logger.Message,
                          metadata: @autoclosure () -> Logger.Metadata? = nil,
-                         baggage: Baggage?,
+                         baggage: Baggage,
                          source: @autoclosure () -> String? = nil,
                          file: String = #fileID, function: String = #function, line: UInt = #line) {
-        self.log(level: .critical, message(), metadata: metadata(), baggage: baggage, source: source(), file: file, function: function, line: line)
+        self.log(level: .critical, message(), metadata: metadata(), baggage: .explicitlyPassed(baggage), source: source(), file: file, function: function, line: line)
     }
 
     #else
     @inlinable
     public func critical(_ message: @autoclosure () -> Logger.Message,
                          metadata: @autoclosure () -> Logger.Metadata? = nil,
-                         baggage: Baggage?,
+                         baggage: ContextualBaggage,
                          source: @autoclosure () -> String? = nil,
                          file: String = #file, function: String = #function, line: UInt = #line) {
         self.log(level: .critical, message(), metadata: metadata(), baggage: baggage, source: source(), file: file, function: function, line: line)
+    }
+    #endif
+
+    #if swift(>=5.5.0)
+    @inlinable
+    public func critical(_ message: @autoclosure () -> Logger.Message,
+                      metadata: @autoclosure () -> Logger.Metadata? = nil,
+                      baggage: ContextualBaggage = .taskLocal,
+                      source: @autoclosure () -> String? = nil,
+                      file: String = #fileID, function: String = #function, line: UInt = #line) {
+      self.log(level: .critical, message(), metadata: metadata(), baggage: baggage, source: source(), file: file, function: function, line: line)
     }
     #endif
 
@@ -1210,7 +1254,7 @@ extension Logger {
     @inlinable
     public func critical(_ message: @autoclosure () -> Logger.Message,
                          metadata: @autoclosure () -> Logger.Metadata? = nil,
-                         baggage: Baggage?,
+                         baggage: BaggageStrategy,
                          file: String = #fileID, function: String = #function, line: UInt = #line) {
         self.critical(message(), metadata: metadata(), baggage: baggage, source: nil, file: file, function: function, line: line)
     }
@@ -1219,7 +1263,7 @@ extension Logger {
     @inlinable
     public func critical(_ message: @autoclosure () -> Logger.Message,
                          metadata: @autoclosure () -> Logger.Metadata? = nil,
-                         baggage: Baggage?,
+                         baggage: ContextualBaggage,
                          file: String = #file, function: String = #function, line: UInt = #line) {
         self.critical(message(), metadata: metadata(), baggage: baggage, source: nil, file: file, function: function, line: line)
     }
@@ -1272,7 +1316,7 @@ public enum LoggingSystem {
     ///     - metadataProvider: The `MetadataProvider` used to inject runtime-generated metadata, defaults to nil.
     ///     - factory: A closure that given a `Logger` identifier, produces an instance of the `LogHandler`.
     public static func bootstrap(metadataProvider: Logger.MetadataProvider? = nil,
-                                 _ factory: @escaping (String) -> LogHandler) {
+                                 _ factory: @escaping (String, Logger.MetadataProvider?) -> LogHandler) {
         self._metadataProvider.replaceMetadataProvider(metadataProvider, validate: true)
         self._factory.replaceFactory(factory, validate: true)
     }
@@ -1284,25 +1328,40 @@ public enum LoggingSystem {
     /// - parameters:
     ///     - factory: A closure that given a `Logger` identifier, produces an instance of the `LogHandler`.
     public static func bootstrap(_ factory: @escaping (String) -> LogHandler) {
-        self.bootstrap(metadataProvider: nil, factory)
+        self.bootstrap(metadataProvider: nil) { label, metadataProvider in
+            factory(label)
+        }
     }
 
     // for our testing we want to allow multiple bootstraping
-    internal static func bootstrapInternal(metadataProvider: Logger.MetadataProvider? = nil,
-                                           _ factory: @escaping (String) -> LogHandler) {
+    internal static func bootstrapInternal(_ factory: @escaping (String, Logger.MetadataProvider?) -> LogHandler) {
+        self._factory.replaceFactory(factory, validate: false)
+    }
+
+    // for our testing we want to allow multiple bootstraping
+    internal static func bootstrapInternal(metadataProvider: Logger.MetadataProvider,
+                                           _ factory: @escaping (String, Logger.MetadataProvider?) -> LogHandler) {
         self._metadataProvider.replaceMetadataProvider(metadataProvider, validate: false)
         self._factory.replaceFactory(factory, validate: false)
     }
 
     internal static func bootstrapInternal(_ factory: @escaping (String) -> LogHandler) {
-        self.bootstrapInternal(metadataProvider: nil, factory)
+        self.bootstrapInternal { label, _ in
+            factory(label)
+        }
     }
 
-    fileprivate static var metadataProvider: Logger.MetadataProvider? {
+    public static var metadataProvider: Logger.MetadataProvider? {
         return self._metadataProvider.underlying
     }
 
     fileprivate static var factory: (String) -> LogHandler {
+        return { label in
+            self._factory._underlying(label, LoggingSystem.metadataProvider)
+        }
+    }
+
+    fileprivate static var factoryWithMetadataProvider: (String, Logger.MetadataProvider?) -> LogHandler {
         return self._factory.underlying
     }
 
@@ -1332,14 +1391,26 @@ public enum LoggingSystem {
 
     private final class FactoryBox {
         private let lock = ReadWriteLock()
-        fileprivate var _underlying: (String) -> LogHandler
+        fileprivate var _underlying: (String, Logger.MetadataProvider?) -> LogHandler
         private var initialized = false
 
         init(_ underlying: @escaping (String) -> LogHandler) {
-            self._underlying = underlying
+            self._underlying = { label, _ in
+                underlying(label)
+            }
         }
 
         func replaceFactory(_ factory: @escaping (String) -> LogHandler, validate: Bool) {
+            self.lock.withWriterLock {
+                precondition(!validate || !self.initialized, "logging system can only be initialized once per process.")
+                self._underlying = { label, _ in
+                    factory(label)
+                }
+                self.initialized = true
+            }
+        }
+
+        func replaceFactory(_ factory: @escaping (String, Logger.MetadataProvider?) -> LogHandler, validate: Bool) {
             self.lock.withWriterLock {
                 precondition(!validate || !self.initialized, "logging system can only be initialized once per process.")
                 self._underlying = factory
@@ -1347,7 +1418,7 @@ public enum LoggingSystem {
             }
         }
 
-        var underlying: (String) -> LogHandler {
+        var underlying: (String, Logger.MetadataProvider?) -> LogHandler {
             return self.lock.withReaderLock {
                 return self._underlying
             }
@@ -1358,6 +1429,25 @@ public enum LoggingSystem {
 extension Logger {
     /// `Metadata` is a typealias for `[String: Logger.MetadataValue]` the type of the metadata storage.
     public typealias Metadata = [String: MetadataValue]
+
+    /// Defines where contextual `Baggage` metadata should be obtained from.
+    /// Generally, the default of the ``ContextualBaggage/taskLocal`` strategy is the best to use in most applications.
+    /// However, some systems may not be able to use task-locals, or want to pass baggage values explicitly.
+    public enum BaggageStrategy {
+        /// Instructs the ``LogHandler`` to pick-up the task-local `Baggage`,
+        /// by querying `Baggage/current` when about to emit a log statement.
+        case taskLocal
+
+        /// Instructs the logger backend to use the explicitly passed Baggage when extracting metadata to include
+        // in log statements.
+        case explicitlyPassed(InstrumentationBaggage.Baggage)
+
+        /// Completely ignore contextual Baggage, and do not attempt to pick-up,
+        /// or extract values from a passed Baggage value.
+        ///
+        /// Effectively, this disables any configured ``Logger/MetadataProvider``.
+        case ignore
+    }
 
     /// A logging metadata value. `Logger.MetadataValue` is string, array, and dictionary literal convertible.
     ///
@@ -1442,7 +1532,7 @@ extension Logger {
     /// - parameters:
     ///     - label: An identifier for the creator of a `Logger`.
     public init(label: String) {
-        self.init(label: label, LoggingSystem.factory(label), metadataProvider: LoggingSystem.metadataProvider)
+        self.init(label: label, LoggingSystem.factoryWithMetadataProvider(label, LoggingSystem.metadataProvider))
     }
 
     /// Construct a `Logger` given a `label` identifying the creator of the `Logger` and a `MetadataProvider`.
@@ -1454,7 +1544,7 @@ extension Logger {
     ///     - label: An identifier for the creator of a `Logger`.
     ///     - metadataProvider: The `MetadataProvider` used to inject runtime-generated metadata, defaults to nil.
     public init(label: String, metadataProvider: MetadataProvider) {
-        self.init(label: label, LoggingSystem.factory(label), metadataProvider: metadataProvider)
+        self.init(label: label, LoggingSystem.factoryWithMetadataProvider(label, metadataProvider))
     }
 
     /// Construct a `Logger` given a `label` identifying the creator of the `Logger` or a non-standard `LogHandler`.
@@ -1470,7 +1560,7 @@ extension Logger {
     ///     - factory: A closure creating non-standard `LogHandler`s.
     public init(label: String,
                 factory: (String) -> LogHandler) {
-        self = Logger(label: label, factory(label), metadataProvider: LoggingSystem.metadataProvider)
+        self = Logger(label: label, factory(label))
     }
 
     /// Construct a `Logger` given a `label` identifying the creator of the `Logger` or a non-standard `LogHandler` and a `MetadataProvider`.
@@ -1483,12 +1573,10 @@ extension Logger {
     ///
     /// - parameters:
     ///     - label: An identifier for the creator of a `Logger`.
-    ///     - factory: A closure creating non-standard `LogHandler`s.
-    ///     - metadataProvider: The `MetadataProvider` used to inject runtime-generated metadata.
+    ///     - factory: A closure creating non-standard `LogHandler`s, which will be passed a label and the global ``LoggingSystem/metadataProvider``
     public init(label: String,
-                factory: (String) -> LogHandler,
-                metadataProvider: MetadataProvider) {
-        self = Logger(label: label, factory(label), metadataProvider: metadataProvider)
+                factory: (String, MetadataProvider?) -> LogHandler) {
+        self = Logger(label: label, factory(label, LoggingSystem.metadataProvider))
     }
 }
 
@@ -1513,27 +1601,35 @@ extension Logger {
     /// ```
     #if swift(>=5.5) && canImport(_Concurrency)
     public struct MetadataProvider: Sendable {
-        /// Extract `Metadata` from the given `Baggage`.
-        public let metadata: @Sendable(_ baggage: Baggage?) -> Metadata?
+        /// Extract `Metadata` from the given `InstrumentationBaggage/Baggage`.
+        public let fn: @Sendable(_ baggage: Baggage?) -> Metadata?
 
         /// Create a new `MetadataProvider`.
         ///
         /// - Parameter metadata: A closure extracting metadata from a given `Baggage`.
-        public init(metadata: @escaping @Sendable(Baggage?) -> Metadata?) {
-            self.metadata = metadata
+        public init(_ fn: @escaping @Sendable(Baggage?) -> Metadata?) {
+            self.fn = fn
+        }
+
+        public func provideMetadata(from baggage: Baggage?) -> Metadata? {
+            fn(baggage)
         }
     }
 
     #else
     public struct MetadataProvider {
-        /// Extract `Metadata` from the given `Baggage`.
-        public let metadata: (_ baggage: Baggage?) -> Metadata?
+        /// Extract `Metadata` from the given `InstrumentationBaggage/Baggage`.
+        internal let fn: (_ baggage: Baggage?) -> Metadata?
 
         /// Create a new `MetadataProvider`.
         ///
         /// - Parameter metadata: A closure extracting metadata from a given `Baggage`.
         public init(metadata: @escaping (Baggage?) -> Metadata?) {
             self.metadata = metadata
+        }
+
+        public func provideMetadata(from baggage: Baggage?) -> Metadata? {
+          fn(baggage)
         }
     }
     #endif
@@ -1553,7 +1649,7 @@ extension Logger.MetadataProvider {
         assert(!providers.isEmpty, "providers MUST NOT be empty")
         return Logger.MetadataProvider { baggage in
             providers.reduce(into: nil) { metadata, provider in
-                if let providedMetadata = provider.metadata(baggage) {
+                if let providedMetadata = provider.provideMetadata(from: baggage) {
                     if metadata != nil {
                         metadata!.merge(providedMetadata, uniquingKeysWith: { _, rhs in rhs })
                     } else {
@@ -1713,12 +1809,13 @@ public struct MultiplexLogHandler: LogHandler {
     public func log(level: Logger.Level,
                     message: Logger.Message,
                     metadata: Logger.Metadata?,
+                    baggage: Logger.BaggageStrategy,
                     source: String,
                     file: String,
                     function: String,
                     line: UInt) {
         for handler in self.handlers where handler.logLevel <= level {
-            handler.log(level: level, message: message, metadata: metadata, source: source, file: file, function: function, line: line)
+            handler.log(level: level, message: message, metadata: metadata, baggage: baggage, source: source, file: file, function: function, line: line)
         }
     }
 
@@ -1850,14 +1947,25 @@ public struct StreamLogHandler: LogHandler {
 
     /// Factory that makes a `StreamLogHandler` to directs its output to `stdout`
     public static func standardOutput(label: String) -> StreamLogHandler {
-        return StreamLogHandler(label: label, stream: StdioOutputStream.stdout)
+        return StreamLogHandler(label: label, metadataProvider: nil, stream: StdioOutputStream.stdout)
+    }
+
+    /// Factory that makes a `StreamLogHandler` to directs its output to `stdout`
+    public static func standardOutput(label: String, metadataProvider: Logger.MetadataProvider?) -> StreamLogHandler {
+        return StreamLogHandler(label: label, metadataProvider: nil, stream: StdioOutputStream.stdout)
     }
 
     /// Factory that makes a `StreamLogHandler` to directs its output to `stderr`
     public static func standardError(label: String) -> StreamLogHandler {
-        return StreamLogHandler(label: label, stream: StdioOutputStream.stderr)
+        return StreamLogHandler(label: label, metadataProvider: nil, stream: StdioOutputStream.stderr)
     }
 
+    /// Factory that makes a `StreamLogHandler` to directs its output to `stderr`
+    public static func standardError(label: String, metadataProvider: Logger.MetadataProvider?) -> StreamLogHandler {
+        return StreamLogHandler(label: label, metadataProvider: metadataProvider, stream: StdioOutputStream.stderr)
+    }
+
+    private let metadataProvider: Logger.MetadataProvider?
     private let stream: _SendableTextOutputStream
     private let label: String
 
@@ -1880,24 +1988,72 @@ public struct StreamLogHandler: LogHandler {
     }
 
     // internal for testing only
-    internal init(label: String, stream: _SendableTextOutputStream) {
+    internal init(label: String,
+                  stream: _SendableTextOutputStream) {
         self.label = label
+        self.metadataProvider = nil
+        self.stream = stream
+    }
+
+    // internal for testing only
+    internal init(label: String,
+                  metadataProvider: Logger.MetadataProvider?,
+                  stream: _SendableTextOutputStream) {
+        self.label = label
+        self.metadataProvider = metadataProvider
         self.stream = stream
     }
 
     public func log(level: Logger.Level,
                     message: Logger.Message,
                     metadata: Logger.Metadata?,
+                    baggage whereIsTheBaggage: Logger.BaggageStrategy,
                     source: String,
                     file: String,
                     function: String,
                     line: UInt) {
-        let prettyMetadata = metadata?.isEmpty ?? true
-            ? self.prettyMetadata
-            : self.prettify(self.metadata.merging(metadata!, uniquingKeysWith: { _, new in new }))
+
+        var baggage: Baggage?
+        switch whereIsTheBaggage {
+        case .explicitlyPassed(let b):
+            baggage = b
+        case .taskLocal:
+            #if swift(>=5.5) && canImport(_Concurrency)
+            if #available(macOS 10.15, iOS 13.0, watchOS 6.0, tvOS 13.0, *) {
+                baggage = .current
+            } else {
+                baggage = nil
+            }
+            #else
+            baggage = nil
+            #endif
+        case .ignore:
+            baggage = nil
+        }
 
         var stream = self.stream
-        stream.write("\(self.timestamp()) \(level) \(self.label) :\(prettyMetadata.map { " \($0)" } ?? "") [\(source)] \(message)\n")
+        if let baggage,
+           let extraMetadata = LoggingSystem.metadataProvider?.provideMetadata(from: baggage) {
+
+            let prettyMetadata = metadata?.isEmpty ?? true
+                    ? self.prettyMetadata
+                    : self.prettify(
+                    extraMetadata.merging(
+                            self.metadata.merging(
+                                    metadata!,
+                                    uniquingKeysWith: { _, new in new }
+                            ),
+                            uniquingKeysWith: { _, new in new }))
+
+
+            stream.write("\(self.timestamp()) \(level) \(self.label) :\(prettyMetadata.map { " \($0)" } ?? "") \(self.prettify(extraMetadata).map { " \($0)" }) [\(source)] \(message)\n")
+        } else {
+            let prettyMetadata = metadata?.isEmpty ?? true
+                    ? self.prettyMetadata
+                    : self.prettify(self.metadata.merging(metadata!, uniquingKeysWith: { _, new in new }))
+
+            stream.write("\(self.timestamp()) \(level) \(self.label) :\(prettyMetadata.map { " \($0)" } ?? "") [\(source)] \(message)\n")
+        }
     }
 
     private func prettify(_ metadata: Logger.Metadata) -> String? {

@@ -19,7 +19,7 @@ class SendableTest: XCTestCase {
     #if compiler(>=5.6)
     func testSendableLogger() async {
         let testLogging = TestLogging()
-        LoggingSystem.bootstrapInternal(testLogging.make)
+        LoggingSystem.bootstrapInternal(testLogging.make(label:metadataProvider:))
 
         let logger = Logger(label: "test")
         let message1 = Logger.Message(stringLiteral: "critical 1")

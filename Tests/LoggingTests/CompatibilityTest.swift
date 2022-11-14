@@ -63,7 +63,7 @@ private struct OldSchoolLogHandler: LogHandler {
     let recorder: Recorder
 
     func make(label: String) -> LogHandler {
-        return TestLogHandler(label: label, config: self.config, recorder: self.recorder)
+        return TestLogHandler(label: label, config: self.config, recorder: self.recorder, metadataProvider: LoggingSystem.metadataProvider)
     }
 
     func log(level: Logger.Level, message: Logger.Message, metadata: Logger.Metadata?, file: String, function: String, line: UInt) {

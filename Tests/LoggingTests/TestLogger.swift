@@ -13,6 +13,7 @@
 //===----------------------------------------------------------------------===//
 import Foundation
 @testable import Logging
+import InstrumentationBaggage
 import XCTest
 #if os(Windows)
 import WinSDK
@@ -23,7 +24,19 @@ internal struct TestLogging {
     private let recorder = Recorder() // shared among loggers
 
     func make(label: String) -> LogHandler {
-        return TestLogHandler(label: label, config: self.config, recorder: self.recorder)
+        return TestLogHandler(
+                label: label,
+                config: self.config,
+                recorder: self.recorder,
+                metadataProvider: LoggingSystem.metadataProvider)
+    }
+
+    func make(label: String, metadataProvider: Logger.MetadataProvider?) -> LogHandler {
+        return TestLogHandler(
+                label: label,
+                config: self.config,
+                recorder: self.recorder,
+                metadataProvider: metadataProvider)
     }
 
     var config: Config { return self._config }
@@ -36,16 +49,48 @@ internal struct TestLogHandler: LogHandler {
     private var logger: Logger // the actual logger
 
     let label: String
-    init(label: String, config: Config, recorder: Recorder) {
+    private let metadataProvider: Logger.MetadataProvider?
+
+    init(label: String, config: Config, recorder: Recorder, metadataProvider: Logger.MetadataProvider?) {
         self.label = label
         self.config = config
         self.recorder = recorder
-        self.logger = Logger(label: "test", StreamLogHandler.standardOutput(label: label), metadataProvider: nil)
+        self.logger = Logger(label: "test", StreamLogHandler.standardOutput(label: label, metadataProvider: nil))
         self.logger.logLevel = .debug
+        self.metadataProvider = metadataProvider
     }
 
-    func log(level: Logger.Level, message: Logger.Message, metadata: Logger.Metadata?, source: String, file: String, function: String, line: UInt) {
-        let metadata = (self._metadataSet ? self.metadata : MDC.global.metadata).merging(metadata ?? [:], uniquingKeysWith: { _, new in new })
+    func log(level: Logger.Level,
+             message: Logger.Message,
+             metadata explicitMetadata: Logger.Metadata?,
+             baggage whereIsTheBaggage: Logger.BaggageStrategy,
+             source: String,
+             file: String, function: String, line: UInt) {
+        var baggage: Baggage?
+        switch whereIsTheBaggage {
+        case .explicitlyPassed(let b):
+            baggage = b
+        case .taskLocal:
+            #if swift(>=5.5) && canImport(_Concurrency)
+            if #available(macOS 10.15, iOS 13.0, watchOS 6.0, tvOS 13.0, *) {
+                baggage = .current
+            } else {
+                baggage = nil
+            }
+            #else
+            baggage = nil
+            #endif
+        case .ignore:
+            baggage = nil
+        }
+
+        var metadata = metadataProvider?.provideMetadata(from: baggage) ?? [:]
+        metadata = metadata.merging(
+                (self._metadataSet ? self.metadata : MDC.global.metadata).merging(metadata ?? [:], uniquingKeysWith: { _, new in new }),
+                uniquingKeysWith: { _, new in new })
+        metadata =  metadata.merging(
+                explicitMetadata ?? [:], uniquingKeysWith: { _, new in new })
+
         self.logger.log(level: level, message, metadata: metadata, source: source, file: file, function: function, line: line)
         self.recorder.record(level: level, metadata: metadata, message: message, source: source)
     }
