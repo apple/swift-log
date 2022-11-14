@@ -1,4 +1,3 @@
-import InstrumentationBaggage
 //===----------------------------------------------------------------------===//
 //
 // This source file is part of the Swift Logging API open source project
@@ -27,7 +26,7 @@ class LoggingTest: XCTestCase {
     func testAutoclosure() throws {
         // bootstrap with our test logging impl
         let logging = TestLogging()
-        LoggingSystem.bootstrapInternal(logging.make)
+        LoggingSystem.bootstrapInternal(logging.makeWithMetadataProvider)
 
         var logger = Logger(label: "test")
         logger.logLevel = .info
@@ -231,7 +230,7 @@ class LoggingTest: XCTestCase {
 
     func testDictionaryMetadata() {
         let testLogging = TestLogging()
-        LoggingSystem.bootstrapInternal(testLogging.make)
+        LoggingSystem.bootstrapInternal(testLogging.makeWithMetadataProvider)
 
         var logger = Logger(label: "\(#function)")
         logger[metadataKey: "foo"] = ["bar": "buz"]
@@ -247,7 +246,7 @@ class LoggingTest: XCTestCase {
 
     func testListMetadata() {
         let testLogging = TestLogging()
-        LoggingSystem.bootstrapInternal(testLogging.make)
+        LoggingSystem.bootstrapInternal(testLogging.makeWithMetadataProvider)
 
         var logger = Logger(label: "\(#function)")
         logger[metadataKey: "foo"] = ["bar", "buz"]
@@ -290,7 +289,7 @@ class LoggingTest: XCTestCase {
 
     func testStringConvertibleMetadata() {
         let testLogging = TestLogging()
-        LoggingSystem.bootstrapInternal(testLogging.make)
+        LoggingSystem.bootstrapInternal(testLogging.makeWithMetadataProvider)
         var logger = Logger(label: "\(#function)")
 
         logger[metadataKey: "foo"] = .stringConvertible("raw-string")
@@ -310,7 +309,7 @@ class LoggingTest: XCTestCase {
 
     func testAutoClosuresAreNotForcedUnlessNeeded() {
         let testLogging = TestLogging()
-        LoggingSystem.bootstrapInternal(testLogging.make)
+        LoggingSystem.bootstrapInternal(testLogging.makeWithMetadataProvider)
 
         var logger = Logger(label: "\(#function)")
         logger.logLevel = .error
@@ -324,7 +323,7 @@ class LoggingTest: XCTestCase {
 
     func testLocalMetadata() {
         let testLogging = TestLogging()
-        LoggingSystem.bootstrapInternal(testLogging.make)
+        LoggingSystem.bootstrapInternal(testLogging.makeWithMetadataProvider)
 
         var logger = Logger(label: "\(#function)")
         logger.info("hello world!", metadata: ["foo": "bar"])
@@ -365,7 +364,7 @@ class LoggingTest: XCTestCase {
 
     func testAllLogLevelsExceptCriticalCanBeBlocked() {
         let testLogging = TestLogging()
-        LoggingSystem.bootstrapInternal(testLogging.make)
+        LoggingSystem.bootstrapInternal(testLogging.makeWithMetadataProvider)
 
         var logger = Logger(label: "\(#function)")
         logger.logLevel = .critical
@@ -389,7 +388,7 @@ class LoggingTest: XCTestCase {
 
     func testAllLogLevelsWork() {
         let testLogging = TestLogging()
-        LoggingSystem.bootstrapInternal(testLogging.make)
+        LoggingSystem.bootstrapInternal(testLogging.makeWithMetadataProvider)
 
         var logger = Logger(label: "\(#function)")
         logger.logLevel = .trace
@@ -413,26 +412,26 @@ class LoggingTest: XCTestCase {
 
     func testAllLogLevelByFunctionRefWithSource() {
         let testLogging = TestLogging()
-        LoggingSystem.bootstrapInternal(testLogging.make)
+        LoggingSystem.bootstrapInternal(testLogging.makeWithMetadataProvider)
 
         var logger = Logger(label: "\(#function)")
         logger.logLevel = .trace
 
-        let trace = logger.trace(_:metadata:baggage:source:file:function:line:)
-        let debug = logger.debug(_:metadata:baggage:source:file:function:line:)
-        let info = logger.info(_:metadata:baggage:source:file:function:line:)
-        let notice = logger.notice(_:metadata:baggage:source:file:function:line:)
-        let warning = logger.warning(_:metadata:baggage:source:file:function:line:)
-        let error = logger.error(_:metadata:baggage:source:file:function:line:)
-        let critical = logger.critical(_:metadata:baggage:source:file:function:line:)
+        let trace = logger.trace(_:metadata:source:file:function:line:)
+        let debug = logger.debug(_:metadata:source:file:function:line:)
+        let info = logger.info(_:metadata:source:file:function:line:)
+        let notice = logger.notice(_:metadata:source:file:function:line:)
+        let warning = logger.warning(_:metadata:source:file:function:line:)
+        let error = logger.error(_:metadata:source:file:function:line:)
+        let critical = logger.critical(_:metadata:source:file:function:line:)
 
-        trace("yes: trace", [:], nil, "foo", #file, #function, #line)
-        debug("yes: debug", [:], nil, "foo", #file, #function, #line)
-        info("yes: info", [:], nil, "foo", #file, #function, #line)
-        notice("yes: notice", [:], nil, "foo", #file, #function, #line)
-        warning("yes: warning", [:], nil, "foo", #file, #function, #line)
-        error("yes: error", [:], nil, "foo", #file, #function, #line)
-        critical("yes: critical", [:], nil, "foo", #file, #function, #line)
+        trace("yes: trace", [:], "foo", #file, #function, #line)
+        debug("yes: debug", [:], "foo", #file, #function, #line)
+        info("yes: info", [:], "foo", #file, #function, #line)
+        notice("yes: notice", [:], "foo", #file, #function, #line)
+        warning("yes: warning", [:], "foo", #file, #function, #line)
+        error("yes: error", [:], "foo", #file, #function, #line)
+        critical("yes: critical", [:], "foo", #file, #function, #line)
 
         testLogging.history.assertExist(level: .trace, message: "yes: trace", source: "foo")
         testLogging.history.assertExist(level: .debug, message: "yes: debug", source: "foo")
@@ -445,27 +444,27 @@ class LoggingTest: XCTestCase {
 
     func testAllLogLevelByFunctionRefWithoutSource() {
         let testLogging = TestLogging()
-        LoggingSystem.bootstrapInternal(testLogging.make)
+        LoggingSystem.bootstrapInternal(testLogging.makeWithMetadataProvider)
 
         var logger = Logger(label: "\(#function)")
         logger.logLevel = .trace
 
-        let trace = logger.trace(_:metadata:baggage:file:function:line:)
-        let debug = logger.debug(_:metadata:baggage:file:function:line:)
-        let info = logger.info(_:metadata:baggage:file:function:line:)
-        let notice = logger.notice(_:metadata:baggage:file:function:line:)
-        let warning = logger.warning(_:metadata:baggage:file:function:line:)
-        let error = logger.error(_:metadata:baggage:file:function:line:)
-        let critical = logger.critical(_:metadata:baggage:file:function:line:)
+        let trace = logger.trace(_:metadata:file:function:line:)
+        let debug = logger.debug(_:metadata:file:function:line:)
+        let info = logger.info(_:metadata:file:function:line:)
+        let notice = logger.notice(_:metadata:file:function:line:)
+        let warning = logger.warning(_:metadata:file:function:line:)
+        let error = logger.error(_:metadata:file:function:line:)
+        let critical = logger.critical(_:metadata:file:function:line:)
 
         #if compiler(>=5.3)
-        trace("yes: trace", [:], nil, #fileID, #function, #line)
-        debug("yes: debug", [:], nil, #fileID, #function, #line)
-        info("yes: info", [:], nil, #fileID, #function, #line)
-        notice("yes: notice", [:], nil, #fileID, #function, #line)
-        warning("yes: warning", [:], nil, #fileID, #function, #line)
-        error("yes: error", [:], nil, #fileID, #function, #line)
-        critical("yes: critical", [:], nil, #fileID, #function, #line)
+        trace("yes: trace", [:], #fileID, #function, #line)
+        debug("yes: debug", [:], #fileID, #function, #line)
+        info("yes: info", [:], #fileID, #function, #line)
+        notice("yes: notice", [:],  #fileID, #function, #line)
+        warning("yes: warning", [:], #fileID, #function, #line)
+        error("yes: error", [:], #fileID, #function, #line)
+        critical("yes: critical", [:], #fileID, #function, #line)
         #else
         trace("yes: trace", [:], nil, #file, #function, #line)
         debug("yes: debug", [:], nil, #file, #function, #line)
@@ -487,7 +486,7 @@ class LoggingTest: XCTestCase {
 
     func testLogsEmittedFromSubdirectoryGetCorrectModuleInNewerSwifts() {
         let testLogging = TestLogging()
-        LoggingSystem.bootstrapInternal(testLogging.make)
+        LoggingSystem.bootstrapInternal(testLogging.makeWithMetadataProvider)
 
         var logger = Logger(label: "\(#function)")
         logger.logLevel = .trace
@@ -511,7 +510,7 @@ class LoggingTest: XCTestCase {
 
     func testLogMessageWithStringInterpolation() {
         let testLogging = TestLogging()
-        LoggingSystem.bootstrapInternal(testLogging.make)
+        LoggingSystem.bootstrapInternal(testLogging.makeWithMetadataProvider)
 
         var logger = Logger(label: "\(#function)")
         logger.logLevel = .debug
@@ -524,7 +523,7 @@ class LoggingTest: XCTestCase {
 
     func testLoggingAString() {
         let testLogging = TestLogging()
-        LoggingSystem.bootstrapInternal(testLogging.make)
+        LoggingSystem.bootstrapInternal(testLogging.makeWithMetadataProvider)
 
         var logger = Logger(label: "\(#function)")
         logger.logLevel = .debug
@@ -538,198 +537,15 @@ class LoggingTest: XCTestCase {
         testLogging.history.assertExist(level: .debug, message: "hello world!")
     }
 
-    @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
-    func testLoggingCallsMetadataProviderWithTaskLocalBaggage() throws {
-        #if swift(>=5.5) && canImport(_Concurrency)
-        let logging = TestLogging()
-        LoggingSystem.bootstrapInternal(logging.make)
-
-        var logger = Logger(label: #function, metadataProvider: .init { baggage in
-            guard let baggage = baggage, let testID = baggage[TestIDKey.self] else {
-                XCTFail("Expected Baggage to be passed along to the metadata provider.")
-                return nil
-            }
-            return ["provider": .string(testID)]
-        })
-        logger.logLevel = .trace
-
-        var baggage = Baggage.topLevel
-        baggage[TestIDKey.self] = "42"
-
-        Baggage.$current.withValue(baggage) {
-            logger.trace("test")
-            logger.debug("test")
-            logger.info("test")
-            logger.notice("test")
-            logger.warning("test")
-            logger.error("test")
-            logger.critical("test")
-        }
-
-        logging.history.assertExist(level: .trace, message: "test", metadata: ["provider": "42"])
-        logging.history.assertExist(level: .debug, message: "test", metadata: ["provider": "42"])
-        logging.history.assertExist(level: .info, message: "test", metadata: ["provider": "42"])
-        logging.history.assertExist(level: .notice, message: "test", metadata: ["provider": "42"])
-        logging.history.assertExist(level: .warning, message: "test", metadata: ["provider": "42"])
-        logging.history.assertExist(level: .error, message: "test", metadata: ["provider": "42"])
-        logging.history.assertExist(level: .critical, message: "test", metadata: ["provider": "42"])
-
-        enum TestIDKey: BaggageKey {
-            typealias Value = String
-        }
-        #endif
-    }
-
-    func testLoggingCallsMetadataProviderWithExplicitlyPassedBaggage() throws {
-        let logging = TestLogging()
-        LoggingSystem.bootstrapInternal(logging.make)
-
-        var logger = Logger(label: #function, metadataProvider: .init { baggage in
-            guard let baggage = baggage, let testID = baggage[TestIDKey.self] else {
-                XCTFail("Expected Baggage to be passed along to the metadata provider.")
-                return nil
-            }
-            return ["provider": .string(testID)]
-        })
-        logger.logLevel = .trace
-
-        var baggage = Baggage.topLevel
-        baggage[TestIDKey.self] = "42"
-
-        logger.trace("test", baggage: baggage)
-        logger.debug("test", baggage: baggage)
-        logger.info("test", baggage: baggage)
-        logger.notice("test", baggage: baggage)
-        logger.warning("test", baggage: baggage)
-        logger.error("test", baggage: baggage)
-        logger.critical("test", baggage: baggage)
-
-        logging.history.assertExist(level: .trace, message: "test", metadata: ["provider": "42"])
-        logging.history.assertExist(level: .debug, message: "test", metadata: ["provider": "42"])
-        logging.history.assertExist(level: .info, message: "test", metadata: ["provider": "42"])
-        logging.history.assertExist(level: .notice, message: "test", metadata: ["provider": "42"])
-        logging.history.assertExist(level: .warning, message: "test", metadata: ["provider": "42"])
-        logging.history.assertExist(level: .error, message: "test", metadata: ["provider": "42"])
-        logging.history.assertExist(level: .critical, message: "test", metadata: ["provider": "42"])
-
-        enum TestIDKey: BaggageKey {
-            typealias Value = String
-        }
-    }
-
-    @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
-    func testLoggingMergesOneOffMetadataWithProvidedMetadataFromTaskLocalBaggage() throws {
-        #if swift(>=5.5) && canImport(_Concurrency)
-        let logging = TestLogging()
-        LoggingSystem.bootstrapInternal(logging.make)
-
-        let logger = Logger(label: #function, metadataProvider: .init { _ in
-            [
-                "common": "provider",
-                "provider": "42",
-            ]
-        })
-
-        Baggage.$current.withValue(.topLevel) {
-            logger.log(level: .info, "test", metadata: ["one-off": "42", "common": "one-off"])
-        }
-
-        logging.history.assertExist(level: .info,
-                                    message: "test",
-                                    metadata: ["common": "one-off", "one-off": "42", "provider": "42"])
-        #endif
-    }
-
-    func testLoggingMergesOneOffMetadataWithProvidedMetadataFromExplicitlyPassedBaggage() throws {
-        let logging = TestLogging()
-        LoggingSystem.bootstrapInternal(logging.make)
-
-        let logger = Logger(label: #function, metadataProvider: .init { _ in
-            [
-                "common": "provider",
-                "provider": "42",
-            ]
-        })
-
-        logger.log(level: .info, "test", metadata: ["one-off": "42", "common": "one-off"], baggage: .topLevel)
-
-        logging.history.assertExist(level: .info,
-                                    message: "test",
-                                    metadata: ["common": "one-off", "one-off": "42", "provider": "42"])
-    }
-
-    @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
-    func testLoggingPrefersExplicitBaggageOverTaskLocal() {
-        #if swift(>=5.5) && canImport(_Concurrency)
-        let logging = TestLogging()
-        LoggingSystem.bootstrapInternal(logging.make)
-
-        var logger = Logger(label: #function, metadataProvider: .init { baggage in
-            guard let baggage = baggage, let testID = baggage[TestIDKey.self] else {
-                XCTFail("Expected Baggage to be passed along to the metadata provider.")
-                return nil
-            }
-            return ["provider": .string(testID)]
-        })
-        logger.logLevel = .trace
-
-        var taskLocalBaggage = Baggage.topLevel
-        taskLocalBaggage[TestIDKey.self] = "task-local"
-
-        var explicitBaggage = Baggage.topLevel
-        explicitBaggage[TestIDKey.self] = "explicit"
-
-        Baggage.$current.withValue(taskLocalBaggage) {
-            logger.trace("test", metadata: ["one-off": "42"], baggage: explicitBaggage)
-            logger.debug("test", metadata: ["one-off": "42"], baggage: explicitBaggage)
-            logger.info("test", metadata: ["one-off": "42"], baggage: explicitBaggage)
-            logger.notice("test", metadata: ["one-off": "42"], baggage: explicitBaggage)
-            logger.warning("test", metadata: ["one-off": "42"], baggage: explicitBaggage)
-            logger.error("test", metadata: ["one-off": "42"], baggage: explicitBaggage)
-            logger.critical("test", metadata: ["one-off": "42"], baggage: explicitBaggage)
-        }
-
-        logging.history.assertExist(level: .trace, message: "test", metadata: ["one-off": "42", "provider": "explicit"])
-        logging.history.assertExist(level: .debug, message: "test", metadata: ["one-off": "42", "provider": "explicit"])
-        logging.history.assertExist(level: .info, message: "test", metadata: ["one-off": "42", "provider": "explicit"])
-        logging.history.assertExist(level: .notice, message: "test", metadata: ["one-off": "42", "provider": "explicit"])
-        logging.history.assertExist(level: .warning, message: "test", metadata: ["one-off": "42", "provider": "explicit"])
-        logging.history.assertExist(level: .error, message: "test", metadata: ["one-off": "42", "provider": "explicit"])
-        logging.history.assertExist(level: .critical, message: "test", metadata: ["one-off": "42", "provider": "explicit"])
-
-        enum TestIDKey: BaggageKey {
-            typealias Value = String
-        }
-        #endif
-    }
-
-    @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
-    func testLoggingWithExplicitlyPassedNilBaggageDoesNotPickUpTaskLocalBaggage() {
-        #if swift(>=5.5) && canImport(_Concurrency)
-        let logging = TestLogging()
-        LoggingSystem.bootstrapInternal(logging.make)
-
-        let logger = Logger(label: #function, metadataProvider: .init { baggage in
-            XCTAssertNil(baggage)
-            return ["provider": .string("42")]
-        })
-
-        Baggage.$current.withValue(.topLevel) {
-            logger.log(level: .info, "test", baggage: nil)
-        }
-
-        logging.history.assertExist(level: .info, message: "test", metadata: ["provider": "42"])
-        #endif
-    }
-
     func testMultiplexMetadataProviderMergesInSpecifiedOrder() {
         let logging = TestLogging()
 
-        let providerA = Logger.MetadataProvider { _ in ["provider": "a", "a": "foo"] }
-        let providerB = Logger.MetadataProvider { _ in ["provider": "b", "b": "bar"] }
+        let providerA = Logger.MetadataProvider { ["provider": "a", "a": "foo"] }
+        let providerB = Logger.MetadataProvider { ["provider": "b", "b": "bar"] }
         let logger = Logger(label: #function,
-                            factory: logging.make,
-                            metadataProvider: .multiplex([providerA, providerB]))
+                factory: { label in
+                    logging.makeWithMetadataProvider(label: label, metadataProvider: .multiplex([providerA, providerB]))
+                })
 
         logger.log(level: .info, "test", metadata: ["one-off": "42"])
 
@@ -740,7 +556,9 @@ class LoggingTest: XCTestCase {
 
     func testLoggerWithoutFactoryOverrideDefaultsToUsingLoggingSystemMetadataProvider() {
         let logging = TestLogging()
-        LoggingSystem.bootstrapInternal(metadataProvider: .init(metadata: { _ in ["provider": "42"] }), logging.make)
+        LoggingSystem.bootstrapInternal(metadataProvider: .init({ ["provider": "42"] })) { label, metadataProvider in
+            logging.makeWithMetadataProvider(label: label, metadataProvider: metadataProvider)
+        }
 
         let logger = Logger(label: #function)
 
@@ -753,9 +571,10 @@ class LoggingTest: XCTestCase {
 
     func testLoggerWithFactoryOverrideDefaultsToUsingLoggingSystemMetadataProvider() {
         let logging = TestLogging()
-        LoggingSystem.bootstrapInternal(metadataProvider: .init(metadata: { _ in ["provider": "42"] }), logging.make)
+        LoggingSystem.bootstrapInternal(metadataProvider: .init({ ["provider": "42"] }))
+        LoggingSystem.bootstrapInternal(logging.makeWithMetadataProvider)
 
-        let logger = Logger(label: #function, factory: logging.make)
+        let logger = Logger(label: #function, factoryWithMetadataProvider: logging.makeWithMetadataProvider)
 
         logger.log(level: .info, "test", metadata: ["one-off": "42"])
 
@@ -912,8 +731,8 @@ class LoggingTest: XCTestCase {
 
     func testStreamLogHandlerWritesToAStream() {
         let interceptStream = InterceptStream()
-        LoggingSystem.bootstrapInternal { _ in
-            StreamLogHandler(label: "test", stream: interceptStream)
+        LoggingSystem.bootstrapInternal { label, metadataProvider in
+            StreamLogHandler(label: "test", metadataProvider: metadataProvider, stream: interceptStream)
         }
         let log = Logger(label: "test")
 
@@ -929,8 +748,8 @@ class LoggingTest: XCTestCase {
     func testStreamLogHandlerOutputFormat() {
         let interceptStream = InterceptStream()
         let label = "testLabel"
-        LoggingSystem.bootstrapInternal { _ in
-            StreamLogHandler(label: label, stream: interceptStream)
+        LoggingSystem.bootstrapInternal { label, metadataProvider in
+            StreamLogHandler(label: label, metadataProvider: metadataProvider, stream: interceptStream)
         }
         let source = "testSource"
         let log = Logger(label: label)
@@ -949,8 +768,8 @@ class LoggingTest: XCTestCase {
     func testStreamLogHandlerOutputFormatWithMetaData() {
         let interceptStream = InterceptStream()
         let label = "testLabel"
-        LoggingSystem.bootstrapInternal { _ in
-            StreamLogHandler(label: label, stream: interceptStream)
+        LoggingSystem.bootstrapInternal { label, metadataProvider in
+            StreamLogHandler(label: label, metadataProvider: metadataProvider, stream: interceptStream)
         }
         let source = "testSource"
         let log = Logger(label: label)
@@ -969,8 +788,8 @@ class LoggingTest: XCTestCase {
     func testStreamLogHandlerOutputFormatWithOrderedMetadata() {
         let interceptStream = InterceptStream()
         let label = "testLabel"
-        LoggingSystem.bootstrapInternal { _ in
-            StreamLogHandler(label: label, stream: interceptStream)
+        LoggingSystem.bootstrapInternal { label, metadataProvider in
+            StreamLogHandler(label: label, metadataProvider: metadataProvider, stream: interceptStream)
         }
         let log = Logger(label: label)
 
@@ -984,14 +803,14 @@ class LoggingTest: XCTestCase {
             return
         }
 
-        XCTAssert(interceptStream.strings[0].contains("a=a0 b=b0"))
-        XCTAssert(interceptStream.strings[1].contains("a=a1 b=b1"))
+        XCTAssert(interceptStream.strings[0].contains("a=a0 b=b0"), "LINES: \(interceptStream.strings[0])")
+        XCTAssert(interceptStream.strings[1].contains("a=a1 b=b1"), "LINES: \(interceptStream.strings[1])")
     }
 
     func testStdioOutputStreamWrite() {
         self.withWriteReadFDsAndReadBuffer { writeFD, readFD, readBuffer in
             let logStream = StdioOutputStream(file: writeFD, flushMode: .always)
-            LoggingSystem.bootstrapInternal { StreamLogHandler(label: $0, stream: logStream) }
+            LoggingSystem.bootstrapInternal { StreamLogHandler(label: $0, metadataProvider: $1, stream: logStream) }
             let log = Logger(label: "test")
             let testString = "hello\u{0} world"
             log.critical("\(testString)")
@@ -1008,7 +827,7 @@ class LoggingTest: XCTestCase {
         // flush on every statement
         self.withWriteReadFDsAndReadBuffer { writeFD, readFD, readBuffer in
             let logStream = StdioOutputStream(file: writeFD, flushMode: .always)
-            LoggingSystem.bootstrapInternal { StreamLogHandler(label: $0, stream: logStream) }
+            LoggingSystem.bootstrapInternal { StreamLogHandler(label: $0, metadataProvider: $1, stream: logStream) }
             Logger(label: "test").critical("test")
 
             let size = read(readFD, readBuffer, 256)
@@ -1021,7 +840,7 @@ class LoggingTest: XCTestCase {
         // default flushing
         self.withWriteReadFDsAndReadBuffer { writeFD, readFD, readBuffer in
             let logStream = StdioOutputStream(file: writeFD, flushMode: .undefined)
-            LoggingSystem.bootstrapInternal { StreamLogHandler(label: $0, stream: logStream) }
+            LoggingSystem.bootstrapInternal { StreamLogHandler(label: $0, metadataProvider: $1, stream: logStream) }
             Logger(label: "test").critical("test")
 
             let size = read(readFD, readBuffer, 256)
@@ -1090,7 +909,7 @@ class LoggingTest: XCTestCase {
         }
         // bootstrap with our test logging impl
         let logging = TestLogging()
-        LoggingSystem.bootstrapInternal(logging.make)
+        LoggingSystem.bootstrapInternal(logging.makeWithMetadataProvider)
 
         var logger = Logger(label: "test")
         logger.logLevel = .error

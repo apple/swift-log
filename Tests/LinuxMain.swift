@@ -26,6 +26,7 @@ import XCTest
 @testable import LoggingTests
 
 XCTMain([
+    testCase(BaggageLoggingTest.allTests),
     testCase(CompatibilityTest.allTests),
     testCase(GlobalLoggerTest.allTests),
     testCase(LocalLoggerTest.allTests),

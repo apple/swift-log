@@ -22,18 +22,17 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/apple/swift-docc-plugin", from: "1.0.0"),
-        .package(url: "https://github.com/slashmo/swift-distributed-tracing-baggage", branch: "support/swift-5.0"),
     ],
     targets: [
         .target(
             name: "Logging",
-            dependencies: [
-                .product(name: "InstrumentationBaggage", package: "swift-distributed-tracing-baggage"),
-            ]
+            dependencies: []
         ),
         .testTarget(
             name: "LoggingTests",
-            dependencies: ["Logging"]
+            dependencies: [
+                "Logging",
+            ]
         ),
     ]
 )

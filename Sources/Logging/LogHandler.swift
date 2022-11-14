@@ -114,6 +114,13 @@
 /// level has not been overridden. And most importantly it passes the requirement listed above: A change to the log
 /// level on one `Logger` should not affect the log level of another `Logger` variable.
 public protocol LogHandler: _SwiftLogSendableLogHandler {
+
+    /// The metadata provider this `LogHandler` will use when a log statement is about to be emitted.
+    ///
+    /// A ``Logger/MetadataProvider`` may add a constant set of metadata,
+    /// or use task-local values to pick up contextual metadata ane add it to emitted logs.
+    var metadataProvider: Logger.MetadataProvider { get set }
+
     /// This method is called when a `LogHandler` must emit a log message. There is no need for the `LogHandler` to
     /// check if the `level` is above or below the configured `logLevel` as `Logger` already performed this check and
     /// determined that a message should be logged.
@@ -161,6 +168,18 @@ public protocol LogHandler: _SwiftLogSendableLogHandler {
     ///         that means a change in log level on a particular `LogHandler` might not be reflected in any
     ///        `LogHandler`.
     var logLevel: Logger.Level { get set }
+}
+
+extension LogHandler {
+    /// Default implementation for `metadataProvider` which defaults to a "no-op" provider.
+    public var metadataProvider: Logger.MetadataProvider {
+        get {
+            .noop
+        }
+        set {
+            self.log(level: .warning, message: "Attempted to set metadataProvider on \(Self.self) that did not implement support for them. Please contact the log handler maintainer to implement metadata provider support.", metadata: nil, source: "Logging", file: #file, function: #function, line: #line)
+        }
+    }
 }
 
 extension LogHandler {

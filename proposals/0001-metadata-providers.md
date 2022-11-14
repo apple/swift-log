@@ -441,7 +441,7 @@ Specifically in logging, this means that _every_ call site for _every_ log state
 ```swift
 class StoresRepository {
     func store(byID id: String, eventLoop: EventLoop, logger: Logger, baggage: Baggage) async throws -> Store {
-        InstrumentationSystem.tracer.withSpan("Fetch Store", baggage: baggage) { span in
+        InstrumentationSystem.tracer.withSpan("Fetch Store") { span in
             logger.info("Fetched store.", baggage: span.baggage)
         }
     }
@@ -463,7 +463,7 @@ Imagine we don't have metadata providers, we'd have to manually set trace IDs on
 import Tracing
 import Logging
 
-let contextualLogger = InstrumentationSystem.tracer.populateTraceMetadata(logger, baggage: baggage)
+let contextualLogger = InstrumentationSystem.tracer.populateTraceMetadata(logger)
 contextualLogger.info("Request received.")
 ```
 
