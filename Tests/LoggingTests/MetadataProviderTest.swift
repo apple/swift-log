@@ -52,9 +52,9 @@ final class MetadataProviderTest: XCTestCase {
 }
 
 extension Logger.MetadataProvider {
-    static var simpleTestProvider: Self {
-        .init {
-            ["test": "provided"]
+    static var simpleTestProvider: Logger.MetadataProvider {
+        return Logger.MetadataProvider {
+            return ["test": "provided"]
         }
     }
 }
@@ -67,7 +67,7 @@ public struct LogHandlerThatDidNotImplementMetadataProviders: LogHandler {
 
     public subscript(metadataKey _: String) -> Logging.Logger.Metadata.Value? {
         get {
-            nil
+            return nil
         }
         set(newValue) {
             // ignore
