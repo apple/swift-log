@@ -59,7 +59,7 @@ public extension Logger {
 
         /// Provide ``Logger.Metadata`` from current context.
         @usableFromInline
-        internal let _provideMetadata: @Sendable () -> Metadata
+        internal let _provideMetadata: @Sendable() -> Metadata
 
         #if DEBUG
         let file: String

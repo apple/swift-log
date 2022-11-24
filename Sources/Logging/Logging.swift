@@ -81,8 +81,7 @@ public extension Logger {
              _ message: @autoclosure () -> Logger.Message,
              metadata: @autoclosure () -> Logger.Metadata? = nil,
              source: @autoclosure () -> String? = nil,
-             file: String = #fileID, function: String = #function, line: UInt = #line)
-    {
+             file: String = #fileID, function: String = #function, line: UInt = #line) {
         if self.logLevel <= level {
             self.handler.log(level: level,
                              message: message(),
@@ -98,8 +97,7 @@ public extension Logger {
              _ message: @autoclosure () -> Logger.Message,
              metadata: @autoclosure () -> Logger.Metadata? = nil,
              source: @autoclosure () -> String? = nil,
-             file: String = #file, function: String = #function, line: UInt = #line)
-    {
+             file: String = #file, function: String = #function, line: UInt = #line) {
         if self.logLevel <= level {
             self.handler.log(level: level,
                              message: message(),
@@ -130,8 +128,7 @@ public extension Logger {
     func log(level: Logger.Level,
              _ message: @autoclosure () -> Logger.Message,
              metadata: @autoclosure () -> Logger.Metadata? = nil,
-             file: String = #fileID, function: String = #function, line: UInt = #line)
-    {
+             file: String = #fileID, function: String = #function, line: UInt = #line) {
         self.log(level: level, message(), metadata: metadata(), source: nil, file: file, function: function, line: line)
     }
 
@@ -140,8 +137,7 @@ public extension Logger {
     func log(level: Logger.Level,
              _ message: @autoclosure () -> Logger.Message,
              metadata: @autoclosure () -> Logger.Metadata? = nil,
-             file: String = #file, function: String = #function, line: UInt = #line)
-    {
+             file: String = #file, function: String = #function, line: UInt = #line) {
         self.log(level: level, message(), metadata: metadata(), source: nil, file: file, function: function, line: line)
     }
     #endif
@@ -201,8 +197,7 @@ public extension Logger {
     func trace(_ message: @autoclosure () -> Logger.Message,
                metadata: @autoclosure () -> Logger.Metadata? = nil,
                source: @autoclosure () -> String? = nil,
-               file: String = #fileID, function: String = #function, line: UInt = #line)
-    {
+               file: String = #fileID, function: String = #function, line: UInt = #line) {
         self.log(level: .trace, message(), metadata: metadata(), source: source(), file: file, function: function, line: line)
     }
 
@@ -211,8 +206,7 @@ public extension Logger {
     func trace(_ message: @autoclosure () -> Logger.Message,
                metadata: @autoclosure () -> Logger.Metadata? = nil,
                source: @autoclosure () -> String? = nil,
-               file: String = #file, function: String = #function, line: UInt = #line)
-    {
+               file: String = #file, function: String = #function, line: UInt = #line) {
         self.log(level: .trace, message(), metadata: metadata(), source: source(), file: file, function: function, line: line)
     }
     #endif
@@ -235,8 +229,7 @@ public extension Logger {
     @inlinable
     func trace(_ message: @autoclosure () -> Logger.Message,
                metadata: @autoclosure () -> Logger.Metadata? = nil,
-               file: String = #fileID, function: String = #function, line: UInt = #line)
-    {
+               file: String = #fileID, function: String = #function, line: UInt = #line) {
         self.trace(message(), metadata: metadata(), source: nil, file: file, function: function, line: line)
     }
 
@@ -244,8 +237,7 @@ public extension Logger {
     @inlinable
     func trace(_ message: @autoclosure () -> Logger.Message,
                metadata: @autoclosure () -> Logger.Metadata? = nil,
-               file: String = #file, function: String = #function, line: UInt = #line)
-    {
+               file: String = #file, function: String = #function, line: UInt = #line) {
         self.trace(message(), metadata: metadata(), source: nil, file: file, function: function, line: line)
     }
     #endif
@@ -273,8 +265,7 @@ public extension Logger {
     func debug(_ message: @autoclosure () -> Logger.Message,
                metadata: @autoclosure () -> Logger.Metadata? = nil,
                source: @autoclosure () -> String? = nil,
-               file: String = #fileID, function: String = #function, line: UInt = #line)
-    {
+               file: String = #fileID, function: String = #function, line: UInt = #line) {
         self.log(level: .debug, message(), metadata: metadata(), source: source(), file: file, function: function, line: line)
     }
 
@@ -283,8 +274,7 @@ public extension Logger {
     func debug(_ message: @autoclosure () -> Logger.Message,
                metadata: @autoclosure () -> Logger.Metadata? = nil,
                source: @autoclosure () -> String? = nil,
-               file: String = #file, function: String = #function, line: UInt = #line)
-    {
+               file: String = #file, function: String = #function, line: UInt = #line) {
         self.log(level: .debug, message(), metadata: metadata(), source: source(), file: file, function: function, line: line)
     }
     #endif
@@ -307,8 +297,7 @@ public extension Logger {
     @inlinable
     func debug(_ message: @autoclosure () -> Logger.Message,
                metadata: @autoclosure () -> Logger.Metadata? = nil,
-               file: String = #fileID, function: String = #function, line: UInt = #line)
-    {
+               file: String = #fileID, function: String = #function, line: UInt = #line) {
         self.debug(message(), metadata: metadata(), source: nil, file: file, function: function, line: line)
     }
 
@@ -316,8 +305,7 @@ public extension Logger {
     @inlinable
     func debug(_ message: @autoclosure () -> Logger.Message,
                metadata: @autoclosure () -> Logger.Metadata? = nil,
-               file: String = #file, function: String = #function, line: UInt = #line)
-    {
+               file: String = #file, function: String = #function, line: UInt = #line) {
         self.debug(message(), metadata: metadata(), source: nil, file: file, function: function, line: line)
     }
     #endif
@@ -345,8 +333,7 @@ public extension Logger {
     func info(_ message: @autoclosure () -> Logger.Message,
               metadata: @autoclosure () -> Logger.Metadata? = nil,
               source: @autoclosure () -> String? = nil,
-              file: String = #fileID, function: String = #function, line: UInt = #line)
-    {
+              file: String = #fileID, function: String = #function, line: UInt = #line) {
         self.log(level: .info, message(), metadata: metadata(), source: source(), file: file, function: function, line: line)
     }
 
@@ -355,8 +342,7 @@ public extension Logger {
     func info(_ message: @autoclosure () -> Logger.Message,
               metadata: @autoclosure () -> Logger.Metadata? = nil,
               source: @autoclosure () -> String? = nil,
-              file: String = #file, function: String = #function, line: UInt = #line)
-    {
+              file: String = #file, function: String = #function, line: UInt = #line) {
         self.log(level: .info, message(), metadata: metadata(), source: source(), file: file, function: function, line: line)
     }
     #endif
@@ -379,8 +365,7 @@ public extension Logger {
     @inlinable
     func info(_ message: @autoclosure () -> Logger.Message,
               metadata: @autoclosure () -> Logger.Metadata? = nil,
-              file: String = #fileID, function: String = #function, line: UInt = #line)
-    {
+              file: String = #fileID, function: String = #function, line: UInt = #line) {
         self.info(message(), metadata: metadata(), source: nil, file: file, function: function, line: line)
     }
 
@@ -388,8 +373,7 @@ public extension Logger {
     @inlinable
     func info(_ message: @autoclosure () -> Logger.Message,
               metadata: @autoclosure () -> Logger.Metadata? = nil,
-              file: String = #file, function: String = #function, line: UInt = #line)
-    {
+              file: String = #file, function: String = #function, line: UInt = #line) {
         self.info(message(), metadata: metadata(), source: nil, file: file, function: function, line: line)
     }
     #endif
@@ -417,8 +401,7 @@ public extension Logger {
     func notice(_ message: @autoclosure () -> Logger.Message,
                 metadata: @autoclosure () -> Logger.Metadata? = nil,
                 source: @autoclosure () -> String? = nil,
-                file: String = #fileID, function: String = #function, line: UInt = #line)
-    {
+                file: String = #fileID, function: String = #function, line: UInt = #line) {
         self.log(level: .notice, message(), metadata: metadata(), source: source(), file: file, function: function, line: line)
     }
 
@@ -427,8 +410,7 @@ public extension Logger {
     func notice(_ message: @autoclosure () -> Logger.Message,
                 metadata: @autoclosure () -> Logger.Metadata? = nil,
                 source: @autoclosure () -> String? = nil,
-                file: String = #file, function: String = #function, line: UInt = #line)
-    {
+                file: String = #file, function: String = #function, line: UInt = #line) {
         self.log(level: .notice, message(), metadata: metadata(), source: source(), file: file, function: function, line: line)
     }
     #endif
@@ -455,8 +437,7 @@ public extension Logger {
     @inlinable
     func notice(_ message: @autoclosure () -> Logger.Message,
                 metadata: @autoclosure () -> Logger.Metadata? = nil,
-                file: String = #fileID, function: String = #function, line: UInt = #line)
-    {
+                file: String = #fileID, function: String = #function, line: UInt = #line) {
         self.notice(message(), metadata: metadata(), source: nil, file: file, function: function, line: line)
     }
 
@@ -464,8 +445,7 @@ public extension Logger {
     @inlinable
     func notice(_ message: @autoclosure () -> Logger.Message,
                 metadata: @autoclosure () -> Logger.Metadata? = nil,
-                file: String = #file, function: String = #function, line: UInt = #line)
-    {
+                file: String = #file, function: String = #function, line: UInt = #line) {
         self.notice(message(), metadata: metadata(), source: nil, file: file, function: function, line: line)
     }
     #endif
@@ -493,8 +473,7 @@ public extension Logger {
     func warning(_ message: @autoclosure () -> Logger.Message,
                  metadata: @autoclosure () -> Logger.Metadata? = nil,
                  source: @autoclosure () -> String? = nil,
-                 file: String = #fileID, function: String = #function, line: UInt = #line)
-    {
+                 file: String = #fileID, function: String = #function, line: UInt = #line) {
         self.log(level: .warning, message(), metadata: metadata(), source: source(), file: file, function: function, line: line)
     }
 
@@ -503,8 +482,7 @@ public extension Logger {
     func warning(_ message: @autoclosure () -> Logger.Message,
                  metadata: @autoclosure () -> Logger.Metadata? = nil,
                  source: @autoclosure () -> String? = nil,
-                 file: String = #file, function: String = #function, line: UInt = #line)
-    {
+                 file: String = #file, function: String = #function, line: UInt = #line) {
         self.log(level: .warning, message(), metadata: metadata(), source: source(), file: file, function: function, line: line)
     }
     #endif
@@ -527,8 +505,7 @@ public extension Logger {
     @inlinable
     func warning(_ message: @autoclosure () -> Logger.Message,
                  metadata: @autoclosure () -> Logger.Metadata? = nil,
-                 file: String = #fileID, function: String = #function, line: UInt = #line)
-    {
+                 file: String = #fileID, function: String = #function, line: UInt = #line) {
         self.warning(message(), metadata: metadata(), source: nil, file: file, function: function, line: line)
     }
 
@@ -536,8 +513,7 @@ public extension Logger {
     @inlinable
     func warning(_ message: @autoclosure () -> Logger.Message,
                  metadata: @autoclosure () -> Logger.Metadata? = nil,
-                 file: String = #file, function: String = #function, line: UInt = #line)
-    {
+                 file: String = #file, function: String = #function, line: UInt = #line) {
         self.warning(message(), metadata: metadata(), source: nil, file: file, function: function, line: line)
     }
     #endif
@@ -565,8 +541,7 @@ public extension Logger {
     func error(_ message: @autoclosure () -> Logger.Message,
                metadata: @autoclosure () -> Logger.Metadata? = nil,
                source: @autoclosure () -> String? = nil,
-               file: String = #fileID, function: String = #function, line: UInt = #line)
-    {
+               file: String = #fileID, function: String = #function, line: UInt = #line) {
         self.log(level: .error, message(), metadata: metadata(), source: source(), file: file, function: function, line: line)
     }
 
@@ -575,8 +550,7 @@ public extension Logger {
     func error(_ message: @autoclosure () -> Logger.Message,
                metadata: @autoclosure () -> Logger.Metadata? = nil,
                source: @autoclosure () -> String? = nil,
-               file: String = #file, function: String = #function, line: UInt = #line)
-    {
+               file: String = #file, function: String = #function, line: UInt = #line) {
         self.log(level: .error, message(), metadata: metadata(), source: source(), file: file, function: function, line: line)
     }
     #endif
@@ -599,8 +573,7 @@ public extension Logger {
     @inlinable
     func error(_ message: @autoclosure () -> Logger.Message,
                metadata: @autoclosure () -> Logger.Metadata? = nil,
-               file: String = #fileID, function: String = #function, line: UInt = #line)
-    {
+               file: String = #fileID, function: String = #function, line: UInt = #line) {
         self.error(message(), metadata: metadata(), source: nil, file: file, function: function, line: line)
     }
 
@@ -608,8 +581,7 @@ public extension Logger {
     @inlinable
     func error(_ message: @autoclosure () -> Logger.Message,
                metadata: @autoclosure () -> Logger.Metadata? = nil,
-               file: String = #file, function: String = #function, line: UInt = #line)
-    {
+               file: String = #file, function: String = #function, line: UInt = #line) {
         self.error(message(), metadata: metadata(), source: nil, file: file, function: function, line: line)
     }
     #endif
@@ -636,8 +608,7 @@ public extension Logger {
     func critical(_ message: @autoclosure () -> Logger.Message,
                   metadata: @autoclosure () -> Logger.Metadata? = nil,
                   source: @autoclosure () -> String? = nil,
-                  file: String = #fileID, function: String = #function, line: UInt = #line)
-    {
+                  file: String = #fileID, function: String = #function, line: UInt = #line) {
         self.log(level: .critical, message(), metadata: metadata(), source: source(), file: file, function: function, line: line)
     }
 
@@ -646,8 +617,7 @@ public extension Logger {
     func critical(_ message: @autoclosure () -> Logger.Message,
                   metadata: @autoclosure () -> Logger.Metadata? = nil,
                   source: @autoclosure () -> String? = nil,
-                  file: String = #file, function: String = #function, line: UInt = #line)
-    {
+                  file: String = #file, function: String = #function, line: UInt = #line) {
         self.log(level: .critical, message(), metadata: metadata(), source: source(), file: file, function: function, line: line)
     }
     #endif
@@ -673,8 +643,7 @@ public extension Logger {
     @inlinable
     func critical(_ message: @autoclosure () -> Logger.Message,
                   metadata: @autoclosure () -> Logger.Metadata? = nil,
-                  file: String = #fileID, function: String = #function, line: UInt = #line)
-    {
+                  file: String = #fileID, function: String = #function, line: UInt = #line) {
         self.critical(message(), metadata: metadata(), source: nil, file: file, function: function, line: line)
     }
 
@@ -682,8 +651,7 @@ public extension Logger {
     @inlinable
     func critical(_ message: @autoclosure () -> Logger.Message,
                   metadata: @autoclosure () -> Logger.Metadata? = nil,
-                  file: String = #file, function: String = #function, line: UInt = #line)
-    {
+                  file: String = #file, function: String = #function, line: UInt = #line) {
         self.critical(message(), metadata: metadata(), source: nil, file: file, function: function, line: line)
     }
     #endif
@@ -741,15 +709,13 @@ public enum LoggingSystem {
     }
 
     internal static func bootstrapInternal(metadataProvider: Logger.MetadataProvider,
-                                           _ factory: @escaping (String, Logger.MetadataProvider) -> LogHandler)
-    {
+                                           _ factory: @escaping (String, Logger.MetadataProvider) -> LogHandler) {
         self._metadataProvider.replaceMetadataProvider({ _ in metadataProvider }, validate: false)
         self._factory.replaceFactory(factory, validate: false)
     }
 
     internal static func bootstrapInternal(metadataProvider: @escaping (String) -> Logger.MetadataProvider,
-                                           _ factory: @escaping (String, Logger.MetadataProvider) -> LogHandler)
-    {
+                                           _ factory: @escaping (String, Logger.MetadataProvider) -> LogHandler) {
         self._metadataProvider.replaceMetadataProvider(metadataProvider, validate: false)
         self._factory.replaceFactory(factory, validate: false)
     }
@@ -830,8 +796,7 @@ public extension LoggingSystem {
     ///     - metadataProvider: The `MetadataProvider` used to inject runtime-generated metadata, defaults to a "no-op" provider.
     ///     - factory: A closure that given a `Logger` identifier, produces an instance of the `LogHandler`.
     static func bootstrap(metadataProvider metadataProviderFactory: @escaping (String) -> Logger.MetadataProvider,
-                          _ factory: @escaping (String, Logger.MetadataProvider) -> LogHandler)
-    {
+                          _ factory: @escaping (String, Logger.MetadataProvider) -> LogHandler) {
         self._metadataProvider.replaceMetadataProvider(metadataProviderFactory, validate: true)
         self._factory.replaceFactory(factory, validate: true)
     }
@@ -844,8 +809,7 @@ public extension LoggingSystem {
     ///     - metadataProvider: The `MetadataProvider` used to inject runtime-generated metadata, defaults to a "no-op" provider.
     ///     - factory: A closure that given a `Logger` identifier, produces an instance of the `LogHandler`.
     static func bootstrap(metadataProvider: Logger.MetadataProvider,
-                          _ factory: @escaping (String, Logger.MetadataProvider) -> LogHandler)
-    {
+                          _ factory: @escaping (String, Logger.MetadataProvider) -> LogHandler) {
         self._metadataProvider.replaceMetadataProvider({ _ in metadataProvider }, validate: true)
         self._factory.replaceFactory(factory, validate: true)
     }
@@ -858,8 +822,7 @@ public extension LoggingSystem {
     ///     - metadataProvider: The `MetadataProvider` used to inject runtime-generated metadata, defaults to nil.
     ///     - factory: A closure that given a `Logger` identifier, produces an instance of the `LogHandler`.
     static func bootstrap(metadataProvider: Logger.MetadataProvider,
-                          _ factory: @escaping (String) -> LogHandler)
-    {
+                          _ factory: @escaping (String) -> LogHandler) {
         self._metadataProvider.replaceMetadataProvider({ _ in metadataProvider }, validate: true)
         self._factory.replaceFactory({ label, _ in
             factory(label)
@@ -1162,8 +1125,7 @@ public struct MultiplexLogHandler: LogHandler {
                     source: String,
                     file: String,
                     function: String,
-                    line: UInt)
-    {
+                    line: UInt) {
         for handler in self.handlers where handler.logLevel <= level {
             handler.log(level: level, message: message, metadata: metadata, source: source, file: file, function: function, line: line)
         }
@@ -1346,8 +1308,7 @@ public struct StreamLogHandler: LogHandler {
                     source: String,
                     file: String,
                     function: String,
-                    line: UInt)
-    {
+                    line: UInt) {
         let effectiveMetadata = Self.prepareMetadata(base: self.metadata, provider: self.metadataProvider, explicit: explicitMetadata)
 
         let prettyMetadata: String?
