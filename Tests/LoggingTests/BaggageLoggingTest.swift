@@ -23,7 +23,6 @@ import Glibc
 #endif
 
 final class BaggageLoggingTest: XCTestCase {
-
     @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
     func testLoggingCallsMetadataProviderWithTaskLocalBaggage() throws {
         #if swift(>=5.5) && canImport(_Concurrency)
@@ -118,7 +117,7 @@ final class BaggageLoggingTest: XCTestCase {
                 return [:]
             }
             var metadata: Logger.Metadata = [:]
-            
+
             if let testID = baggage[TestIDKey.self] {
                 metadata["overriden-contextual"] = .string(testID)
             }
@@ -150,7 +149,7 @@ final class BaggageLoggingTest: XCTestCase {
             logger.error("test", metadata: ["one-off": "42"])
             logger.critical("test", metadata: ["one-off": "42"])
         }
-        
+
         // ["one-off": 42, "only-local": task-local, "only-explicitly": provided-to-handler, "overriden-contextual": task-local]
         let expectedMetadata: Logger.Metadata = [
             // explicitly set on handler by `logger.provideMetadata`:
@@ -163,7 +162,7 @@ final class BaggageLoggingTest: XCTestCase {
             // task-local is picked up as usual if no conflicts:
             "only-local": "task-local",
         ]
-        
+
         logging.history.assertExist(level: .trace, message: "test", metadata: expectedMetadata)
         logging.history.assertExist(level: .debug, message: "test", metadata: expectedMetadata)
         logging.history.assertExist(level: .info, message: "test", metadata: expectedMetadata)
@@ -183,17 +182,16 @@ final class BaggageLoggingTest: XCTestCase {
         }
         #endif
     }
-    
+
     func testLogHandlerThatDidNotImplementProvidersButSomeoneAttemptsToSetOneOnIt() {
         let logging = TestLogging()
         var handler = LogHandlerThatDidNotImplementMetadataProviders(testLogging: logging)
-        
+
         handler.metadataProvider = .simpleTestProvider
-        
+
         logging.history.assertExist(level: .warning, message: "Attempted to set metadataProvider on LogHandlerThatDidNotImplementMetadataProviders that did not implement support for them. Please contact the log handler maintainer to implement metadata provider support.", source: "Logging")
     }
 }
-
 
 extension Logger.MetadataProvider {
     static var simpleTestProvider: Self {
@@ -208,7 +206,7 @@ public struct LogHandlerThatDidNotImplementMetadataProviders: LogHandler {
     init(testLogging: TestLogging) {
         self.testLogging = testLogging
     }
-    
+
     public subscript(metadataKey _: String) -> Logging.Logger.Metadata.Value? {
         get {
             nil
@@ -217,18 +215,19 @@ public struct LogHandlerThatDidNotImplementMetadataProviders: LogHandler {
             // ignore
         }
     }
-    
+
     public var metadata: Logging.Logger.Metadata = [:]
-    
+
     public var logLevel: Logging.Logger.Level = .trace
-    
+
     public func log(level: Logger.Level,
                     message: Logger.Message,
                     metadata: Logger.Metadata?,
                     source: String,
                     file: String,
                     function: String,
-                    line: UInt) {
+                    line: UInt)
+    {
         self.testLogging.make(label: "fake").log(level: level, message: message, metadata: metadata, source: source, file: file, function: function, line: line)
     }
 }

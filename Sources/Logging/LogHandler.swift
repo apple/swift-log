@@ -114,7 +114,6 @@
 /// level has not been overridden. And most importantly it passes the requirement listed above: A change to the log
 /// level on one `Logger` should not affect the log level of another `Logger` variable.
 public protocol LogHandler: _SwiftLogSendableLogHandler {
-
     /// The metadata provider this `LogHandler` will use when a log statement is about to be emitted.
     ///
     /// A ``Logger/MetadataProvider`` may add a constant set of metadata,
@@ -170,9 +169,9 @@ public protocol LogHandler: _SwiftLogSendableLogHandler {
     var logLevel: Logger.Level { get set }
 }
 
-extension LogHandler {
+public extension LogHandler {
     /// Default implementation for `metadataProvider` which defaults to a "no-op" provider.
-    public var metadataProvider: Logger.MetadataProvider {
+    var metadataProvider: Logger.MetadataProvider {
         get {
             .noop
         }
@@ -182,20 +181,21 @@ extension LogHandler {
     }
 }
 
-extension LogHandler {
+public extension LogHandler {
     @available(*, deprecated, message: "You should implement this method instead of using the default implementation")
-    public func log(level: Logger.Level,
-                    message: Logger.Message,
-                    metadata: Logger.Metadata?,
-                    source: String,
-                    file: String,
-                    function: String,
-                    line: UInt) {
+    func log(level: Logger.Level,
+             message: Logger.Message,
+             metadata: Logger.Metadata?,
+             source: String,
+             file: String,
+             function: String,
+             line: UInt)
+    {
         self.log(level: level, message: message, metadata: metadata, file: file, function: function, line: line)
     }
 
     @available(*, deprecated, renamed: "log(level:message:metadata:source:file:function:line:)")
-    public func log(level: Logging.Logger.Level, message: Logging.Logger.Message, metadata: Logging.Logger.Metadata?, file: String, function: String, line: UInt) {
+    func log(level: Logging.Logger.Level, message: Logging.Logger.Message, metadata: Logging.Logger.Metadata?, file: String, function: String, line: UInt) {
         self.log(level: level,
                  message: message,
                  metadata: metadata,

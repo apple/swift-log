@@ -21,14 +21,14 @@ public typealias _TestBaggage_Sendable = Any
 actor A {
     @TaskLocal
     static var name: String?
-    
+
     func test() async {
         await TestBaggage.withValue(.topLevel) {
             await self.asyncFunc()
         }
     }
-    
-    func asyncFunc() async {} 
+
+    func asyncFunc() async {}
 }
 
 /// Minimal `Baggage`-like type replicating how `swift-distributed-tracing-baggage` works, so we can showcase how to use it in tests.
@@ -40,16 +40,16 @@ public struct TestBaggage: _TestBaggage_Sendable {
 
 // MARK: - Creating TestBaggage
 
-extension TestBaggage {
-    public static var topLevel: TestBaggage {
+public extension TestBaggage {
+    static var topLevel: TestBaggage {
         TestBaggage()
     }
 }
 
 // MARK: - Interacting with TestBaggage
 
-extension TestBaggage {
-    public subscript<Key: TestBaggageKey>(_ key: Key.Type) -> Key.Value? {
+public extension TestBaggage {
+    subscript<Key: TestBaggageKey>(_ key: Key.Type) -> Key.Value? {
         get {
             guard let value = self._storage[AnyTestBaggageKey(key)] else { return nil }
             // safe to force-cast as this subscript is the only way to set a value.
@@ -61,29 +61,28 @@ extension TestBaggage {
     }
 }
 
-extension TestBaggage {
-    public var count: Int {
+public extension TestBaggage {
+    var count: Int {
         self._storage.count
     }
 
-    public var isEmpty: Bool {
+    var isEmpty: Bool {
         self._storage.isEmpty
     }
-
 }
 
 // MARK: - Propagating TestBaggage
 
 #if swift(>=5.5) && canImport(_Concurrency)
 @available(macOS 10.15, iOS 13.0, watchOS 6.0, tvOS 13.0, *)
-extension TestBaggage {
-    @TaskLocal public static var current: TestBaggage?
+public extension TestBaggage {
+    @TaskLocal static var current: TestBaggage?
 
-    public static func withValue<T>(_ value: TestBaggage?, operation: () throws -> T) rethrows -> T {
+    static func withValue<T>(_ value: TestBaggage?, operation: () throws -> T) rethrows -> T {
         try TestBaggage.$current.withValue(value, operation: operation)
     }
 
-    public static func withValue<T>(_ value: TestBaggage?, operation: () async throws -> T) async rethrows -> T {
+    static func withValue<T>(_ value: TestBaggage?, operation: () async throws -> T) async rethrows -> T {
         try await TestBaggage.$current.withValue(value, operation: operation)
     }
 }
@@ -93,8 +92,8 @@ public protocol TestBaggageKey: _TestBaggage_Sendable {
     associatedtype Value: _TestBaggage_Sendable
 }
 
-extension TestBaggageKey {
-    public static var nameOverride: String? { nil }
+public extension TestBaggageKey {
+    static var nameOverride: String? { nil }
 }
 
 public struct AnyTestBaggageKey: _TestBaggage_Sendable {

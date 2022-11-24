@@ -24,8 +24,7 @@ import WASILibc
 #error("Unsupported runtime")
 #endif
 
-
-extension Logger {
+public extension Logger {
     /// A `MetadataProvider` is used to automatically inject runtime-generated metadata
     /// to all logs emitted by a logger.
     ///
@@ -47,8 +46,7 @@ extension Logger {
     ///     logger.info("hello") // automatically includes ["traceID": "42"] metadata
     /// }
     /// ```
-    public struct MetadataProvider: Sendable {
-        
+    struct MetadataProvider: Sendable {
         /// A default no-op metadata provider, which always returns empty metadata.
         public static var noop: MetadataProvider {
             MetadataProvider { [:] }
@@ -62,7 +60,7 @@ extension Logger {
         /// Provide ``Logger.Metadata`` from current context.
         @usableFromInline
         internal let _provideMetadata: @Sendable () -> Metadata
-        
+
         #if DEBUG
         let file: String
         let line: UInt
@@ -86,7 +84,7 @@ extension Logger {
     }
 }
 
-extension Logger.MetadataProvider {
+public extension Logger.MetadataProvider {
     /// A pseudo-`MetadataProvider` that can be used to merge metadata from multiple other `MetadataProvider`s.
     ///
     /// ### Merging conflicting keys
@@ -96,7 +94,7 @@ extension Logger.MetadataProvider {
     ///
     /// - Parameter providers: An array of `MetadataProvider`s to delegate to. The array must not be empty.
     /// - Returns: A pseudo-`MetadataProvider` merging metadata from the given `MetadataProvider`s.
-    public static func multiplex(_ providers: [Logger.MetadataProvider]) -> Logger.MetadataProvider {
+    static func multiplex(_ providers: [Logger.MetadataProvider]) -> Logger.MetadataProvider {
         assert(!providers.isEmpty, "providers MUST NOT be empty")
         return Logger.MetadataProvider {
             providers.reduce(into: [:]) { metadata, provider in

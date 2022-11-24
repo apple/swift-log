@@ -461,7 +461,7 @@ class LoggingTest: XCTestCase {
         trace("yes: trace", [:], #fileID, #function, #line)
         debug("yes: debug", [:], #fileID, #function, #line)
         info("yes: info", [:], #fileID, #function, #line)
-        notice("yes: notice", [:],  #fileID, #function, #line)
+        notice("yes: notice", [:], #fileID, #function, #line)
         warning("yes: warning", [:], #fileID, #function, #line)
         error("yes: error", [:], #fileID, #function, #line)
         critical("yes: critical", [:], #fileID, #function, #line)
@@ -543,9 +543,9 @@ class LoggingTest: XCTestCase {
         let providerA = Logger.MetadataProvider { ["provider": "a", "a": "foo"] }
         let providerB = Logger.MetadataProvider { ["provider": "b", "b": "bar"] }
         let logger = Logger(label: #function,
-                factory: { label in
-                    logging.makeWithMetadataProvider(label: label, metadataProvider: .multiplex([providerA, providerB]))
-                })
+                            factory: { label in
+                                logging.makeWithMetadataProvider(label: label, metadataProvider: .multiplex([providerA, providerB]))
+                            })
 
         logger.log(level: .info, "test", metadata: ["one-off": "42"])
 
@@ -556,7 +556,7 @@ class LoggingTest: XCTestCase {
 
     func testLoggerWithoutFactoryOverrideDefaultsToUsingLoggingSystemMetadataProvider() {
         let logging = TestLogging()
-        LoggingSystem.bootstrapInternal(metadataProvider: .init({ ["provider": "42"] })) { label, metadataProvider in
+        LoggingSystem.bootstrapInternal(metadataProvider: .init { ["provider": "42"] }) { label, metadataProvider in
             logging.makeWithMetadataProvider(label: label, metadataProvider: metadataProvider)
         }
 
@@ -571,7 +571,7 @@ class LoggingTest: XCTestCase {
 
     func testLoggerWithFactoryOverrideDefaultsToUsingLoggingSystemMetadataProvider() {
         let logging = TestLogging()
-        LoggingSystem.bootstrapInternal(metadataProvider: .init({ ["provider": "42"] }))
+        LoggingSystem.bootstrapInternal(metadataProvider: .init { ["provider": "42"] })
         LoggingSystem.bootstrapInternal(logging.makeWithMetadataProvider)
 
         let logger = Logger(label: #function, factoryWithMetadataProvider: logging.makeWithMetadataProvider)
@@ -638,7 +638,8 @@ class LoggingTest: XCTestCase {
             }
 
             func log(level: Logger.Level, message: Logger.Message, metadata: Logger.Metadata?,
-                     source: String, file: String, function: String, line: UInt) {
+                     source: String, file: String, function: String, line: UInt)
+            {
                 self.recorder.record(level: level, metadata: metadata, message: message, source: source)
             }
 
@@ -731,7 +732,7 @@ class LoggingTest: XCTestCase {
 
     func testStreamLogHandlerWritesToAStream() {
         let interceptStream = InterceptStream()
-        LoggingSystem.bootstrapInternal { label, metadataProvider in
+        LoggingSystem.bootstrapInternal { _, metadataProvider in
             StreamLogHandler(label: "test", metadataProvider: metadataProvider, stream: interceptStream)
         }
         let log = Logger(label: "test")
@@ -878,10 +879,10 @@ class LoggingTest: XCTestCase {
 
         let readFD = fds[0]
         #if os(Windows)
-        let hPipe: HANDLE = HANDLE(bitPattern: _get_osfhandle(readFD))!
+        let hPipe = HANDLE(bitPattern: _get_osfhandle(readFD))!
         XCTAssertFalse(hPipe == INVALID_HANDLE_VALUE)
 
-        var dwMode: DWORD = DWORD(PIPE_NOWAIT)
+        var dwMode = DWORD(PIPE_NOWAIT)
         let bSucceeded = SetNamedPipeHandleState(hPipe, &dwMode, nil, nil)
         XCTAssertTrue(bSucceeded)
         #else
@@ -919,18 +920,20 @@ class LoggingTest: XCTestCase {
     }
 }
 
-extension Logger {
+public extension Logger {
     #if compiler(>=5.3)
-    public func error(error: Error,
-                      metadata: @autoclosure () -> Logger.Metadata? = nil,
-                      file: String = #fileID, function: String = #function, line: UInt = #line) {
+    func error(error: Error,
+               metadata: @autoclosure () -> Logger.Metadata? = nil,
+               file: String = #fileID, function: String = #function, line: UInt = #line)
+    {
         self.error("\(error.localizedDescription)", metadata: metadata(), file: file, function: function, line: line)
     }
 
     #else
-    public func error(error: Error,
-                      metadata: @autoclosure () -> Logger.Metadata? = nil,
-                      file: String = #file, function: String = #function, line: UInt = #line) {
+    func error(error: Error,
+               metadata: @autoclosure () -> Logger.Metadata? = nil,
+               file: String = #file, function: String = #function, line: UInt = #line)
+    {
         self.error("\(error.localizedDescription)", metadata: metadata(), file: file, function: function, line: line)
     }
     #endif
