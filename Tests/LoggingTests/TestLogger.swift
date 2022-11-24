@@ -74,8 +74,7 @@ internal struct TestLogHandler: LogHandler {
              message: Logger.Message,
              metadata explicitMetadata: Logger.Metadata?,
              source: String,
-             file: String, function: String, line: UInt)
-    {
+             file: String, function: String, line: UInt) {
         // baseline metadata, that was set on handler:
         var metadata = self._metadataSet ? self.metadata : MDC.global.metadata
         // contextual metadata, e.g. from task-locals:
@@ -218,8 +217,7 @@ extension History {
                      source: String? = nil,
                      file: StaticString = #file,
                      fileID: String = #fileID,
-                     line: UInt = #line)
-    {
+                     line: UInt = #line) {
         let source = source ?? Logger.currentModule(fileID: "\(fileID)")
         let entry = self.find(level: level, message: message, metadata: metadata, source: source)
         XCTAssertNotNil(entry, "entry not found: \(level), \(source), \(String(describing: metadata)), \(message)",
@@ -232,8 +230,7 @@ extension History {
                         source: String? = nil,
                         file: StaticString = #file,
                         fileID: String = #file,
-                        line: UInt = #line)
-    {
+                        line: UInt = #line) {
         let source = source ?? Logger.currentModule(fileID: "\(fileID)")
         let entry = self.find(level: level, message: message, metadata: metadata, source: source)
         XCTAssertNil(entry, "entry was found: \(level), \(source), \(String(describing: metadata)), \(message)",
@@ -246,8 +243,7 @@ extension History {
                      metadata: Logger.Metadata? = nil,
                      source: String? = nil,
                      file: StaticString = #file,
-                     line: UInt = #line)
-    {
+                     line: UInt = #line) {
         let source = source ?? Logger.currentModule(filePath: "\(file)")
         let entry = self.find(level: level, message: message, metadata: metadata, source: source)
         XCTAssertNotNil(entry, "entry not found: \(level), \(source), \(String(describing: metadata)), \(message)",
@@ -259,8 +255,7 @@ extension History {
                         metadata: Logger.Metadata? = nil,
                         source: String? = nil,
                         file: StaticString = #file,
-                        line: UInt = #line)
-    {
+                        line: UInt = #line) {
         let source = source ?? Logger.currentModule(filePath: "\(file)")
         let entry = self.find(level: level, message: message, metadata: metadata, source: source)
         XCTAssertNil(entry, "entry was found: \(level), \(source), \(String(describing: metadata)), \(message)",

@@ -189,8 +189,7 @@ public extension LogHandler {
              source: String,
              file: String,
              function: String,
-             line: UInt)
-    {
+             line: UInt) {
         self.log(level: level, message: message, metadata: metadata, file: file, function: function, line: line)
     }
 

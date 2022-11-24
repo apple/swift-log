@@ -64,7 +64,7 @@ public extension Logger {
         }
 
         #if swift(>=5.5) && canImport(_Concurrency)
-        public typealias Function = @Sendable () -> Metadata
+        public typealias Function = @Sendable() -> Metadata
         #else
         public typealias Function = () -> Metadata
         #endif

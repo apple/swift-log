@@ -466,13 +466,13 @@ class LoggingTest: XCTestCase {
         error("yes: error", [:], #fileID, #function, #line)
         critical("yes: critical", [:], #fileID, #function, #line)
         #else
-        trace("yes: trace", [:], nil, #file, #function, #line)
-        debug("yes: debug", [:], nil, #file, #function, #line)
-        info("yes: info", [:], nil, #file, #function, #line)
-        notice("yes: notice", [:], nil, #file, #function, #line)
-        warning("yes: warning", [:], nil, #file, #function, #line)
-        error("yes: error", [:], nil, #file, #function, #line)
-        critical("yes: critical", [:], nil, #file, #function, #line)
+        trace("yes: trace", [:], #file, #function, #line)
+        debug("yes: debug", [:], #file, #function, #line)
+        info("yes: info", [:], #file, #function, #line)
+        notice("yes: notice", [:], #file, #function, #line)
+        warning("yes: warning", [:], #file, #function, #line)
+        error("yes: error", [:], #file, #function, #line)
+        critical("yes: critical", [:], #file, #function, #line)
         #endif
 
         testLogging.history.assertExist(level: .trace, message: "yes: trace")
@@ -638,8 +638,7 @@ class LoggingTest: XCTestCase {
             }
 
             func log(level: Logger.Level, message: Logger.Message, metadata: Logger.Metadata?,
-                     source: String, file: String, function: String, line: UInt)
-            {
+                     source: String, file: String, function: String, line: UInt) {
                 self.recorder.record(level: level, metadata: metadata, message: message, source: source)
             }
 
@@ -924,16 +923,14 @@ public extension Logger {
     #if compiler(>=5.3)
     func error(error: Error,
                metadata: @autoclosure () -> Logger.Metadata? = nil,
-               file: String = #fileID, function: String = #function, line: UInt = #line)
-    {
+               file: String = #fileID, function: String = #function, line: UInt = #line) {
         self.error("\(error.localizedDescription)", metadata: metadata(), file: file, function: function, line: line)
     }
 
     #else
     func error(error: Error,
                metadata: @autoclosure () -> Logger.Metadata? = nil,
-               file: String = #file, function: String = #function, line: UInt = #line)
-    {
+               file: String = #file, function: String = #function, line: UInt = #line) {
         self.error("\(error.localizedDescription)", metadata: metadata(), file: file, function: function, line: line)
     }
     #endif

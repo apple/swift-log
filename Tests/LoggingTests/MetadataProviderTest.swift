@@ -23,12 +23,14 @@ import Glibc
 #endif
 
 enum TestLocals {
+    #if swift(>=5.5) && canImport(_Concurrency)
     @TaskLocal
     static var testID: String?
     @TaskLocal
     static var onlyLocalID: String?
     @TaskLocal
     static var onlyExplicitlyProvidedID: String?
+    #endif
 }
 
 final class MetadataProviderTest: XCTestCase {
@@ -130,14 +132,6 @@ final class MetadataProviderTest: XCTestCase {
         })
         logger.logLevel = .trace
 
-//        var taskLocalBaggage = TestBaggage.topLevel
-//        taskLocalBaggage[TestIDKey.self] = "task-local"
-//        taskLocalBaggage[OnlyLocalIDKey.self] = "task-local"
-//
-//        var explicitBaggage = TestBaggage.topLevel
-//        explicitBaggage[TestIDKey.self] = "explicit"
-//        explicitBaggage[OnlyExplicitlyProvidedIDKey.self] = "provided-to-handler"
-
         TestLocals.$testID.withValue("task-local") {
             TestLocals.$onlyLocalID.withValue("task-local") {
                 logger[metadataKey: "overridden-contextual"] = "will-be-overridden"
@@ -218,8 +212,7 @@ public struct LogHandlerThatDidNotImplementMetadataProviders: LogHandler {
                     source: String,
                     file: String,
                     function: String,
-                    line: UInt)
-    {
+                    line: UInt) {
         self.testLogging.make(label: "fake").log(level: level, message: message, metadata: metadata, source: source, file: file, function: function, line: line)
     }
 }
