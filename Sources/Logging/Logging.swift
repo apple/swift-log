@@ -662,7 +662,7 @@ public extension Logger {
 /// implementation.
 public enum LoggingSystem {
     private static let _factory = FactoryBox { label, _ in StreamLogHandler.standardOutput(label: label) }
-    private static let _metadataProvider = MetadataProviderBox { _ in Logger.MetadataProvider.noop }
+    private static let _metadataProviderFactory = MetadataProviderBox(.noop)
 
     /// `bootstrap` is a one-time configuration function which globally selects the desired logging backend
     /// implementation. `bootstrap` can be called at maximum once in any given program, calling it more than once will
@@ -687,13 +687,13 @@ public enum LoggingSystem {
         }, validate: true)
     }
 
-    public static func bootstrapMetadataProvider(_ metadataProvider: @escaping (String) -> Logger.MetadataProvider) {
-        self._metadataProvider.replaceMetadataProvider(metadataProvider, validate: true)
+    public static func bootstrapMetadataProvider(_ metadataProvider: Logger.MetadataProvider) {
+        self._metadataProviderFactory.replaceMetadataProvider(metadataProvider, validate: true)
     }
 
-    // for our testing we want to allow multiple bootstraping
+    // for our testing we want to allow multiple bootstrapping
     internal static func bootstrapInternal(_ factory: @escaping (String) -> LogHandler) {
-        self._metadataProvider.replaceMetadataProvider({ _ in Logger.MetadataProvider.noop }, validate: false)
+        self._metadataProviderFactory.replaceMetadataProvider(.noop, validate: false) // TODO: fixme remove this and fix tests
         self._factory.replaceFactory({ label, _ in
             factory(label)
         }, validate: false)
@@ -704,24 +704,14 @@ public enum LoggingSystem {
         self._factory.replaceFactory(factory, validate: false)
     }
 
-    internal static func bootstrapInternal(metadataProvider: @escaping (String) -> Logger.MetadataProvider) {
-        self._metadataProvider.replaceMetadataProvider(metadataProvider, validate: false)
+    internal static func bootstrapInternal(metadataProvider: Logger.MetadataProvider) {
+        self._metadataProviderFactory.replaceMetadataProvider(metadataProvider, validate: false)
     }
 
     internal static func bootstrapInternal(metadataProvider: Logger.MetadataProvider,
                                            _ factory: @escaping (String, Logger.MetadataProvider) -> LogHandler) {
-        self._metadataProvider.replaceMetadataProvider({ _ in metadataProvider }, validate: false)
+        self._metadataProviderFactory.replaceMetadataProvider(metadataProvider, validate: false)
         self._factory.replaceFactory(factory, validate: false)
-    }
-
-    internal static func bootstrapInternal(metadataProvider: @escaping (String) -> Logger.MetadataProvider,
-                                           _ factory: @escaping (String, Logger.MetadataProvider) -> LogHandler) {
-        self._metadataProvider.replaceMetadataProvider(metadataProvider, validate: false)
-        self._factory.replaceFactory(factory, validate: false)
-    }
-
-    internal static func bootstrapInternal(metadataProvider: Logger.MetadataProvider) {
-        self._metadataProvider.replaceMetadataProvider({ _ in metadataProvider }, validate: false)
     }
 
     fileprivate static var factory: (String, Logger.MetadataProvider) -> LogHandler {
@@ -733,8 +723,8 @@ public enum LoggingSystem {
     }
 
     /// System wide ``Logger/MetadataProvider`` that was configured during the logging system's `bootstrap`.
-    internal static var metadataProviderFactory: (String) -> Logger.MetadataProvider {
-        return self._metadataProvider.makeMetadataProvider
+    internal static var metadataProvider: Logger.MetadataProvider {
+        return self._metadataProviderFactory.metadataProvider
     }
 
     private final class FactoryBox {
@@ -764,22 +754,22 @@ public enum LoggingSystem {
     private final class MetadataProviderBox {
         private let lock = ReadWriteLock()
 
-        internal var _underlying: (String) -> Logger.MetadataProvider
+        internal var _underlying: Logger.MetadataProvider
         private var initialized = false
 
-        init(_ underlying: @escaping (String) -> Logger.MetadataProvider) {
+        init(_ underlying: Logger.MetadataProvider) {
             self._underlying = underlying
         }
 
-        func replaceMetadataProvider(_ makeMetadataProvider: @escaping (String) -> Logger.MetadataProvider, validate: Bool) {
+        func replaceMetadataProvider(_ metadataProvider: Logger.MetadataProvider, validate: Bool) {
             self.lock.withWriterLock {
                 precondition(!validate || !self.initialized, "logging system can only be initialized once per process.")
-                self._underlying = makeMetadataProvider
+                self._underlying = metadataProvider
                 self.initialized = true
             }
         }
 
-        var makeMetadataProvider: (String) -> Logger.MetadataProvider {
+        var metadataProvider: Logger.MetadataProvider {
             return self.lock.withReaderLock {
                 return self._underlying
             }
@@ -795,22 +785,9 @@ public extension LoggingSystem {
     /// - parameters:
     ///     - metadataProvider: The `MetadataProvider` used to inject runtime-generated metadata, defaults to a "no-op" provider.
     ///     - factory: A closure that given a `Logger` identifier, produces an instance of the `LogHandler`.
-    static func bootstrap(metadataProvider metadataProviderFactory: @escaping (String) -> Logger.MetadataProvider,
-                          _ factory: @escaping (String, Logger.MetadataProvider) -> LogHandler) {
-        self._metadataProvider.replaceMetadataProvider(metadataProviderFactory, validate: true)
-        self._factory.replaceFactory(factory, validate: true)
-    }
-
-    /// `bootstrap` is a one-time configuration function which globally selects the desired logging backend
-    /// implementation. `bootstrap` can be called at maximum once in any given program, calling it more than once will
-    /// lead to undefined behavior, most likely a crash.
-    ///
-    /// - parameters:
-    ///     - metadataProvider: The `MetadataProvider` used to inject runtime-generated metadata, defaults to a "no-op" provider.
-    ///     - factory: A closure that given a `Logger` identifier, produces an instance of the `LogHandler`.
     static func bootstrap(metadataProvider: Logger.MetadataProvider,
                           _ factory: @escaping (String, Logger.MetadataProvider) -> LogHandler) {
-        self._metadataProvider.replaceMetadataProvider({ _ in metadataProvider }, validate: true)
+        self._metadataProviderFactory.replaceMetadataProvider(metadataProvider, validate: true)
         self._factory.replaceFactory(factory, validate: true)
     }
 
@@ -823,7 +800,7 @@ public extension LoggingSystem {
     ///     - factory: A closure that given a `Logger` identifier, produces an instance of the `LogHandler`.
     static func bootstrap(metadataProvider: Logger.MetadataProvider,
                           _ factory: @escaping (String) -> LogHandler) {
-        self._metadataProvider.replaceMetadataProvider({ _ in metadataProvider }, validate: true)
+        self._metadataProviderFactory.replaceMetadataProvider(metadataProvider, validate: true)
         self._factory.replaceFactory({ label, _ in
             factory(label)
         }, validate: true)
@@ -917,7 +894,7 @@ public extension Logger {
     /// - parameters:
     ///     - label: An identifier for the creator of a `Logger`.
     init(label: String) {
-        self.init(label: label, LoggingSystem.factory(label, .bootstrapped(label: label)))
+        self.init(label: label, LoggingSystem.factory(label, .bootstrapped))
     }
 
     /// Construct a `Logger` given a `label` identifying the creator of the `Logger` or a non-standard `LogHandler`.
@@ -970,7 +947,7 @@ public extension Logger {
     ///     - label: An identifier for the creator of a `Logger`.
     ///     - factory: A closure creating non-standard `LogHandler`s.
     init(label: String, factoryWithMetadataProvider: (String, MetadataProvider) -> LogHandler) {
-        self = Logger(label: label, factoryWithMetadataProvider(label, LoggingSystem.metadataProviderFactory(label)))
+        self = Logger(label: label, factoryWithMetadataProvider(label, LoggingSystem.metadataProvider))
     }
 }
 
@@ -1264,12 +1241,12 @@ public struct StreamLogHandler: LogHandler {
 
     /// Factory that makes a `StreamLogHandler` to directs its output to `stdout`
     public static func standardOutput(label: String) -> StreamLogHandler {
-        return StreamLogHandler(label: label, metadataProvider: LoggingSystem.metadataProviderFactory(label), stream: StdioOutputStream.stdout)
+        return StreamLogHandler(label: label, metadataProvider: LoggingSystem.metadataProvider, stream: StdioOutputStream.stdout)
     }
 
     /// Factory that makes a `StreamLogHandler` to directs its output to `stderr`
     public static func standardError(label: String) -> StreamLogHandler {
-        return StreamLogHandler(label: label, metadataProvider: LoggingSystem.metadataProviderFactory(label), stream: StdioOutputStream.stderr)
+        return StreamLogHandler(label: label, metadataProvider: LoggingSystem.metadataProvider, stream: StdioOutputStream.stderr)
     }
 
     private let stream: _SendableTextOutputStream

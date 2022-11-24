@@ -27,7 +27,7 @@ internal struct TestLogging {
             label: label,
             config: self.config,
             recorder: self.recorder,
-            metadataProvider: LoggingSystem.metadataProviderFactory(label)
+            metadataProvider: LoggingSystem.metadataProvider
         )
     }
 
@@ -67,7 +67,7 @@ internal struct TestLogHandler: LogHandler {
         self.recorder = recorder
         self.logger = Logger(label: "test", StreamLogHandler.standardOutput(label: label))
         self.logger.logLevel = .debug
-        self.metadataProvider = LoggingSystem.metadataProviderFactory(label)
+        self.metadataProvider = LoggingSystem.metadataProvider
     }
 
     func log(level: Logger.Level,

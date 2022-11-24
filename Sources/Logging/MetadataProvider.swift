@@ -59,8 +59,8 @@ public extension Logger {
         }
 
         /// Return the ``Logger/MetadataProvider-swift.struct`` that was configured during ``LoggingSystem/bootstrap(_:)-8ffrb``.
-        static func bootstrapped(label: String) -> MetadataProvider {
-            return LoggingSystem.metadataProviderFactory(label)
+        static var bootstrapped: MetadataProvider {
+            return LoggingSystem.metadataProvider
         }
 
         #if swift(>=5.5) && canImport(_Concurrency)
