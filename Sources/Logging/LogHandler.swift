@@ -117,7 +117,7 @@ public protocol LogHandler: _SwiftLogSendableLogHandler {
     /// The metadata provider this `LogHandler` will use when a log statement is about to be emitted.
     ///
     /// A ``Logger/MetadataProvider`` may add a constant set of metadata,
-    /// or use task-local values to pick up contextual metadata ane add it to emitted logs.
+    /// or use task-local values to pick up contextual metadata and add it to emitted logs.
     var metadataProvider: Logger.MetadataProvider { get set }
 
     /// This method is called when a `LogHandler` must emit a log message. There is no need for the `LogHandler` to

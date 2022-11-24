@@ -24,6 +24,12 @@ import WASILibc
 #error("Unsupported runtime")
 #endif
 
+#if compiler(>=5.6)
+@preconcurrency public protocol _SwiftLogSendable: Sendable {}
+#else
+public protocol _SwiftLogSendable {}
+#endif
+
 public extension Logger {
     /// A `MetadataProvider` is used to automatically inject runtime-generated metadata
     /// to all logs emitted by a logger.
@@ -46,7 +52,7 @@ public extension Logger {
     ///     logger.info("hello") // automatically includes ["traceID": "42"] metadata
     /// }
     /// ```
-    struct MetadataProvider: Sendable {
+    struct MetadataProvider: _SwiftLogSendable {
         /// A default no-op metadata provider, which always returns empty metadata.
         public static var noop: MetadataProvider {
             MetadataProvider { [:] }
@@ -57,24 +63,21 @@ public extension Logger {
             LoggingSystem.metadataProviderFactory(label)
         }
 
+        #if swift(>=5.5) && canImport(_Concurrency)
+        public typealias Function = @Sendable() -> Metadata
+        #else
+        public typealias Function = () -> Metadata
+        #endif
+
         /// Provide ``Logger.Metadata`` from current context.
         @usableFromInline
-        internal let _provideMetadata: @Sendable() -> Metadata
-
-        #if DEBUG
-        let file: String
-        let line: UInt
-        #endif
+        internal let _provideMetadata: MetadataProvider.Function
 
         /// Create a new `MetadataProvider`.
         ///
         /// - Parameter provideMetadata: A closure extracting metadata from a given `Baggage`.
-        public init(_ provideMetadata: @escaping () -> Metadata, file: String = #fileID, line: UInt = #line) {
+        public init(_ provideMetadata: @escaping MetadataProvider.Function) {
             self._provideMetadata = provideMetadata
-            #if DEBUG
-            self.file = file
-            self.line = line
-            #endif
         }
 
         /// Invoke the metadata provider and return the generated contextual ``Logger/Metadata``.

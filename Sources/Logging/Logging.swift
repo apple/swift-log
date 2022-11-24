@@ -952,7 +952,7 @@ public extension Logger {
         })
     }
 
-    init(label: String, metadataProvider: @escaping () -> Logger.Metadata) {
+    init(label: String, metadataProvider: @escaping MetadataProvider.Function) {
         self = Logger(label: label, factory: { label in
             LoggingSystem.factory(label, .init(metadataProvider))
         })
