@@ -34,26 +34,28 @@ These libraries, by design, don't know about the specific metadata keys that sho
 Those keys are after all runtime dependent, and may change depending on what tracing system is configured by the end user.
 
 For example, a specific `Tracer` implementation would use a type representing a trace ID, and has a way of extracting
-that trace ID from a `Baggage`. But other libraries can't know about this _specific_ trace ID and therefore would not be
+that trace ID from a [Swift Distributed Tracing Baggage](https://github.com/apple/swift-distributed-tracing-baggage). But other libraries can't know about this _specific_ trace ID and therefore would not be
 able to pass such values along to their log statements.
 
 ## Proposed solution
 
-To support this kind of runtime-generated metadata in `swift-log`, we need to extend the logging APIs in an open-ended way, to allow any kinds of metadata to be provided from the asynchronous context.
+To support this kind of runtime-generated metadata in `swift-log`, we need to extend the logging APIs in an open-ended way, to allow any kinds of metadata to be provided from the asynchronous context (i.e. task local values).
+
+We also have a desire to keep `swift-log` a "zero dependencies" library, as it intends only to focus on describing a logging API, and not incur any additional dependencies, so it can be used in the most minimal of projects.
 
 To solve this, we propose the extension of swift-log APIs with a new concept: _metadata providers_.
 
-`MetadataProvider` is struct nested in the `Logger` type, sitting alongside `MetadataValue`
-and the `Metadata` typealias. It has a single property `metadata` which is a closure from `Baggage?` to `Metadata?`:
+`MetadataProvider` is struct nested in the `Logger` type, sitting alongside `MetadataValue` and the `Metadata`. 
+Its purpose is to _provide_ `Logger.Metadata` from the asynchronous context, by e.g. looking up various task-local values,
+and converting them into `Logger.Metadata`. This is performed by calling the `provideMetadata()` function, like so:
 
 ```swift
 extension Logger {
     public struct MetadataProvider: Sendable {
-        public var metadata: @Sendable (_ baggage: Baggage?) -> Metadata?
-
-        public init(metadata: @escaping @Sendable (Baggage?) -> Metadata?) {
-            self.metadata = metadata
-        }
+        // ... 
+        public init(_ provideMetadata: @escaping @Sendable () -> Metadata)
+    
+        public provideMetadata() -> Metadata
     }
 }
 ```
@@ -61,13 +63,23 @@ extension Logger {
 ### Defining a `MetadataProvider`
 
 While `MetadataProvider`s can be created in an ad-hoc fashion, the struct may be used as a namespace
-to define providers in. A Tracing library e.g. could expose its metadata provider via a static property
-on `Logger.MetadataProvider`:
+to define providers in. 
+
+For example, a `MyTracer` implementation of swift-distributed-tracing would be expected to provide a metadata provider
+that is aware of its own `Baggage` and specific keys it uses to carry the trace and span identifiers, like this:
 
 ```swift
+import Tracing // swift-distributed-tracing
+
 extension Logger.MetadataProvider {
-    static let tracer = Logger.MetadataProvider { baggage in
-        guard let spanContext = baggage?.spanContext else { return nil }
+    static let myTracer = Logger.MetadataProvider {
+        guard let baggage = Baggage.current else {
+            return [:]
+        }
+        guard let spanContext = baggage.spanContext else { 
+            return nil
+        }
+        
         return [
           "traceID": "\(spanContext.traceID)",
           "spanID": "\(spanContext.spanID)",
@@ -82,33 +94,53 @@ A `MetadataProvider` can be set up either globally, on a boot-strapped logging s
 
 ```swift
 LoggingSystem.bootstrap(
-    metadataProvider: .tracer,
+    metadataProvider: .myTracer,
     StreamLogHandler.standardOutput
 )
 ```
 
-or, on a specific logger, in case some contexts should extract additional information:
+or, using the metadata provider specific bootstrap method:
 
 ```swift
-let logger = Logger(label: "example", metadataProvider: .init { baggage in
-    guard let operationID = baggage?.operationID else { return nil }
+LoggingSystem.bootstrapMetadataProvider(.myTracer)
+```
+
+It is also possible to configure a metadata provider on a per-logger basis, like this:
+
+```swift
+let logger = Logger(label: "example", metadataProvider: Logger.MetadataProvider { 
+    guard let baggage = Baggage.current else {
+        return [:]
+    }
+    guard let operationID = baggage.operationID else { 
+        return nil
+    }
     return ["extra/opID": "\(opID)"]
 })
 ```
+
+which _overrides_ the default bootstrapped metadata provider.
 
 > NOTE: Setting the metadata provider on the logger directly means the `LoggingSystem` metadata provider
 > is skipped (if defined), following how an explicitly passed handler `factory`
 > overrides the `LoggingSystem`s `factory`.
 
-Once a metadata provider was set up, when a log statement is about to be emitted, the logger will obtain the task-local `Baggage.current`,
-and pass it to the metadata providers. The providers can then convert specific baggage items into logger metadata as they see fit.
+Once a metadata provider was set up, when a log statement is about to be emitted, the a log handler implementation shall
+invoke it whenever it is about to emit a log statement. This must be done from the same asynchronous context as the log statement
+was made; I.e. if a log handler were to asynchronously–in a _detached_ task–create the actual log message, the invocation of
+the metadata provider still _must_ be performed before passing the data over to the other detached task.
+
+Usually, metadata providers will reach for the task's Swift Distributed Tracing [`Baggage`](https://github.com/apple/swift-distributed-tracing-baggage) which is the mechanism that swift-distributed-tracing 
+and instrumentation libraries use to propagate metadata across asynchronous, as well as process, boundaries. Handlers 
+may also inspect other task-local values, however they should not expect other libraries to be able to propagage those
+as well as they will propagate `Baggage` values.
 
 Those metadata will then be included in the log statement, e.g. like this:
 
 ```swift
 var baggage = Baggage.topLevel
 baggage.spanContext = SpanContext()
-Baggage.$current.withValue(baggage) {
+Baggage.withValue(baggage) {
     test()
 }
 
@@ -127,7 +159,7 @@ more than one metadata provider at the same time:
 ```swift
 extension Logger.MetadataProvider {
     public static func multiplex(_ providers: [Logger.MetadataProvider]) -> Logger.MetadataProvider {
-        assert(!providers.isEmpty, "providers MUST NOT be empty")
+        precondition(!providers.isEmpty, "providers MUST NOT be empty")
         return Logger.MetadataProvider { baggage in
             providers.reduce(into: nil) { metadata, provider in
                 if let providedMetadata = provider.metadata(baggage) {
@@ -144,139 +176,28 @@ extension Logger.MetadataProvider {
 ```
 
 Metadata keys are unique, so in case multiple metadata providers return the same key,
-the last provider in the array "wins" and provides the value.
+the last provider in the array _wins_ and provides the value.
 
-### Proposal: Using `Baggage` as the execution context dependent metadata container
+Note that it is possible to query the `LoggingSystem` for the configured, system-wide, metadata provider,
+and combine it using a `multiplex` provider if the system-wide provider should not be replaced, but augmented
+by additional providers.
 
-We propose that swift-log should use [Swift Distributed Tracing Baggage](https://github.com/apple/swift-distributed-tracing-baggage) for its contextual metadata propagation type, meaning that swift-log would depend on this package.
+### Understanding Swift Distributed Tracing `Baggage`
 
-The `Baggage` type is modeled after the [Propagation format for distributed context: Baggage](https://www.w3.org/TR/baggage/), a W3C working draft, and is intended for all kinds of instrumentation of Swift applications both within and across processes. It is also used by [Swift Distributed Tracing](https://github.com/apple/swift-distributed-tracing), however it is usable even without tracing infrastructure. The baggage package contains the single `Baggage` type, and is expected to have a stable, unchanging API, fit for swift-log to depend upon.
+The `Baggage` type is more than just a fancy type-safe container for your values which are meant to be carried across
+using a single, well-known, [task-local value](https://developer.apple.com/documentation/swift/tasklocal).
 
-> NOTE: We could potentially even rename the baggage package, if the tracing wording in it is causing confusion here. But realistically, this is its primary purpose: to enable tracing in logging systems, so we think swift-log depending on `swift-distributed-tracing-baggage` is fine.
+Values stored in `Baggage` are intended to be carried _across process boundaries_, and e.g. libraries such as HTTP clients,
+or other RPC mechanisms, or even messaging systems implement distributed tracing [instruments](https://github.com/apple/swift-distributed-tracing/blob/main/Sources/Instrumentation/Instrument.swift) 
+which `inject` and `extract` baggage values into their respective carrier objects, e.g. an `HTTPRequest` in the case of an HTTP client.
 
-To start using contextual metadata, end-users configure a metadata provider on the entire logging system or on a specific `Logger` via a new initializer parameter:
+In other words, whenever intending to propagate information _across processes_ utilize the `Baggage` type to carry it, 
+and ensure to provide an `Instrument` that is able to inject/extract the values of interest into the carrier types you are interested in.
+To learn more about baggage and instrumentation, refer to the [Swift Distributed Tracing](https://github.com/apple/swift-distributed-tracing/) library documentation.
 
-```swift
-let logger = Logger(label: "example", metadataProvider: { baggage in
-    // extract values from baggage
-    guard let traceID = baggage?[TraceIDKey.self] else { return nil }
-    // convert values into logging metadata
-    return ["trace-id": traceID]
-})
-```
+#### When to use `Baggage` vs. `Logger[metadataKey:]`
 
-### Task-local Baggage
-
-> NOTE: See [SE-0311](https://github.com/apple/swift-evolution/blob/main/proposals/0311-task-locals.md) for an explanation of task-local values in Swift.
-
-Once configured, the `log` function and its log-level-based counterparts will utilize this provider by merging the provided metadata with the one-off metadata within the log statement.
-
-Since `Baggage` is propagaged as a task-local, we do not change any of the existing method signatures, and the baggage is picked up inside the log method:
-
-```swift
-extension Logger {
-    @inlinable
-    func log(level: Logger.Level,
-             _ message: @autoclosure () -> Logger.Message,
-             metadata: @autoclosure () -> Logger.Metadata? = nil,
-             source: @autoclosure () -> String? = nil,
-             file: String = #fileID, function: String = #function, line: UInt = #line) {
-        let effectiveBaggage: Baggage? = {
-            guard baggage == nil else { return baggage }
-
-            let taskLocalBaggage: Baggage?
-            #if compiler(>=5.5) && canImport(_Concurrency)
-            if #available(macOS 10.15, iOS 13.0, watchOS 6.0, tvOS 13.0, *), self.metadataProvider != nil {
-                taskLocalBaggage = Baggage.current
-            } else {
-                taskLocalBaggage = nil
-            }
-            #else
-            taskLocalBaggage = nil
-            #endif
-
-            return taskLocalBaggage
-        }()
-        let providerMetadata = metadataProvider?.metadata(effectiveBaggage)
-        let metadata: Metadata? = {
-            guard let metadata = metadata(), !metadata.isEmpty else { return providerMetadata }
-            guard let providerMetadata = providerMetadata else { return metadata }
-            return providerMetadata.merging(metadata, uniquingKeysWith: { _, oneOffMetadata in oneOffMetadata })
-        }()
-
-        self.handler.log(level: level,
-                         message: message(),
-                         metadata: metadata,
-                         source: source() ?? Logger.currentModule(fileID: (file)),
-                         file: file, function: function, line: line)
-    }
-}
-```
-
-Note, that the task-local lookup is only performed when the log message is about to be emitted. No task-local or thread-local lookups are performed when the log level is lower than the level of the current statement or in case no metadata provider was set up.
-
-We also introduce another overload of the log (and trace/debug/info/notice/warning/error/critical) method, which allows libraries to pass a baggage explicitly if they need to (or, disable baggage value extraction by passing `nil` as the value):
-
-```swift
-extension Logger {
-    @inlinable
-    public func log(level: Logger.Level,
-                    _ message: @autoclosure () -> Logger.Message,
-                    metadata: @autoclosure () -> Logger.Metadata? = nil,
-                    baggage: Baggage?,
-                    source: @autoclosure () -> String? = nil,
-                    file: String = #fileID, function: String = #function, line: UInt = #line) {
-        if self.logLevel <= level {
-            let providerMetadata = metadataProvider?.metadata(baggage)
-            let metadata: Metadata? = {
-                guard let metadata = metadata(), !metadata.isEmpty else { return providerMetadata }
-                guard let providerMetadata = providerMetadata else { return metadata }
-                return providerMetadata.merging(metadata, uniquingKeysWith: { _, oneOffMetadata in oneOffMetadata })
-            }()
-
-            self.handler.log(level: level,
-                             message: message(),
-                             metadata: metadata,
-                             source: source() ?? Logger.currentModule(fileID: (file)),
-                             file: file, function: function, line: line)
-        }
-    }
-}
-```
-
-Practical usage of baggage values is as follows:
-
-```swift
-var baggage = Baggage.topLevel
-baggage[TestIDKey.self] = "my-awesome-trace-id"
-
-Baggage.$current.withValue(baggage) {
-    logger.info("Such logging, wow!", metadata: ["one-off": "example"])
-    // info [my-test-key: my-awesome-trace-id, one-off: example] Such logging, wow!
-}
-```
-
-This has the advantage of not having to specify the global metadata explicitly anymore.
-
-The task-local baggage is often going to be set by e.g. tracing libraries or frameworks, so end-users do not need to do anything to benefit from tracing,
-other than setting up the metadata providers when they bootstrap their logging and tracing systems. For example, assuming some imaginary http framework where http requests are forwarded to an actor for handling, all the end-users of this framework would benefit from contextual metadata, propagated with baggage by logging, as usual:
-
-```swift
-actor MyHTTPHandler {
-
-  func handle(request: HTTPRequest) async {
-    Logger(label: "inline").info("Handling request!")
-    // info [trace-id: 1234-5678] Handling request!
-  }
-}
-```
-
-This also solves the issue of libraries not being able to include this kind of metadata since it is done automatically in the background, as long as
-the values are stored inside the task-local `Baggage`.
-
-### When to use `Baggage` vs. `Logger[metadataKey:]`
-
-While `Baggage` is context-dependend and changes depending on where the log methods are being called from, the metadata set on a `Logger` is static and not context-dependent. E.g, if you wanted to add things like an instance ID or a subsystem name to a `Logger`, that could be seen as static information and set via `Logger[metadataKey:]`.
+While `Baggage` is context-dependent and changes depending on where the log methods are being called from, the metadata set on a `Logger` is static and not context-dependent. E.g, if you wanted to add things like an instance ID or a subsystem name to a `Logger`, that could be seen as static information and set via `Logger[metadataKey:]`.
 
 ```swift
 var logger = Logger(label: "org.swift.my-service")
@@ -317,106 +238,24 @@ Baggage.$current.withValue(baggage) {
 // [trace-id: 42, paymentMethod: apple-pay] Product fetched.
 ```
 
-### Using Baggage in callback APIs
-
-Many libraries which provide `async` APIs, are implemented on top of Swift NIO, or other callback-heavy libraries (e.g. when wrapping existing non-async database libraries or similar).
-
-The proposed API must work well with such libraries, in the sense that a metadata provider configured by an end-user, should still be useful in such libraries where setting a Task-local baggage is either impossible, or very weird (continiously wrapping every call into "restoring" the current baggage upon every re-entry from a callback):
-
-```swift
-class RequestStateMachine: ChannelInboundHandler {
-    let logger: Logger
-
-    func channelActive(context: ChannelHandlerContext) {
-        logger.debug("Channel active.")
-        // debug [trace-id: ???] Channel active.
-    }
-
-    func channelRead(context: ChannelHandlerContext, data: NIOAny) {
-        logger.debug("Received request part.")
-        // debug [trace-id: ???] Received request part.
-    }
-}
-```
-
-In the above example, we want the logger to capture the trace ID of the task that created `MyChannel`, but the delegate methods are called on the NIO event-loop which doesn't set any task-local `Baggage`.
-
-We propose the following strategy for such libraries:
-
-Entry points into such libraries should assume the presence of task-local `Baggage`.
-This is the same as with tracing -- e.g. a `startWork()` method, does not need to accept a baggage parameter, but simply query `Baggage.current` if in need of any contextual metadata.
-
-When the library is forced to exit the world of structured concurrency where task-locals work well `*`, they should _get and store_ the current baggage from the user's calling context, e.g. by storing it in a state machine driving class, handler, or actor: `self.baggage = Baggage.current`:
-
-```swift
-class RequestStateMachine: ChannelInboundHandler {
-    let logger: Logger
-    var baggage: Baggage?
-
-    init(logger: Logger) {
-        self.logger = logger
-        // in here we can still access the task-local Baggage
-        self.baggage = Baggage.current
-    }
-
-    func channelActive(context: ChannelHandlerContext) {
-        logger.debug("Channel active.", baggage: self.baggage)
-        // debug [trace-id: 42] Channel active.
-    }
-
-    func channelRead(context: ChannelHandlerContext, data: NIOAny) {
-        logger.debug("Received request part.", baggage: self.baggage)
-        // debug [trace-id: 42] Received request part.
-    }
-}
-```
-
-> `*` situations where task-local baggage just works include: plain synchronous methods, asynchronous methods, as all forms of structured concurrency (async lets and task groups), as well as un-structured (but _not_ detached) tasks (created by calling `Task { ... }`).
-
-The libraries are then free to continue using their callback or delegate-style APIs, and whenever needing to log or restore the baggage they can, either:
-
-- explicitly pass it to a logger: `log.info("Request finished", metadata: [...], baggage: self.baggage)`
-- restore the contextual task-local baggage and wrap subsequent calls with: `Baggage.current.withValue(self.baggage) { moreThings() }`
-
-### Rendering provider metadata only once in performance-critical code
-
-In some performance-critical code, you may want to render the provider metadata only once. In such cases, you can call the metadata provider explicitly at the point of entry and instead of passing `Baggage` you'd use the `Logger`'s metadata:
-
-```swift
-class PerformanceCriticalRequestStateMachine: ChannelInboundHandler {
-    let logger: Logger
-
-    init(logger: Logger) {
-        var logger = logger
-        // in here we can still access the task-local Baggage
-        if let baggage = Baggage.current, let metadataProvider = logger.metadataProvider {
-            let metadata = metadataProvider(baggage)
-            for (key, value) in metadata {
-                logger[metadataKey: key] = value
-            }
-        }
-        self.logger = logger
-    }
-
-    func channelActive(context: ChannelHandlerContext) {
-        logger.debug("Channel active.", baggage: nil)
-        // debug [trace-id: 42] Channel active.
-    }
-
-    func channelRead(context: ChannelHandlerContext, data: NIOAny) {
-        logger.debug("Received request part.", baggage: nil)
-        // debug [trace-id: 42] Received request part.
-    }
-}
-```
-
-Passing `nil` as the `Baggage` will prevent task-local look-ups in these performance sensitive situations.
-
-> NOTE: Most applications shouldn't need to worry about this and just rely on automatic Baggage propagation using task-locals
-
-> WARNING: The context-dependent metadata becomes static which makes it hard to recover the dynamic information back into `Baggage`, e.g. if you wanted to create a child span in one of those callbacks.
-
 ## Alternatives considered
+
+### MetadataProviders as a function of `Baggage -> Metadata`
+
+This was considered and fully developed, however it would cause swift-log to have a dependency on the instrumentation type `Baggage`, 
+which was seen as in-conflict-with the interest of swift-log remaining a zero-dependency library.
+
+`Baggage` _is_ the well known type that is intended to be used for any kind of distributed systems instrumentation and tracing,
+however it adds additional complexity and confusion for users who are not interested in this domain. For example, developers
+may be confused about why `Baggage` and `Logger.Metadata` look somewhat similar, but behave very differently. This complexity
+is inherent to the two types actually being _very_ different, however we do not want to overwhelm newcomers or developers
+who are only intending to use swift-log within process. Such developers do not need to care about the added complexities 
+of distributed systems.
+
+The tradeoff we take here is that every metadata provider will have to perform its own task-local (and therefore also thread-local),
+access in order to obtain the `Baggage` value, rather than the lookup being able to be performed _once_ and shared between 
+multiple providers when a multiplex provider was configured in the system. We view this tradeoff as worth taking, as the cost
+of actually formatting the metadata usually strongly dominates the cost of the task-local lookup. 
 
 ### Removing `LogHandler.Metadata` in favor of `Baggage`
 

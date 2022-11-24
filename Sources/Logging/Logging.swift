@@ -687,6 +687,16 @@ public enum LoggingSystem {
         }, validate: true)
     }
 
+    /// `bootstrapMetadataProvider` is a one-time configuration function which globally selects the desired
+    /// ``Logger/MetadataProvider`` which should be used by all loggers created in this process from here onwards.
+    ///
+    /// `bootstrapMetadataProvider` can be called at maximum once in any given program, calling it more than once will
+    /// lead to undefined behavior, most likely a crash.
+    ///
+    /// It is also possible to `bootstrap(metadataProvider:_:)` to configure both a metadata provider,
+    /// and log handler backend at the same time, in a single call.
+    ///
+    /// - Parameter metadataProvider: The metadata provider to be used by this logging system.
     public static func bootstrapMetadataProvider(_ metadataProvider: Logger.MetadataProvider) {
         self._metadataProviderFactory.replaceMetadataProvider(metadataProvider, validate: true)
     }

@@ -32,5 +32,9 @@ let package = Package(
             name: "LoggingTests",
             dependencies: ["Logging"]
         ),
+        .testTarget(
+            name: "LoggingTests+51",
+            dependencies: ["Logging"]
+        ),
     ]
 )
