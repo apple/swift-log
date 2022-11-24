@@ -96,7 +96,14 @@ def createLinuxMain(testsDirectory, allTestSubDirectories, files)
 
     file.write "#if os(Linux) || os(FreeBSD) || os(Windows) || os(Android)\n"
     for testSubDirectory in allTestSubDirectories.sort { |x, y| x <=> y }
+      needsIfGuard = testSubDirectory =~ /51/
+      if needsIfGuard then
+        file.write "#if swift(>=5.1)\n"
+      end
       file.write '@testable import ' + testSubDirectory + "\n"
+      if needsIfGuard then
+        file.write "#endif\n"
+      end
     end
     file.write "\n"
     file.write "XCTMain([\n"
@@ -109,11 +116,24 @@ def createLinuxMain(testsDirectory, allTestSubDirectories, files)
     end
 
     for testCase in testCases.sort { |x, y| x <=> y }
-      file.write '    testCase(' + testCase + ".allTests),\n"
+      needsIfGuard = testCaseNeedsIfGuard(testCase, allTestSubDirectories, 5, 1)
+      unless needsIfGuard
+        file.write '    testCase(' + testCase + ".allTests),\n"
+      end
     end
     file.write "])\n"
     file.write "#endif\n"
   end
+end
+
+def testCaseNeedsIfGuard(testCase, allTestSubDirectories, major, minor)
+  for f in allTestSubDirectories
+    if File.exist? "Tests/" + f + "/" + testCase.split(/./, 1).first + ".swift" then
+      return f =~ /#{major}#{minor}/
+    end
+  end
+
+  false
 end
 
 def parseSourceFile(fileName)
