@@ -25,10 +25,7 @@ import XCTest
 extension MetadataProviderTest {
     static var allTests: [(String, (MetadataProviderTest) -> () throws -> Void)] {
         return [
-            ("testLoggingCallsMetadataProviderWithTaskLocal", testLoggingCallsMetadataProviderWithTaskLocal),
-            ("testLoggingMergesOneOffMetadataWithProvidedMetadataFromTaskLocal", testLoggingMergesOneOffMetadataWithProvidedMetadataFromTaskLocal),
             ("testLoggingMergesOneOffMetadataWithProvidedMetadataFromExplicitlyPassed", testLoggingMergesOneOffMetadataWithProvidedMetadataFromExplicitlyPassed),
-            ("testLoggingIncludesExplicitOverTaskLocal", testLoggingIncludesExplicitOverTaskLocal),
             ("testLogHandlerThatDidNotImplementProvidersButSomeoneAttemptsToSetOneOnIt", testLogHandlerThatDidNotImplementProvidersButSomeoneAttemptsToSetOneOnIt),
         ]
     }

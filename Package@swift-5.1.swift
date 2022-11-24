@@ -32,9 +32,16 @@ let package = Package(
             name: "LoggingTests",
             dependencies: ["Logging"]
         ),
+        // Due to a compiler bug in parsing/lexing in 5.0,
+        // it is not possible to #if out uses of task-local values out of Swift 5.0 code.
+        // Thus, tests making use of task-local values must be in their own module.
         .testTarget(
-            name: "LoggingTests+51",
-            dependencies: ["Logging"]
+            name: "LoggingTests-51plus",
+            dependencies: [
+                "Logging",
+                "LoggingTests",
+            ],
+            path: "Tests/LoggingTests_51plus"
         ),
     ]
 )
