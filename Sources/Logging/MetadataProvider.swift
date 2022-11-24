@@ -69,7 +69,7 @@ public extension Logger {
         /// Create a new `MetadataProvider`.
         ///
         /// - Parameter provideMetadata: A closure extracting metadata from a given `Baggage`.
-        public init(_ provideMetadata: @escaping @Sendable () -> Metadata, file: String = #fileID, line: UInt = #line) {
+        public init(_ provideMetadata: @escaping () -> Metadata, file: String = #fileID, line: UInt = #line) {
             self._provideMetadata = provideMetadata
             #if DEBUG
             self.file = file
