@@ -25,7 +25,8 @@ let package = Package(
     targets: [
         .target(
             name: "Logging",
-            dependencies: []
+            dependencies: [
+            ]
         ),
         .testTarget(
             name: "LoggingTests",
