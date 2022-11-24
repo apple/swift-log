@@ -22,26 +22,32 @@ import WinSDK
 import Glibc
 #endif
 
-final class BaggageLoggingTest: XCTestCase {
+enum TestLocals {
+    @TaskLocal
+    static var testID: String?
+    @TaskLocal
+    static var onlyLocalID: String?
+    @TaskLocal
+    static var onlyExplicitlyProvidedID: String?
+}
+
+final class MetadataProviderTest: XCTestCase {
     @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
-    func testLoggingCallsMetadataProviderWithTaskLocalBaggage() throws {
+    func testLoggingCallsMetadataProviderWithTaskLocal() throws {
         #if swift(>=5.5) && canImport(_Concurrency)
         let logging = TestLogging()
         LoggingSystem.bootstrapInternal(logging.makeWithMetadataProvider)
 
         var logger = Logger(label: #function, metadataProvider: .init {
-            guard let baggage = TestBaggage.current, let testID = baggage[TestIDKey.self] else {
-                XCTFail("Expected TestBaggage to be passed along to the metadata provider.")
+            guard let testID = TestLocals.testID else {
+                XCTFail("Expected `testID` to be passed along to the metadata provider.")
                 return [:]
             }
             return ["provider": .string(testID)]
         })
         logger.logLevel = .trace
 
-        var baggage = TestBaggage.topLevel
-        baggage[TestIDKey.self] = "42"
-
-        TestBaggage.$current.withValue(baggage) {
+        TestLocals.$testID.withValue("42") {
             logger.trace("test")
             logger.debug("test")
             logger.info("test")
@@ -58,15 +64,11 @@ final class BaggageLoggingTest: XCTestCase {
         logging.history.assertExist(level: .warning, message: "test", metadata: ["provider": "42"])
         logging.history.assertExist(level: .error, message: "test", metadata: ["provider": "42"])
         logging.history.assertExist(level: .critical, message: "test", metadata: ["provider": "42"])
-
-        enum TestIDKey: TestBaggageKey {
-            typealias Value = String
-        }
         #endif
     }
 
     @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
-    func testLoggingMergesOneOffMetadataWithProvidedMetadataFromTaskLocalBaggage() throws {
+    func testLoggingMergesOneOffMetadataWithProvidedMetadataFromTaskLocal() throws {
         #if swift(>=5.5) && canImport(_Concurrency)
         let logging = TestLogging()
         LoggingSystem.bootstrapInternal(logging.makeWithMetadataProvider)
@@ -78,7 +80,7 @@ final class BaggageLoggingTest: XCTestCase {
             ]
         })
 
-        TestBaggage.$current.withValue(.topLevel) {
+        TestLocals.$testID.withValue("ignore-this") {
             logger.log(level: .info, "test", metadata: ["one-off": "42", "common": "one-off"])
         }
 
@@ -88,7 +90,7 @@ final class BaggageLoggingTest: XCTestCase {
         #endif
     }
 
-    func testLoggingMergesOneOffMetadataWithProvidedMetadataFromExplicitlyPassedBaggage() throws {
+    func testLoggingMergesOneOffMetadataWithProvidedMetadataFromExplicitlyPassed() throws {
         let logging = TestLogging()
         LoggingSystem.bootstrapInternal(logging.makeWithMetadataProvider)
 
@@ -107,58 +109,58 @@ final class BaggageLoggingTest: XCTestCase {
     }
 
     @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
-    func testLoggingIncludesExplicitBaggageOverTaskLocal() {
+    func testLoggingIncludesExplicitOverTaskLocal() {
         #if swift(>=5.5) && canImport(_Concurrency)
         let logging = TestLogging()
         LoggingSystem.bootstrapInternal(logging.makeWithMetadataProvider)
 
         var logger = Logger(label: #function, metadataProvider: .init {
-            guard let baggage = TestBaggage.current else {
-                return [:]
-            }
             var metadata: Logger.Metadata = [:]
 
-            if let testID = baggage[TestIDKey.self] {
-                metadata["overriden-contextual"] = .string(testID)
+            if let testID = TestLocals.testID {
+                metadata["overridden-contextual"] = .string(testID)
             }
-            if let onlyLocal = baggage[OnlyLocalIDKey.self] {
+            if let onlyLocal = TestLocals.onlyLocalID {
                 metadata["only-local"] = .string(onlyLocal)
             }
-            if let onlyExplicitlyProvidedToHandler = baggage[OnlyExplicitlyProvidedIDKey.self] {
+            if let onlyExplicitlyProvidedToHandler = TestLocals.onlyExplicitlyProvidedID {
                 metadata["only-explicitly"] = .string(onlyExplicitlyProvidedToHandler)
             }
             return metadata
         })
         logger.logLevel = .trace
 
-        var taskLocalBaggage = TestBaggage.topLevel
-        taskLocalBaggage[TestIDKey.self] = "task-local"
-        taskLocalBaggage[OnlyLocalIDKey.self] = "task-local"
+//        var taskLocalBaggage = TestBaggage.topLevel
+//        taskLocalBaggage[TestIDKey.self] = "task-local"
+//        taskLocalBaggage[OnlyLocalIDKey.self] = "task-local"
+//
+//        var explicitBaggage = TestBaggage.topLevel
+//        explicitBaggage[TestIDKey.self] = "explicit"
+//        explicitBaggage[OnlyExplicitlyProvidedIDKey.self] = "provided-to-handler"
 
-        var explicitBaggage = TestBaggage.topLevel
-        explicitBaggage[TestIDKey.self] = "explicit"
-        explicitBaggage[OnlyExplicitlyProvidedIDKey.self] = "provided-to-handler"
-
-        TestBaggage.$current.withValue(taskLocalBaggage) {
-            logger.provideMetadata(from: explicitBaggage)
-            logger.trace("test", metadata: ["one-off": "42"])
-            logger.debug("test", metadata: ["one-off": "42"])
-            logger.info("test", metadata: ["one-off": "42"])
-            logger.notice("test", metadata: ["one-off": "42"])
-            logger.warning("test", metadata: ["one-off": "42"])
-            logger.error("test", metadata: ["one-off": "42"])
-            logger.critical("test", metadata: ["one-off": "42"])
+        TestLocals.$testID.withValue("task-local") {
+            TestLocals.$onlyLocalID.withValue("task-local") {
+                logger[metadataKey: "overridden-contextual"] = "will-be-overridden"
+                logger[metadataKey: "only-explicitly"] = "provided-to-handler"
+                logger.trace("test", metadata: ["one-off": "42"])
+                logger.debug("test", metadata: ["one-off": "42"])
+                logger.info("test", metadata: ["one-off": "42"])
+                logger.notice("test", metadata: ["one-off": "42"])
+                logger.warning("test", metadata: ["one-off": "42"])
+                logger.error("test", metadata: ["one-off": "42"])
+                logger.critical("test", metadata: ["one-off": "42"])
+            }
         }
 
-        // ["one-off": 42, "only-local": task-local, "only-explicitly": provided-to-handler, "overriden-contextual": task-local]
+        // ["one-off": 42, "only-local": task-local, "only-explicitly": provided-to-handler, "overridden-contextual": task-local]
         let expectedMetadata: Logger.Metadata = [
             // explicitly set on handler by `logger.provideMetadata`:
             "only-explicitly": "provided-to-handler",
             // passed in-line by end user at log statement level:
             "one-off": "42",
-            // concetual metadata, if present, still wins over the provided to handler,
+            // contextual metadata, if present, still wins over the provided to handler,
             // which allows for "default value if no contextual is present" (which the "only-explicit" is an example of):
-            "overriden-contextual": "task-local",
+            "overridden-contextual": "task-local",
             // task-local is picked up as usual if no conflicts:
             "only-local": "task-local",
         ]
@@ -170,16 +172,6 @@ final class BaggageLoggingTest: XCTestCase {
         logging.history.assertExist(level: .warning, message: "test", metadata: expectedMetadata)
         logging.history.assertExist(level: .error, message: "test", metadata: expectedMetadata)
         logging.history.assertExist(level: .critical, message: "test", metadata: expectedMetadata)
-
-        enum TestIDKey: TestBaggageKey {
-            typealias Value = String
-        }
-        enum OnlyLocalIDKey: TestBaggageKey {
-            typealias Value = String
-        }
-        enum OnlyExplicitlyProvidedIDKey: TestBaggageKey {
-            typealias Value = String
-        }
         #endif
     }
 
