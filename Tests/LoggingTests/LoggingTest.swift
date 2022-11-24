@@ -638,7 +638,8 @@ class LoggingTest: XCTestCase {
             }
 
             func log(level: Logger.Level, message: Logger.Message, metadata: Logger.Metadata?,
-                     source: String, file: String, function: String, line: UInt) {
+                     source: String, file: String, function: String, line: UInt)
+            {
                 self.recorder.record(level: level, metadata: metadata, message: message, source: source)
             }
 
@@ -923,14 +924,16 @@ public extension Logger {
     #if compiler(>=5.3)
     func error(error: Error,
                metadata: @autoclosure () -> Logger.Metadata? = nil,
-               file: String = #fileID, function: String = #function, line: UInt = #line) {
+               file: String = #fileID, function: String = #function, line: UInt = #line)
+    {
         self.error("\(error.localizedDescription)", metadata: metadata(), file: file, function: function, line: line)
     }
 
     #else
     func error(error: Error,
                metadata: @autoclosure () -> Logger.Metadata? = nil,
-               file: String = #file, function: String = #function, line: UInt = #line) {
+               file: String = #file, function: String = #function, line: UInt = #line)
+    {
         self.error("\(error.localizedDescription)", metadata: metadata(), file: file, function: function, line: line)
     }
     #endif

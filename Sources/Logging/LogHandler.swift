@@ -173,7 +173,7 @@ public extension LogHandler {
     /// Default implementation for `metadataProvider` which defaults to a "no-op" provider.
     var metadataProvider: Logger.MetadataProvider {
         get {
-            .noop
+            return .noop
         }
         set {
             self.log(level: .warning, message: "Attempted to set metadataProvider on \(Self.self) that did not implement support for them. Please contact the log handler maintainer to implement metadata provider support.", metadata: nil, source: "Logging", file: #file, function: #function, line: #line)
@@ -189,7 +189,8 @@ public extension LogHandler {
              source: String,
              file: String,
              function: String,
-             line: UInt) {
+             line: UInt)
+    {
         self.log(level: level, message: message, metadata: metadata, file: file, function: function, line: line)
     }
 

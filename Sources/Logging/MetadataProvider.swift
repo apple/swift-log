@@ -55,16 +55,16 @@ public extension Logger {
     struct MetadataProvider: _SwiftLogSendable {
         /// A default no-op metadata provider, which always returns empty metadata.
         public static var noop: MetadataProvider {
-            MetadataProvider { [:] }
+            return MetadataProvider { [:] }
         }
 
         /// Return the ``Logger/MetadataProvider-swift.struct`` that was configured during ``LoggingSystem/bootstrap(_:)-8ffrb``.
         static func bootstrapped(label: String) -> MetadataProvider {
-            LoggingSystem.metadataProviderFactory(label)
+            return LoggingSystem.metadataProviderFactory(label)
         }
 
         #if swift(>=5.5) && canImport(_Concurrency)
-        public typealias Function = @Sendable() -> Metadata
+        public typealias Function = @Sendable () -> Metadata
         #else
         public typealias Function = () -> Metadata
         #endif
@@ -82,7 +82,7 @@ public extension Logger {
 
         /// Invoke the metadata provider and return the generated contextual ``Logger/Metadata``.
         public func provideMetadata() -> Metadata {
-            self._provideMetadata()
+            return self._provideMetadata()
         }
     }
 }

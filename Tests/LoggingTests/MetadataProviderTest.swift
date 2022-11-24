@@ -218,7 +218,8 @@ public struct LogHandlerThatDidNotImplementMetadataProviders: LogHandler {
                     source: String,
                     file: String,
                     function: String,
-                    line: UInt) {
+                    line: UInt)
+    {
         self.testLogging.make(label: "fake").log(level: level, message: message, metadata: metadata, source: source, file: file, function: function, line: line)
     }
 }
