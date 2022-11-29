@@ -80,11 +80,11 @@ internal struct TestLogHandler: LogHandler {
         // contextual metadata, e.g. from task-locals:
         let contextualMetadata = self.metadataProvider.provideMetadata()
         if !contextualMetadata.isEmpty {
-            metadata = metadata.merging(contextualMetadata, uniquingKeysWith: { _, contextual in contextual })
+            metadata.merge(contextualMetadata, uniquingKeysWith: { _, contextual in contextual })
         }
         // override using any explicit metadata passed for this log statement:
         if let explicitMetadata = explicitMetadata {
-            metadata = metadata.merging(explicitMetadata, uniquingKeysWith: { _, explicit in explicit })
+            metadata.merge(explicitMetadata, uniquingKeysWith: { _, explicit in explicit })
         }
 
         self.logger.log(level: level, message, metadata: metadata, source: source, file: file, function: function, line: line)

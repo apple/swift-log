@@ -1329,11 +1329,11 @@ public struct StreamLogHandler: LogHandler {
         }
 
         if !provided.isEmpty {
-            metadata = metadata.merging(provided, uniquingKeysWith: { _, provided in provided })
+            metadata.merge(provided, uniquingKeysWith: { _, provided in provided })
         }
 
         if let explicit = explicit, !explicit.isEmpty {
-            metadata = metadata.merging(explicit, uniquingKeysWith: { _, explicit in explicit })
+            metadata.merge(explicit, uniquingKeysWith: { _, explicit in explicit })
         }
 
         return explicit
