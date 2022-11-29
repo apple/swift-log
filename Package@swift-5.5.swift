@@ -20,8 +20,6 @@ let package = Package(
     products: [
         .library(name: "Logging", targets: ["Logging"]),
     ],
-    dependencies: [
-    ],
     targets: [
         .target(
             name: "Logging",

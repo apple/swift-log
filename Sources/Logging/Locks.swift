@@ -125,7 +125,7 @@ extension Lock {
     /// - Parameter body: The block to execute while holding the lock.
     /// - Returns: The value returned by the block.
     @inlinable
-    func withLock<T>(_ body: () throws -> T) rethrows -> T {
+    internal func withLock<T>(_ body: () throws -> T) rethrows -> T {
         self.lock()
         defer {
             self.unlock()
@@ -135,7 +135,7 @@ extension Lock {
 
     // specialise Void return (for performance)
     @inlinable
-    func withLockVoid(_ body: () throws -> Void) rethrows {
+    internal func withLockVoid(_ body: () throws -> Void) rethrows {
         try self.withLock(body)
     }
 }
@@ -246,7 +246,7 @@ extension ReadWriteLock {
     /// - Parameter body: The block to execute while holding the reader lock.
     /// - Returns: The value returned by the block.
     @inlinable
-    func withReaderLock<T>(_ body: () throws -> T) rethrows -> T {
+    internal func withReaderLock<T>(_ body: () throws -> T) rethrows -> T {
         self.lockRead()
         defer {
             self.unlock()
@@ -263,7 +263,7 @@ extension ReadWriteLock {
     /// - Parameter body: The block to execute while holding the writer lock.
     /// - Returns: The value returned by the block.
     @inlinable
-    func withWriterLock<T>(_ body: () throws -> T) rethrows -> T {
+    internal func withWriterLock<T>(_ body: () throws -> T) rethrows -> T {
         self.lockWrite()
         defer {
             self.unlock()
@@ -273,13 +273,13 @@ extension ReadWriteLock {
 
     // specialise Void return (for performance)
     @inlinable
-    func withReaderLockVoid(_ body: () throws -> Void) rethrows {
+    internal func withReaderLockVoid(_ body: () throws -> Void) rethrows {
         try self.withReaderLock(body)
     }
 
     // specialise Void return (for performance)
     @inlinable
-    func withWriterLockVoid(_ body: () throws -> Void) rethrows {
+    internal func withWriterLockVoid(_ body: () throws -> Void) rethrows {
         try self.withWriterLock(body)
     }
 }

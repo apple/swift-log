@@ -878,10 +878,10 @@ class LoggingTest: XCTestCase {
 
         let readFD = fds[0]
         #if os(Windows)
-        let hPipe = HANDLE(bitPattern: _get_osfhandle(readFD))!
+        let hPipe: HANDLE = HANDLE(bitPattern: _get_osfhandle(readFD))!
         XCTAssertFalse(hPipe == INVALID_HANDLE_VALUE)
 
-        var dwMode = DWORD(PIPE_NOWAIT)
+        var dwMode: DWORD = DWORD(PIPE_NOWAIT)
         let bSucceeded = SetNamedPipeHandleState(hPipe, &dwMode, nil, nil)
         XCTAssertTrue(bSucceeded)
         #else
@@ -919,18 +919,18 @@ class LoggingTest: XCTestCase {
     }
 }
 
-public extension Logger {
+extension Logger {
     #if compiler(>=5.3)
-    func error(error: Error,
-               metadata: @autoclosure () -> Logger.Metadata? = nil,
-               file: String = #fileID, function: String = #function, line: UInt = #line) {
+    public func error(error: Error,
+                      metadata: @autoclosure () -> Logger.Metadata? = nil,
+                      file: String = #fileID, function: String = #function, line: UInt = #line) {
         self.error("\(error.localizedDescription)", metadata: metadata(), file: file, function: function, line: line)
     }
 
     #else
-    func error(error: Error,
-               metadata: @autoclosure () -> Logger.Metadata? = nil,
-               file: String = #file, function: String = #function, line: UInt = #line) {
+    public func error(error: Error,
+                      metadata: @autoclosure () -> Logger.Metadata? = nil,
+                      file: String = #file, function: String = #function, line: UInt = #line) {
         self.error("\(error.localizedDescription)", metadata: metadata(), file: file, function: function, line: line)
     }
     #endif

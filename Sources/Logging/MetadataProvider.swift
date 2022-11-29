@@ -30,7 +30,7 @@ import WASILibc
 public protocol _SwiftLogSendable {}
 #endif
 
-public extension Logger {
+extension Logger {
     /// A `MetadataProvider` is used to automatically inject runtime-generated metadata
     /// to all logs emitted by a logger.
     ///
@@ -52,14 +52,14 @@ public extension Logger {
     ///     logger.info("hello") // automatically includes ["traceID": "42"] metadata
     /// }
     /// ```
-    struct MetadataProvider: _SwiftLogSendable {
+    public struct MetadataProvider: _SwiftLogSendable {
         /// A default no-op metadata provider, which always returns empty metadata.
         public static var noop: MetadataProvider {
             return MetadataProvider { [:] }
         }
 
         /// Return the ``Logger/MetadataProvider-swift.struct`` that was configured during ``LoggingSystem/bootstrap(_:)-8ffrb``.
-        static var bootstrapped: MetadataProvider {
+        public static var bootstrapped: MetadataProvider {
             return LoggingSystem.metadataProvider
         }
 
@@ -87,7 +87,7 @@ public extension Logger {
     }
 }
 
-public extension Logger.MetadataProvider {
+extension Logger.MetadataProvider {
     /// A pseudo-`MetadataProvider` that can be used to merge metadata from multiple other `MetadataProvider`s.
     ///
     /// ### Merging conflicting keys
@@ -97,7 +97,7 @@ public extension Logger.MetadataProvider {
     ///
     /// - Parameter providers: An array of `MetadataProvider`s to delegate to. The array must not be empty.
     /// - Returns: A pseudo-`MetadataProvider` merging metadata from the given `MetadataProvider`s.
-    static func multiplex(_ providers: [Logger.MetadataProvider]) -> Logger.MetadataProvider {
+    public static func multiplex(_ providers: [Logger.MetadataProvider]) -> Logger.MetadataProvider {
         precondition(!providers.isEmpty, "providers MUST NOT be empty")
         return Logger.MetadataProvider {
             providers.reduce(into: [:]) { metadata, provider in

@@ -169,9 +169,9 @@ public protocol LogHandler: _SwiftLogSendableLogHandler {
     var logLevel: Logger.Level { get set }
 }
 
-public extension LogHandler {
+extension LogHandler {
     /// Default implementation for `metadataProvider` which defaults to a "no-op" provider.
-    var metadataProvider: Logger.MetadataProvider {
+    public var metadataProvider: Logger.MetadataProvider {
         get {
             return .noop
         }
@@ -181,20 +181,20 @@ public extension LogHandler {
     }
 }
 
-public extension LogHandler {
+extension LogHandler {
     @available(*, deprecated, message: "You should implement this method instead of using the default implementation")
-    func log(level: Logger.Level,
-             message: Logger.Message,
-             metadata: Logger.Metadata?,
-             source: String,
-             file: String,
-             function: String,
-             line: UInt) {
+    public func log(level: Logger.Level,
+                    message: Logger.Message,
+                    metadata: Logger.Metadata?,
+                    source: String,
+                    file: String,
+                    function: String,
+                    line: UInt) {
         self.log(level: level, message: message, metadata: metadata, file: file, function: function, line: line)
     }
 
     @available(*, deprecated, renamed: "log(level:message:metadata:source:file:function:line:)")
-    func log(level: Logging.Logger.Level, message: Logging.Logger.Message, metadata: Logging.Logger.Metadata?, file: String, function: String, line: UInt) {
+    public func log(level: Logging.Logger.Level, message: Logging.Logger.Message, metadata: Logging.Logger.Metadata?, file: String, function: String, line: UInt) {
         self.log(level: level,
                  message: message,
                  metadata: metadata,
