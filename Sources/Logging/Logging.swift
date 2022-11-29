@@ -1248,9 +1248,9 @@ let systemStdout = WASILibc.stdout!
 /// `Logger` output to either `stderr` or `stdout` via the factory methods.
 ///
 /// Metadata is merged in the following order:
-/// - metadata set on the log handler itself is used as the base metadata,
-/// - next, the handlers ``metadataProvider`` is invoked, and overrides any existing keys,
-/// - next, the per-log-statement metadata is merged, overriding any previously set keys.
+/// 1. Metadata set on the log handler itself is used as the base metadata.
+/// 2. The handler's ``metadataProvider`` is invoked, overriding any existing keys.
+/// 3. The per-log-statement metadata is merged, overriding any previously set keys.
 public struct StreamLogHandler: LogHandler {
     #if compiler(>=5.6)
     internal typealias _SendableTextOutputStream = TextOutputStream & Sendable
