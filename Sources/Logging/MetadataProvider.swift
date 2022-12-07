@@ -63,22 +63,33 @@ extension Logger {
             return LoggingSystem.metadataProvider
         }
 
-        #if swift(>=5.5) && canImport(_Concurrency)
-        public typealias Function = @Sendable() -> Metadata
-        #else
-        public typealias Function = () -> Metadata
-        #endif
+//        #if swift(>=5.5) && canImport(_Concurrency)
+//        public typealias Function = @Sendable() -> Metadata
+//        #else
+//        public typealias Function = () -> Metadata
+//        #endif
 
         /// Provide ``Logger.Metadata`` from current context.
+        #if swift(>=5.5) && canImport(_Concurrency) // we could instead typealias the function type, but it was requested that we avoid this for better developer experience
         @usableFromInline
-        internal let _provideMetadata: MetadataProvider.Function
+        internal let _provideMetadata: @Sendable () -> Metadata
+        #else
+        @usableFromInline
+        internal let _provideMetadata: () -> Metadata
+        #endif
 
         /// Create a new `MetadataProvider`.
         ///
         /// - Parameter provideMetadata: A closure extracting metadata from a given `Baggage`.
-        public init(_ provideMetadata: @escaping MetadataProvider.Function) {
+        #if swift(>=5.5) && canImport(_Concurrency)
+        public init(_ provideMetadata: @escaping @Sendable () -> Metadata) {
             self._provideMetadata = provideMetadata
         }
+        #else
+        public init(_ provideMetadata: @escaping () -> Metadata) {
+            self._provideMetadata = provideMetadata
+        }
+        #endif
 
         /// Invoke the metadata provider and return the generated contextual ``Logger/Metadata``.
         public func provideMetadata() -> Metadata {

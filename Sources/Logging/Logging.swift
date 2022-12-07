@@ -949,11 +949,19 @@ extension Logger {
     /// - parameters:
     ///     - label: An identifier for the creator of a `Logger`.
     ///     - factoryWithMetadataProvider: A closure creating non-standard `LogHandler`s.
-    public init(label: String, metadataProvider: @escaping MetadataProvider.Function) {
+    #if swift(>=5.5) && canImport(_Concurrency) // we could instead typealias the function type, but it was requested that we avoid this for better developer experience
+    public init(label: String, metadataProvider: @escaping @Sendable () -> Metadata) {
         self = Logger(label: label, factory: { label in
             LoggingSystem.factory(label, .init(metadataProvider))
         })
     }
+    #else
+    public init(label: String, metadataProvider: @escaping () -> Metadata) {
+        self = Logger(label: label, factory: { label in
+            LoggingSystem.factory(label, .init(metadataProvider))
+        })
+    }
+    #endif
 
     /// Construct a `Logger` given a `label` identifying the creator of the `Logger` or a non-standard `LogHandler`.
     ///
