@@ -794,7 +794,7 @@ extension LoggingSystem {
     ///     - metadataProvider: The `MetadataProvider` used to inject runtime-generated metadata, defaults to a "no-op" provider.
     ///     - factory: A closure that given a `Logger` identifier, produces an instance of the `LogHandler`.
     public static func bootstrap(metadataProvider: Logger.MetadataProvider,
-                          _ factory: @escaping (String, Logger.MetadataProvider) -> LogHandler) {
+                                 _ factory: @escaping (String, Logger.MetadataProvider) -> LogHandler) {
         self._metadataProviderFactory.replaceMetadataProvider(metadataProvider, validate: true)
         self._factory.replaceFactory(factory, validate: true)
     }
@@ -807,7 +807,7 @@ extension LoggingSystem {
     ///     - metadataProvider: The `MetadataProvider` used to inject runtime-generated metadata, defaults to nil.
     ///     - factory: A closure that given a `Logger` identifier, produces an instance of the `LogHandler`.
     public static func bootstrap(metadataProvider: Logger.MetadataProvider,
-                          _ factory: @escaping (String) -> LogHandler) {
+                                 _ factory: @escaping (String) -> LogHandler) {
         self._metadataProviderFactory.replaceMetadataProvider(metadataProvider, validate: true)
         self._factory.replaceFactory({ label, _ in
             factory(label)
