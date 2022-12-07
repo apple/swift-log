@@ -24,7 +24,6 @@ import XCTest
 
 #if os(Linux) || os(FreeBSD) || os(Windows) || os(Android)
 @testable import LoggingTests
-@testable import LoggingTests_51plus
 
 XCTMain([
     testCase(CompatibilityTest.allTests),
@@ -33,6 +32,5 @@ XCTMain([
     testCase(LoggingTest.allTests),
     testCase(MDCTest.allTests),
     testCase(MetadataProviderTest.allTests),
-    testCase(TaskLocalMetadataProviderTest.allTests),
 ])
 #endif

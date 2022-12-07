@@ -931,7 +931,8 @@ extension Logger {
     ///
     /// - parameters:
     ///     - label: An identifier for the creator of a `Logger`.
-    ///     - factory: A closure creating non-standard `LogHandler`s.
+    ///     - metadataProvider: The custom metadata provider this logger should invoke,
+    ///                         instead of the system wide bootstrapped one, when a log statement is about to be emitted.
     public init(label: String, metadataProvider: MetadataProvider) {
         self = Logger(label: label, factory: { label in
             LoggingSystem.factory(label, metadataProvider)
@@ -950,11 +951,12 @@ extension Logger {
     ///     - label: An identifier for the creator of a `Logger`.
     ///     - factoryWithMetadataProvider: A closure creating non-standard `LogHandler`s.
     #if swift(>=5.5) && canImport(_Concurrency) // we could instead typealias the function type, but it was requested that we avoid this for better developer experience
-    public init(label: String, metadataProvider: @escaping @Sendable () -> Metadata) {
+    public init(label: String, metadataProvider: @escaping @Sendable() -> Metadata) {
         self = Logger(label: label, factory: { label in
             LoggingSystem.factory(label, .init(metadataProvider))
         })
     }
+
     #else
     public init(label: String, metadataProvider: @escaping () -> Metadata) {
         self = Logger(label: label, factory: { label in
