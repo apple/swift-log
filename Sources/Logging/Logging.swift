@@ -261,6 +261,7 @@ extension Logger {
     ///    - line: The line this log message originates from (there's usually no need to pass it explicitly as it
     ///            defaults to `#line`).
     #if compiler(>=5.3)
+    @inlinable
     public func debug(_ message: @autoclosure () -> Logger.Message,
                       metadata: @autoclosure () -> Logger.Metadata? = nil,
                       source: @autoclosure () -> String? = nil,
@@ -269,6 +270,7 @@ extension Logger {
     }
 
     #else
+    @inlinable
     public func debug(_ message: @autoclosure () -> Logger.Message,
                       metadata: @autoclosure () -> Logger.Metadata? = nil,
                       source: @autoclosure () -> String? = nil,
@@ -667,7 +669,6 @@ public enum LoggingSystem {
     /// lead to undefined behavior, most likely a crash.
     ///
     /// - parameters:
-    ///     - metadataProvider: The `MetadataProvider` used to inject runtime-generated metadata, defaults to nil.
     ///     - factory: A closure that given a `Logger` identifier, produces an instance of the `LogHandler`.
     public static func bootstrap(_ factory: @escaping (String, Logger.MetadataProvider) -> LogHandler) {
         self._factory.replaceFactory(factory, validate: true)
