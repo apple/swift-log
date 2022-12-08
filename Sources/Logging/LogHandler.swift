@@ -118,7 +118,7 @@ public protocol LogHandler: _SwiftLogSendableLogHandler {
     ///
     /// A ``Logger/MetadataProvider`` may add a constant set of metadata,
     /// or use task-local values to pick up contextual metadata and add it to emitted logs.
-    var metadataProvider: Logger.MetadataProvider { get set }
+    var metadataProvider: Logger.MetadataProvider? { get set }
 
     /// This method is called when a `LogHandler` must emit a log message. There is no need for the `LogHandler` to
     /// check if the `level` is above or below the configured `logLevel` as `Logger` already performed this check and
@@ -170,10 +170,11 @@ public protocol LogHandler: _SwiftLogSendableLogHandler {
 }
 
 extension LogHandler {
-    /// Default implementation for `metadataProvider` which defaults to a "no-op" provider.
-    public var metadataProvider: Logger.MetadataProvider {
+    /// Default implementation for `metadataProvider` which defaults to `nil`.
+    /// This default exists in order to facilitate source-compatible introduction of the metadataProvider protocol requirement.
+    public var metadataProvider: Logger.MetadataProvider? {
         get {
-            return .noop
+            nil
         }
         set {
             self.log(level: .warning, message: "Attempted to set metadataProvider on \(Self.self) that did not implement support for them. Please contact the log handler maintainer to implement metadata provider support.", metadata: nil, source: "Logging", file: #file, function: #function, line: #line)

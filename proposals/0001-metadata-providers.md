@@ -47,7 +47,7 @@ To solve this, we propose the extension of swift-log APIs with a new concept: _m
 
 `MetadataProvider` is struct nested in the `Logger` type, sitting alongside `MetadataValue` and the `Metadata`. 
 Its purpose is to _provide_ `Logger.Metadata` from the asynchronous context, by e.g. looking up various task-local values,
-and converting them into `Logger.Metadata`. This is performed by calling the `provideMetadata()` function, like so:
+and converting them into `Logger.Metadata`. This is performed by calling the `get()` function, like so:
 
 ```swift
 extension Logger {
@@ -55,7 +55,7 @@ extension Logger {
         // ... 
         public init(_ provideMetadata: @escaping @Sendable () -> Metadata)
     
-        public provideMetadata() -> Metadata
+        public get() -> Metadata
     }
 }
 ```

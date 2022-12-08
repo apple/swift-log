@@ -59,7 +59,7 @@ extension Logger {
         }
 
         /// Return the ``Logger/MetadataProvider-swift.struct`` that was configured during ``LoggingSystem/bootstrap(_:)-8ffrb``.
-        public static var bootstrapped: MetadataProvider {
+        public static var bootstrapped: MetadataProvider? {
             return LoggingSystem.metadataProvider
         }
 
@@ -87,7 +87,7 @@ extension Logger {
         #endif
 
         /// Invoke the metadata provider and return the generated contextual ``Logger/Metadata``.
-        public func provideMetadata() -> Metadata {
+        public func get() -> Metadata {
             return self._provideMetadata()
         }
     }
@@ -103,11 +103,11 @@ extension Logger.MetadataProvider {
     ///
     /// - Parameter providers: An array of `MetadataProvider`s to delegate to. The array must not be empty.
     /// - Returns: A pseudo-`MetadataProvider` merging metadata from the given `MetadataProvider`s.
-    public static func multiplex(_ providers: [Logger.MetadataProvider]) -> Logger.MetadataProvider {
-        precondition(!providers.isEmpty, "providers MUST NOT be empty")
+    public static func multiplex(_ providers: [Logger.MetadataProvider]) -> Logger.MetadataProvider? {
+        assert(!providers.isEmpty, "providers MUST NOT be empty")
         return Logger.MetadataProvider {
             providers.reduce(into: [:]) { metadata, provider in
-                let providedMetadata = provider.provideMetadata()
+                let providedMetadata = provider.get()
                 guard !providedMetadata.isEmpty else {
                     return
                 }

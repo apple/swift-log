@@ -31,7 +31,7 @@ internal struct TestLogging {
         )
     }
 
-    func makeWithMetadataProvider(label: String, metadataProvider: Logger.MetadataProvider) -> LogHandler {
+    func makeWithMetadataProvider(label: String, metadataProvider: Logger.MetadataProvider?) -> LogHandler {
         return TestLogHandler(
             label: label,
             config: self.config,
@@ -50,9 +50,9 @@ internal struct TestLogHandler: LogHandler {
     private var logger: Logger // the actual logger
 
     let label: String
-    public var metadataProvider: Logger.MetadataProvider
+    public var metadataProvider: Logger.MetadataProvider?
 
-    init(label: String, config: Config, recorder: Recorder, metadataProvider: Logger.MetadataProvider) {
+    init(label: String, config: Config, recorder: Recorder, metadataProvider: Logger.MetadataProvider?) {
         self.label = label
         self.config = config
         self.recorder = recorder
@@ -78,7 +78,7 @@ internal struct TestLogHandler: LogHandler {
         // baseline metadata, that was set on handler:
         var metadata = self._metadataSet ? self.metadata : MDC.global.metadata
         // contextual metadata, e.g. from task-locals:
-        let contextualMetadata = self.metadataProvider.provideMetadata()
+        let contextualMetadata = self.metadataProvider?.get() ?? [:]
         if !contextualMetadata.isEmpty {
             metadata.merge(contextualMetadata, uniquingKeysWith: { _, contextual in contextual })
         }
