@@ -117,7 +117,7 @@ public struct LogHandlerThatDidImplementMetadataProviders: LogHandler {
 
     public var logLevel: Logging.Logger.Level = .trace
 
-    public var metadataProvider: Logger.MetadataProvider? = nil
+    public var metadataProvider: Logger.MetadataProvider?
 
     public func log(level: Logger.Level,
                     message: Logger.Message,
