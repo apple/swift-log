@@ -52,6 +52,11 @@ extension Logger {
     ///     logger.info("hello") // automatically includes ["traceID": "42"] metadata
     /// }
     /// ```
+    ///
+    /// We recommend referring to [swift-distributed-tracing](https://github.com/apple/swift-distributed-tracing)
+    /// for metadata providers which make use of its tracing and metadata propagation infrastructure. It is however
+    /// possible to make use of metadata providers independently of tracing and instruments provided by that library,
+    /// if necessary.
     public struct MetadataProvider: _SwiftLogSendable {
         /// A default no-op metadata provider, which always returns empty metadata.
         public static var noop: MetadataProvider {
@@ -74,7 +79,7 @@ extension Logger {
 
         /// Create a new `MetadataProvider`.
         ///
-        /// - Parameter provideMetadata: A closure extracting metadata from a given `Baggage`.
+        /// - Parameter provideMetadata: A closure extracting metadata from the current execution context.
         #if swift(>=5.5) && canImport(_Concurrency)
         public init(_ provideMetadata: @escaping @Sendable() -> Metadata) {
             self._provideMetadata = provideMetadata
