@@ -27,6 +27,7 @@ extension MetadataProviderTest {
         return [
             ("testLoggingMergesOneOffMetadataWithProvidedMetadataFromExplicitlyPassed", testLoggingMergesOneOffMetadataWithProvidedMetadataFromExplicitlyPassed),
             ("testLogHandlerThatDidNotImplementProvidersButSomeoneAttemptsToSetOneOnIt", testLogHandlerThatDidNotImplementProvidersButSomeoneAttemptsToSetOneOnIt),
+            ("testLogHandlerThatDidImplementProvidersButSomeoneAttemptsToSetOneOnIt", testLogHandlerThatDidImplementProvidersButSomeoneAttemptsToSetOneOnIt),
         ]
     }
 }

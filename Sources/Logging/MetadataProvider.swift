@@ -25,9 +25,9 @@ import WASILibc
 #endif
 
 #if compiler(>=5.6)
-@preconcurrency public protocol _SwiftLogSendable: Sendable {}
+@preconcurrency protocol _SwiftLogSendable: Sendable {}
 #else
-public protocol _SwiftLogSendable {}
+protocol _SwiftLogSendable {}
 #endif
 
 extension Logger {
