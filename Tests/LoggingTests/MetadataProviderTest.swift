@@ -49,6 +49,15 @@ final class MetadataProviderTest: XCTestCase {
 
         logging.history.assertExist(level: .warning, message: "Attempted to set metadataProvider on LogHandlerThatDidNotImplementMetadataProviders that did not implement support for them. Please contact the log handler maintainer to implement metadata provider support.", source: "Logging")
     }
+
+    func testLogHandlerThatDidImplementProvidersButSomeoneAttemptsToSetOneOnIt() {
+        let logging = TestLogging()
+        var handler = LogHandlerThatDidImplementMetadataProviders(testLogging: logging)
+
+        handler.metadataProvider = .simpleTestProvider
+
+        logging.history.assertNotExist(level: .warning, message: "Attempted to set metadataProvider on LogHandlerThatDidImplementMetadataProviders that did not implement support for them. Please contact the log handler maintainer to implement metadata provider support.", source: "Logging")
+    }
 }
 
 extension Logger.MetadataProvider {
@@ -77,6 +86,38 @@ public struct LogHandlerThatDidNotImplementMetadataProviders: LogHandler {
     public var metadata: Logging.Logger.Metadata = [:]
 
     public var logLevel: Logging.Logger.Level = .trace
+
+    public func log(level: Logger.Level,
+                    message: Logger.Message,
+                    metadata: Logger.Metadata?,
+                    source: String,
+                    file: String,
+                    function: String,
+                    line: UInt) {
+        self.testLogging.make(label: "fake").log(level: level, message: message, metadata: metadata, source: source, file: file, function: function, line: line)
+    }
+}
+
+public struct LogHandlerThatDidImplementMetadataProviders: LogHandler {
+    let testLogging: TestLogging
+    init(testLogging: TestLogging) {
+        self.testLogging = testLogging
+    }
+
+    public subscript(metadataKey _: String) -> Logging.Logger.Metadata.Value? {
+        get {
+            return nil
+        }
+        set(newValue) {
+            // ignore
+        }
+    }
+
+    public var metadata: Logging.Logger.Metadata = [:]
+
+    public var logLevel: Logging.Logger.Level = .trace
+
+    public var metadataProvider: Logger.MetadataProvider? = nil
 
     public func log(level: Logger.Level,
                     message: Logger.Message,
