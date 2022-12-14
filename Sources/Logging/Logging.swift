@@ -668,7 +668,7 @@ public enum LoggingSystem {
     /// lead to undefined behavior, most likely a crash.
     ///
     /// - parameters:
-    ///     - factory: A closure that given a `Logger` identifier, produces an instance of the `LogHandler`.
+    ///     - factory: A closure that given a `Logger` identifier and an optional metadata provider, produces an instance of the `LogHandler`.
     public static func bootstrap(_ factory: @escaping (String, Logger.MetadataProvider?) -> LogHandler) {
         self._factory.replaceFactory(factory, validate: true)
     }

@@ -45,7 +45,7 @@ We also have a desire to keep `swift-log` a "zero dependencies" library, as it i
 
 To solve this, we propose the extension of swift-log APIs with a new concept: _metadata providers_.
 
-`MetadataProvider` is struct nested in the `Logger` type, sitting alongside `MetadataValue` and the `Metadata`. 
+`MetadataProvider` is a struct nested in the `Logger` type, sitting alongside `MetadataValue` and the `Metadata`. 
 Its purpose is to _provide_ `Logger.Metadata` from the asynchronous context, by e.g. looking up various task-local values,
 and converting them into `Logger.Metadata`. This is performed by calling the `get()` function, like so:
 
@@ -77,7 +77,7 @@ extension Logger.MetadataProvider {
             return [:]
         }
         guard let spanContext = baggage.spanContext else { 
-            return nil
+            return [:]
         }
         
         return [
@@ -125,7 +125,7 @@ which _overrides_ the default bootstrapped metadata provider.
 > is skipped (if defined), following how an explicitly passed handler `factory`
 > overrides the `LoggingSystem`s `factory`.
 
-Once a metadata provider was set up, when a log statement is about to be emitted, the a log handler implementation shall
+Once a metadata provider was set up, when a log statement is about to be emitted, the log handler implementation shall
 invoke it whenever it is about to emit a log statement. This must be done from the same asynchronous context as the log statement
 was made; I.e. if a log handler were to asynchronously–in a _detached_ task–create the actual log message, the invocation of
 the metadata provider still _must_ be performed before passing the data over to the other detached task.
@@ -296,7 +296,7 @@ try await storesRepository.store(
 
 ### Explicitly passing `Logger` always
 
-Imagine we don't have metadata providers, we'd have to manually set trace IDs on loggers which doesn't really work as all libraries involved would need to know about the same specific trace ID. Event if we inverted the dependency to have `Tracing` depend on `Logging` so that we'd be able to define something like "Tracing, please populate this logger with metadata", we'd have to make sure this thing is called in all places to avoid dropping contextual metadata.
+Imagine we don't have metadata providers, we'd have to manually set trace IDs on loggers which doesn't really work as all libraries involved would need to know about the same specific trace ID. Even if we inverted the dependency to have `Tracing` depend on `Logging` so that we'd be able to define something like "Tracing, please populate this logger with metadata", we'd have to make sure this thing is called in all places to avoid dropping contextual metadata.
 
 ```swift
 import Tracing
