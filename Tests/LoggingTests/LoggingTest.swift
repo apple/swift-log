@@ -871,6 +871,108 @@ class LoggingTest: XCTestCase {
 
         logging.history.assertExist(level: .error, message: "errorDescription")
     }
+
+    func testCopyingWithFactoryMethod() {
+        let metadataKey = "key_under_test"
+        let testLogging = TestLogging()
+        LoggingSystem.bootstrapInternal(testLogging.make)
+
+        var logger = Logger(label: "\(#function)")
+        logger.logLevel = .info
+        logger[metadataKey: metadataKey] = "original"
+
+        logger.info("yes")
+        logger.trace("no")
+
+        testLogging.history.assertExist(level: .info, message: "yes", metadata: [metadataKey: "original"])
+        testLogging.history.assertNotExist(level: .trace, message: "no", metadata: [metadataKey: "original"])
+
+        let copy = logger.makeCopy {
+            $0.logLevel = .trace
+            $0[metadataKey: metadataKey] = "new"
+        }
+        copy.trace("yes")
+        testLogging.history.assertExist(level: .trace, message: "yes", metadata: [metadataKey: "new"])
+
+        // make sure we haven't changed the original logger
+        logger.info("no")
+        testLogging.history.assertNotExist(level: .info, message: "no", metadata: [metadataKey: "new"])
+    }
+
+    func testCopyingWithMetadata() {
+        let metadataKey = "key_under_test"
+        let testLogging = TestLogging()
+        LoggingSystem.bootstrapInternal(testLogging.make)
+
+        var logger = Logger(label: "\(#function)")
+        logger.logLevel = .trace
+        logger[metadataKey: metadataKey] = "original"
+
+        XCTAssertTrue(testLogging.history.entries.isEmpty)
+
+        logger.trace("yes")
+        XCTAssertEqual(testLogging.history.entries.count, 1)
+        testLogging.history.assertExist(level: .trace, message: "yes", metadata: [metadataKey: "original"])
+
+        let defaultChild = logger.makeCopy(with: [metadataKey: "new"])
+        defaultChild.debug("yes default")
+        XCTAssertEqual(testLogging.history.entries.count, 2)
+        testLogging.history.assertExist(level: .debug, message: "yes default", metadata: [metadataKey: "original"])
+
+        let retainedChild = logger.makeCopy(with: [metadataKey: "new"], mergePolicy: .retainExistingValues)
+        retainedChild.info("yes retain")
+        XCTAssertEqual(testLogging.history.entries.count, 3)
+        testLogging.history.assertExist(level: .info, message: "yes retain", metadata: [metadataKey: "original"])
+
+        let replacedChild = logger.makeCopy(with: [metadataKey: "new"], mergePolicy: .replaceValues)
+        replacedChild.notice("yes replace")
+        XCTAssertEqual(testLogging.history.entries.count, 4)
+        testLogging.history.assertExist(level: .notice, message: "yes replace", metadata: [metadataKey: "new"])
+
+        // make sure we haven't changed the original logger
+        logger.info("no")
+        testLogging.history.assertNotExist(level: .info, message: "no", metadata: [metadataKey: "new"])
+    }
+
+    func testInitWithMetadata() {
+        let testLogging = TestLogging()
+        LoggingSystem.bootstrapInternal(testLogging.make)
+
+        let basicLogger = Logger(label: "\(#function)")
+        XCTAssertTrue(basicLogger.handler.metadata.isEmpty)
+
+        let metadataLogger = Logger(label: "\(#function)", metadata: ["key_under_test": "value"])
+        XCTAssertFalse(metadataLogger.handler.metadata.isEmpty)
+
+        // make sure we haven't changed the original logger
+        XCTAssertTrue(basicLogger.handler.metadata.isEmpty)
+    }
+
+    func testInitWithClosure() {
+        let testLogging = TestLogging()
+        LoggingSystem.bootstrapInternal(testLogging.make)
+
+        let basicLogger = Logger(label: "\(#function)")
+        XCTAssertTrue(basicLogger.handler.metadata.isEmpty)
+
+        let originalLogLevel = basicLogger.logLevel
+
+        let closureLogger = Logger(label: "\(#function)") {
+            guard let newLogLevel = Logger.Level.allCases.first(where: { $0 != originalLogLevel }) else {
+                XCTFail("failed to find a log level for asserting conditions")
+                return
+            }
+            $0.logLevel = newLogLevel
+            $0[metadataKey: "key_under_test"] = "value"
+        }
+        XCTAssertNotEqual(closureLogger.logLevel, originalLogLevel)
+        XCTAssertFalse(closureLogger.handler.metadata.isEmpty)
+
+        // make sure we haven't changed the original logger
+        XCTAssertTrue(basicLogger.handler.metadata.isEmpty)
+        XCTAssertEqual(basicLogger.logLevel, originalLogLevel)
+        XCTAssertTrue(basicLogger.handler.metadata.isEmpty)
+    }
 }
 
 extension Logger {
