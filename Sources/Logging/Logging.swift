@@ -664,7 +664,10 @@ public enum LoggingSystem {
     private static let _metadataProviderFactory = MetadataProviderBox(.noop)
 
     /// `bootstrap` is a one-time configuration function which globally selects the desired logging backend
-    /// implementation. `bootstrap` can be called at maximum once in any given program, calling it more than once will
+    /// implementation. 
+    ///
+    /// - Warning:
+    /// `bootstrap` can be called at maximum once in any given program, calling it more than once will
     /// lead to undefined behavior, most likely a crash.
     ///
     /// - parameters:
@@ -688,6 +691,7 @@ public enum LoggingSystem {
     /// `bootstrapMetadataProvider` is a one-time configuration function which globally selects the desired
     /// ``Logger/MetadataProvider`` which should be used by all loggers created in this process from here onwards.
     ///
+    /// - Warning:
     /// `bootstrapMetadataProvider` can be called at maximum once in any given program, calling it more than once will
     /// lead to undefined behavior, most likely a crash.
     ///
@@ -707,7 +711,7 @@ public enum LoggingSystem {
         }, validate: false)
     }
 
-    // for our testing we want to allow multiple bootstraping
+    // for our testing we want to allow multiple bootstrapping
     internal static func bootstrapInternal(_ factory: @escaping (String, Logger.MetadataProvider?) -> LogHandler) {
         self._factory.replaceFactory(factory, validate: false)
     }
@@ -787,7 +791,10 @@ public enum LoggingSystem {
 
 extension LoggingSystem {
     /// `bootstrap` is a one-time configuration function which globally selects the desired logging backend
-    /// implementation. `bootstrap` can be called at maximum once in any given program, calling it more than once will
+    /// implementation. 
+    ///
+    /// - Warning:
+    /// `bootstrap` can be called at maximum once in any given program, calling it more than once will
     /// lead to undefined behavior, most likely a crash.
     ///
     /// - parameters:
@@ -800,7 +807,10 @@ extension LoggingSystem {
     }
 
     /// `bootstrap` is a one-time configuration function which globally selects the desired logging backend
-    /// implementation. `bootstrap` can be called at maximum once in any given program, calling it more than once will
+    /// implementation. 
+    ///
+    /// - Warning:
+    /// `bootstrap` can be called at maximum once in any given program, calling it more than once will
     /// lead to undefined behavior, most likely a crash.
     ///
     /// - parameters:
@@ -944,7 +954,7 @@ extension Logger {
     /// a datatype.
     ///
     /// This initializer provides an escape hatch in case the global default logging backend implementation (set up
-    /// using `LoggingSystem.bootstrap` is not appropriate for this particular logger.
+    /// using `LoggingSystem.bootstrap`) is not appropriate for this particular logger.
     ///
     /// - parameters:
     ///     - label: An identifier for the creator of a `Logger`.
@@ -970,7 +980,7 @@ extension Logger {
     /// a datatype.
     ///
     /// This initializer provides an escape hatch in case the global default logging backend implementation (set up
-    /// using `LoggingSystem.bootstrap` is not appropriate for this particular logger.
+    /// using `LoggingSystem.bootstrap`) is not appropriate for this particular logger.
     ///
     /// - parameters:
     ///     - label: An identifier for the creator of a `Logger`.

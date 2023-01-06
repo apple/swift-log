@@ -171,7 +171,7 @@ public protocol LogHandler: _SwiftLogSendableLogHandler {
 
 extension LogHandler {
     /// Default implementation for `metadataProvider` which defaults to `nil`.
-    /// This default exists in order to facilitate source-compatible introduction of the metadataProvider protocol requirement.
+    /// This default exists in order to facilitate source-compatible introduction of the `metadataProvider` protocol requirement.
     public var metadataProvider: Logger.MetadataProvider? {
         get {
             nil
