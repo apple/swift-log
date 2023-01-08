@@ -139,15 +139,6 @@ public protocol LogHandler: _SwiftLogSendableLogHandler {
     @available(*, deprecated, renamed: "log(level:message:metadata:source:file:function:line:)")
     func log(level: Logging.Logger.Level, message: Logging.Logger.Message, metadata: Logging.Logger.Metadata?, file: String, function: String, line: UInt)
 
-    /// Add, remove, or change the logging metadata.
-    ///
-    /// - note: `LogHandler`s must treat logging metadata as a value type. This means that the change in metadata must
-    ///         only affect this very `LogHandler`.
-    ///
-    /// - parameters:
-    ///    - metadataKey: The key for the metadata item
-    subscript(metadataKey _: String) -> Logger.Metadata.Value? { get set }
-
     /// Get or set the entire metadata storage as a dictionary.
     ///
     /// - note: `LogHandler`s must treat logging metadata as a value type. This means that the change in metadata must
@@ -161,6 +152,25 @@ public protocol LogHandler: _SwiftLogSendableLogHandler {
     ///         that means a change in log level on a particular `LogHandler` might not be reflected in any
     ///        `LogHandler`.
     var logLevel: Logger.Level { get set }
+}
+
+public extension LogHandler {
+    
+    /// Add, remove, or change the logging metadata.
+    ///
+    /// - note: `LogHandler`s must treat logging metadata as a value type. This means that the change in metadata must
+    ///         only affect this very `LogHandler`.
+    ///
+    /// - parameters:
+    ///    - metadataKey: The key for the metadata item
+    subscript(metadataKey metadataKey: String) -> Logger.Metadata.Value? {
+        get {
+            return self.metadata[metadataKey]
+        }
+        set(newValue) {
+            self.metadata[metadataKey] = newValue
+        }
+    }
 }
 
 extension LogHandler {
