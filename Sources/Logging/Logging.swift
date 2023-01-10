@@ -1171,11 +1171,16 @@ public struct StreamLogHandler: LogHandler {
 
 /// No operation LogHandler, used when no logging is required
 public struct SwiftLogNoOpLogHandler: LogHandler {
+    
     public init() {}
 
     public init(_: String) {}
 
     @inlinable public func log(level: Logger.Level, message: Logger.Message, metadata: Logger.Metadata?, file: String, function: String, line: UInt) {}
+    
+    @inlinable public func log(level: Logger.Level, message: Logger.Message, metadata: Logger.Metadata?, source: String, file: String, function: String, line: UInt) {
+        self.log(level: level, message: message, metadata: metadata, file: file, function: function, line: line)
+    }
 
     @inlinable public subscript(metadataKey _: String) -> Logger.Metadata.Value? {
         get {

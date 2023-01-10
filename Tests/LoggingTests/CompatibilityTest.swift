@@ -58,6 +58,11 @@ private struct OldSchoolTestLogging {
 }
 
 private struct OldSchoolLogHandler: LogHandler {
+    
+    func log(level: Logging.Logger.Level, message: Logging.Logger.Message, metadata: Logging.Logger.Metadata?, source: String, file: String, function: String, line: UInt) {
+        self.log(level: level, message: message, metadata: metadata, file: file, function: function, line: line)
+    }
+    
     var label: String
     let config: Config
     let recorder: Recorder
