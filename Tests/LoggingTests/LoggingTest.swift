@@ -732,7 +732,7 @@ class LoggingTest: XCTestCase {
     func testStreamLogHandlerWritesToAStream() {
         let interceptStream = InterceptStream()
         LoggingSystem.bootstrapInternal { _, metadataProvider in
-            StreamLogHandler(label: "test", metadataProvider: metadataProvider, stream: interceptStream)
+            StreamLogHandler(label: "test", stream: interceptStream, metadataProvider: metadataProvider)
         }
         let log = Logger(label: "test")
 
@@ -749,7 +749,7 @@ class LoggingTest: XCTestCase {
         let interceptStream = InterceptStream()
         let label = "testLabel"
         LoggingSystem.bootstrapInternal { label, metadataProvider in
-            StreamLogHandler(label: label, metadataProvider: metadataProvider, stream: interceptStream)
+            StreamLogHandler(label: label, stream: interceptStream, metadataProvider: metadataProvider)
         }
         let source = "testSource"
         let log = Logger(label: label)
@@ -769,7 +769,7 @@ class LoggingTest: XCTestCase {
         let interceptStream = InterceptStream()
         let label = "testLabel"
         LoggingSystem.bootstrapInternal { label, metadataProvider in
-            StreamLogHandler(label: label, metadataProvider: metadataProvider, stream: interceptStream)
+            StreamLogHandler(label: label, stream: interceptStream, metadataProvider: metadataProvider)
         }
         let source = "testSource"
         let log = Logger(label: label)
@@ -789,7 +789,7 @@ class LoggingTest: XCTestCase {
         let interceptStream = InterceptStream()
         let label = "testLabel"
         LoggingSystem.bootstrapInternal { label, metadataProvider in
-            StreamLogHandler(label: label, metadataProvider: metadataProvider, stream: interceptStream)
+            StreamLogHandler(label: label, stream: interceptStream, metadataProvider: metadataProvider)
         }
         let log = Logger(label: label)
 
@@ -810,7 +810,7 @@ class LoggingTest: XCTestCase {
     func testStdioOutputStreamWrite() {
         self.withWriteReadFDsAndReadBuffer { writeFD, readFD, readBuffer in
             let logStream = StdioOutputStream(file: writeFD, flushMode: .always)
-            LoggingSystem.bootstrapInternal { StreamLogHandler(label: $0, metadataProvider: $1, stream: logStream) }
+            LoggingSystem.bootstrapInternal { StreamLogHandler(label: $0, stream: logStream, metadataProvider: $1) }
             let log = Logger(label: "test")
             let testString = "hello\u{0} world"
             log.critical("\(testString)")
@@ -827,7 +827,7 @@ class LoggingTest: XCTestCase {
         // flush on every statement
         self.withWriteReadFDsAndReadBuffer { writeFD, readFD, readBuffer in
             let logStream = StdioOutputStream(file: writeFD, flushMode: .always)
-            LoggingSystem.bootstrapInternal { StreamLogHandler(label: $0, metadataProvider: $1, stream: logStream) }
+            LoggingSystem.bootstrapInternal { StreamLogHandler(label: $0, stream: logStream, metadataProvider: $1) }
             Logger(label: "test").critical("test")
 
             let size = read(readFD, readBuffer, 256)
@@ -840,7 +840,7 @@ class LoggingTest: XCTestCase {
         // default flushing
         self.withWriteReadFDsAndReadBuffer { writeFD, readFD, readBuffer in
             let logStream = StdioOutputStream(file: writeFD, flushMode: .undefined)
-            LoggingSystem.bootstrapInternal { StreamLogHandler(label: $0, metadataProvider: $1, stream: logStream) }
+            LoggingSystem.bootstrapInternal { StreamLogHandler(label: $0, stream: logStream, metadataProvider: $1) }
             Logger(label: "test").critical("test")
 
             let size = read(readFD, readBuffer, 256)

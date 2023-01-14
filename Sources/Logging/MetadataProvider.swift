@@ -58,16 +58,6 @@ extension Logger {
     /// possible to make use of metadata providers independently of tracing and instruments provided by that library,
     /// if necessary.
     public struct MetadataProvider: _SwiftLogSendable {
-        /// A default no-op metadata provider, which always returns empty metadata.
-        public static var noop: MetadataProvider {
-            return MetadataProvider { [:] }
-        }
-
-        /// Return the ``Logger/MetadataProvider-swift.struct`` that was configured during ``LoggingSystem/bootstrap(_:)-8ffrb``.
-        public static var bootstrapped: MetadataProvider? {
-            return LoggingSystem.metadataProvider
-        }
-
         /// Provide ``Logger.Metadata`` from current context.
         #if swift(>=5.5) && canImport(_Concurrency) // we could instead typealias the function type, but it was requested that we avoid this for better developer experience
         @usableFromInline
