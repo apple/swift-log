@@ -952,6 +952,30 @@ class LoggingTest: XCTestCase {
 
         logging.history.assertExist(level: .error, message: "errorDescription")
     }
+
+    func testCompileInitializeStandardStreamLogHandlersWithMetadataProviders() {
+        // avoid "unreachable code" warnings
+        let dontExecute = Int.random(in: 100 ... 200) == 1
+        guard dontExecute else {
+            return
+        }
+
+        // default usage
+        LoggingSystem.bootstrap(StreamLogHandler.standardOutput)
+        LoggingSystem.bootstrap(StreamLogHandler.standardError)
+
+        // with metadata handler, explicitly, public api
+        LoggingSystem.bootstrap({ label, metadataProvider in
+            StreamLogHandler.standardOutput(label: label, metadataProvider: metadataProvider)
+        }, metadataProvider: .exampleMetadataProvider)
+        LoggingSystem.bootstrap({ label, metadataProvider in
+            StreamLogHandler.standardError(label: label, metadataProvider: metadataProvider)
+        }, metadataProvider: .exampleMetadataProvider)
+
+        // with metadata handler, still pretty
+        LoggingSystem.bootstrap(StreamLogHandler.standardOutput, metadataProvider: .exampleMetadataProvider)
+        LoggingSystem.bootstrap(StreamLogHandler.standardError, metadataProvider: .exampleMetadataProvider)
+    }
 }
 
 extension Logger {
