@@ -23,7 +23,21 @@ internal struct TestLogging {
     private let recorder = Recorder() // shared among loggers
 
     func make(label: String) -> LogHandler {
-        return TestLogHandler(label: label, config: self.config, recorder: self.recorder)
+        return TestLogHandler(
+            label: label,
+            config: self.config,
+            recorder: self.recorder,
+            metadataProvider: LoggingSystem.metadataProvider
+        )
+    }
+
+    func makeWithMetadataProvider(label: String, metadataProvider: Logger.MetadataProvider?) -> LogHandler {
+        return TestLogHandler(
+            label: label,
+            config: self.config,
+            recorder: self.recorder,
+            metadataProvider: metadataProvider
+        )
     }
 
     var config: Config { return self._config }
@@ -36,16 +50,43 @@ internal struct TestLogHandler: LogHandler {
     private var logger: Logger // the actual logger
 
     let label: String
+    public var metadataProvider: Logger.MetadataProvider?
+
+    init(label: String, config: Config, recorder: Recorder, metadataProvider: Logger.MetadataProvider?) {
+        self.label = label
+        self.config = config
+        self.recorder = recorder
+        self.logger = Logger(label: "test", StreamLogHandler.standardOutput(label: label))
+        self.logger.logLevel = .debug
+        self.metadataProvider = metadataProvider
+    }
+
     init(label: String, config: Config, recorder: Recorder) {
         self.label = label
         self.config = config
         self.recorder = recorder
         self.logger = Logger(label: "test", StreamLogHandler.standardOutput(label: label))
         self.logger.logLevel = .debug
+        self.metadataProvider = LoggingSystem.metadataProvider
     }
 
-    func log(level: Logger.Level, message: Logger.Message, metadata: Logger.Metadata?, source: String, file: String, function: String, line: UInt) {
-        let metadata = (self._metadataSet ? self.metadata : MDC.global.metadata).merging(metadata ?? [:], uniquingKeysWith: { _, new in new })
+    func log(level: Logger.Level,
+             message: Logger.Message,
+             metadata explicitMetadata: Logger.Metadata?,
+             source: String,
+             file: String, function: String, line: UInt) {
+        // baseline metadata, that was set on handler:
+        var metadata = self._metadataSet ? self.metadata : MDC.global.metadata
+        // contextual metadata, e.g. from task-locals:
+        let contextualMetadata = self.metadataProvider?.get() ?? [:]
+        if !contextualMetadata.isEmpty {
+            metadata.merge(contextualMetadata, uniquingKeysWith: { _, contextual in contextual })
+        }
+        // override using any explicit metadata passed for this log statement:
+        if let explicitMetadata = explicitMetadata {
+            metadata.merge(explicitMetadata, uniquingKeysWith: { _, explicit in explicit })
+        }
+
         self.logger.log(level: level, message, metadata: metadata, source: source, file: file, function: function, line: line)
         self.recorder.record(level: level, metadata: metadata, message: message, source: source)
     }
@@ -224,10 +265,36 @@ extension History {
 
     func find(level: Logger.Level, message: String, metadata: Logger.Metadata? = nil, source: String) -> LogEntry? {
         return self.entries.first { entry in
-            entry.level == level &&
-                entry.message == message &&
-                entry.metadata ?? [:] == metadata ?? [:] &&
-                entry.source == source
+            if entry.level != level {
+                return false
+            }
+            if entry.message != message {
+                return false
+            }
+            if let lhs = entry.metadata, let rhs = metadata {
+                if lhs.count != rhs.count {
+                    return false
+                }
+
+                for lk in lhs.keys {
+                    if lhs[lk] != rhs[lk] {
+                        return false
+                    }
+                }
+
+                for rk in rhs.keys {
+                    if lhs[rk] != rhs[rk] {
+                        return false
+                    }
+                }
+
+                return true
+            }
+            if entry.source != source {
+                return false
+            }
+
+            return true
         }
     }
 }

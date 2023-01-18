@@ -537,6 +537,69 @@ class LoggingTest: XCTestCase {
         testLogging.history.assertExist(level: .debug, message: "hello world!")
     }
 
+    func testMultiplexMetadataProviderMergesInSpecifiedOrder() {
+        let logging = TestLogging()
+
+        let providerA = Logger.MetadataProvider { ["provider": "a", "a": "foo"] }
+        let providerB = Logger.MetadataProvider { ["provider": "b", "b": "bar"] }
+        let logger = Logger(label: #function,
+                            factory: { label in
+                                logging.makeWithMetadataProvider(label: label, metadataProvider: .multiplex([providerA, providerB]))
+                            })
+
+        logger.log(level: .info, "test", metadata: ["one-off": "42"])
+
+        logging.history.assertExist(level: .info,
+                                    message: "test",
+                                    metadata: ["provider": "b", "a": "foo", "b": "bar", "one-off": "42"])
+    }
+
+    func testLoggerWithoutFactoryOverrideDefaultsToUsingLoggingSystemMetadataProvider() {
+        let logging = TestLogging()
+        LoggingSystem.bootstrapInternal({ label, metadataProvider in
+            logging.makeWithMetadataProvider(label: label, metadataProvider: metadataProvider)
+        }, metadataProvider: .init { ["provider": "42"] })
+
+        let logger = Logger(label: #function)
+
+        logger.log(level: .info, "test", metadata: ["one-off": "42"])
+
+        logging.history.assertExist(level: .info,
+                                    message: "test",
+                                    metadata: ["provider": "42", "one-off": "42"])
+    }
+
+    func testLoggerWithPredefinedLibraryMetadataProvider() {
+        let logging = TestLogging()
+        LoggingSystem.bootstrapInternal(
+            logging.makeWithMetadataProvider,
+            metadataProvider: .exampleMetadataProvider
+        )
+
+        let logger = Logger(label: #function)
+
+        logger.log(level: .info, "test", metadata: ["one-off": "42"])
+
+        logging.history.assertExist(level: .info,
+                                    message: "test",
+                                    metadata: ["example": "example-value", "one-off": "42"])
+    }
+
+    func testLoggerWithFactoryOverrideDefaultsToUsingLoggingSystemMetadataProvider() {
+        let logging = TestLogging()
+        LoggingSystem.bootstrapInternal(logging.makeWithMetadataProvider, metadataProvider: .init { ["provider": "42"] })
+
+        let logger = Logger(label: #function, factory: { label in
+            logging.makeWithMetadataProvider(label: label, metadataProvider: LoggingSystem.metadataProvider)
+        })
+
+        logger.log(level: .info, "test", metadata: ["one-off": "42"])
+
+        logging.history.assertExist(level: .info,
+                                    message: "test",
+                                    metadata: ["provider": "42", "one-off": "42"])
+    }
+
     func testMultiplexerIsValue() {
         let multi = MultiplexLogHandler([StreamLogHandler.standardOutput(label: "x"), StreamLogHandler.standardOutput(label: "y")])
         LoggingSystem.bootstrapInternal { _ in
@@ -702,7 +765,7 @@ class LoggingTest: XCTestCase {
     func testStreamLogHandlerOutputFormat() {
         let interceptStream = InterceptStream()
         let label = "testLabel"
-        LoggingSystem.bootstrapInternal { _ in
+        LoggingSystem.bootstrapInternal { label in
             StreamLogHandler(label: label, stream: interceptStream)
         }
         let source = "testSource"
@@ -722,7 +785,7 @@ class LoggingTest: XCTestCase {
     func testStreamLogHandlerOutputFormatWithMetaData() {
         let interceptStream = InterceptStream()
         let label = "testLabel"
-        LoggingSystem.bootstrapInternal { _ in
+        LoggingSystem.bootstrapInternal { label in
             StreamLogHandler(label: label, stream: interceptStream)
         }
         let source = "testSource"
@@ -742,7 +805,7 @@ class LoggingTest: XCTestCase {
     func testStreamLogHandlerOutputFormatWithOrderedMetadata() {
         let interceptStream = InterceptStream()
         let label = "testLabel"
-        LoggingSystem.bootstrapInternal { _ in
+        LoggingSystem.bootstrapInternal { label in
             StreamLogHandler(label: label, stream: interceptStream)
         }
         let log = Logger(label: label)
@@ -757,8 +820,8 @@ class LoggingTest: XCTestCase {
             return
         }
 
-        XCTAssert(interceptStream.strings[0].contains("a=a0 b=b0"))
-        XCTAssert(interceptStream.strings[1].contains("a=a1 b=b1"))
+        XCTAssert(interceptStream.strings[0].contains("a=a0 b=b0"), "LINES: \(interceptStream.strings[0])")
+        XCTAssert(interceptStream.strings[1].contains("a=a1 b=b1"), "LINES: \(interceptStream.strings[1])")
     }
 
     func testStdioOutputStreamWrite() {
@@ -888,6 +951,12 @@ extension Logger {
         self.error("\(error.localizedDescription)", metadata: metadata(), file: file, function: function, line: line)
     }
     #endif
+}
+
+extension Logger.MetadataProvider {
+    static var exampleMetadataProvider: Self {
+        .init { ["example": .string("example-value")] }
+    }
 }
 
 // Sendable

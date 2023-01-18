@@ -43,6 +43,11 @@ public struct Logger {
     /// An identifier of the creator of this `Logger`.
     public let label: String
 
+    /// The metadata provider this logger was created with.
+    public var metadataProvider: Logger.MetadataProvider? {
+        return self.handler.metadataProvider
+    }
+
     internal init(label: String, _ handler: LogHandler) {
         self.label = label
         self.handler = handler
@@ -264,6 +269,7 @@ extension Logger {
     }
 
     #else
+    @inlinable
     public func debug(_ message: @autoclosure () -> Logger.Message,
                       metadata: @autoclosure () -> Logger.Metadata? = nil,
                       source: @autoclosure () -> String? = nil,
@@ -435,6 +441,7 @@ extension Logger {
     }
 
     #else
+    @inlinable
     public func notice(_ message: @autoclosure () -> Logger.Message,
                        metadata: @autoclosure () -> Logger.Metadata? = nil,
                        file: String = #file, function: String = #function, line: UInt = #line) {
@@ -653,7 +660,8 @@ extension Logger {
 /// configured. `LoggingSystem` is set up just once in a given program to set up the desired logging backend
 /// implementation.
 public enum LoggingSystem {
-    private static let _factory = FactoryBox(StreamLogHandler.standardOutput)
+    private static let _factory = FactoryBox { label, _ in StreamLogHandler.standardOutput(label: label) }
+    private static let _metadataProviderFactory = MetadataProviderBox(nil)
 
     /// `bootstrap` is a one-time configuration function which globally selects the desired logging backend
     /// implementation. `bootstrap` can be called at maximum once in any given program, calling it more than once will
@@ -662,28 +670,73 @@ public enum LoggingSystem {
     /// - parameters:
     ///     - factory: A closure that given a `Logger` identifier, produces an instance of the `LogHandler`.
     public static func bootstrap(_ factory: @escaping (String) -> LogHandler) {
+        self._factory.replaceFactory({ label, _ in
+            factory(label)
+        }, validate: true)
+    }
+
+    /// `bootstrap` is a one-time configuration function which globally selects the desired logging backend
+    /// implementation.
+    ///
+    /// - Warning:
+    /// `bootstrap` can be called at maximum once in any given program, calling it more than once will
+    /// lead to undefined behavior, most likely a crash.
+    ///
+    /// - parameters:
+    ///     - metadataProvider: The `MetadataProvider` used to inject runtime-generated metadata from the execution context.
+    ///     - factory: A closure that given a `Logger` identifier, produces an instance of the `LogHandler`.
+    public static func bootstrap(_ factory: @escaping (String, Logger.MetadataProvider?) -> LogHandler,
+                                 metadataProvider: Logger.MetadataProvider?) {
+        self._metadataProviderFactory.replaceMetadataProvider(metadataProvider, validate: true)
         self._factory.replaceFactory(factory, validate: true)
     }
 
-    // for our testing we want to allow multiple bootstraping
+    // for our testing we want to allow multiple bootstrapping
     internal static func bootstrapInternal(_ factory: @escaping (String) -> LogHandler) {
+        self._metadataProviderFactory.replaceMetadataProvider(nil, validate: false)
+        self._factory.replaceFactory({ label, _ in
+            factory(label)
+        }, validate: false)
+    }
+
+    // for our testing we want to allow multiple bootstrapping
+    internal static func bootstrapInternal(_ factory: @escaping (String, Logger.MetadataProvider?) -> LogHandler,
+                                           metadataProvider: Logger.MetadataProvider?) {
+        self._metadataProviderFactory.replaceMetadataProvider(metadataProvider, validate: false)
         self._factory.replaceFactory(factory, validate: false)
     }
 
-    fileprivate static var factory: (String) -> LogHandler {
-        return self._factory.underlying
+    fileprivate static var factory: (String, Logger.MetadataProvider?) -> LogHandler {
+        return { label, metadataProvider in
+            var handler = self._factory.underlying(label, metadataProvider)
+            handler.metadataProvider = metadataProvider
+            return handler
+        }
+    }
+
+    /// System wide ``Logger/MetadataProvider`` that was configured during the logging system's `bootstrap`.
+    ///
+    /// When creating a ``Logger`` using the plain ``Logger/init(label:)`` initializer, this metadata provider
+    /// will be provided to it.
+    ///
+    /// When using custom log handler factories, make sure to provide the bootstrapped metadata provider to them,
+    /// or the metadata will not be filled in automatically using the provider on log-sites. While using a custom
+    /// factory to avoid using the bootstrapped metadata provider may sometimes be useful, usually it will lead to
+    /// un-expected behavior, so make sure to always propagate it to your handlers.
+    public static var metadataProvider: Logger.MetadataProvider? {
+        return self._metadataProviderFactory.metadataProvider
     }
 
     private final class FactoryBox {
         private let lock = ReadWriteLock()
-        fileprivate var _underlying: (String) -> LogHandler
+        fileprivate var _underlying: (_ label: String, _ provider: Logger.MetadataProvider?) -> LogHandler
         private var initialized = false
 
-        init(_ underlying: @escaping (String) -> LogHandler) {
+        init(_ underlying: @escaping (String, Logger.MetadataProvider?) -> LogHandler) {
             self._underlying = underlying
         }
 
-        func replaceFactory(_ factory: @escaping (String) -> LogHandler, validate: Bool) {
+        func replaceFactory(_ factory: @escaping (String, Logger.MetadataProvider?) -> LogHandler, validate: Bool) {
             self.lock.withWriterLock {
                 precondition(!validate || !self.initialized, "logging system can only be initialized once per process.")
                 self._underlying = factory
@@ -691,7 +744,32 @@ public enum LoggingSystem {
             }
         }
 
-        var underlying: (String) -> LogHandler {
+        var underlying: (String, Logger.MetadataProvider?) -> LogHandler {
+            return self.lock.withReaderLock {
+                return self._underlying
+            }
+        }
+    }
+
+    private final class MetadataProviderBox {
+        private let lock = ReadWriteLock()
+
+        internal var _underlying: Logger.MetadataProvider?
+        private var initialized = false
+
+        init(_ underlying: Logger.MetadataProvider?) {
+            self._underlying = underlying
+        }
+
+        func replaceMetadataProvider(_ metadataProvider: Logger.MetadataProvider?, validate: Bool) {
+            self.lock.withWriterLock {
+                precondition(!validate || !self.initialized, "logging system can only be initialized once per process.")
+                self._underlying = metadataProvider
+                self.initialized = true
+            }
+        }
+
+        var metadataProvider: Logger.MetadataProvider? {
             return self.lock.withReaderLock {
                 return self._underlying
             }
@@ -786,7 +864,7 @@ extension Logger {
     /// - parameters:
     ///     - label: An identifier for the creator of a `Logger`.
     public init(label: String) {
-        self.init(label: label, LoggingSystem.factory(label))
+        self.init(label: label, LoggingSystem.factory(label, LoggingSystem.metadataProvider))
     }
 
     /// Construct a `Logger` given a `label` identifying the creator of the `Logger` or a non-standard `LogHandler`.
@@ -802,6 +880,39 @@ extension Logger {
     ///     - factory: A closure creating non-standard `LogHandler`s.
     public init(label: String, factory: (String) -> LogHandler) {
         self = Logger(label: label, factory(label))
+    }
+
+    /// Construct a `Logger` given a `label` identifying the creator of the `Logger` or a non-standard `LogHandler`.
+    ///
+    /// The `label` should identify the creator of the `Logger`. This can be an application, a sub-system, or even
+    /// a datatype.
+    ///
+    /// This initializer provides an escape hatch in case the global default logging backend implementation (set up
+    /// using `LoggingSystem.bootstrap` is not appropriate for this particular logger.
+    ///
+    /// - parameters:
+    ///     - label: An identifier for the creator of a `Logger`.
+    ///     - factory: A closure creating non-standard `LogHandler`s.
+    public init(label: String, factory: (String, Logger.MetadataProvider?) -> LogHandler) {
+        self = Logger(label: label, factory(label, LoggingSystem.metadataProvider))
+    }
+
+    /// Construct a `Logger` given a `label` identifying the creator of the `Logger` and a non-standard ``Logger/MetadataProvider``.
+    ///
+    /// The `label` should identify the creator of the `Logger`. This can be an application, a sub-system, or even
+    /// a datatype.
+    ///
+    /// This initializer provides an escape hatch in case the global default logging backend implementation (set up
+    /// using `LoggingSystem.bootstrap` is not appropriate for this particular logger.
+    ///
+    /// - parameters:
+    ///     - label: An identifier for the creator of a `Logger`.
+    ///     - metadataProvider: The custom metadata provider this logger should invoke,
+    ///                         instead of the system wide bootstrapped one, when a log statement is about to be emitted.
+    public init(label: String, metadataProvider: MetadataProvider) {
+        self = Logger(label: label, factory: { label in
+            LoggingSystem.factory(label, metadataProvider)
+        })
     }
 }
 
@@ -1081,6 +1192,11 @@ let systemStdout = WASILibc.stdout!
 
 /// `StreamLogHandler` is a simple implementation of `LogHandler` for directing
 /// `Logger` output to either `stderr` or `stdout` via the factory methods.
+///
+/// Metadata is merged in the following order:
+/// 1. Metadata set on the log handler itself is used as the base metadata.
+/// 2. The handler's ``metadataProvider`` is invoked, overriding any existing keys.
+/// 3. The per-log-statement metadata is merged, overriding any previously set keys.
 public struct StreamLogHandler: LogHandler {
     #if compiler(>=5.6)
     internal typealias _SendableTextOutputStream = TextOutputStream & Sendable
@@ -1090,18 +1206,20 @@ public struct StreamLogHandler: LogHandler {
 
     /// Factory that makes a `StreamLogHandler` to directs its output to `stdout`
     public static func standardOutput(label: String) -> StreamLogHandler {
-        return StreamLogHandler(label: label, stream: StdioOutputStream.stdout)
+        return StreamLogHandler(label: label, stream: StdioOutputStream.stdout, metadataProvider: LoggingSystem.metadataProvider)
     }
 
     /// Factory that makes a `StreamLogHandler` to directs its output to `stderr`
     public static func standardError(label: String) -> StreamLogHandler {
-        return StreamLogHandler(label: label, stream: StdioOutputStream.stderr)
+        return StreamLogHandler(label: label, stream: StdioOutputStream.stderr, metadataProvider: LoggingSystem.metadataProvider)
     }
 
     private let stream: _SendableTextOutputStream
     private let label: String
 
     public var logLevel: Logger.Level = .info
+
+    public var metadataProvider: Logger.MetadataProvider?
 
     private var prettyMetadata: String?
     public var metadata = Logger.Metadata() {
@@ -1121,38 +1239,72 @@ public struct StreamLogHandler: LogHandler {
 
     // internal for testing only
     internal init(label: String, stream: _SendableTextOutputStream) {
+        self.init(label: label, stream: stream, metadataProvider: LoggingSystem.metadataProvider)
+    }
+
+    // internal for testing only
+    internal init(label: String, stream: _SendableTextOutputStream, metadataProvider: Logger.MetadataProvider?) {
         self.label = label
         self.stream = stream
+        self.metadataProvider = metadataProvider
     }
 
     public func log(level: Logger.Level,
                     message: Logger.Message,
-                    metadata: Logger.Metadata?,
+                    metadata explicitMetadata: Logger.Metadata?,
                     source: String,
                     file: String,
                     function: String,
                     line: UInt) {
-        let prettyMetadata = metadata?.isEmpty ?? true
-            ? self.prettyMetadata
-            : self.prettify(self.metadata.merging(metadata!, uniquingKeysWith: { _, new in new }))
+        let effectiveMetadata = StreamLogHandler.prepareMetadata(base: self.metadata, provider: self.metadataProvider, explicit: explicitMetadata)
+
+        let prettyMetadata: String?
+        if let effectiveMetadata = effectiveMetadata {
+            prettyMetadata = self.prettify(effectiveMetadata)
+        } else {
+            prettyMetadata = self.prettyMetadata
+        }
 
         var stream = self.stream
         stream.write("\(self.timestamp()) \(level) \(self.label) :\(prettyMetadata.map { " \($0)" } ?? "") [\(source)] \(message)\n")
     }
 
+    internal static func prepareMetadata(base: Logger.Metadata, provider: Logger.MetadataProvider?, explicit: Logger.Metadata?) -> Logger.Metadata? {
+        var metadata = base
+
+        let provided = provider?.get() ?? [:]
+
+        guard !provided.isEmpty || !((explicit ?? [:]).isEmpty) else {
+            // all per-log-statement values are empty
+            return nil
+        }
+
+        if !provided.isEmpty {
+            metadata.merge(provided, uniquingKeysWith: { _, provided in provided })
+        }
+
+        if let explicit = explicit, !explicit.isEmpty {
+            metadata.merge(explicit, uniquingKeysWith: { _, explicit in explicit })
+        }
+
+        return explicit
+    }
+
     private func prettify(_ metadata: Logger.Metadata) -> String? {
-        return !metadata.isEmpty
-            ? metadata.lazy.sorted(by: { $0.key < $1.key }).map { "\($0)=\($1)" }.joined(separator: " ")
-            : nil
+        if metadata.isEmpty {
+            return nil
+        } else {
+            return metadata.lazy.sorted(by: { $0.key < $1.key }).map { "\($0)=\($1)" }.joined(separator: " ")
+        }
     }
 
     private func timestamp() -> String {
         var buffer = [Int8](repeating: 0, count: 255)
         #if os(Windows)
-        var timestamp: __time64_t = __time64_t()
+        var timestamp = __time64_t()
         _ = _time64(&timestamp)
 
-        var localTime: tm = tm()
+        var localTime = tm()
         _ = _localtime64_s(&localTime, &timestamp)
 
         _ = strftime(&buffer, buffer.count, "%Y-%m-%dT%H:%M:%S%z", &localTime)
