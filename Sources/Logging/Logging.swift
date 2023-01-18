@@ -656,6 +656,54 @@ extension Logger {
     #endif
 }
 
+extension Logger.Metadata {
+    public struct MergingPolicy: Equatable {
+        public static var replaceValues: MergingPolicy { return .init(policy: .replaceValues) }
+        public static var retainExistingValues: MergingPolicy { return .init(policy: .retainExistingValues) }
+
+        fileprivate var policy: Policy
+        fileprivate enum Policy {
+            case replaceValues
+            case retainExistingValues
+        }
+
+        public static func ==(lhs: MergingPolicy, rhs: MergingPolicy) -> Bool {
+            return lhs.policy == rhs.policy
+        }
+    }
+}
+
+extension Logger {
+    public func makeCopy(with metadata: Metadata, mergePolicy: Metadata.MergingPolicy = .retainExistingValues) -> Logger {
+        let originalMetadata = self.handler.metadata
+        var child = self
+        child.handler.metadata = originalMetadata.merging(metadata, uniquingKeysWith: { old, new in
+            switch mergePolicy.policy {
+            case .replaceValues: return new
+            case .retainExistingValues: return old
+            }
+        })
+        return child
+    }
+
+    @inlinable
+    public func makeCopy(_ configure: (inout Logger) -> Void) -> Logger {
+        var child = self
+        configure(&child)
+        return child
+    }
+
+    public init(label: String, metadata: Metadata) {
+        self.init(label: label)
+        self.handler.metadata = metadata
+    }
+
+    public init(label: String, _ configure: (inout Logger) -> Void) {
+        self.init(label: label)
+        configure(&self)
+    }
+}
+
 /// The `LoggingSystem` is a global facility where the default logging backend implementation (`LogHandler`) can be
 /// configured. `LoggingSystem` is set up just once in a given program to set up the desired logging backend
 /// implementation.
