@@ -664,6 +664,18 @@ public enum LoggingSystem {
     private static let _metadataProviderFactory = MetadataProviderBox(nil)
 
     /// `bootstrap` is a one-time configuration function which globally selects the desired logging backend
+    /// implementation. `bootstrap` can be called at maximum once in any given program, calling it more than once will
+    /// lead to undefined behavior, most likely a crash.
+    ///
+    /// - parameters:
+    ///     - factory: A closure that given a `Logger` identifier, produces an instance of the `LogHandler`.
+    public static func bootstrap(_ factory: @escaping (String) -> LogHandler) {
+        self._factory.replaceFactory({ label, _ in
+            factory(label)
+        }, validate: true)
+    }
+
+    /// `bootstrap` is a one-time configuration function which globally selects the desired logging backend
     /// implementation.
     ///
     /// - Warning:
@@ -684,23 +696,11 @@ public enum LoggingSystem {
     /// lead to undefined behavior, most likely a crash.
     ///
     /// - parameters:
-    ///     - metadataProvider: The `MetadataProvider` used to inject runtime-generated metadata, defaults to nil.
+    ///     - metadataProvider: The ``Logger/MetadataProvider`` used to inject runtime-generated metadata, defaults to nil.
     ///     - factory: A closure that given a `Logger` identifier, produces an instance of the `LogHandler`.
     public static func bootstrap(_ factory: @escaping (String) -> LogHandler,
                                  metadataProvider: Logger.MetadataProvider?) {
         self._metadataProviderFactory.replaceMetadataProvider(metadataProvider, validate: true)
-        self._factory.replaceFactory({ label, _ in
-            factory(label)
-        }, validate: true)
-    }
-
-    /// `bootstrap` is a one-time configuration function which globally selects the desired logging backend
-    /// implementation. `bootstrap` can be called at maximum once in any given program, calling it more than once will
-    /// lead to undefined behavior, most likely a crash.
-    ///
-    /// - parameters:
-    ///     - factory: A closure that given a `Logger` identifier, produces an instance of the `LogHandler`.
-    public static func bootstrap(_ factory: @escaping (String) -> LogHandler) {
         self._factory.replaceFactory({ label, _ in
             factory(label)
         }, validate: true)
@@ -714,7 +714,7 @@ public enum LoggingSystem {
     /// lead to undefined behavior, most likely a crash.
     ///
     /// - parameters:
-    ///     - metadataProvider: The `MetadataProvider` used to inject runtime-generated metadata, defaults to a "no-op" provider.
+    ///     - metadataProvider: The `MetadataProvider` used to inject runtime-generated metadata from the execution context.
     ///     - factory: A closure that given a `Logger` identifier, produces an instance of the `LogHandler`.
     public static func bootstrap(_ factory: @escaping (String, Logger.MetadataProvider?) -> LogHandler,
                                  metadataProvider: Logger.MetadataProvider?) {
@@ -735,10 +735,7 @@ public enum LoggingSystem {
         self._factory.replaceFactory(factory, validate: false)
     }
 
-    internal static func bootstrapInternal(metadataProvider: Logger.MetadataProvider?) {
-        self._metadataProviderFactory.replaceMetadataProvider(metadataProvider, validate: false)
-    }
-
+    // for our testing we want to allow multiple bootstrapping
     internal static func bootstrapInternal(_ factory: @escaping (String, Logger.MetadataProvider?) -> LogHandler,
                                            metadataProvider: Logger.MetadataProvider?) {
         self._metadataProviderFactory.replaceMetadataProvider(metadataProvider, validate: false)
@@ -754,7 +751,15 @@ public enum LoggingSystem {
     }
 
     /// System wide ``Logger/MetadataProvider`` that was configured during the logging system's `bootstrap`.
-    internal static var metadataProvider: Logger.MetadataProvider? {
+    ///
+    /// When creating a ``Logger`` using the plain ``Logger/init(label:)`` initializer, this metadata provider
+    /// will be provided to it.
+    ///
+    /// When using custom log handler factories, make sure to provide the bootstrapped metadata provider to them,
+    /// or the metadata will not be filled in automatically using the provider on log-sites. While using a custom
+    /// factory to avoid using the bootstrapped metadata provider may sometimes be useful, usually it will lead to
+    /// un-expected behavior, so make sure to always propagate it to your handlers.
+    public static var metadataProvider: Logger.MetadataProvider? {
         return self._metadataProviderFactory.metadataProvider
     }
 
@@ -805,42 +810,6 @@ public enum LoggingSystem {
                 return self._underlying
             }
         }
-    }
-}
-
-extension LoggingSystem {
-    /// `bootstrap` is a one-time configuration function which globally selects the desired logging backend
-    /// implementation.
-    ///
-    /// - Warning:
-    /// `bootstrap` can be called at maximum once in any given program, calling it more than once will
-    /// lead to undefined behavior, most likely a crash.
-    ///
-    /// - parameters:
-    ///     - factory: A closure that given a `Logger` identifier, produces an instance of the `LogHandler`.
-    ///     - metadataProvider: The `MetadataProvider` used to inject runtime-generated metadata, defaults to a "no-op" provider.
-    public static func bootstrap(_ factory: @escaping (String, Logger.MetadataProvider?) -> LogHandler,
-                                 metadataProvider: Logger.MetadataProvider?) {
-        self._factory.replaceFactory(factory, validate: true)
-        self._metadataProviderFactory.replaceMetadataProvider(metadataProvider, validate: true)
-    }
-
-    /// `bootstrap` is a one-time configuration function which globally selects the desired logging backend
-    /// implementation.
-    ///
-    /// - Warning:
-    /// `bootstrap` can be called at maximum once in any given program, calling it more than once will
-    /// lead to undefined behavior, most likely a crash.
-    ///
-    /// - parameters:
-    ///     - factory: A closure that given a `Logger` identifier, produces an instance of the `LogHandler`.
-    ///     - metadataProvider: The `MetadataProvider` used to inject runtime-generated metadata, defaults to nil.
-    public static func bootstrap(_ factory: @escaping (String) -> LogHandler,
-                                 metadataProvider: Logger.MetadataProvider?) {
-        self._metadataProviderFactory.replaceMetadataProvider(metadataProvider, validate: true)
-        self._factory.replaceFactory({ label, _ in
-            factory(label)
-        }, validate: true)
     }
 }
 
@@ -965,21 +934,6 @@ extension Logger {
         self = Logger(label: label, factory: { label in
             LoggingSystem.factory(label, metadataProvider)
         })
-    }
-
-    /// Construct a `Logger` given a `label` identifying the creator of the `Logger` or a non-standard `LogHandler`.
-    ///
-    /// The `label` should identify the creator of the `Logger`. This can be an application, a sub-system, or even
-    /// a datatype.
-    ///
-    /// This initializer provides an escape hatch in case the global default logging backend implementation (set up
-    /// using `LoggingSystem.bootstrap`) is not appropriate for this particular logger.
-    ///
-    /// - parameters:
-    ///     - label: An identifier for the creator of a `Logger`.
-    ///     - factoryWithMetadataProvider: A closure creating non-standard `LogHandler`s.
-    public init(label: String, factoryWithMetadataProvider: (String, MetadataProvider?) -> LogHandler) {
-        self = Logger(label: label, factoryWithMetadataProvider(label, LoggingSystem.metadataProvider))
     }
 }
 

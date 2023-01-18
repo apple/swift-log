@@ -46,6 +46,7 @@ extension LoggingTest {
             ("testLoggingAString", testLoggingAString),
             ("testMultiplexMetadataProviderMergesInSpecifiedOrder", testMultiplexMetadataProviderMergesInSpecifiedOrder),
             ("testLoggerWithoutFactoryOverrideDefaultsToUsingLoggingSystemMetadataProvider", testLoggerWithoutFactoryOverrideDefaultsToUsingLoggingSystemMetadataProvider),
+            ("testLoggerWithPredefinedLibraryMetadataProvider", testLoggerWithPredefinedLibraryMetadataProvider),
             ("testLoggerWithFactoryOverrideDefaultsToUsingLoggingSystemMetadataProvider", testLoggerWithFactoryOverrideDefaultsToUsingLoggingSystemMetadataProvider),
             ("testMultiplexerIsValue", testMultiplexerIsValue),
             ("testLoggerWithGlobalOverride", testLoggerWithGlobalOverride),

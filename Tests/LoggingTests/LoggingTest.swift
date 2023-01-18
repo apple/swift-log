@@ -556,9 +556,9 @@ class LoggingTest: XCTestCase {
 
     func testLoggerWithoutFactoryOverrideDefaultsToUsingLoggingSystemMetadataProvider() {
         let logging = TestLogging()
-        LoggingSystem.bootstrapInternal(metadataProvider: .init { ["provider": "42"] }) { label, metadataProvider in
+        LoggingSystem.bootstrapInternal({ label, metadataProvider in
             logging.makeWithMetadataProvider(label: label, metadataProvider: metadataProvider)
-        }
+        }, metadataProvider: .init { ["provider": "42"] })
 
         let logger = Logger(label: #function)
 
@@ -569,12 +569,29 @@ class LoggingTest: XCTestCase {
                                     metadata: ["provider": "42", "one-off": "42"])
     }
 
+    func testLoggerWithPredefinedLibraryMetadataProvider() {
+        let logging = TestLogging()
+        LoggingSystem.bootstrapInternal(
+            logging.makeWithMetadataProvider,
+            metadataProvider: .exampleMetadataProvider
+        )
+
+        let logger = Logger(label: #function)
+
+        logger.log(level: .info, "test", metadata: ["one-off": "42"])
+
+        logging.history.assertExist(level: .info,
+                                    message: "test",
+                                    metadata: ["example": "example-value", "one-off": "42"])
+    }
+
     func testLoggerWithFactoryOverrideDefaultsToUsingLoggingSystemMetadataProvider() {
         let logging = TestLogging()
-        LoggingSystem.bootstrapInternal(metadataProvider: .init { ["provider": "42"] })
-        LoggingSystem.bootstrapInternal(logging.makeWithMetadataProvider)
+        LoggingSystem.bootstrapInternal(logging.makeWithMetadataProvider, metadataProvider: .init { ["provider": "42"] })
 
-        let logger = Logger(label: #function, factoryWithMetadataProvider: logging.makeWithMetadataProvider)
+        let logger = Logger(label: #function, factory: { label in
+            logging.makeWithMetadataProvider(label: label, metadataProvider: LoggingSystem.metadataProvider)
+        })
 
         logger.log(level: .info, "test", metadata: ["one-off": "42"])
 
@@ -934,6 +951,12 @@ extension Logger {
         self.error("\(error.localizedDescription)", metadata: metadata(), file: file, function: function, line: line)
     }
     #endif
+}
+
+extension Logger.MetadataProvider {
+    static var exampleMetadataProvider: Self {
+        .init { ["example": .string("example-value")] }
+    }
 }
 
 // Sendable
