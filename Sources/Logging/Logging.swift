@@ -1287,7 +1287,7 @@ public struct StreamLogHandler: LogHandler {
             metadata.merge(explicit, uniquingKeysWith: { _, explicit in explicit })
         }
 
-        return explicit
+        return metadata
     }
 
     private func prettify(_ metadata: Logger.Metadata) -> String? {

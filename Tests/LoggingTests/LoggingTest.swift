@@ -824,6 +824,24 @@ class LoggingTest: XCTestCase {
         XCTAssert(interceptStream.strings[1].contains("a=a1 b=b1"), "LINES: \(interceptStream.strings[1])")
     }
 
+    func testStreamLogHandlerWritesIncludeMetadataProviderMetadata() {
+        let interceptStream = InterceptStream()
+        LoggingSystem.bootstrapInternal({ _, metadataProvider in
+            StreamLogHandler(label: "test", stream: interceptStream, metadataProvider: metadataProvider)
+        }, metadataProvider: .exampleMetadataProvider)
+        let log = Logger(label: "test")
+
+        let testString = "my message is better than yours"
+        log.critical("\(testString)")
+
+        let messageSucceeded = interceptStream.interceptedText?.trimmingCharacters(in: .whitespacesAndNewlines).hasSuffix(testString)
+
+        XCTAssertTrue(messageSucceeded ?? false)
+        XCTAssertEqual(interceptStream.strings.count, 1)
+        let message = interceptStream.strings.first!
+        XCTAssertTrue(message.contains("example=example-value"), "message must contain metadata, was: \(message)")
+    }
+
     func testStdioOutputStreamWrite() {
         self.withWriteReadFDsAndReadBuffer { writeFD, readFD, readBuffer in
             let logStream = StdioOutputStream(file: writeFD, flushMode: .always)
