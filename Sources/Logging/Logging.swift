@@ -683,37 +683,6 @@ public enum LoggingSystem {
     /// lead to undefined behavior, most likely a crash.
     ///
     /// - parameters:
-    ///     - factory: A closure that given a `Logger` identifier and an optional metadata provider, produces an instance of the `LogHandler`.
-    public static func bootstrap(_ factory: @escaping (String, Logger.MetadataProvider?) -> LogHandler) {
-        self._factory.replaceFactory(factory, validate: true)
-    }
-
-    /// `bootstrap` is a one-time configuration function which globally selects the desired logging backend
-    /// implementation.
-    ///
-    /// - Warning:
-    /// `bootstrap` can be called at maximum once in any given program, calling it more than once will
-    /// lead to undefined behavior, most likely a crash.
-    ///
-    /// - parameters:
-    ///     - metadataProvider: The ``Logger/MetadataProvider`` used to inject runtime-generated metadata, defaults to nil.
-    ///     - factory: A closure that given a `Logger` identifier, produces an instance of the `LogHandler`.
-    public static func bootstrap(_ factory: @escaping (String) -> LogHandler,
-                                 metadataProvider: Logger.MetadataProvider?) {
-        self._metadataProviderFactory.replaceMetadataProvider(metadataProvider, validate: true)
-        self._factory.replaceFactory({ label, _ in
-            factory(label)
-        }, validate: true)
-    }
-
-    /// `bootstrap` is a one-time configuration function which globally selects the desired logging backend
-    /// implementation.
-    ///
-    /// - Warning:
-    /// `bootstrap` can be called at maximum once in any given program, calling it more than once will
-    /// lead to undefined behavior, most likely a crash.
-    ///
-    /// - parameters:
     ///     - metadataProvider: The `MetadataProvider` used to inject runtime-generated metadata from the execution context.
     ///     - factory: A closure that given a `Logger` identifier, produces an instance of the `LogHandler`.
     public static func bootstrap(_ factory: @escaping (String, Logger.MetadataProvider?) -> LogHandler,
@@ -728,11 +697,6 @@ public enum LoggingSystem {
         self._factory.replaceFactory({ label, _ in
             factory(label)
         }, validate: false)
-    }
-
-    // for our testing we want to allow multiple bootstrapping
-    internal static func bootstrapInternal(_ factory: @escaping (String, Logger.MetadataProvider?) -> LogHandler) {
-        self._factory.replaceFactory(factory, validate: false)
     }
 
     // for our testing we want to allow multiple bootstrapping
@@ -916,6 +880,21 @@ extension Logger {
     ///     - factory: A closure creating non-standard `LogHandler`s.
     public init(label: String, factory: (String) -> LogHandler) {
         self = Logger(label: label, factory(label))
+    }
+
+    /// Construct a `Logger` given a `label` identifying the creator of the `Logger` or a non-standard `LogHandler`.
+    ///
+    /// The `label` should identify the creator of the `Logger`. This can be an application, a sub-system, or even
+    /// a datatype.
+    ///
+    /// This initializer provides an escape hatch in case the global default logging backend implementation (set up
+    /// using `LoggingSystem.bootstrap` is not appropriate for this particular logger.
+    ///
+    /// - parameters:
+    ///     - label: An identifier for the creator of a `Logger`.
+    ///     - factory: A closure creating non-standard `LogHandler`s.
+    public init(label: String, factory: (String, Logger.MetadataProvider?) -> LogHandler) {
+        self = Logger(label: label, factory(label, LoggingSystem.metadataProvider))
     }
 
     /// Construct a `Logger` given a `label` identifying the creator of the `Logger` and a non-standard ``Logger/MetadataProvider``.
@@ -1256,6 +1235,11 @@ public struct StreamLogHandler: LogHandler {
         set {
             self.metadata[metadataKey] = newValue
         }
+    }
+
+    // internal for testing only
+    internal init(label: String, stream: _SendableTextOutputStream) {
+        self.init(label: label, stream: stream, metadataProvider: LoggingSystem.metadataProvider)
     }
 
     // internal for testing only

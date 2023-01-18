@@ -25,7 +25,7 @@ import Glibc
 final class MetadataProviderTest: XCTestCase {
     func testLoggingMergesOneOffMetadataWithProvidedMetadataFromExplicitlyPassed() throws {
         let logging = TestLogging()
-        LoggingSystem.bootstrapInternal(logging.makeWithMetadataProvider)
+        LoggingSystem.bootstrapInternal(logging.make)
 
         let logger = Logger(label: #function, metadataProvider: .init {
             [
