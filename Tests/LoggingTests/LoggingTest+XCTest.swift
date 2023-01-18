@@ -59,6 +59,7 @@ extension LoggingTest {
             ("testStdioOutputStreamWrite", testStdioOutputStreamWrite),
             ("testStdioOutputStreamFlush", testStdioOutputStreamFlush),
             ("testOverloadingError", testOverloadingError),
+            ("testCompileInitializeStandardStreamLogHandlersWithMetadataProviders", testCompileInitializeStandardStreamLogHandlersWithMetadataProviders),
         ]
     }
 }
