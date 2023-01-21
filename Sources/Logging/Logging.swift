@@ -708,9 +708,7 @@ public enum LoggingSystem {
 
     fileprivate static var factory: (String, Logger.MetadataProvider?) -> LogHandler {
         return { label, metadataProvider in
-            var handler = self._factory.underlying(label, metadataProvider)
-            handler.metadataProvider = metadataProvider
-            return handler
+            return self._factory.underlying(label, metadataProvider)
         }
     }
 
