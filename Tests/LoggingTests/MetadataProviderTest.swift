@@ -25,7 +25,9 @@ import Glibc
 final class MetadataProviderTest: XCTestCase {
     func testLoggingMergesOneOffMetadataWithProvidedMetadataFromExplicitlyPassed() throws {
         let logging = TestLogging()
-        LoggingSystem.bootstrapInternal(logging.make)
+        LoggingSystem.bootstrapInternal(logging.makeWithMetadataProvider,
+                                        metadataProvider: .init { ["common": "initial"]
+        })
 
         let logger = Logger(label: #function, metadataProvider: .init {
             [
@@ -42,21 +44,31 @@ final class MetadataProviderTest: XCTestCase {
     }
 
     func testLogHandlerThatDidNotImplementProvidersButSomeoneAttemptsToSetOneOnIt() {
+        #if DEBUG
+        // we only emit these warnings in debug mode
         let logging = TestLogging()
         var handler = LogHandlerThatDidNotImplementMetadataProviders(testLogging: logging)
 
         handler.metadataProvider = .simpleTestProvider
 
         logging.history.assertExist(level: .warning, message: "Attempted to set metadataProvider on LogHandlerThatDidNotImplementMetadataProviders that did not implement support for them. Please contact the log handler maintainer to implement metadata provider support.", source: "Logging")
+
+        let countBefore = logging.history.entries.count
+        handler.metadataProvider = .simpleTestProvider
+        XCTAssertEqual(countBefore, logging.history.entries.count, "Should only log the warning once")
+        #endif
     }
 
     func testLogHandlerThatDidImplementProvidersButSomeoneAttemptsToSetOneOnIt() {
+        #if DEBUG
+        // we only emit these warnings in debug mode
         let logging = TestLogging()
         var handler = LogHandlerThatDidImplementMetadataProviders(testLogging: logging)
 
         handler.metadataProvider = .simpleTestProvider
 
         logging.history.assertNotExist(level: .warning, message: "Attempted to set metadataProvider on LogHandlerThatDidImplementMetadataProviders that did not implement support for them. Please contact the log handler maintainer to implement metadata provider support.", source: "Logging")
+        #endif
     }
 }
 

@@ -663,6 +663,10 @@ public enum LoggingSystem {
     private static let _factory = FactoryBox { label, _ in StreamLogHandler.standardOutput(label: label) }
     private static let _metadataProviderFactory = MetadataProviderBox(nil)
 
+    #if DEBUG
+    private static var _warnOnceBox: WarnOnceBox = WarnOnceBox()
+    #endif
+
     /// `bootstrap` is a one-time configuration function which globally selects the desired logging backend
     /// implementation. `bootstrap` can be called at maximum once in any given program, calling it more than once will
     /// lead to undefined behavior, most likely a crash.
@@ -708,9 +712,7 @@ public enum LoggingSystem {
 
     fileprivate static var factory: (String, Logger.MetadataProvider?) -> LogHandler {
         return { label, metadataProvider in
-            var handler = self._factory.underlying(label, metadataProvider)
-            handler.metadataProvider = metadataProvider
-            return handler
+            self._factory.underlying(label, metadataProvider)
         }
     }
 
@@ -726,6 +728,15 @@ public enum LoggingSystem {
     public static var metadataProvider: Logger.MetadataProvider? {
         return self._metadataProviderFactory.metadataProvider
     }
+
+    #if DEBUG
+    /// Used to warn only once about a specific ``LogHandler`` type when it does not support ``Logger/MetadataProvider``,
+    /// but an attempt was made to set a metadata provider on such handler. In order to avoid flooding the system with
+    /// warnings such warning is only emitted in debug mode, and even then at-most once for a handler type.
+    internal static func warnOnceLogHandlerNotSupportedMetadataProvider<Handler: LogHandler>(_ type: Handler.Type) -> Bool {
+        self._warnOnceBox.warnOnceLogHandlerNotSupportedMetadataProvider(type: type)
+    }
+    #endif
 
     private final class FactoryBox {
         private let lock = ReadWriteLock()
@@ -1438,6 +1449,28 @@ extension Logger.MetadataValue: ExpressibleByArrayLiteral {
         self = .array(elements)
     }
 }
+
+// MARK: - Debug only warnings
+
+#if DEBUG
+/// Contains state to manage all kinds of "warn only once" warnings which the logging system may want to issue.
+private final class WarnOnceBox {
+    private let lock: Lock = Lock()
+    private var warnOnceLogHandlerNotSupportedMetadataProviderPerType: [ObjectIdentifier: Bool] = [:]
+
+    func warnOnceLogHandlerNotSupportedMetadataProvider<Handler: LogHandler>(type: Handler.Type) -> Bool {
+        self.lock.withLock {
+            let id = ObjectIdentifier(type)
+            if warnOnceLogHandlerNotSupportedMetadataProviderPerType[id] ?? false {
+                return false // don't warn, it was already warned about
+            } else {
+                warnOnceLogHandlerNotSupportedMetadataProviderPerType[id] = true
+                return true // warn about this handler type, it is the first time we encountered it
+            }
+        }
+    }
+}
+#endif
 
 // MARK: - Sendable support helpers
 

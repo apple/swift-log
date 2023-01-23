@@ -177,7 +177,11 @@ extension LogHandler {
             nil
         }
         set {
-            self.log(level: .warning, message: "Attempted to set metadataProvider on \(Self.self) that did not implement support for them. Please contact the log handler maintainer to implement metadata provider support.", metadata: nil, source: "Logging", file: #file, function: #function, line: #line)
+            #if DEBUG
+            if LoggingSystem.warnOnceLogHandlerNotSupportedMetadataProvider(Self.self) {
+                self.log(level: .warning, message: "Attempted to set metadataProvider on \(Self.self) that did not implement support for them. Please contact the log handler maintainer to implement metadata provider support.", metadata: nil, source: "Logging", file: #file, function: #function, line: #line)
+            }
+            #endif
         }
     }
 }
