@@ -220,7 +220,84 @@ class LoggingTest: XCTestCase {
         XCTAssertEqual(multiplexLogger.handler.metadata, [
             "one": "111",
             "two": "222",
-            "in": "in-1",
+            "in": "in-2",
+        ])
+    }
+
+    func testMultiplexMetadataProviderSet() {
+        let logging1 = TestLogging()
+        let logging2 = TestLogging()
+
+        var handler1 = logging1.make(label: "1")
+        handler1.metadata["one"] = "111"
+        handler1.metadata["in"] = "in-1"
+        handler1.metadataProvider = .constant([
+            "provider-1": "provided-111",
+            "provider-overlap": "provided-111",
+        ])
+        var handler2 = logging2.make(label: "2")
+        handler2.metadata["two"] = "222"
+        handler2.metadata["in"] = "in-2"
+        handler2.metadataProvider = .constant([
+            "provider-2": "provided-222",
+            "provider-overlap": "provided-222",
+        ])
+
+        LoggingSystem.bootstrapInternal { _ in
+            MultiplexLogHandler([handler1, handler2])
+        }
+
+        let multiplexLogger = Logger(label: "test")
+
+        XCTAssertEqual(multiplexLogger.handler.metadata, [
+            "one": "111",
+            "two": "222",
+            "in": "in-2",
+            "provider-1": "provided-111",
+            "provider-2": "provided-222",
+            "provider-overlap": "provided-222",
+        ])
+        XCTAssertEqual(multiplexLogger.handler.metadataProvider?.get(), [
+            "provider-1": "provided-111",
+            "provider-2": "provided-222",
+            "provider-overlap": "provided-222",
+        ])
+    }
+
+    func testMultiplexMetadataProviderExtract() {
+        let logging1 = TestLogging()
+        let logging2 = TestLogging()
+
+        var handler1 = logging1.make(label: "1")
+        handler1.metadataProvider = .constant([
+            "provider-1": "provided-111",
+            "provider-overlap": "provided-111",
+        ])
+        var handler2 = logging2.make(label: "2")
+        handler2.metadata["two"] = "222"
+        handler2.metadata["in"] = "in-2"
+        handler2.metadataProvider = .constant([
+            "provider-2": "provided-222",
+            "provider-overlap": "provided-222",
+        ])
+
+        LoggingSystem.bootstrapInternal({ _, metadataProvider in
+            MultiplexLogHandler(
+                [handler1, handler2],
+                metadataProvider: metadataProvider
+            )
+        }, metadataProvider: .constant([
+            "provider-overlap": "provided-outer",
+        ]))
+
+        let multiplexLogger = Logger(label: "test")
+
+        let provider = multiplexLogger.metadataProvider!
+
+        XCTAssertEqual(provider.get(), [
+            "provider-1": "provided-111",
+            "provider-2": "provided-222",
+            "provider-overlap": "provided-outer",
         ])
     }
 
@@ -998,6 +1075,10 @@ extension Logger {
 extension Logger.MetadataProvider {
     static var exampleMetadataProvider: Self {
         .init { ["example": .string("example-value")] }
+    }
+
+    static func constant(_ metadata: Logger.Metadata) -> Self {
+        .init { metadata }
     }
 }
 

@@ -31,6 +31,8 @@ extension LoggingTest {
             ("testMultiplexLogHandlerNeedNotMaterializeValuesMultipleTimes", testMultiplexLogHandlerNeedNotMaterializeValuesMultipleTimes),
             ("testMultiplexLogHandlerMetadata_settingMetadataThroughToUnderlyingHandlers", testMultiplexLogHandlerMetadata_settingMetadataThroughToUnderlyingHandlers),
             ("testMultiplexLogHandlerMetadata_readingHandlerMetadata", testMultiplexLogHandlerMetadata_readingHandlerMetadata),
+            ("testMultiplexMetadataProviderSet", testMultiplexMetadataProviderSet),
+            ("testMultiplexMetadataProviderExtract", testMultiplexMetadataProviderExtract),
             ("testDictionaryMetadata", testDictionaryMetadata),
             ("testListMetadata", testListMetadata),
             ("testStringConvertibleMetadata", testStringConvertibleMetadata),
