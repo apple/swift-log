@@ -3,16 +3,16 @@ version: "3"
 services:
 
   runtime-setup:
-    image: swift-log:20.04-main
+    image: swift-log:20.04-5.8
     build:
       args:
-        base_image: "swiftlang/swift:nightly-main-focal"
+        base_image: "swiftlang/swift:nightly-5.8-focal"
 
   test:
-    image: swift-log:20.04-main
+    image: swift-log:20.04-5.8
     environment:
       - FORCE_TEST_DISCOVERY=--enable-test-discovery
       #- SANITIZER_ARG=--sanitize=thread
 
   shell:
-    image: swift-log:20.04-main
+    image: swift-log:20.04-5.8
