@@ -1052,7 +1052,7 @@ extension Logger {
 public struct MultiplexLogHandler: LogHandler {
     private var handlers: [LogHandler]
     private var effectiveLogLevel: Logger.Level
-    /// This provider is in addition to any providers the handlers this multiplexes to may have.
+    /// This metadata provider runs after all metadata providers of the multiplexed handlers.
     private var _metadataProvider: Logger.MetadataProvider?
 
     /// Create a `MultiplexLogHandler`.
@@ -1099,8 +1099,8 @@ public struct MultiplexLogHandler: LogHandler {
                 }
             } else {
                 var providers: [Logger.MetadataProvider] = []
-                let hasSpecifiedAdditionalMetadataProvider = (self._metadataProvider != nil ? 1 : 0)
-                providers.reserveCapacity(self.handlers.count + hasSpecifiedAdditionalMetadataProvider)
+                let additionalMetadataProviderCount = (self._metadataProvider != nil ? 1 : 0)
+                providers.reserveCapacity(self.handlers.count + additionalMetadataProviderCount)
                 for handler in self.handlers {
                     if let provider = handler.metadataProvider {
                         providers.append(provider)
