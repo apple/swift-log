@@ -922,7 +922,9 @@ extension Logger {
     ///                         instead of the system wide bootstrapped one, when a log statement is about to be emitted.
     public init(label: String, metadataProvider: MetadataProvider) {
         self = Logger(label: label, factory: { label in
-            LoggingSystem.factory(label, metadataProvider)
+            var handler = LoggingSystem.factory(label, metadataProvider)
+            handler.metadataProvider = metadataProvider
+            return handler
         })
     }
 }
@@ -1050,6 +1052,8 @@ extension Logger {
 public struct MultiplexLogHandler: LogHandler {
     private var handlers: [LogHandler]
     private var effectiveLogLevel: Logger.Level
+    /// This metadata provider runs after all metadata providers of the multiplexed handlers.
+    private var _metadataProvider: Logger.MetadataProvider?
 
     /// Create a `MultiplexLogHandler`.
     ///
@@ -1062,6 +1066,13 @@ public struct MultiplexLogHandler: LogHandler {
         self.effectiveLogLevel = handlers.map { $0.logLevel }.min() ?? .trace
     }
 
+    public init(_ handlers: [LogHandler], metadataProvider: Logger.MetadataProvider?) {
+        assert(!handlers.isEmpty, "MultiplexLogHandler.handlers MUST NOT be empty")
+        self.handlers = handlers
+        self.effectiveLogLevel = handlers.map { $0.logLevel }.min() ?? .trace
+        self._metadataProvider = metadataProvider
+    }
+
     public var logLevel: Logger.Level {
         get {
             return self.effectiveLogLevel
@@ -1069,6 +1080,43 @@ public struct MultiplexLogHandler: LogHandler {
         set {
             self.mutatingForEachHandler { $0.logLevel = newValue }
             self.effectiveLogLevel = newValue
+        }
+    }
+
+    public var metadataProvider: Logger.MetadataProvider? {
+        get {
+            if self.handlers.count == 1 {
+                if let innerHandler = self.handlers.first?.metadataProvider {
+                    if let multiplexHandlerProvider = self._metadataProvider {
+                        return .multiplex([innerHandler, multiplexHandlerProvider])
+                    } else {
+                        return innerHandler
+                    }
+                } else if let multiplexHandlerProvider = self._metadataProvider {
+                    return multiplexHandlerProvider
+                } else {
+                    return nil
+                }
+            } else {
+                var providers: [Logger.MetadataProvider] = []
+                let additionalMetadataProviderCount = (self._metadataProvider != nil ? 1 : 0)
+                providers.reserveCapacity(self.handlers.count + additionalMetadataProviderCount)
+                for handler in self.handlers {
+                    if let provider = handler.metadataProvider {
+                        providers.append(provider)
+                    }
+                }
+                if let multiplexHandlerProvider = self._metadataProvider {
+                    providers.append(multiplexHandlerProvider)
+                }
+                guard !providers.isEmpty else {
+                    return nil
+                }
+                return .multiplex(providers)
+            }
+        }
+        set {
+            self.mutatingForEachHandler { $0.metadataProvider = newValue }
         }
     }
 
@@ -1086,13 +1134,22 @@ public struct MultiplexLogHandler: LogHandler {
 
     public var metadata: Logger.Metadata {
         get {
-            var effectiveMetadata: Logger.Metadata = [:]
+            var effective: Logger.Metadata = [:]
             // as a rough estimate we assume that the underlying handlers have a similar metadata count,
             // and we use the first one's current count to estimate how big of a dictionary we need to allocate:
-            effectiveMetadata.reserveCapacity(self.handlers.first!.metadata.count) // !-safe, we always have at least one handler
-            return self.handlers.reduce(into: effectiveMetadata) { effectiveMetadata, handler in
-                effectiveMetadata.merge(handler.metadata, uniquingKeysWith: { l, _ in l })
+            effective.reserveCapacity(self.handlers.first!.metadata.count) // !-safe, we always have at least one handler
+
+            for handler in self.handlers {
+                effective.merge(handler.metadata, uniquingKeysWith: { _, handlerMetadata in handlerMetadata })
+                if let provider = handler.metadataProvider {
+                    effective.merge(provider.get(), uniquingKeysWith: { _, provided in provided })
+                }
             }
+            if let provider = self._metadataProvider {
+                effective.merge(provider.get(), uniquingKeysWith: { _, provided in provided })
+            }
+
+            return effective
         }
         set {
             self.mutatingForEachHandler { $0.metadata = newValue }
