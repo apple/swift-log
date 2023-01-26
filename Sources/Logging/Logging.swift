@@ -734,7 +734,7 @@ public enum LoggingSystem {
     /// but an attempt was made to set a metadata provider on such handler. In order to avoid flooding the system with
     /// warnings such warning is only emitted in debug mode, and even then at-most once for a handler type.
     internal static func warnOnceLogHandlerNotSupportedMetadataProvider<Handler: LogHandler>(_ type: Handler.Type) -> Bool {
-        self._warnOnceBox.warnOnceLogHandlerNotSupportedMetadataProvider(type: type)
+        return self._warnOnceBox.warnOnceLogHandlerNotSupportedMetadataProvider(type: type)
     }
     #endif
 
@@ -1515,8 +1515,9 @@ private final class WarnOnceBox {
     private let lock: Lock = Lock()
     private var warnOnceLogHandlerNotSupportedMetadataProviderPerType: [ObjectIdentifier: Bool] = [:]
 
+    @discardableResult
     func warnOnceLogHandlerNotSupportedMetadataProvider<Handler: LogHandler>(type: Handler.Type) -> Bool {
-        self.lock.withLock {
+        return self.lock.withLock {
             let id = ObjectIdentifier(type)
             if warnOnceLogHandlerNotSupportedMetadataProviderPerType[id] ?? false {
                 return false // don't warn, it was already warned about
