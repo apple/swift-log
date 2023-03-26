@@ -86,6 +86,7 @@ As the API has just launched, not many implementations exist yet. If you are int
 | [Apodini/swift-log-elk](https://github.com/Apodini/swift-log-elk) | a logging backend that formats, caches and sends log data to [elastic/logstash](https://github.com/elastic/logstash) |
 | [binaryscraping/swift-log-supabase](https://github.com/binaryscraping/swift-log-supabase) | a logging backend that sends log entries to [Supabase](https://github.com/supabase/supabase). |
 | [MahdiBM/DiscordBM](https://github.com/MahdiBM/DiscordBM) | a Discord client package containing a standalone [DiscordLogger library](https://github.com/MahdiBM/DiscordBM/blob/discord-logger/README.md#discord-logger) |
+| [kiliankoe/swift-log-matrix](https://swiftpackageindex.com/kiliankoe/swift-log-matrix) | a logging backend for sending logs directly to a [Matrix](https://matrix.org) room |
 | Your library? | [Get in touch!](https://forums.swift.org/c/server) |
 
 ## What is an API package?
