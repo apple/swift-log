@@ -359,7 +359,7 @@ public class MDC {
     }
 
     private var threadId: Int {
-        #if os(macOS) || os(iOS) || os(tvOS) || os(watchOS)
+        #if canImport(Darwin)
         return Int(pthread_mach_thread_np(pthread_self()))
         #elseif os(Windows)
         return Int(GetCurrentThreadId())
