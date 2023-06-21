@@ -12,7 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#if os(macOS) || os(iOS) || os(tvOS) || os(watchOS)
+#if canImport(Darwin)
 import Darwin
 #elseif os(Windows)
 import CRT
@@ -1242,7 +1242,7 @@ internal struct StdioOutputStream: TextOutputStream {
 }
 
 // Prevent name clashes
-#if os(macOS) || os(tvOS) || os(iOS) || os(watchOS)
+#if canImport(Darwin)
 let systemStderr = Darwin.stderr
 let systemStdout = Darwin.stdout
 #elseif os(Windows)
