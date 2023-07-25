@@ -87,6 +87,7 @@ As the API has just launched, not many implementations exist yet. If you are int
 | [binaryscraping/swift-log-supabase](https://github.com/binaryscraping/swift-log-supabase) | a logging backend that sends log entries to [Supabase](https://github.com/supabase/supabase). |
 | [kiliankoe/swift-log-matrix](https://swiftpackageindex.com/kiliankoe/swift-log-matrix) | a logging backend for sending logs directly to a [Matrix](https://matrix.org) room |
 | [DiscordBM/DiscordLogger](https://github.com/DiscordBM/DiscordLogger) | a Discord logging implementation to send your logs over to a Discord channel in a good-looking manner and with a lot of configuration options including the ability to send only a few important log-levels such as `warning`/`error`/`critical`. |
+| [wynioux/DeveloperSuite](https://github.com/wynioux/DeveloperSuite) | a logging backend that sends log messages to [DeveloperSuite](https://github.com/wynioux/DeveloperSuite) |
 | Your library? | [Get in touch!](https://forums.swift.org/c/server) |
 
 ## What is an API package?
