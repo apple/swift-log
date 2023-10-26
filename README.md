@@ -60,9 +60,9 @@ LoggingSystem.bootstrap(StreamLogHandler.standardError)
 For further information, please check the [API documentation][api-docs].
 
 <a name="backends"></a>
-#### Selecting a logging backend implementation (applications only)
+## Available Logging Backends
 
-As the API has just launched, not many implementations exist yet. If you are interested in implementing one see the "Implementation considerations" section below explaining how to do so. List of existing SwiftLog API compatible libraries:
+You can choose from one of the following backends to consume your logs. If you are interested in implementing one see the "Implementation considerations" section below explaining how to do so. List of existing SwiftLog API compatible libraries:
 
 | Repository | Handler Description|
 | ----------- | ----------- |
@@ -72,7 +72,7 @@ As the API has just launched, not many implementations exist yet. If you are int
 | [chrisaljoudi/swift-log-**oslog**](https://github.com/chrisaljoudi/swift-log-oslog) | an OSLog [Unified Logging](https://developer.apple.com/documentation/os/logging) backend for use on Apple platforms. **Important Note:** we recommend using os_log directly as described [here](https://developer.apple.com/documentation/os/logging). Using os_log through swift-log using this backend will be less efficient and will also prevent specifying the privacy of the message. The backend always uses `%{public}@` as the format string and eagerly converts all string interpolations to strings.  This has two drawbacks: 1. the static components of the string interpolation would be eagerly copied by the unified logging system, which will result in loss of performance. 2. It makes all messages public, which changes the default privacy policy of os_log, and doesn't allow specifying fine-grained privacy of sections of the message.  In a separate on-going work, Swift APIs for os_log are being improved and made to align closely with swift-log APIs. References: [Unifying Logging Levels](https://forums.swift.org/t/custom-string-interpolation-and-compile-time-interpretation-applied-to-logging/18799), [Making os_log accept string interpolations using compile-time interpretation](https://forums.swift.org/t/logging-levels-for-swifts-server-side-logging-apis-and-new-os-log-apis/20365). |
 | [Brainfinance/StackdriverLogging](https://github.com/Brainfinance/StackdriverLogging) | a structured JSON logging backend for use on Google Cloud Platform with the [Stackdriver logging agent](https://cloud.google.com/logging/docs/agent) |
 | [DnV1eX/GoogleCloudLogging](https://github.com/DnV1eX/GoogleCloudLogging) | a client-side library for logging application events in [Google Cloud](https://console.cloud.google.com/logs) via REST API v2. |
-| [vapor/console-kit](https://github.com/vapor/console-kit/) | print log messages to a terminal with stylized ([ANSI](https://en.wikipedia.org/wiki/ANSI_escape_code)) output |
+| [vapor/console-kit](https://github.com/vapor/console-kit/) | a logger to the current terminal or stdout with stylized ([ANSI](https://en.wikipedia.org/wiki/ANSI_escape_code)) output. The default logger for all Vapor applications |
 | [neallester/swift-log-testing](https://github.com/neallester/swift-log-testing) | provides access to log messages for use in assertions (within test targets) |
 | [wlisac/swift-log-slack](https://github.com/wlisac/swift-log-slack)  | a logging backend that sends critical log messages to Slack |
 | [NSHipster/swift-log-github-actions](https://github.com/NSHipster/swift-log-github-actions) | a logging backend that translates logging messages into [workflow commands for GitHub Actions](https://help.github.com/en/actions/reference/workflow-commands-for-github-actions). |
