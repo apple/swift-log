@@ -1388,7 +1388,9 @@ public struct StreamLogHandler: LogHandler {
         _ = strftime(&buffer, buffer.count, "%Y-%m-%dT%H:%M:%S%z", &localTime)
         #else
         var timestamp = time(nil)
-        guard let localTime = localtime(&timestamp) else { return "<unknown>" }
+        guard let localTime = localtime(&timestamp) else {
+            return "<unknown>"
+        }
         strftime(&buffer, buffer.count, "%Y-%m-%dT%H:%M:%S%z", localTime)
         #endif
         return buffer.withUnsafeBufferPointer {
