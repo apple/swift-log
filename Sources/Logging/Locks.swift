@@ -34,6 +34,8 @@ import Darwin
 import WinSDK
 #elseif canImport(Glibc)
 import Glibc
+#elseif canImport(Musl)
+import Musl
 #else
 #error("Unsupported runtime")
 #endif

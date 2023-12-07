@@ -18,6 +18,8 @@ import Darwin
 import CRT
 #elseif canImport(Glibc)
 import Glibc
+#elseif canImport(Musl)
+import Musl
 #elseif canImport(WASILibc)
 import WASILibc
 #else
@@ -1251,6 +1253,9 @@ let systemStdout = CRT.stdout
 #elseif canImport(Glibc)
 let systemStderr = Glibc.stderr!
 let systemStdout = Glibc.stdout!
+#elseif canImport(Musl)
+let systemStderr = Musl.stderr!
+let systemStdout = Musl.stdout!
 #elseif canImport(WASILibc)
 let systemStderr = WASILibc.stderr!
 let systemStdout = WASILibc.stdout!
