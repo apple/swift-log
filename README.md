@@ -220,3 +220,4 @@ This logging API was designed with the contributors to the Swift on Server commu
 - [log levels](https://forums.swift.org/t/logging-levels-for-swifts-server-side-logging-apis-and-new-os-log-apis/20365)
 
 [api-docs]: https://apple.github.io/swift-log/docs/current/Logging/Structs/Logger.html
+
