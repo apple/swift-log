@@ -662,7 +662,7 @@ extension Logger {
 /// configured. `LoggingSystem` is set up just once in a given program to set up the desired logging backend
 /// implementation.
 public enum LoggingSystem {
-    private static let _factory = FactoryBox { label, _ in StreamLogHandler.standardOutput(label: label) }
+    private static let _factory = FactoryBox { label, _ in StreamLogHandler.standardError(label: label) }
     private static let _metadataProviderFactory = MetadataProviderBox(nil)
 
     #if DEBUG
