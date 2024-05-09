@@ -39,20 +39,41 @@ import WASILibc
 /// logger.info("Hello World!")
 /// ```
 public struct Logger {
-    @usableFromInline
-    var handler: LogHandler
+    /// A private property to hold the boxed `LogHandler`.
+    private var _handler: Box<LogHandler>
 
     /// An identifier of the creator of this `Logger`.
     public let label: String
+    
+    /// A computed property to access the `LogHandler`.
+    public var handler: LogHandler {
+        get {
+            return _handler.value
+        }
+        set {
+            if !(isKnownUniquelyReferenced(&_handler)) {
+                _handler = Box(value: newValue)
+            } else {
+                _handler.value = newValue
+            }
+        }
+    }
 
     /// The metadata provider this logger was created with.
     public var metadataProvider: Logger.MetadataProvider? {
-        return self.handler.metadataProvider
+        return handler.metadataProvider
     }
 
     internal init(label: String, _ handler: LogHandler) {
         self.label = label
-        self.handler = handler
+        self._handler = Box(value: handler)
+    }
+}
+
+private final class Box<T> {
+    var value: T
+    init(value: T) {
+        self.value = value
     }
 }
 
