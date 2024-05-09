@@ -81,7 +81,6 @@ You can choose from one of the following backends to consume your logs. If you a
 | [google/SwiftLogFireCloud](https://github.com/google/swiftlogfirecloud)  | a logging backend for time series logging which pushes logs as flat files to Firebase Cloud Storage. |
 | [crspybits/swift-log-file](https://github.com/crspybits/swift-log-file)  | a simple local file logger (using `Foundation` `FileManager`) |
 | [sushichop/Puppy](https://github.com/sushichop/Puppy) | a logging backend that supports multiple transports(console, file, syslog, etc.) and has the feature with formatting and file log rotation |
-| [luoxiu/LogDog](https://github.com/luoxiu/LogDog) | user-friendly logging with sinks and appenders |
 | [ShivaHuang/swift-log-SwiftyBeaver](https://github.com/ShivaHuang/swift-log-SwiftyBeaver) | a logging backend for printing colored logging to Xcode console / file, or sending encrypted logging to [SwiftyBeaver](https://swiftybeaver.com) platform. |
 | [Apodini/swift-log-elk](https://github.com/Apodini/swift-log-elk) | a logging backend that formats, caches and sends log data to [elastic/logstash](https://github.com/elastic/logstash) |
 | [binaryscraping/swift-log-supabase](https://github.com/binaryscraping/swift-log-supabase) | a logging backend that sends log entries to [Supabase](https://github.com/supabase/supabase). |
