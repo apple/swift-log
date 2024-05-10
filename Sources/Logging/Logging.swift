@@ -69,7 +69,7 @@ public struct Logger {
         self._handler = Storage(label: label, handler: handler)
     }
 
-    public class Storage {
+    public class Storage: @unchecked Sendable {
         var label: String
         var handler: LogHandler
         
