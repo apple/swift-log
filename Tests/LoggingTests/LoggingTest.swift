@@ -1053,6 +1053,11 @@ class LoggingTest: XCTestCase {
         LoggingSystem.bootstrap(StreamLogHandler.standardOutput, metadataProvider: .exampleMetadataProvider)
         LoggingSystem.bootstrap(StreamLogHandler.standardError, metadataProvider: .exampleMetadataProvider)
     }
+    
+    func testLoggerSize() {
+        let expectedSize = MemoryLayout<Logger.Storage>.size + MemoryLayout<String>.size
+        XCTAssertEqual(MemoryLayout<Logger>.size, expectedSize)
+    }
 }
 
 extension Logger {

@@ -40,7 +40,7 @@ import WASILibc
 /// ```
 public struct Logger {
     /// A private property to hold the boxed `LogHandler`.
-    private var _handler: Box<LogHandler>
+    private var _handler: Storage
 
     /// An identifier of the creator of this `Logger`.
     public let label: String
@@ -48,13 +48,13 @@ public struct Logger {
     /// A computed property to access the `LogHandler`.
     public var handler: LogHandler {
         get {
-            return _handler.value
+            return _handler.handler
         }
         set {
-            if !(isKnownUniquelyReferenced(&_handler)) {
-                _handler = Box(value: newValue)
+            if !isKnownUniquelyReferenced(&self._handler) {
+                self._handler = Storage(label: self.label, handler: newValue)
             } else {
-                _handler.value = newValue
+                self._handler.handler = newValue
             }
         }
     }
@@ -66,14 +66,17 @@ public struct Logger {
 
     internal init(label: String, _ handler: LogHandler) {
         self.label = label
-        self._handler = Box(value: handler)
+        self._handler = Storage(label: label, handler: handler)
     }
-}
 
-private final class Box<T> {
-    var value: T
-    init(value: T) {
-        self.value = value
+    public class Storage {
+        var label: String
+        var handler: LogHandler
+        
+        init(label: String, handler: LogHandler) {
+            self.label = label
+            self.handler = handler
+        }
     }
 }
 
