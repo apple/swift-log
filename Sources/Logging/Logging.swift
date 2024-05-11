@@ -39,22 +39,46 @@ import WASILibc
 /// logger.info("Hello World!")
 /// ```
 public struct Logger {
-    /// A private property to hold the boxed `LogHandler`.
-    private var _handler: Storage
-
-    /// An identifier of the creator of this `Logger`.
-    public let label: String
+    /// Storage class to hold the label and log handler/
+    @usableFromInline
+    internal final class Storage: @unchecked /* and not actually */ Sendable /* but safe if only used with CoW */ {
+        @usableFromInline
+        var label: String
+        @usableFromInline
+        var handler: LogHandler
+        
+        init(label: String, handler: LogHandler) {
+            self.label = label
+            self.handler = handler
+        }
+    }
     
+    @usableFromInline
+    internal var _storage: Storage
+
+    internal var label: String {
+        get {
+            return _storage.label
+        }
+        set {
+            if !isKnownUniquelyReferenced(&_storage) {
+                _storage = Storage(label: newValue, handler: _storage.handler)
+            } else {
+                _storage.label = newValue
+            }
+        }
+    }
+
     /// A computed property to access the `LogHandler`.
     public var handler: LogHandler {
         get {
-            return _handler.handler
+            return _storage.handler
         }
         set {
-            if !isKnownUniquelyReferenced(&self._handler) {
-                self._handler = Storage(label: self.label, handler: newValue)
+            if !isKnownUniquelyReferenced(&_storage) {
+                _storage = Storage(label: label, handler: newValue)
             } else {
-                self._handler.handler = newValue
+                _storage.handler = newValue
             }
         }
     }
@@ -65,18 +89,7 @@ public struct Logger {
     }
 
     internal init(label: String, _ handler: LogHandler) {
-        self.label = label
-        self._handler = Storage(label: label, handler: handler)
-    }
-
-    public class Storage: @unchecked Sendable {
-        var label: String
-        var handler: LogHandler
-        
-        init(label: String, handler: LogHandler) {
-            self.label = label
-            self.handler = handler
-        }
+        self._storage = Storage(label: label, handler: handler)
     }
 }
 

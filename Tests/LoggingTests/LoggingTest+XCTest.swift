@@ -63,7 +63,7 @@ extension LoggingTest {
             ("testStdioOutputStreamFlush", testStdioOutputStreamFlush),
             ("testOverloadingError", testOverloadingError),
             ("testCompileInitializeStandardStreamLogHandlersWithMetadataProviders", testCompileInitializeStandardStreamLogHandlersWithMetadataProviders),
-            ("testLoggerSize", testLoggerSize),
+            ("testLoggerIsJustHoldingASinglePointer", testLoggerIsJustHoldingASinglePointer),
         ]
     }
 }
