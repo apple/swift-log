@@ -67,6 +67,7 @@ public struct Logger {
                 self.handler = handler
             }
         }
+    #endif
     
     @usableFromInline
     internal var _storage: Storage
