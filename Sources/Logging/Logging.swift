@@ -56,7 +56,7 @@ public struct Logger {
         }
     #else
         @usableFromInline
-        internal final class Storage: {
+        internal final class Storage {
             @usableFromInline
             var label: String
             @usableFromInline
