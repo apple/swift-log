@@ -38,24 +38,39 @@ import WASILibc
 /// ```swift
 /// logger.info("Hello World!")
 /// ```
+
 public struct Logger {
-    /// Storage class to hold the label and log handler/
-    @usableFromInline
-    internal final class Storage: @unchecked /* and not actually */ Sendable /* but safe if only used with CoW */ {
+    #if compiler(>=5.7)
+        /// Storage class to hold the label and log handler/
         @usableFromInline
-        var label: String
-        @usableFromInline
-        var handler: LogHandler
-        
-        init(label: String, handler: LogHandler) {
-            self.label = label
-            self.handler = handler
+        internal final class Storage: @unchecked /* and not actually */ Sendable /* but safe if only used with CoW */ {
+            @usableFromInline
+            var label: String
+            @usableFromInline
+            var handler: LogHandler
+            
+            init(label: String, handler: LogHandler) {
+                self.label = label
+                self.handler = handler
+            }
         }
-    }
+    #else
+        @usableFromInline
+        internal final class Storage: {
+            @usableFromInline
+            var label: String
+            @usableFromInline
+            var handler: LogHandler
+            
+            init(label: String, handler: LogHandler) {
+                self.label = label
+                self.handler = handler
+            }
+        }
     
     @usableFromInline
     internal var _storage: Storage
-
+    @usableFromInline
     internal var label: String {
         get {
             return _storage.label
@@ -70,6 +85,7 @@ public struct Logger {
     }
 
     /// A computed property to access the `LogHandler`.
+    @inlinable
     public var handler: LogHandler {
         get {
             return _storage.handler
