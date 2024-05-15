@@ -40,7 +40,7 @@ import WASILibc
 /// ```
 
 public struct Logger {
-    /// Storage class to hold the label and log handler/
+    /// Storage class to hold the label and log handler
     @usableFromInline
     internal final class Storage {
         @usableFromInline
