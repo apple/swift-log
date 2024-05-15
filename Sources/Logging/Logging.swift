@@ -40,34 +40,19 @@ import WASILibc
 /// ```
 
 public struct Logger {
-    #if compiler(>=5.7)
-        /// Storage class to hold the label and log handler/
+    /// Storage class to hold the label and log handler/
+    @usableFromInline
+    internal final class Storage {
         @usableFromInline
-        internal final class Storage: @unchecked /* and not actually */ Sendable /* but safe if only used with CoW */ {
-            @usableFromInline
-            var label: String
-            @usableFromInline
-            var handler: LogHandler
-            
-            init(label: String, handler: LogHandler) {
-                self.label = label
-                self.handler = handler
-            }
-        }
-    #else
+        var label: String
         @usableFromInline
-        internal final class Storage {
-            @usableFromInline
-            var label: String
-            @usableFromInline
-            var handler: LogHandler
-            
-            init(label: String, handler: LogHandler) {
-                self.label = label
-                self.handler = handler
-            }
+        var handler: LogHandler
+        @usableFromInline
+        init(label: String, handler: LogHandler) {
+            self.label = label
+            self.handler = handler
         }
-    #endif
+    }
     
     @usableFromInline
     internal var _storage: Storage
@@ -104,7 +89,7 @@ public struct Logger {
     public var metadataProvider: Logger.MetadataProvider? {
         return handler.metadataProvider
     }
-
+    @usableFromInline
     internal init(label: String, _ handler: LogHandler) {
         self._storage = Storage(label: label, handler: handler)
     }
@@ -1594,6 +1579,8 @@ private final class WarnOnceBox {
 
 #if compiler(>=5.7.0)
 extension Logger.MetadataValue: Sendable {} // on 5.7 `stringConvertible`'s value marked as Sendable; but if a value not conforming to Sendable is passed there, a warning is emitted. We are okay with warnings, but on 5.6 for the same situation an error is emitted (!)
+extension Logger.Storage: @unchecked Sendable {}
+
 #elseif compiler(>=5.6)
 extension Logger.MetadataValue: @unchecked Sendable {} // sadly, On 5.6 a missing Sendable conformance causes an 'error' (specifically this is about `stringConvertible`'s value)
 #endif
