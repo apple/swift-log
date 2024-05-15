@@ -620,7 +620,7 @@ extension Logger {
 
         /// A metadata value which is some `CustomStringConvertible`.
         case stringConvertible(CustomStringConvertible & Sendable)
-        
+
         /// A metadata value which is a dictionary from `String` to `Logger.MetadataValue`.
         ///
         /// Because `MetadataValue` implements `ExpressibleByDictionaryLiteral`, you don't need to type
