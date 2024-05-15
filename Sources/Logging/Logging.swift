@@ -86,6 +86,7 @@ public struct Logger {
     }
 
     /// The metadata provider this logger was created with.
+    @inlinable
     public var metadataProvider: Logger.MetadataProvider? {
         return handler.metadataProvider
     }
