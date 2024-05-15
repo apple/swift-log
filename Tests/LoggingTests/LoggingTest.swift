@@ -534,7 +534,6 @@ class LoggingTest: XCTestCase {
         let error = logger.error(_:metadata:file:function:line:)
         let critical = logger.critical(_:metadata:file:function:line:)
 
-        #if compiler(>=5.3)
         trace("yes: trace", [:], #fileID, #function, #line)
         debug("yes: debug", [:], #fileID, #function, #line)
         info("yes: info", [:], #fileID, #function, #line)
@@ -542,15 +541,6 @@ class LoggingTest: XCTestCase {
         warning("yes: warning", [:], #fileID, #function, #line)
         error("yes: error", [:], #fileID, #function, #line)
         critical("yes: critical", [:], #fileID, #function, #line)
-        #else
-        trace("yes: trace", [:], #file, #function, #line)
-        debug("yes: debug", [:], #file, #function, #line)
-        info("yes: info", [:], #file, #function, #line)
-        notice("yes: notice", [:], #file, #function, #line)
-        warning("yes: warning", [:], #file, #function, #line)
-        error("yes: error", [:], #file, #function, #line)
-        critical("yes: critical", [:], #file, #function, #line)
-        #endif
 
         testLogging.history.assertExist(level: .trace, message: "yes: trace")
         testLogging.history.assertExist(level: .debug, message: "yes: debug")
@@ -570,11 +560,7 @@ class LoggingTest: XCTestCase {
 
         emitLogMessage("hello", to: logger)
 
-        #if compiler(>=5.3)
         let moduleName = "LoggingTests" // the actual name
-        #else
-        let moduleName = "SubDirectoryOfLoggingTests" // the last path component of `#file` showing the failure mode
-        #endif
 
         testLogging.history.assertExist(level: .trace, message: "hello", source: moduleName)
         testLogging.history.assertExist(level: .debug, message: "hello", source: moduleName)
@@ -1056,20 +1042,11 @@ class LoggingTest: XCTestCase {
 }
 
 extension Logger {
-    #if compiler(>=5.3)
     public func error(error: Error,
                       metadata: @autoclosure () -> Logger.Metadata? = nil,
                       file: String = #fileID, function: String = #function, line: UInt = #line) {
         self.error("\(error.localizedDescription)", metadata: metadata(), file: file, function: function, line: line)
     }
-
-    #else
-    public func error(error: Error,
-                      metadata: @autoclosure () -> Logger.Metadata? = nil,
-                      file: String = #file, function: String = #function, line: UInt = #line) {
-        self.error("\(error.localizedDescription)", metadata: metadata(), file: file, function: function, line: line)
-    }
-    #endif
 }
 
 extension Logger.MetadataProvider {
@@ -1084,7 +1061,6 @@ extension Logger.MetadataProvider {
 
 // Sendable
 
-#if compiler(>=5.6)
 // used to test logging metadata which requires Sendable conformance
 // @unchecked Sendable since manages it own state
 extension LoggingTest.LazyMetadataBox: @unchecked Sendable {}
@@ -1092,4 +1068,3 @@ extension LoggingTest.LazyMetadataBox: @unchecked Sendable {}
 // used to test logging stream which requires Sendable conformance
 // @unchecked Sendable since manages it own state
 extension LoggingTest.InterceptStream: @unchecked Sendable {}
-#endif

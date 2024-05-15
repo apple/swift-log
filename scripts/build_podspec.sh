@@ -74,7 +74,7 @@ Pod::Spec.new do |s|
   s.documentation_url = 'https://apple.github.io/swift-log'
   s.module_name = 'Logging'
 
-  s.swift_version = '5.0'
+  s.swift_version = '5.8'
   s.cocoapods_version = '>=1.6.0'
   s.ios.deployment_target = '8.0'
   s.osx.deployment_target = '10.9'

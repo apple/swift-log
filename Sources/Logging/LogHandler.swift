@@ -212,8 +212,4 @@ extension LogHandler {
 
 // MARK: - Sendable support helpers
 
-#if compiler(>=5.6)
 @preconcurrency public protocol _SwiftLogSendableLogHandler: Sendable {}
-#else
-public protocol _SwiftLogSendableLogHandler {}
-#endif
