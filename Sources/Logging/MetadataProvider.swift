@@ -26,11 +26,7 @@ import WASILibc
 #error("Unsupported runtime")
 #endif
 
-#if compiler(>=5.6)
 @preconcurrency protocol _SwiftLogSendable: Sendable {}
-#else
-protocol _SwiftLogSendable {}
-#endif
 
 extension Logger {
     /// A `MetadataProvider` is used to automatically inject runtime-generated metadata
@@ -61,27 +57,15 @@ extension Logger {
     /// if necessary.
     public struct MetadataProvider: _SwiftLogSendable {
         /// Provide ``Logger.Metadata`` from current context.
-        #if swift(>=5.5) && canImport(_Concurrency) // we could instead typealias the function type, but it was requested that we avoid this for better developer experience
         @usableFromInline
         internal let _provideMetadata: @Sendable() -> Metadata
-        #else
-        @usableFromInline
-        internal let _provideMetadata: () -> Metadata
-        #endif
 
         /// Create a new `MetadataProvider`.
         ///
         /// - Parameter provideMetadata: A closure extracting metadata from the current execution context.
-        #if swift(>=5.5) && canImport(_Concurrency)
         public init(_ provideMetadata: @escaping @Sendable() -> Metadata) {
             self._provideMetadata = provideMetadata
         }
-
-        #else
-        public init(_ provideMetadata: @escaping () -> Metadata) {
-            self._provideMetadata = provideMetadata
-        }
-        #endif
 
         /// Invoke the metadata provider and return the generated contextual ``Logger/Metadata``.
         public func get() -> Metadata {

@@ -16,7 +16,6 @@ import Dispatch
 import XCTest
 
 class SendableTest: XCTestCase {
-    #if compiler(>=5.6)
     func testSendableLogger() async {
         let testLogging = TestLogging()
         LoggingSystem.bootstrapInternal(testLogging.make)
@@ -39,5 +38,4 @@ class SendableTest: XCTestCase {
         testLogging.history.assertExist(level: .critical, message: "critical 2", metadata: [:])
         testLogging.history.assertExist(level: .warning, message: "warning", metadata: metadata)
     }
-    #endif
 }
