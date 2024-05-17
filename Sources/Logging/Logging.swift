@@ -65,7 +65,7 @@ public struct Logger {
             if !isKnownUniquelyReferenced(&_storage) {
                 _storage = Storage(label: newValue, handler: _storage.handler)
             } else {
-                _storage.label = newValue
+                self._storage.label = newValue
             }
         }
     }
