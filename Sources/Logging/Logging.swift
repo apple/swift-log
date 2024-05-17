@@ -38,7 +38,6 @@ import WASILibc
 /// ```swift
 /// logger.info("Hello World!")
 /// ```
-
 public struct Logger {
     /// Storage class to hold the label and log handler
     @usableFromInline
