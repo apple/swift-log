@@ -210,7 +210,6 @@ internal struct LogEntry {
 }
 
 extension History {
-    #if compiler(>=5.3)
     func assertExist(level: Logger.Level,
                      message: String,
                      metadata: Logger.Metadata? = nil,
@@ -236,32 +235,6 @@ extension History {
         XCTAssertNil(entry, "entry was found: \(level), \(source), \(String(describing: metadata)), \(message)",
                      file: file, line: line)
     }
-
-    #else
-    func assertExist(level: Logger.Level,
-                     message: String,
-                     metadata: Logger.Metadata? = nil,
-                     source: String? = nil,
-                     file: StaticString = #file,
-                     line: UInt = #line) {
-        let source = source ?? Logger.currentModule(filePath: "\(file)")
-        let entry = self.find(level: level, message: message, metadata: metadata, source: source)
-        XCTAssertNotNil(entry, "entry not found: \(level), \(source), \(String(describing: metadata)), \(message)",
-                        file: file, line: line)
-    }
-
-    func assertNotExist(level: Logger.Level,
-                        message: String,
-                        metadata: Logger.Metadata? = nil,
-                        source: String? = nil,
-                        file: StaticString = #file,
-                        line: UInt = #line) {
-        let source = source ?? Logger.currentModule(filePath: "\(file)")
-        let entry = self.find(level: level, message: message, metadata: metadata, source: source)
-        XCTAssertNil(entry, "entry was found: \(level), \(source), \(String(describing: metadata)), \(message)",
-                     file: file, line: line)
-    }
-    #endif
 
     func find(level: Logger.Level, message: String, metadata: Logger.Metadata? = nil, source: String) -> LogEntry? {
         return self.entries.first { entry in
@@ -404,9 +377,7 @@ internal struct TestLibrary {
 
 // Sendable
 
-#if compiler(>=5.6)
 extension TestLogHandler: @unchecked Sendable {}
 extension Recorder: @unchecked Sendable {}
 extension Config: @unchecked Sendable {}
 extension MDC: @unchecked Sendable {}
-#endif
