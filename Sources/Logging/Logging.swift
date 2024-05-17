@@ -74,7 +74,7 @@ public struct Logger {
     @inlinable
     public var handler: LogHandler {
         get {
-            return _storage.handler
+            return self._storage.handler
         }
         set {
             if !isKnownUniquelyReferenced(&_storage) {
