@@ -47,6 +47,7 @@ public struct Logger {
         var label: String
         @usableFromInline
         var handler: LogHandler
+
         @usableFromInline
         init(label: String, handler: LogHandler) {
             self.label = label
