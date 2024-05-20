@@ -41,16 +41,22 @@ import WASILibc
 public struct Logger {
     /// Storage class to hold the label and log handler
     @usableFromInline
-    internal final class Storage {
+    internal final class Storage: @unchecked /* and not actually */ Sendable /* but safe if only used with CoW */ {
         @usableFromInline
         var label: String
+
         @usableFromInline
         var handler: LogHandler
 
-        @usableFromInline
+        @inlinable
         init(label: String, handler: LogHandler) {
             self.label = label
             self.handler = handler
+        }
+        
+        @inlinable
+        func copy() -> Storage {
+            return Storage(label: self.label, handler: self.handler)
         }
     }
     
@@ -59,14 +65,13 @@ public struct Logger {
     @usableFromInline
     internal var label: String {
         get {
-            return _storage.label
+            return self._storage.label
         }
         set {
-            if !isKnownUniquelyReferenced(&_storage) {
-                _storage = Storage(label: newValue, handler: _storage.handler)
-            } else {
-                self._storage.label = newValue
+            if !isKnownUniquelyReferenced(&self._storage) {
+                self._storage = self._storage.copy()
             }
+            self._storage.label = newValue // mutation is fine now because we just copied
         }
     }
 
@@ -77,10 +82,10 @@ public struct Logger {
             return self._storage.handler
         }
         set {
-            if !isKnownUniquelyReferenced(&_storage) {
-                _storage = Storage(label: label, handler: newValue)
+            if !isKnownUniquelyReferenced(&self._storage) {
+                self._storage = Storage(label: label, handler: newValue)
             } else {
-                _storage.handler = newValue
+                self._storage.handler = newValue
             }
         }
     }
@@ -1370,7 +1375,6 @@ private final class WarnOnceBox {
 // MARK: - Sendable support helpers
 
 extension Logger.MetadataValue: Sendable {}
-extension Logger.Storage: @unchecked Sendable {}
 extension Logger: Sendable {}
 extension Logger.Level: Sendable {}
 extension Logger.Message: Sendable {}
