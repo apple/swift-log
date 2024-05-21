@@ -1039,7 +1039,7 @@ class LoggingTest: XCTestCase {
         LoggingSystem.bootstrap(StreamLogHandler.standardOutput, metadataProvider: .exampleMetadataProvider)
         LoggingSystem.bootstrap(StreamLogHandler.standardError, metadataProvider: .exampleMetadataProvider)
     }
-    
+
     func testLoggerIsJustHoldingASinglePointer() {
         let expectedSize = MemoryLayout<UnsafeRawPointer>.size
         XCTAssertEqual(MemoryLayout<Logger>.size, expectedSize)

@@ -53,13 +53,13 @@ public struct Logger {
             self.label = label
             self.handler = handler
         }
-        
+
         @inlinable
         func copy() -> Storage {
             return Storage(label: self.label, handler: self.handler)
         }
     }
-    
+
     @usableFromInline
     internal var _storage: Storage
     public var label: String {
@@ -82,7 +82,7 @@ public struct Logger {
         }
         set {
             if !isKnownUniquelyReferenced(&self._storage) {
-                self._storage = Storage(label: label, handler: newValue)
+                self._storage = Storage(label: self.label, handler: newValue)
             } else {
                 self._storage.handler = newValue
             }
@@ -92,8 +92,9 @@ public struct Logger {
     /// The metadata provider this logger was created with.
     @inlinable
     public var metadataProvider: Logger.MetadataProvider? {
-        return handler.metadataProvider
+        return self.handler.metadataProvider
     }
+
     @usableFromInline
     internal init(label: String, _ handler: LogHandler) {
         self._storage = Storage(label: label, handler: handler)
