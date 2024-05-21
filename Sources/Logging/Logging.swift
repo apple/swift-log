@@ -62,8 +62,7 @@ public struct Logger {
     
     @usableFromInline
     internal var _storage: Storage
-    @usableFromInline
-    internal var label: String {
+    public var label: String {
         get {
             return self._storage.label
         }
