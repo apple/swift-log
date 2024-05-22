@@ -62,7 +62,7 @@ You can choose from one of the following backends to consume your logs. If you a
 
 | Repository | Handler Description|
 | ----------- | ----------- |
-| [ShipBook/swift-log-**shipbook**](https://github.com/ShipBook/swift-log-shipbook) | a logging backend that sends log entries to [Shipbook](https://www.shipbook.io) - Shipook gives you the power to remotely gather, search and analyze your user logs and exceptions in the cloud, on a per-user & session basis. |
+| [ShipBook/swift-log-**shipbook**](https://github.com/ShipBook/swift-log-shipbook) | a logging backend that sends log entries to [Shipbook](https://www.shipbook.io) - Shipbook gives you the power to remotely gather, search and analyze your user logs and exceptions in the cloud, on a per-user & session basis. |
 | [Kitura/HeliumLogger](https://github.com/Kitura/HeliumLogger)  |a logging backend widely used in the Kitura ecosystem |
 | [ianpartridge/swift-log-**syslog**](https://github.com/ianpartridge/swift-log-syslog) | a [syslog](https://en.wikipedia.org/wiki/Syslog) backend|
 | [Adorkable/swift-log-**format-and-pipe**](https://github.com/Adorkable/swift-log-format-and-pipe) | a backend that allows customization of the output format and the resulting destination |
