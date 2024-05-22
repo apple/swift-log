@@ -63,15 +63,7 @@ public struct Logger {
     @usableFromInline
     internal var _storage: Storage
     public var label: String {
-        get {
-            return self._storage.label
-        }
-        set {
-            if !isKnownUniquelyReferenced(&self._storage) {
-                self._storage = self._storage.copy()
-            }
-            self._storage.label = newValue // mutation is fine now because we just copied
-        }
+        return self._storage.label
     }
 
     /// A computed property to access the `LogHandler`.
