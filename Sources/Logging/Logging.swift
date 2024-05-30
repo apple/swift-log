@@ -74,10 +74,9 @@ public struct Logger {
         }
         set {
             if !isKnownUniquelyReferenced(&self._storage) {
-                self._storage = Storage(label: self.label, handler: newValue)
-            } else {
-                self._storage.handler = newValue
+                self._storage = self._storage.copy()
             }
+            self._storage.handler = newValue
         }
     }
 
