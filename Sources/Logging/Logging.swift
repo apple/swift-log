@@ -39,20 +39,56 @@ import WASILibc
 /// logger.info("Hello World!")
 /// ```
 public struct Logger {
+    /// Storage class to hold the label and log handler
     @usableFromInline
-    var handler: LogHandler
+    internal final class Storage: @unchecked /* and not actually */ Sendable /* but safe if only used with CoW */ {
+        @usableFromInline
+        var label: String
 
-    /// An identifier of the creator of this `Logger`.
-    public let label: String
+        @usableFromInline
+        var handler: LogHandler
+
+        @inlinable
+        init(label: String, handler: LogHandler) {
+            self.label = label
+            self.handler = handler
+        }
+
+        @inlinable
+        func copy() -> Storage {
+            return Storage(label: self.label, handler: self.handler)
+        }
+    }
+
+    @usableFromInline
+    internal var _storage: Storage
+    public var label: String {
+        return self._storage.label
+    }
+
+    /// A computed property to access the `LogHandler`.
+    @inlinable
+    public var handler: LogHandler {
+        get {
+            return self._storage.handler
+        }
+        set {
+            if !isKnownUniquelyReferenced(&self._storage) {
+                self._storage = self._storage.copy()
+            }
+            self._storage.handler = newValue
+        }
+    }
 
     /// The metadata provider this logger was created with.
+    @inlinable
     public var metadataProvider: Logger.MetadataProvider? {
         return self.handler.metadataProvider
     }
 
+    @usableFromInline
     internal init(label: String, _ handler: LogHandler) {
-        self.label = label
-        self.handler = handler
+        self._storage = Storage(label: label, handler: handler)
     }
 }
 

@@ -1039,6 +1039,20 @@ class LoggingTest: XCTestCase {
         LoggingSystem.bootstrap(StreamLogHandler.standardOutput, metadataProvider: .exampleMetadataProvider)
         LoggingSystem.bootstrap(StreamLogHandler.standardError, metadataProvider: .exampleMetadataProvider)
     }
+
+    func testLoggerIsJustHoldingASinglePointer() {
+        let expectedSize = MemoryLayout<UnsafeRawPointer>.size
+        XCTAssertEqual(MemoryLayout<Logger>.size, expectedSize)
+    }
+
+    func testLoggerCopyOnWrite() {
+        var logger1 = Logger(label: "foo")
+        logger1.logLevel = .error
+        var logger2 = logger1
+        logger2.logLevel = .trace
+        XCTAssertEqual(.error, logger1.logLevel)
+        XCTAssertEqual(.trace, logger2.logLevel)
+    }
 }
 
 extension Logger {
