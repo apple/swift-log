@@ -15,6 +15,10 @@
 
 import PackageDescription
 
+let swiftSettings: [SwiftSetting] = [
+    .enableUpcomingFeature("ExistentialAny"),
+]
+
 let package = Package(
     name: "swift-log",
     products: [
@@ -26,11 +30,13 @@ let package = Package(
     targets: [
         .target(
             name: "Logging",
-            dependencies: []
+            dependencies: [],
+            swiftSettings: swiftSettings
         ),
         .testTarget(
             name: "LoggingTests",
-            dependencies: ["Logging"]
+            dependencies: ["Logging"],
+            swiftSettings: swiftSettings
         ),
     ]
 )

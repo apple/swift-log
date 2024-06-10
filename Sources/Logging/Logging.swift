@@ -46,10 +46,10 @@ public struct Logger {
         var label: String
 
         @usableFromInline
-        var handler: LogHandler
+        var handler: any LogHandler
 
         @inlinable
-        init(label: String, handler: LogHandler) {
+        init(label: String, handler: any LogHandler) {
             self.label = label
             self.handler = handler
         }
@@ -68,7 +68,7 @@ public struct Logger {
 
     /// A computed property to access the `LogHandler`.
     @inlinable
-    public var handler: LogHandler {
+    public var handler: any LogHandler {
         get {
             return self._storage.handler
         }
@@ -87,7 +87,7 @@ public struct Logger {
     }
 
     @usableFromInline
-    internal init(label: String, _ handler: LogHandler) {
+    internal init(label: String, _ handler: any LogHandler) {
         self._storage = Storage(label: label, handler: handler)
     }
 }
@@ -515,7 +515,7 @@ public enum LoggingSystem {
     ///
     /// - parameters:
     ///     - factory: A closure that given a `Logger` identifier, produces an instance of the `LogHandler`.
-    public static func bootstrap(_ factory: @escaping (String) -> LogHandler) {
+    public static func bootstrap(_ factory: @escaping (String) -> any LogHandler) {
         self._factory.replaceFactory({ label, _ in
             factory(label)
         }, validate: true)
@@ -531,14 +531,14 @@ public enum LoggingSystem {
     /// - parameters:
     ///     - metadataProvider: The `MetadataProvider` used to inject runtime-generated metadata from the execution context.
     ///     - factory: A closure that given a `Logger` identifier, produces an instance of the `LogHandler`.
-    public static func bootstrap(_ factory: @escaping (String, Logger.MetadataProvider?) -> LogHandler,
+    public static func bootstrap(_ factory: @escaping (String, Logger.MetadataProvider?) -> any LogHandler,
                                  metadataProvider: Logger.MetadataProvider?) {
         self._metadataProviderFactory.replaceMetadataProvider(metadataProvider, validate: true)
         self._factory.replaceFactory(factory, validate: true)
     }
 
     // for our testing we want to allow multiple bootstrapping
-    internal static func bootstrapInternal(_ factory: @escaping (String) -> LogHandler) {
+    internal static func bootstrapInternal(_ factory: @escaping (String) -> any LogHandler) {
         self._metadataProviderFactory.replaceMetadataProvider(nil, validate: false)
         self._factory.replaceFactory({ label, _ in
             factory(label)
@@ -546,13 +546,13 @@ public enum LoggingSystem {
     }
 
     // for our testing we want to allow multiple bootstrapping
-    internal static func bootstrapInternal(_ factory: @escaping (String, Logger.MetadataProvider?) -> LogHandler,
+    internal static func bootstrapInternal(_ factory: @escaping (String, Logger.MetadataProvider?) -> any LogHandler,
                                            metadataProvider: Logger.MetadataProvider?) {
         self._metadataProviderFactory.replaceMetadataProvider(metadataProvider, validate: false)
         self._factory.replaceFactory(factory, validate: false)
     }
 
-    fileprivate static var factory: (String, Logger.MetadataProvider?) -> LogHandler {
+    fileprivate static var factory: (String, Logger.MetadataProvider?) -> any LogHandler {
         return { label, metadataProvider in
             self._factory.underlying(label, metadataProvider)
         }
@@ -582,14 +582,14 @@ public enum LoggingSystem {
 
     private final class FactoryBox {
         private let lock = ReadWriteLock()
-        fileprivate var _underlying: (_ label: String, _ provider: Logger.MetadataProvider?) -> LogHandler
+        fileprivate var _underlying: (_ label: String, _ provider: Logger.MetadataProvider?) -> any LogHandler
         private var initialized = false
 
-        init(_ underlying: @escaping (String, Logger.MetadataProvider?) -> LogHandler) {
+        init(_ underlying: @escaping (String, Logger.MetadataProvider?) -> any LogHandler) {
             self._underlying = underlying
         }
 
-        func replaceFactory(_ factory: @escaping (String, Logger.MetadataProvider?) -> LogHandler, validate: Bool) {
+        func replaceFactory(_ factory: @escaping (String, Logger.MetadataProvider?) -> any LogHandler, validate: Bool) {
             self.lock.withWriterLock {
                 precondition(!validate || !self.initialized, "logging system can only be initialized once per process.")
                 self._underlying = factory
@@ -597,7 +597,7 @@ public enum LoggingSystem {
             }
         }
 
-        var underlying: (String, Logger.MetadataProvider?) -> LogHandler {
+        var underlying: (String, Logger.MetadataProvider?) -> any LogHandler {
             return self.lock.withReaderLock {
                 return self._underlying
             }
@@ -655,7 +655,7 @@ extension Logger {
         case string(String)
 
         /// A metadata value which is some `CustomStringConvertible`.
-        case stringConvertible(CustomStringConvertible & Sendable)
+        case stringConvertible(any CustomStringConvertible & Sendable)
 
         /// A metadata value which is a dictionary from `String` to `Logger.MetadataValue`.
         ///
@@ -728,7 +728,7 @@ extension Logger {
     /// - parameters:
     ///     - label: An identifier for the creator of a `Logger`.
     ///     - factory: A closure creating non-standard `LogHandler`s.
-    public init(label: String, factory: (String) -> LogHandler) {
+    public init(label: String, factory: (String) -> any LogHandler) {
         self = Logger(label: label, factory(label))
     }
 
@@ -743,7 +743,7 @@ extension Logger {
     /// - parameters:
     ///     - label: An identifier for the creator of a `Logger`.
     ///     - factory: A closure creating non-standard `LogHandler`s.
-    public init(label: String, factory: (String, Logger.MetadataProvider?) -> LogHandler) {
+    public init(label: String, factory: (String, Logger.MetadataProvider?) -> any LogHandler) {
         self = Logger(label: label, factory(label, LoggingSystem.metadataProvider))
     }
 
@@ -889,7 +889,7 @@ extension Logger {
 /// "more important" than the second handler. The same rule applies when querying for the `metadata` property of the
 /// multiplex log handler - it constructs `Metadata` uniquing values.
 public struct MultiplexLogHandler: LogHandler {
-    private var handlers: [LogHandler]
+    private var handlers: [any LogHandler]
     private var effectiveLogLevel: Logger.Level
     /// This metadata provider runs after all metadata providers of the multiplexed handlers.
     private var _metadataProvider: Logger.MetadataProvider?
@@ -899,13 +899,13 @@ public struct MultiplexLogHandler: LogHandler {
     /// - parameters:
     ///    - handlers: An array of `LogHandler`s, each of which will receive the log messages sent to this `Logger`.
     ///                The array must not be empty.
-    public init(_ handlers: [LogHandler]) {
+    public init(_ handlers: [any LogHandler]) {
         assert(!handlers.isEmpty, "MultiplexLogHandler.handlers MUST NOT be empty")
         self.handlers = handlers
         self.effectiveLogLevel = handlers.map { $0.logLevel }.min() ?? .trace
     }
 
-    public init(_ handlers: [LogHandler], metadataProvider: Logger.MetadataProvider?) {
+    public init(_ handlers: [any LogHandler], metadataProvider: Logger.MetadataProvider?) {
         assert(!handlers.isEmpty, "MultiplexLogHandler.handlers MUST NOT be empty")
         self.handlers = handlers
         self.effectiveLogLevel = handlers.map { $0.logLevel }.min() ?? .trace
@@ -1009,7 +1009,7 @@ public struct MultiplexLogHandler: LogHandler {
         }
     }
 
-    private mutating func mutatingForEachHandler(_ mutator: (inout LogHandler) -> Void) {
+    private mutating func mutatingForEachHandler(_ mutator: (inout any LogHandler) -> Void) {
         for index in self.handlers.indices {
             mutator(&self.handlers[index])
         }
@@ -1126,7 +1126,7 @@ public struct StreamLogHandler: LogHandler {
         return StreamLogHandler(label: label, stream: StdioOutputStream.stderr, metadataProvider: metadataProvider)
     }
 
-    private let stream: _SendableTextOutputStream
+    private let stream: any _SendableTextOutputStream
     private let label: String
 
     public var logLevel: Logger.Level = .info
@@ -1150,12 +1150,12 @@ public struct StreamLogHandler: LogHandler {
     }
 
     // internal for testing only
-    internal init(label: String, stream: _SendableTextOutputStream) {
+    internal init(label: String, stream: any _SendableTextOutputStream) {
         self.init(label: label, stream: stream, metadataProvider: LoggingSystem.metadataProvider)
     }
 
     // internal for testing only
-    internal init(label: String, stream: _SendableTextOutputStream, metadataProvider: Logger.MetadataProvider?) {
+    internal init(label: String, stream: any _SendableTextOutputStream, metadataProvider: Logger.MetadataProvider?) {
         self.label = label
         self.stream = stream
         self.metadataProvider = metadataProvider

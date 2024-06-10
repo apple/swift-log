@@ -1056,7 +1056,7 @@ class LoggingTest: XCTestCase {
 }
 
 extension Logger {
-    public func error(error: Error,
+    public func error(error: any Error,
                       metadata: @autoclosure () -> Logger.Metadata? = nil,
                       file: String = #fileID, function: String = #function, line: UInt = #line) {
         self.error("\(error.localizedDescription)", metadata: metadata(), file: file, function: function, line: line)

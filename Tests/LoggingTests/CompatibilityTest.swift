@@ -45,7 +45,7 @@ private struct OldSchoolTestLogging {
     private let _config = Config() // shared among loggers
     private let recorder = Recorder() // shared among loggers
 
-    func make(label: String) -> LogHandler {
+    func make(label: String) -> any LogHandler {
         return OldSchoolLogHandler(label: label,
                                    config: self.config,
                                    recorder: self.recorder,
@@ -54,7 +54,7 @@ private struct OldSchoolTestLogging {
     }
 
     var config: Config { return self._config }
-    var history: History { return self.recorder }
+    var history: some History { return self.recorder }
 }
 
 private struct OldSchoolLogHandler: LogHandler {
@@ -62,7 +62,7 @@ private struct OldSchoolLogHandler: LogHandler {
     let config: Config
     let recorder: Recorder
 
-    func make(label: String) -> LogHandler {
+    func make(label: String) -> some LogHandler {
         return TestLogHandler(label: label, config: self.config, recorder: self.recorder)
     }
 

@@ -22,7 +22,7 @@ internal struct TestLogging {
     private let _config = Config() // shared among loggers
     private let recorder = Recorder() // shared among loggers
 
-    func make(label: String) -> LogHandler {
+    func make(label: String) -> some LogHandler {
         return TestLogHandler(
             label: label,
             config: self.config,
@@ -31,7 +31,7 @@ internal struct TestLogging {
         )
     }
 
-    func makeWithMetadataProvider(label: String, metadataProvider: Logger.MetadataProvider?) -> LogHandler {
+    func makeWithMetadataProvider(label: String, metadataProvider: Logger.MetadataProvider?) -> (some LogHandler) {
         return TestLogHandler(
             label: label,
             config: self.config,
@@ -41,7 +41,7 @@ internal struct TestLogging {
     }
 
     var config: Config { return self._config }
-    var history: History { return self.recorder }
+    var history: some History { return self.recorder }
 }
 
 internal struct TestLogHandler: LogHandler {
