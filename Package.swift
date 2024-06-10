@@ -17,6 +17,7 @@ import PackageDescription
 
 let swiftSettings: [SwiftSetting] = [
     .enableUpcomingFeature("ExistentialAny"),
+    .enableExperimentalFeature("StrictConcurrency=complete"),
 ]
 
 let package = Package(

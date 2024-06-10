@@ -22,6 +22,20 @@ import WinSDK
 import Glibc
 #endif
 
+fileprivate extension LogHandler {
+    func with(logLevel: Logger.Level) -> any LogHandler {
+        var result = self
+        result.logLevel = logLevel
+        return result
+    }
+
+    func withMetadata(_ key: String, _ value: Logger.MetadataValue) -> any LogHandler {
+        var result = self
+        result.metadata[key] = value
+        return result
+    }
+}
+
 class LoggingTest: XCTestCase {
     func testAutoclosure() throws {
         // bootstrap with our test logging impl
@@ -80,11 +94,8 @@ class LoggingTest: XCTestCase {
         let logging1 = TestLogging()
         let logging2 = TestLogging()
 
-        var logger1 = logging1.make(label: "1")
-        logger1.logLevel = .info
-
-        var logger2 = logging2.make(label: "2")
-        logger2.logLevel = .debug
+        let logger1 = logging1.make(label: "1").with(logLevel: .info)
+        let logger2 = logging2.make(label: "2").with(logLevel: .debug)
 
         LoggingSystem.bootstrapInternal { _ in
             MultiplexLogHandler([logger1, logger2])
@@ -111,11 +122,8 @@ class LoggingTest: XCTestCase {
         let logging1 = TestLogging()
         let logging2 = TestLogging()
 
-        var logger1 = logging1.make(label: "1")
-        logger1.logLevel = .info
-
-        var logger2 = logging2.make(label: "2")
-        logger2.logLevel = .info
+        let logger1 = logging1.make(label: "1").with(logLevel: .info)
+        let logger2 = logging2.make(label: "2").with(logLevel: .info)
 
         LoggingSystem.bootstrapInternal { _ in
             MultiplexLogHandler([logger1, logger2])
@@ -147,12 +155,12 @@ class LoggingTest: XCTestCase {
         let logging1 = TestLogging()
         let logging2 = TestLogging()
 
-        var logger1 = logging1.make(label: "1")
-        logger1.metadata["one"] = "111"
-        logger1.metadata["in"] = "in-1"
-        var logger2 = logging2.make(label: "2")
-        logger2.metadata["two"] = "222"
-        logger2.metadata["in"] = "in-2"
+        let logger1 = logging1.make(label: "1")
+            .withMetadata("one", "111")
+            .withMetadata("in", "in-1")
+        let logger2 = logging2.make(label: "2")
+            .withMetadata("two", "222")
+            .withMetadata("in", "in-2")
 
         LoggingSystem.bootstrapInternal { _ in
             MultiplexLogHandler([logger1, logger2])
@@ -204,12 +212,12 @@ class LoggingTest: XCTestCase {
         let logging1 = TestLogging()
         let logging2 = TestLogging()
 
-        var logger1 = logging1.make(label: "1")
-        logger1.metadata["one"] = "111"
-        logger1.metadata["in"] = "in-1"
-        var logger2 = logging2.make(label: "2")
-        logger2.metadata["two"] = "222"
-        logger2.metadata["in"] = "in-2"
+        let logger1 = logging1.make(label: "1")
+            .withMetadata("one", "111")
+            .withMetadata("in", "in-1")
+        let logger2 = logging2.make(label: "2")
+            .withMetadata("two", "222")
+            .withMetadata("in", "in-2")
 
         LoggingSystem.bootstrapInternal { _ in
             MultiplexLogHandler([logger1, logger2])
@@ -228,20 +236,26 @@ class LoggingTest: XCTestCase {
         let logging1 = TestLogging()
         let logging2 = TestLogging()
 
-        var handler1 = logging1.make(label: "1")
-        handler1.metadata["one"] = "111"
-        handler1.metadata["in"] = "in-1"
-        handler1.metadataProvider = .constant([
-            "provider-1": "provided-111",
-            "provider-overlap": "provided-111",
-        ])
-        var handler2 = logging2.make(label: "2")
-        handler2.metadata["two"] = "222"
-        handler2.metadata["in"] = "in-2"
-        handler2.metadataProvider = .constant([
-            "provider-2": "provided-222",
-            "provider-overlap": "provided-222",
-        ])
+        let handler1 = {
+            var handler1 = logging1.make(label: "1")
+            handler1.metadata["one"] = "111"
+            handler1.metadata["in"] = "in-1"
+            handler1.metadataProvider = .constant([
+                "provider-1": "provided-111",
+                "provider-overlap": "provided-111",
+            ])
+            return handler1
+        }()
+        let handler2 = {
+            var handler2 = logging2.make(label: "2")
+            handler2.metadata["two"] = "222"
+            handler2.metadata["in"] = "in-2"
+            handler2.metadataProvider = .constant([
+                "provider-2": "provided-222",
+                "provider-overlap": "provided-222",
+            ])
+            return handler2
+        }()
 
         LoggingSystem.bootstrapInternal { _ in
             MultiplexLogHandler([handler1, handler2])
@@ -268,18 +282,24 @@ class LoggingTest: XCTestCase {
         let logging1 = TestLogging()
         let logging2 = TestLogging()
 
-        var handler1 = logging1.make(label: "1")
-        handler1.metadataProvider = .constant([
-            "provider-1": "provided-111",
-            "provider-overlap": "provided-111",
-        ])
-        var handler2 = logging2.make(label: "2")
-        handler2.metadata["two"] = "222"
-        handler2.metadata["in"] = "in-2"
-        handler2.metadataProvider = .constant([
-            "provider-2": "provided-222",
-            "provider-overlap": "provided-222",
-        ])
+        let handler1 = {
+            var handler1 = logging1.make(label: "1")
+            handler1.metadataProvider = .constant([
+                "provider-1": "provided-111",
+                "provider-overlap": "provided-111",
+            ])
+            return handler1
+        }()
+        let handler2 = {
+            var handler2 = logging2.make(label: "2")
+            handler2.metadata["two"] = "222"
+            handler2.metadata["in"] = "in-2"
+            handler2.metadataProvider = .constant([
+                "provider-2": "provided-222",
+                "provider-overlap": "provided-222",
+            ])
+            return handler2
+        }()
 
         LoggingSystem.bootstrapInternal({ _, metadataProvider in
             MultiplexLogHandler(
@@ -686,11 +706,37 @@ class LoggingTest: XCTestCase {
         logger1.error("hey")
     }
 
+    /// Protects an object such that it can only be accessed while holding a lock.
+    private final class LockedValueBox<Value: Sendable>: @unchecked Sendable {
+        private let lock = Lock()
+        private var storage: Value
+
+        init(initialValue:  Value) {
+            self.storage = initialValue
+        }
+
+        func withLock<Result>(_ operation: (Value) -> Result) -> Result {
+            self.lock.withLock {
+                operation(self.storage)
+            }
+        }
+
+        func withLockMutating(_ operation: (inout Value) -> Void) -> Void {
+            self.lock.withLockVoid {
+                operation(&self.storage)
+            }
+        }
+
+        var underlying: Value {
+            get { self.withLock { return $0 } }
+            set { self.withLockMutating { $0 = newValue }}
+        }
+    }
+
     func testLoggerWithGlobalOverride() {
         struct LogHandlerWithGlobalLogLevelOverride: LogHandler {
             // the static properties hold the globally overridden log level (if overridden)
-            private static let overrideLock = Lock()
-            private static var overrideLogLevel: Logger.Level?
+            private static let overrideLogLevel = LockedValueBox<Logger.Level?>(initialValue: nil)
 
             private let recorder: Recorder
             // this holds the log level if not overridden
@@ -706,9 +752,7 @@ class LoggingTest: XCTestCase {
             var logLevel: Logger.Level {
                 // when we get asked for the log level, we check if it was globally overridden or not
                 get {
-                    return LogHandlerWithGlobalLogLevelOverride.overrideLock.withLock {
-                        LogHandlerWithGlobalLogLevelOverride.overrideLogLevel
-                    } ?? self._logLevel
+                    return LogHandlerWithGlobalLogLevelOverride.overrideLogLevel.underlying ?? self._logLevel
                 }
                 // we set the log level whenever we're asked (note: this might not have an effect if globally
                 // overridden)
@@ -733,9 +777,7 @@ class LoggingTest: XCTestCase {
 
             // this is the function to globally override the log level, it is not part of the `LogHandler` protocol
             static func overrideGlobalLogLevel(_ logLevel: Logger.Level) {
-                LogHandlerWithGlobalLogLevelOverride.overrideLock.withLock {
-                    LogHandlerWithGlobalLogLevelOverride.overrideLogLevel = logLevel
-                }
+                LogHandlerWithGlobalLogLevelOverride.overrideLogLevel.underlying = logLevel
             }
         }
 

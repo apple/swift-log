@@ -17,7 +17,7 @@ import Darwin
 #elseif os(Windows)
 import CRT
 #elseif canImport(Glibc)
-import Glibc
+@preconcurrency import Glibc
 #elseif canImport(Musl)
 import Musl
 #elseif canImport(WASILibc)
@@ -502,11 +502,12 @@ extension Logger {
 /// configured. `LoggingSystem` is set up just once in a given program to set up the desired logging backend
 /// implementation.
 public enum LoggingSystem {
-    private static let _factory = FactoryBox { label, _ in StreamLogHandler.standardError(label: label) }
-    private static let _metadataProviderFactory = MetadataProviderBox(nil)
+    private static let _factory = FactoryBox({ label, _ in StreamLogHandler.standardError(label: label) },
+                                             violationErrorMesage: "logging system can only be initialized once per process.")
+    private static let _metadataProviderFactory = MetadataProviderBox(nil, violationErrorMesage: "logging system can only be initialized once per process.")
 
     #if DEBUG
-    private static var _warnOnceBox: WarnOnceBox = WarnOnceBox()
+    private static let _warnOnceBox: WarnOnceBox = WarnOnceBox()
     #endif
 
     /// `bootstrap` is a one-time configuration function which globally selects the desired logging backend
@@ -515,8 +516,9 @@ public enum LoggingSystem {
     ///
     /// - parameters:
     ///     - factory: A closure that given a `Logger` identifier, produces an instance of the `LogHandler`.
-    public static func bootstrap(_ factory: @escaping (String) -> any LogHandler) {
-        self._factory.replaceFactory({ label, _ in
+    @preconcurrency
+    public static func bootstrap(_ factory: @escaping @Sendable (String) -> any LogHandler) {
+        self._factory.replace({ label, _ in
             factory(label)
         }, validate: true)
     }
@@ -531,25 +533,26 @@ public enum LoggingSystem {
     /// - parameters:
     ///     - metadataProvider: The `MetadataProvider` used to inject runtime-generated metadata from the execution context.
     ///     - factory: A closure that given a `Logger` identifier, produces an instance of the `LogHandler`.
-    public static func bootstrap(_ factory: @escaping (String, Logger.MetadataProvider?) -> any LogHandler,
+    @preconcurrency
+    public static func bootstrap(_ factory: @escaping @Sendable (String, Logger.MetadataProvider?) -> any LogHandler,
                                  metadataProvider: Logger.MetadataProvider?) {
-        self._metadataProviderFactory.replaceMetadataProvider(metadataProvider, validate: true)
-        self._factory.replaceFactory(factory, validate: true)
+        self._metadataProviderFactory.replace(metadataProvider, validate: true)
+        self._factory.replace(factory, validate: true)
     }
 
     // for our testing we want to allow multiple bootstrapping
-    internal static func bootstrapInternal(_ factory: @escaping (String) -> any LogHandler) {
-        self._metadataProviderFactory.replaceMetadataProvider(nil, validate: false)
-        self._factory.replaceFactory({ label, _ in
+    internal static func bootstrapInternal(_ factory: @escaping @Sendable (String) -> any LogHandler) {
+        self._metadataProviderFactory.replace(nil, validate: false)
+        self._factory.replace({ label, _ in
             factory(label)
         }, validate: false)
     }
 
     // for our testing we want to allow multiple bootstrapping
-    internal static func bootstrapInternal(_ factory: @escaping (String, Logger.MetadataProvider?) -> any LogHandler,
+    internal static func bootstrapInternal(_ factory: @escaping @Sendable (String, Logger.MetadataProvider?) -> any LogHandler,
                                            metadataProvider: Logger.MetadataProvider?) {
-        self._metadataProviderFactory.replaceMetadataProvider(metadataProvider, validate: false)
-        self._factory.replaceFactory(factory, validate: false)
+        self._metadataProviderFactory.replace(metadataProvider, validate: false)
+        self._factory.replace(factory, validate: false)
     }
 
     fileprivate static var factory: (String, Logger.MetadataProvider?) -> any LogHandler {
@@ -568,7 +571,7 @@ public enum LoggingSystem {
     /// factory to avoid using the bootstrapped metadata provider may sometimes be useful, usually it will lead to
     /// un-expected behavior, so make sure to always propagate it to your handlers.
     public static var metadataProvider: Logger.MetadataProvider? {
-        return self._metadataProviderFactory.metadataProvider
+        return self._metadataProviderFactory.underlying
     }
 
     #if DEBUG
@@ -580,54 +583,71 @@ public enum LoggingSystem {
     }
     #endif
 
-    private final class FactoryBox {
+    /// Protects an object such that it can only be accessed through a Reader-Writer lock.
+    final class RWLockedValueBox<Value: Sendable>: @unchecked Sendable {
         private let lock = ReadWriteLock()
-        fileprivate var _underlying: (_ label: String, _ provider: Logger.MetadataProvider?) -> any LogHandler
-        private var initialized = false
+        private var storage: Value
 
-        init(_ underlying: @escaping (String, Logger.MetadataProvider?) -> any LogHandler) {
-            self._underlying = underlying
+        init(initialValue: Value) {
+            self.storage = initialValue
         }
 
-        func replaceFactory(_ factory: @escaping (String, Logger.MetadataProvider?) -> any LogHandler, validate: Bool) {
-            self.lock.withWriterLock {
-                precondition(!validate || !self.initialized, "logging system can only be initialized once per process.")
-                self._underlying = factory
-                self.initialized = true
+        func withReadLock<Result>(_ operation: (Value) -> Result) -> Result {
+            self.lock.withReaderLock {
+                return operation(self.storage)
             }
         }
 
-        var underlying: (String, Logger.MetadataProvider?) -> any LogHandler {
-            return self.lock.withReaderLock {
-                return self._underlying
+        func withWriteLock<Result>(_ operation: (inout Value) -> Result) -> Result {
+            self.lock.withWriterLock {
+                return operation(&self.storage)
             }
         }
     }
 
-    private final class MetadataProviderBox {
-        private let lock = ReadWriteLock()
+    /// Protects an object applying the constraints that it can only be accessed through a Reader-Writer lock
+    /// and can ony bre updated once from the initial value given.
+    private struct ReplaceOnceBox<BoxedType: Sendable> {
+        private struct ReplaceOnce: Sendable {
+            private var initialized = false
+            private var _underlying: BoxedType
+            private let violationErrorMessage: String
 
-        internal var _underlying: Logger.MetadataProvider?
-        private var initialized = false
-
-        init(_ underlying: Logger.MetadataProvider?) {
-            self._underlying = underlying
-        }
-
-        func replaceMetadataProvider(_ metadataProvider: Logger.MetadataProvider?, validate: Bool) {
-            self.lock.withWriterLock {
-                precondition(!validate || !self.initialized, "logging system can only be initialized once per process.")
-                self._underlying = metadataProvider
+            mutating func replaceUnderlying(_ underlying: BoxedType, validate: Bool) {
+                precondition(!validate || !self.initialized, self.violationErrorMessage)
+                self._underlying = underlying
                 self.initialized = true
             }
-        }
 
-        var metadataProvider: Logger.MetadataProvider? {
-            return self.lock.withReaderLock {
+            var underlying: BoxedType {
                 return self._underlying
             }
+
+            init(underlying: BoxedType, violationErrorMessage: String) {
+                self._underlying = underlying
+                self.violationErrorMessage = violationErrorMessage
+            }
+        }
+
+        private let storage: RWLockedValueBox<ReplaceOnce>
+
+        init(_ underlying: BoxedType, violationErrorMesage: String) {
+            self.storage = .init(initialValue: ReplaceOnce(underlying: underlying,
+                                                           violationErrorMessage: violationErrorMesage))
+        }
+
+        func replace(_ newUnderlying: BoxedType, validate: Bool) {
+            self.storage.withWriteLock { $0.replaceUnderlying(newUnderlying, validate: validate) }
+        }
+
+        var underlying: BoxedType {
+            self.storage.withReadLock { $0.underlying }
         }
     }
+
+    private typealias FactoryBox = ReplaceOnceBox<@Sendable (_ label: String, _ provider: Logger.MetadataProvider?) -> any LogHandler>
+
+    private typealias MetadataProviderBox = ReplaceOnceBox<Logger.MetadataProvider?>
 }
 
 extension Logger {
@@ -1025,7 +1045,7 @@ internal typealias CFilePointer = UnsafeMutablePointer<FILE>
 /// A wrapper to facilitate `print`-ing to stderr and stdio that
 /// ensures access to the underlying `FILE` is locked to prevent
 /// cross-thread interleaving of output.
-internal struct StdioOutputStream: TextOutputStream {
+internal struct StdioOutputStream: TextOutputStream, @unchecked Sendable {
     internal let file: CFilePointer
     internal let flushMode: FlushMode
 
@@ -1066,8 +1086,40 @@ internal struct StdioOutputStream: TextOutputStream {
         return contiguousString.utf8
     }
 
-    internal static let stderr = StdioOutputStream(file: systemStderr, flushMode: .always)
-    internal static let stdout = StdioOutputStream(file: systemStdout, flushMode: .always)
+    internal static let stderr = {
+        // Prevent name clashes
+        #if canImport(Darwin)
+        let systemStderr = Darwin.stderr
+        #elseif os(Windows)
+        let systemStderr = CRT.stderr
+        #elseif canImport(Glibc)
+        let systemStderr = Glibc.stderr!
+        #elseif canImport(Musl)
+        let systemStderr = Musl.stderr!
+        #elseif canImport(WASILibc)
+        let systemStderr = WASILibc.stderr!
+        #else
+        #error("Unsupported runtime")
+        #endif
+        return StdioOutputStream(file: systemStderr, flushMode: .always)
+    }()
+    internal static let stdout = {
+        // Prevent name clashes
+        #if canImport(Darwin)
+        let systemStdout = Darwin.stdout
+        #elseif os(Windows)
+        let systemStdout = CRT.stdout
+        #elseif canImport(Glibc)
+        let systemStdout = Glibc.stdout!
+        #elseif canImport(Musl)
+        let systemStdout = Musl.stdout!
+        #elseif canImport(WASILibc)
+        let systemStdout = WASILibc.stdout!
+        #else
+        #error("Unsupported runtime")
+        #endif
+        return StdioOutputStream(file: systemStdout, flushMode: .always)
+    }()
 
     /// Defines the flushing strategy for the underlying stream.
     internal enum FlushMode {
@@ -1075,26 +1127,6 @@ internal struct StdioOutputStream: TextOutputStream {
         case always
     }
 }
-
-// Prevent name clashes
-#if canImport(Darwin)
-let systemStderr = Darwin.stderr
-let systemStdout = Darwin.stdout
-#elseif os(Windows)
-let systemStderr = CRT.stderr
-let systemStdout = CRT.stdout
-#elseif canImport(Glibc)
-let systemStderr = Glibc.stderr!
-let systemStdout = Glibc.stdout!
-#elseif canImport(Musl)
-let systemStderr = Musl.stderr!
-let systemStdout = Musl.stdout!
-#elseif canImport(WASILibc)
-let systemStderr = WASILibc.stderr!
-let systemStdout = WASILibc.stdout!
-#else
-#error("Unsupported runtime")
-#endif
 
 /// `StreamLogHandler` is a simple implementation of `LogHandler` for directing
 /// `Logger` output to either `stderr` or `stdout` via the factory methods.
@@ -1107,21 +1139,25 @@ public struct StreamLogHandler: LogHandler {
     internal typealias _SendableTextOutputStream = TextOutputStream & Sendable
 
     /// Factory that makes a `StreamLogHandler` to directs its output to `stdout`
+    @Sendable
     public static func standardOutput(label: String) -> StreamLogHandler {
         return StreamLogHandler(label: label, stream: StdioOutputStream.stdout, metadataProvider: LoggingSystem.metadataProvider)
     }
 
     /// Factory that makes a `StreamLogHandler` that directs its output to `stdout`
+    @Sendable
     public static func standardOutput(label: String, metadataProvider: Logger.MetadataProvider?) -> StreamLogHandler {
         return StreamLogHandler(label: label, stream: StdioOutputStream.stdout, metadataProvider: metadataProvider)
     }
 
     /// Factory that makes a `StreamLogHandler` that directs its output to `stderr`
+    @Sendable
     public static func standardError(label: String) -> StreamLogHandler {
         return StreamLogHandler(label: label, stream: StdioOutputStream.stderr, metadataProvider: LoggingSystem.metadataProvider)
     }
 
     /// Factory that makes a `StreamLogHandler` that direct its output to `stderr`
+    @Sendable
     public static func standardError(label: String, metadataProvider: Logger.MetadataProvider?) -> StreamLogHandler {
         return StreamLogHandler(label: label, stream: StdioOutputStream.stderr, metadataProvider: metadataProvider)
     }
@@ -1345,7 +1381,7 @@ extension Logger.MetadataValue: ExpressibleByArrayLiteral {
 
 #if DEBUG
 /// Contains state to manage all kinds of "warn only once" warnings which the logging system may want to issue.
-private final class WarnOnceBox {
+private final class WarnOnceBox: @unchecked Sendable {
     private let lock: Lock = Lock()
     private var warnOnceLogHandlerNotSupportedMetadataProviderPerType = Set<ObjectIdentifier>()
 
