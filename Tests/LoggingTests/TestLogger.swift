@@ -364,7 +364,7 @@ internal struct TestLibrary {
         self.logger.info("TestLibrary::doSomething")
     }
 
-    public func doSomethingAsync(completion: @escaping @Sendable () -> Void) {
+    public func doSomethingAsync(completion: @escaping @Sendable() -> Void) {
         // libraries that use global loggers and async, need to make sure they propagate the
         // logging metadata when creating a new thread
         let metadata = MDC.global.metadata

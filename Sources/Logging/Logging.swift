@@ -517,7 +517,7 @@ public enum LoggingSystem {
     /// - parameters:
     ///     - factory: A closure that given a `Logger` identifier, produces an instance of the `LogHandler`.
     @preconcurrency
-    public static func bootstrap(_ factory: @escaping @Sendable (String) -> any LogHandler) {
+    public static func bootstrap(_ factory: @escaping @Sendable(String) -> any LogHandler) {
         self._factory.replace({ label, _ in
             factory(label)
         }, validate: true)
@@ -534,14 +534,14 @@ public enum LoggingSystem {
     ///     - metadataProvider: The `MetadataProvider` used to inject runtime-generated metadata from the execution context.
     ///     - factory: A closure that given a `Logger` identifier, produces an instance of the `LogHandler`.
     @preconcurrency
-    public static func bootstrap(_ factory: @escaping @Sendable (String, Logger.MetadataProvider?) -> any LogHandler,
+    public static func bootstrap(_ factory: @escaping @Sendable(String, Logger.MetadataProvider?) -> any LogHandler,
                                  metadataProvider: Logger.MetadataProvider?) {
         self._metadataProviderFactory.replace(metadataProvider, validate: true)
         self._factory.replace(factory, validate: true)
     }
 
     // for our testing we want to allow multiple bootstrapping
-    internal static func bootstrapInternal(_ factory: @escaping @Sendable (String) -> any LogHandler) {
+    internal static func bootstrapInternal(_ factory: @escaping @Sendable(String) -> any LogHandler) {
         self._metadataProviderFactory.replace(nil, validate: false)
         self._factory.replace({ label, _ in
             factory(label)
@@ -549,7 +549,7 @@ public enum LoggingSystem {
     }
 
     // for our testing we want to allow multiple bootstrapping
-    internal static func bootstrapInternal(_ factory: @escaping @Sendable (String, Logger.MetadataProvider?) -> any LogHandler,
+    internal static func bootstrapInternal(_ factory: @escaping @Sendable(String, Logger.MetadataProvider?) -> any LogHandler,
                                            metadataProvider: Logger.MetadataProvider?) {
         self._metadataProviderFactory.replace(metadataProvider, validate: false)
         self._factory.replace(factory, validate: false)
@@ -594,13 +594,13 @@ public enum LoggingSystem {
 
         func withReadLock<Result>(_ operation: (Value) -> Result) -> Result {
             self.lock.withReaderLock {
-                return operation(self.storage)
+                operation(self.storage)
             }
         }
 
         func withWriteLock<Result>(_ operation: (inout Value) -> Result) -> Result {
             self.lock.withWriterLock {
-                return operation(&self.storage)
+                operation(&self.storage)
             }
         }
     }
@@ -645,7 +645,7 @@ public enum LoggingSystem {
         }
     }
 
-    private typealias FactoryBox = ReplaceOnceBox<@Sendable (_ label: String, _ provider: Logger.MetadataProvider?) -> any LogHandler>
+    private typealias FactoryBox = ReplaceOnceBox< @Sendable(_ label: String, _ provider: Logger.MetadataProvider?) -> any LogHandler>
 
     private typealias MetadataProviderBox = ReplaceOnceBox<Logger.MetadataProvider?>
 }
@@ -1103,6 +1103,7 @@ internal struct StdioOutputStream: TextOutputStream, @unchecked Sendable {
         #endif
         return StdioOutputStream(file: systemStderr, flushMode: .always)
     }()
+
     internal static let stdout = {
         // Prevent name clashes
         #if canImport(Darwin)

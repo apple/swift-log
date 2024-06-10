@@ -22,7 +22,7 @@ import WinSDK
 import Glibc
 #endif
 
-fileprivate extension LogHandler {
+private extension LogHandler {
     func with(logLevel: Logger.Level) -> any LogHandler {
         var result = self
         result.logLevel = logLevel
@@ -711,7 +711,7 @@ class LoggingTest: XCTestCase {
         private let lock = Lock()
         private var storage: Value
 
-        init(initialValue:  Value) {
+        init(initialValue: Value) {
             self.storage = initialValue
         }
 
@@ -721,15 +721,15 @@ class LoggingTest: XCTestCase {
             }
         }
 
-        func withLockMutating(_ operation: (inout Value) -> Void) -> Void {
+        func withLockMutating(_ operation: (inout Value) -> Void) {
             self.lock.withLockVoid {
                 operation(&self.storage)
             }
         }
 
         var underlying: Value {
-            get { self.withLock { return $0 } }
-            set { self.withLockMutating { $0 = newValue }}
+            get { self.withLock { $0 } }
+            set { self.withLockMutating { $0 = newValue } }
         }
     }
 
