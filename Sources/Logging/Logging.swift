@@ -1347,17 +1347,13 @@ extension Logger.MetadataValue: ExpressibleByArrayLiteral {
 /// Contains state to manage all kinds of "warn only once" warnings which the logging system may want to issue.
 private final class WarnOnceBox {
     private let lock: Lock = Lock()
-    private var warnOnceLogHandlerNotSupportedMetadataProviderPerType: [ObjectIdentifier: Bool] = [:]
+    private var warnOnceLogHandlerNotSupportedMetadataProviderPerType = Set<ObjectIdentifier>()
 
     func warnOnceLogHandlerNotSupportedMetadataProvider<Handler: LogHandler>(type: Handler.Type) -> Bool {
         self.lock.withLock {
             let id = ObjectIdentifier(type)
-            if warnOnceLogHandlerNotSupportedMetadataProviderPerType[id] ?? false {
-                return false // don't warn, it was already warned about
-            } else {
-                warnOnceLogHandlerNotSupportedMetadataProviderPerType[id] = true
-                return true // warn about this handler type, it is the first time we encountered it
-            }
+            let (inserted, _) = warnOnceLogHandlerNotSupportedMetadataProviderPerType.insert(id)
+            return inserted // warn about this handler type, it is the first time we encountered it
         }
     }
 }
