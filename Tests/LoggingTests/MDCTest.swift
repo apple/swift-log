@@ -11,11 +11,7 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 //===----------------------------------------------------------------------===//
-#if compiler(>=6.0) || canImport(Darwin)
 import Dispatch
-#else
-@preconcurrency import Dispatch
-#endif
 @testable import Logging
 import XCTest
 

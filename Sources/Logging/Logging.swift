@@ -17,7 +17,11 @@ import Darwin
 #elseif os(Windows)
 import CRT
 #elseif canImport(Glibc)
+#if compiler(>=6.0)
 @preconcurrency import Glibc
+#else
+import Glibc
+#endif
 #elseif canImport(Musl)
 import Musl
 #elseif canImport(WASILibc)
