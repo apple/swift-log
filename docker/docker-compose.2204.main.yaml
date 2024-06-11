@@ -11,6 +11,7 @@ services:
   test:
     image: swift-log:22.04-main
     environment:
+      - WARN_AS_ERROR_ARG=-Xswiftc -warnings-as-errors
       #- SANITIZER_ARG=--sanitize=thread
       - IMPORT_CHECK_ARG=--explicit-target-dependency-import-check error
       - EXPLICIT_SENDABLE_ARG=-Xswiftc -require-explicit-sendable

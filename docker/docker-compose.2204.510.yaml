@@ -11,6 +11,7 @@ services:
   test:
     image: swift-log:22.04-5.10
     environment:
+      - WARN_AS_ERROR_ARG=-Xswiftc -warnings-as-errors
       #- SANITIZER_ARG=--sanitize=thread
 
   shell:
