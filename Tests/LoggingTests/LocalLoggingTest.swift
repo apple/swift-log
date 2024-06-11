@@ -13,6 +13,11 @@
 //===----------------------------------------------------------------------===//
 @testable import Logging
 import XCTest
+#if compiler(>=6.0) || canImport(Darwin)
+import Dispatch
+#else
+@preconcurrency import Dispatch
+#endif
 
 class LocalLoggerTest: XCTestCase {
     func test1() throws {

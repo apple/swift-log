@@ -17,6 +17,11 @@ import XCTest
 #if os(Windows)
 import WinSDK
 #endif
+#if compiler(>=6.0) || canImport(Darwin)
+import Dispatch
+#else
+@preconcurrency import Dispatch
+#endif
 
 internal struct TestLogging {
     private let _config = Config() // shared among loggers
@@ -354,7 +359,7 @@ internal extension NSLock {
     }
 }
 
-internal struct TestLibrary {
+internal struct TestLibrary: Sendable {
     private let logger = Logger(label: "TestLibrary")
     private let queue = DispatchQueue(label: "TestLibrary")
 
