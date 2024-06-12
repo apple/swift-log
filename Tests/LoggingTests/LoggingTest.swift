@@ -1066,8 +1066,8 @@ class LoggingTest: XCTestCase {
         }
 
         // default usage
-        LoggingSystem.bootstrap({ (label: String) in StreamLogHandler.standardOutput(label: label) })
-        LoggingSystem.bootstrap({ (label: String) in StreamLogHandler.standardError(label: label) })
+        LoggingSystem.bootstrap { (label: String) in StreamLogHandler.standardOutput(label: label) }
+        LoggingSystem.bootstrap { (label: String) in StreamLogHandler.standardError(label: label) }
 
         // with metadata handler, explicitly, public api
         LoggingSystem.bootstrap({ label, metadataProvider in
