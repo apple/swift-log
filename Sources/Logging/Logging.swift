@@ -1144,25 +1144,21 @@ public struct StreamLogHandler: LogHandler {
     internal typealias _SendableTextOutputStream = TextOutputStream & Sendable
 
     /// Factory that makes a `StreamLogHandler` to directs its output to `stdout`
-    @Sendable
     public static func standardOutput(label: String) -> StreamLogHandler {
         return StreamLogHandler(label: label, stream: StdioOutputStream.stdout, metadataProvider: LoggingSystem.metadataProvider)
     }
 
     /// Factory that makes a `StreamLogHandler` that directs its output to `stdout`
-    @Sendable
     public static func standardOutput(label: String, metadataProvider: Logger.MetadataProvider?) -> StreamLogHandler {
         return StreamLogHandler(label: label, stream: StdioOutputStream.stdout, metadataProvider: metadataProvider)
     }
 
     /// Factory that makes a `StreamLogHandler` that directs its output to `stderr`
-    @Sendable
     public static func standardError(label: String) -> StreamLogHandler {
         return StreamLogHandler(label: label, stream: StdioOutputStream.stderr, metadataProvider: LoggingSystem.metadataProvider)
     }
 
     /// Factory that makes a `StreamLogHandler` that direct its output to `stderr`
-    @Sendable
     public static func standardError(label: String, metadataProvider: Logger.MetadataProvider?) -> StreamLogHandler {
         return StreamLogHandler(label: label, stream: StdioOutputStream.stderr, metadataProvider: metadataProvider)
     }

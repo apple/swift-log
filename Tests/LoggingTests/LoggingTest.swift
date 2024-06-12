@@ -1066,8 +1066,8 @@ class LoggingTest: XCTestCase {
         }
 
         // default usage
-        LoggingSystem.bootstrap(StreamLogHandler.standardOutput)
-        LoggingSystem.bootstrap(StreamLogHandler.standardError)
+        LoggingSystem.bootstrap({ (label: String) in StreamLogHandler.standardOutput(label: label) })
+        LoggingSystem.bootstrap({ (label: String) in StreamLogHandler.standardError(label: label) })
 
         // with metadata handler, explicitly, public api
         LoggingSystem.bootstrap({ label, metadataProvider in
@@ -1078,8 +1078,10 @@ class LoggingTest: XCTestCase {
         }, metadataProvider: .exampleMetadataProvider)
 
         // with metadata handler, still pretty
-        LoggingSystem.bootstrap(StreamLogHandler.standardOutput, metadataProvider: .exampleMetadataProvider)
-        LoggingSystem.bootstrap(StreamLogHandler.standardError, metadataProvider: .exampleMetadataProvider)
+        LoggingSystem.bootstrap({ (label: String, metadataProvider: Logger.MetadataProvider?) in StreamLogHandler.standardOutput(label: label, metadataProvider: metadataProvider) },
+                                metadataProvider: .exampleMetadataProvider)
+        LoggingSystem.bootstrap({ (label: String, metadataProvider: Logger.MetadataProvider?) in StreamLogHandler.standardError(label: label, metadataProvider: metadataProvider) },
+                                metadataProvider: .exampleMetadataProvider)
     }
 
     func testLoggerIsJustHoldingASinglePointer() {
