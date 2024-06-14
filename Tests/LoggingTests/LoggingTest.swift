@@ -639,9 +639,8 @@ class LoggingTest: XCTestCase {
 
     func testLoggerWithoutFactoryOverrideDefaultsToUsingLoggingSystemMetadataProvider() {
         let logging = TestLogging()
-        LoggingSystem.bootstrapInternal({ label, metadataProvider in
-            logging.makeWithMetadataProvider(label: label, metadataProvider: metadataProvider)
-        }, metadataProvider: .init { ["provider": "42"] })
+        LoggingSystem.bootstrapInternal({ logging.makeWithMetadataProvider(label: $0, metadataProvider: $1) },
+                                        metadataProvider: .init { ["provider": "42"] })
 
         let logger = Logger(label: #function)
 
@@ -655,7 +654,7 @@ class LoggingTest: XCTestCase {
     func testLoggerWithPredefinedLibraryMetadataProvider() {
         let logging = TestLogging()
         LoggingSystem.bootstrapInternal(
-            logging.makeWithMetadataProvider,
+            { logging.makeWithMetadataProvider(label: $0, metadataProvider: $1) },
             metadataProvider: .exampleMetadataProvider
         )
 
@@ -670,7 +669,8 @@ class LoggingTest: XCTestCase {
 
     func testLoggerWithFactoryOverrideDefaultsToUsingLoggingSystemMetadataProvider() {
         let logging = TestLogging()
-        LoggingSystem.bootstrapInternal(logging.makeWithMetadataProvider, metadataProvider: .init { ["provider": "42"] })
+        LoggingSystem.bootstrapInternal({ logging.makeWithMetadataProvider(label: $0, metadataProvider: $1) },
+                                        metadataProvider: .init { ["provider": "42"] })
 
         let logger = Logger(label: #function, factory: { label in
             logging.makeWithMetadataProvider(label: label, metadataProvider: LoggingSystem.metadataProvider)
