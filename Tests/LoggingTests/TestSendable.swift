@@ -17,7 +17,7 @@ import XCTest
 class SendableTest: XCTestCase {
     func testSendableLogger() async {
         let testLogging = TestLogging()
-        LoggingSystem.bootstrapInternal(testLogging.make)
+        LoggingSystem.bootstrapInternal { testLogging.make(label: $0) }
 
         let logger = Logger(label: "test")
         let message1 = Logger.Message(stringLiteral: "critical 1")

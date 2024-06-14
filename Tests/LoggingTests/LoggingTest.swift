@@ -40,7 +40,7 @@ class LoggingTest: XCTestCase {
     func testAutoclosure() throws {
         // bootstrap with our test logging impl
         let logging = TestLogging()
-        LoggingSystem.bootstrapInternal(logging.make)
+        LoggingSystem.bootstrapInternal { logging.make(label: $0) }
 
         var logger = Logger(label: "test")
         logger.logLevel = .info
@@ -327,7 +327,7 @@ class LoggingTest: XCTestCase {
 
     func testDictionaryMetadata() {
         let testLogging = TestLogging()
-        LoggingSystem.bootstrapInternal(testLogging.make)
+        LoggingSystem.bootstrapInternal { testLogging.make(label: $0) }
 
         var logger = Logger(label: "\(#function)")
         logger[metadataKey: "foo"] = ["bar": "buz"]
@@ -343,7 +343,7 @@ class LoggingTest: XCTestCase {
 
     func testListMetadata() {
         let testLogging = TestLogging()
-        LoggingSystem.bootstrapInternal(testLogging.make)
+        LoggingSystem.bootstrapInternal { testLogging.make(label: $0) }
 
         var logger = Logger(label: "\(#function)")
         logger[metadataKey: "foo"] = ["bar", "buz"]
@@ -386,7 +386,7 @@ class LoggingTest: XCTestCase {
 
     func testStringConvertibleMetadata() {
         let testLogging = TestLogging()
-        LoggingSystem.bootstrapInternal(testLogging.make)
+        LoggingSystem.bootstrapInternal { testLogging.make(label: $0) }
         var logger = Logger(label: "\(#function)")
 
         logger[metadataKey: "foo"] = .stringConvertible("raw-string")
@@ -406,7 +406,7 @@ class LoggingTest: XCTestCase {
 
     func testAutoClosuresAreNotForcedUnlessNeeded() {
         let testLogging = TestLogging()
-        LoggingSystem.bootstrapInternal(testLogging.make)
+        LoggingSystem.bootstrapInternal { testLogging.make(label: $0) }
 
         var logger = Logger(label: "\(#function)")
         logger.logLevel = .error
@@ -420,7 +420,7 @@ class LoggingTest: XCTestCase {
 
     func testLocalMetadata() {
         let testLogging = TestLogging()
-        LoggingSystem.bootstrapInternal(testLogging.make)
+        LoggingSystem.bootstrapInternal { testLogging.make(label: $0) }
 
         var logger = Logger(label: "\(#function)")
         logger.info("hello world!", metadata: ["foo": "bar"])
@@ -461,7 +461,7 @@ class LoggingTest: XCTestCase {
 
     func testAllLogLevelsExceptCriticalCanBeBlocked() {
         let testLogging = TestLogging()
-        LoggingSystem.bootstrapInternal(testLogging.make)
+        LoggingSystem.bootstrapInternal { testLogging.make(label: $0) }
 
         var logger = Logger(label: "\(#function)")
         logger.logLevel = .critical
@@ -485,7 +485,7 @@ class LoggingTest: XCTestCase {
 
     func testAllLogLevelsWork() {
         let testLogging = TestLogging()
-        LoggingSystem.bootstrapInternal(testLogging.make)
+        LoggingSystem.bootstrapInternal { testLogging.make(label: $0) }
 
         var logger = Logger(label: "\(#function)")
         logger.logLevel = .trace
@@ -509,7 +509,7 @@ class LoggingTest: XCTestCase {
 
     func testAllLogLevelByFunctionRefWithSource() {
         let testLogging = TestLogging()
-        LoggingSystem.bootstrapInternal(testLogging.make)
+        LoggingSystem.bootstrapInternal { testLogging.make(label: $0) }
 
         var logger = Logger(label: "\(#function)")
         logger.logLevel = .trace
@@ -541,7 +541,7 @@ class LoggingTest: XCTestCase {
 
     func testAllLogLevelByFunctionRefWithoutSource() {
         let testLogging = TestLogging()
-        LoggingSystem.bootstrapInternal(testLogging.make)
+        LoggingSystem.bootstrapInternal { testLogging.make(label: $0) }
 
         var logger = Logger(label: "\(#function)")
         logger.logLevel = .trace
@@ -573,7 +573,7 @@ class LoggingTest: XCTestCase {
 
     func testLogsEmittedFromSubdirectoryGetCorrectModuleInNewerSwifts() {
         let testLogging = TestLogging()
-        LoggingSystem.bootstrapInternal(testLogging.make)
+        LoggingSystem.bootstrapInternal { testLogging.make(label: $0) }
 
         var logger = Logger(label: "\(#function)")
         logger.logLevel = .trace
@@ -593,7 +593,7 @@ class LoggingTest: XCTestCase {
 
     func testLogMessageWithStringInterpolation() {
         let testLogging = TestLogging()
-        LoggingSystem.bootstrapInternal(testLogging.make)
+        LoggingSystem.bootstrapInternal { testLogging.make(label: $0) }
 
         var logger = Logger(label: "\(#function)")
         logger.logLevel = .debug
@@ -606,7 +606,7 @@ class LoggingTest: XCTestCase {
 
     func testLoggingAString() {
         let testLogging = TestLogging()
-        LoggingSystem.bootstrapInternal(testLogging.make)
+        LoggingSystem.bootstrapInternal { testLogging.make(label: $0) }
 
         var logger = Logger(label: "\(#function)")
         logger.logLevel = .debug
@@ -1049,7 +1049,7 @@ class LoggingTest: XCTestCase {
         }
         // bootstrap with our test logging impl
         let logging = TestLogging()
-        LoggingSystem.bootstrapInternal(logging.make)
+        LoggingSystem.bootstrapInternal { logging.make(label: $0) }
 
         var logger = Logger(label: "test")
         logger.logLevel = .error

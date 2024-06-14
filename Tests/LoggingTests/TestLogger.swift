@@ -27,7 +27,6 @@ internal struct TestLogging {
     private let _config = Config() // shared among loggers
     private let recorder = Recorder() // shared among loggers
 
-    @Sendable
     func make(label: String) -> some LogHandler {
         return TestLogHandler(
             label: label,
@@ -37,7 +36,6 @@ internal struct TestLogging {
         )
     }
 
-    @Sendable
     func makeWithMetadataProvider(label: String, metadataProvider: Logger.MetadataProvider?) -> (some LogHandler) {
         return TestLogHandler(
             label: label,

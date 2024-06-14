@@ -19,7 +19,7 @@ final class CompatibilityTest: XCTestCase {
     func testAllLogLevelsWorkWithOldSchoolLogHandlerWorks() {
         let testLogging = OldSchoolTestLogging()
 
-        var logger = Logger(label: "\(#function)", factory: testLogging.make)
+        var logger = Logger(label: "\(#function)", factory: { testLogging.make(label: $0) })
         logger.logLevel = .trace
 
         logger.trace("yes: trace")
