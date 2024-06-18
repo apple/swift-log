@@ -1282,8 +1282,7 @@ public struct SwiftLogNoOpLogHandler: LogHandler {
                     source: String,
                     file: String,
                     function: String,
-                    line: UInt) {
-    }
+                    line: UInt) {}
 
     @inlinable public subscript(metadataKey _: String) -> Logger.Metadata.Value? {
         get {
