@@ -17,6 +17,11 @@ import XCTest
 #if os(Windows)
 import WinSDK
 #endif
+#if compiler(>=6.0) || canImport(Darwin)
+import Dispatch
+#else
+@preconcurrency import Dispatch
+#endif
 
 internal struct TestLogging {
     private let _config = Config() // shared among loggers
@@ -276,7 +281,7 @@ public class MDC {
     private let lock = NSLock()
     private var storage = [Int: Logger.Metadata]()
 
-    public static var global = MDC()
+    public static let global = MDC()
 
     private init() {}
 
@@ -352,7 +357,7 @@ internal extension NSLock {
     }
 }
 
-internal struct TestLibrary {
+internal struct TestLibrary: Sendable {
     private let logger = Logger(label: "TestLibrary")
     private let queue = DispatchQueue(label: "TestLibrary")
 
@@ -362,7 +367,7 @@ internal struct TestLibrary {
         self.logger.info("TestLibrary::doSomething")
     }
 
-    public func doSomethingAsync(completion: @escaping () -> Void) {
+    public func doSomethingAsync(completion: @escaping @Sendable() -> Void) {
         // libraries that use global loggers and async, need to make sure they propagate the
         // logging metadata when creating a new thread
         let metadata = MDC.global.metadata
