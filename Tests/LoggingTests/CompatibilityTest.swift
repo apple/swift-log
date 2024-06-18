@@ -16,6 +16,7 @@
 import XCTest
 
 final class CompatibilityTest: XCTestCase {
+    @available(*, deprecated, message: "Testing deprecated functionality")
     func testAllLogLevelsWorkWithOldSchoolLogHandlerWorks() {
         let testLogging = OldSchoolTestLogging()
 
@@ -45,6 +46,7 @@ private struct OldSchoolTestLogging {
     private let _config = Config() // shared among loggers
     private let recorder = Recorder() // shared among loggers
 
+    @available(*, deprecated, message: "Testing deprecated functionality")
     func make(label: String) -> any LogHandler {
         return OldSchoolLogHandler(label: label,
                                    config: self.config,
@@ -57,6 +59,7 @@ private struct OldSchoolTestLogging {
     var history: some History { return self.recorder }
 }
 
+@available(*, deprecated, message: "Testing deprecated functionality")
 private struct OldSchoolLogHandler: LogHandler {
     var label: String
     let config: Config

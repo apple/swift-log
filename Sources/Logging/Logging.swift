@@ -1276,6 +1276,15 @@ public struct SwiftLogNoOpLogHandler: LogHandler {
 
     @inlinable public func log(level: Logger.Level, message: Logger.Message, metadata: Logger.Metadata?, file: String, function: String, line: UInt) {}
 
+    public func log(level: Logger.Level,
+                    message: Logger.Message,
+                    metadata: Logger.Metadata?,
+                    source: String,
+                    file: String,
+                    function: String,
+                    line: UInt) {
+    }
+
     @inlinable public subscript(metadataKey _: String) -> Logger.Metadata.Value? {
         get {
             return nil
