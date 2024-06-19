@@ -19,7 +19,7 @@ class MDCTest: XCTestCase {
     func test1() throws {
         // bootstrap with our test logger
         let logging = TestLogging()
-        LoggingSystem.bootstrapInternal(logging.make)
+        LoggingSystem.bootstrapInternal { logging.make(label: $0) }
 
         // run the program
         MDC.global["foo"] = "bar"
