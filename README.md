@@ -83,6 +83,7 @@ You can choose from one of the following backends to consume your logs. If you a
 | [kiliankoe/swift-log-matrix](https://swiftpackageindex.com/kiliankoe/swift-log-matrix) | a logging backend for sending logs directly to a [Matrix](https://matrix.org) room |
 | [DiscordBM/DiscordLogger](https://github.com/DiscordBM/DiscordLogger) | a Discord logging implementation to send your logs over to a Discord channel in a good-looking manner and with a lot of configuration options including the ability to send only a few important log-levels such as `warning`/`error`/`critical`. |
 | [CocoaLumberjack](https://github.com/CocoaLumberjack/CocoaLumberjack) | a fast & simple, yet powerful & flexible logging framework for macOS, iOS, tvOS and watchOS, which includes a logging backend for swift-log. |
+| [rwbutler/swift-log-ecs](https://github.com/rwbutler/swift-log-ecs) | a logging backend for logging in [ECS Log format](https://www.elastic.co/guide/en/ecs-logging/overview/current/intro.html). Compatible with [Vapor](https://github.com/vapor/vapor) and allows chaining of multiple LogHandlers. |
 | Your library? | [Get in touch!](https://forums.swift.org/c/server) |
 
 ## What is an API package?
