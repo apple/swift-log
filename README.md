@@ -62,7 +62,6 @@ You can choose from one of the following backends to consume your logs. If you a
 
 | Repository | Handler Description|
 | ----------- | ----------- |
-| [ShipBook/swift-log-**shipbook**](https://github.com/ShipBook/swift-log-shipbook) | a logging backend that sends log entries to [Shipbook](https://www.shipbook.io) - Shipbook gives you the power to remotely gather, search and analyze your user logs and exceptions in the cloud, on a per-user & session basis. |
 | [Kitura/HeliumLogger](https://github.com/Kitura/HeliumLogger)  |a logging backend widely used in the Kitura ecosystem |
 | [ianpartridge/swift-log-**syslog**](https://github.com/ianpartridge/swift-log-syslog) | a [syslog](https://en.wikipedia.org/wiki/Syslog) backend|
 | [Adorkable/swift-log-**format-and-pipe**](https://github.com/Adorkable/swift-log-format-and-pipe) | a backend that allows customization of the output format and the resulting destination |
@@ -85,6 +84,7 @@ You can choose from one of the following backends to consume your logs. If you a
 | [DiscordBM/DiscordLogger](https://github.com/DiscordBM/DiscordLogger) | a Discord logging implementation to send your logs over to a Discord channel in a good-looking manner and with a lot of configuration options including the ability to send only a few important log-levels such as `warning`/`error`/`critical`. |
 | [CocoaLumberjack](https://github.com/CocoaLumberjack/CocoaLumberjack) | a fast & simple, yet powerful & flexible logging framework for macOS, iOS, tvOS and watchOS, which includes a logging backend for swift-log. |
 | [rwbutler/swift-log-ecs](https://github.com/rwbutler/swift-log-ecs) | a logging backend for logging in [ECS Log format](https://www.elastic.co/guide/en/ecs-logging/overview/current/intro.html). Compatible with [Vapor](https://github.com/vapor/vapor) and allows chaining of multiple LogHandlers. |
+| [ShipBook/swift-log-**shipbook**](https://github.com/ShipBook/swift-log-shipbook) | a logging backend that sends log entries to [Shipbook](https://www.shipbook.io) - Shipbook gives you the power to remotely gather, search and analyze your user logs and exceptions in the cloud, on a per-user & session basis. |
 | Your library? | [Get in touch!](https://forums.swift.org/c/server) |
 
 ## What is an API package?
