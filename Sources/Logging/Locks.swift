@@ -46,7 +46,7 @@ import Musl
 /// of lock is safe to use with `libpthread`-based threading models, such as the
 /// one used by NIO. On Windows, the lock is based on the substantially similar
 /// `SRWLOCK` type.
-internal final class Lock {
+internal final class Lock: @unchecked Sendable {
     #if canImport(WASILibc)
     // WASILibc is single threaded, provides no locks
     #elseif os(Windows)
@@ -148,7 +148,7 @@ extension Lock {
 /// of lock is safe to use with `libpthread`-based threading models, such as the
 /// one used by NIO. On Windows, the lock is based on the substantially similar
 /// `SRWLOCK` type.
-internal final class ReadWriteLock {
+internal final class ReadWriteLock: @unchecked Sendable {
     #if canImport(WASILibc)
     // WASILibc is single threaded, provides no locks
     #elseif os(Windows)
@@ -189,7 +189,7 @@ internal final class ReadWriteLock {
     ///
     /// Whenever possible, consider using `withReaderLock` instead of this
     /// method and `unlock`, to simplify lock handling.
-    public func lockRead() {
+    fileprivate func lockRead() {
         #if canImport(WASILibc)
         // WASILibc is single threaded, provides no locks
         #elseif os(Windows)
@@ -205,7 +205,7 @@ internal final class ReadWriteLock {
     ///
     /// Whenever possible, consider using `withWriterLock` instead of this
     /// method and `unlock`, to simplify lock handling.
-    public func lockWrite() {
+    fileprivate func lockWrite() {
         #if canImport(WASILibc)
         // WASILibc is single threaded, provides no locks
         #elseif os(Windows)
@@ -222,7 +222,7 @@ internal final class ReadWriteLock {
     /// Whenever possible, consider using `withReaderLock` and `withWriterLock`
     /// instead of this method and `lockRead` and `lockWrite`, to simplify lock
     /// handling.
-    public func unlock() {
+    fileprivate func unlock() {
         #if canImport(WASILibc)
         // WASILibc is single threaded, provides no locks
         #elseif os(Windows)

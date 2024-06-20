@@ -13,12 +13,17 @@
 //===----------------------------------------------------------------------===//
 @testable import Logging
 import XCTest
+#if compiler(>=6.0) || canImport(Darwin)
+import Dispatch
+#else
+@preconcurrency import Dispatch
+#endif
 
 class LocalLoggerTest: XCTestCase {
     func test1() throws {
         // bootstrap with our test logging impl
         let logging = TestLogging()
-        LoggingSystem.bootstrapInternal(logging.make)
+        LoggingSystem.bootstrapInternal { logging.make(label: $0) }
 
         // change test logging config to log traces and above
         logging.config.set(value: Logger.Level.debug)
@@ -46,7 +51,7 @@ class LocalLoggerTest: XCTestCase {
     func test2() throws {
         // bootstrap with our test logging impl
         let logging = TestLogging()
-        LoggingSystem.bootstrapInternal(logging.make)
+        LoggingSystem.bootstrapInternal { logging.make(label: $0) }
 
         // change test logging config to log errors and above
         logging.config.set(value: Logger.Level.error)
