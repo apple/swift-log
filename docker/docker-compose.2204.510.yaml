@@ -13,6 +13,8 @@ services:
     environment:
       - WARN_AS_ERROR_ARG=-Xswiftc -warnings-as-errors
       #- SANITIZER_ARG=--sanitize=thread
+      # Generated test manifest uses existentials without 'any'.
+      #- EXISTENTIAL_ANY_ARG=-Xswiftc -enable-upcoming-feature -Xswiftc ExistentialAny
 
   shell:
     image: swift-log:22.04-5.10

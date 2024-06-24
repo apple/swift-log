@@ -28,7 +28,7 @@ services:
 
   test:
     <<: *common
-    command: /bin/bash -xcl "swift test $${WARN_AS_ERROR_ARG-} $${SANITIZER_ARG-} $${IMPORT_CHECK_ARG-} $${EXPLICIT_SENDABLE_ARG-} $${STRICT_CONCURRENCY_ARG-}"
+    command: /bin/bash -xcl "swift test $${WARN_AS_ERROR_ARG-} $${SANITIZER_ARG-} $${IMPORT_CHECK_ARG-} $${EXPLICIT_SENDABLE_ARG-} $${STRICT_CONCURRENCY_ARG-} $${EXISTENTIAL_ANY_ARG-}"
 
   # util
 

@@ -13,6 +13,7 @@ services:
     image: swift-log:22.04-5.9
     environment:
       - WARN_AS_ERROR_ARG=-Xswiftc -warnings-as-errors
+      - EXISTENTIAL_ANY_ARG=-Xswiftc -enable-upcoming-feature -Xswiftc ExistentialAny
       #- SANITIZER_ARG=--sanitize=thread
 
   shell:
