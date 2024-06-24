@@ -15,15 +15,6 @@
 
 import PackageDescription
 
-let swiftSettings: [SwiftSetting] = [
-    // TODO: re-enable this when 5.8 is no longer supported. Having this
-    // enabled propagates to consumers before 5.8 which can result in build
-    // failures if the caller is using an existential from this package without.
-    // the explicit 'any'.
-    //
-    // .enableUpcomingFeature("ExistentialAny"),
-]
-
 let package = Package(
     name: "swift-log",
     products: [
@@ -32,13 +23,11 @@ let package = Package(
     targets: [
         .target(
             name: "Logging",
-            dependencies: [],
-            swiftSettings: swiftSettings
+            dependencies: []
         ),
         .testTarget(
             name: "LoggingTests",
-            dependencies: ["Logging"],
-            swiftSettings: swiftSettings
+            dependencies: ["Logging"]
         ),
     ]
 )
