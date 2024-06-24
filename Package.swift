@@ -16,7 +16,12 @@
 import PackageDescription
 
 let swiftSettings: [SwiftSetting] = [
-    .enableUpcomingFeature("ExistentialAny"),
+    // TODO: re-enable this when 5.8 is no longer supported. Having this
+    // enabled propagates to consumers before 5.8 which can result in build
+    // failures if the caller is using an existential from this package without.
+    // the explicit 'any'.
+    //
+    // .enableUpcomingFeature("ExistentialAny"),
 ]
 
 let package = Package(
