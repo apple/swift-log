@@ -16,7 +16,8 @@ services:
       - IMPORT_CHECK_ARG=--explicit-target-dependency-import-check error
       - EXPLICIT_SENDABLE_ARG=-Xswiftc -require-explicit-sendable
       - STRICT_CONCURRENCY_ARG=-Xswiftc -strict-concurrency=complete
-      - EXISTENTIAL_ANY_ARG=-Xswiftc -enable-upcoming-feature -Xswiftc ExistentialAny
+      # Generated test manifest uses existentials without 'any'.
+      #- EXISTENTIAL_ANY_ARG=-Xswiftc -enable-upcoming-feature -Xswiftc ExistentialAny
 
   shell:
     image: swift-log:22.04-main
