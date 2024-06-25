@@ -219,7 +219,7 @@ extension History {
                      message: String,
                      metadata: Logger.Metadata? = nil,
                      source: String? = nil,
-                     file: StaticString = #file,
+                     file: StaticString = #filePath,
                      fileID: String = #fileID,
                      line: UInt = #line) {
         let source = source ?? Logger.currentModule(fileID: "\(fileID)")
@@ -232,7 +232,7 @@ extension History {
                         message: String,
                         metadata: Logger.Metadata? = nil,
                         source: String? = nil,
-                        file: StaticString = #file,
+                        file: StaticString = #filePath,
                         fileID: String = #file,
                         line: UInt = #line) {
         let source = source ?? Logger.currentModule(fileID: "\(fileID)")
