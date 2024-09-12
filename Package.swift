@@ -19,15 +19,20 @@ let package = Package(
     name: "swift-log",
     products: [
         .library(name: "Logging", targets: ["Logging"]),
+        .library(name: "LoggingTestKit", targets: ["LoggingTestKit"]),
     ],
     targets: [
         .target(
             name: "Logging",
             dependencies: []
         ),
+        .target(
+            name: "LoggingTestKit",
+            dependencies: ["Logging"]
+        ),
         .testTarget(
             name: "LoggingTests",
-            dependencies: ["Logging"]
+            dependencies: ["Logging", "LoggingTestKit"]
         ),
     ]
 )

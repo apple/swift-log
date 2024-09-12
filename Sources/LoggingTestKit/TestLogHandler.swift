@@ -1,4 +1,19 @@
+//===----------------------------------------------------------------------===//
+//
+// This source file is part of the Swift Logging API open source project
+//
+// Copyright (c) 2024 Apple Inc. and the Swift Logging API project authors
+// Licensed under Apache License v2.0
+//
+// See LICENSE.txt for license information
+// See CONTRIBUTORS.txt for the list of Swift Logging API project authors
+//
+// SPDX-License-Identifier: Apache-2.0
+//
+//===----------------------------------------------------------------------===//
+
 import Foundation
+import Logging
 
 #if os(Linux)
     import Glibc
@@ -6,7 +21,7 @@ import Foundation
     import Darwin.C
 #endif
 
-public struct LogMessage: CustomStringConvertible {
+public struct CapturedLogMessage: CustomStringConvertible {
     private static let timestampFormat = createTimestampFormat()
 
     private static func createTimestampFormat() -> DateFormatter {
@@ -15,17 +30,17 @@ public struct LogMessage: CustomStringConvertible {
         return dateFormatter
     }
 
-    public let timestamp: Date
-    public let label: String
+    public var timestamp: Date
+    public var label: String
 
-    public let level: Logger.Level
-    public let message: Logger.Message
-    public let metadata: Logger.Metadata
-    public let source: String
+    public var level: Logger.Level
+    public var message: Logger.Message
+    public var metadata: Logger.Metadata
+    public var source: String
 
-    public let file: String
-    public let function: String
-    public let line: UInt
+    public var file: String
+    public var function: String
+    public var line: UInt
 
     public var prettyMetadata: String {
         metadata.sorted(by: {
@@ -118,12 +133,12 @@ public struct LogMessage: CustomStringConvertible {
     }
 }
 
-public struct TestingLogHandler: LogHandler, Sendable {
-    public typealias Filter = (LogMessage) -> Bool
+public struct TestLogHandler: LogHandler, Sendable {
+    public typealias Filter = (CapturedLogMessage) -> Bool
 
     public final class Container: @unchecked Sendable {
         // Guarded by queue:
-        private var _messages: [LogMessage] = []
+        private var _messages: [CapturedLogMessage] = []
 
         private let queue: DispatchQueue
 
@@ -131,18 +146,18 @@ public struct TestingLogHandler: LogHandler, Sendable {
 
         init(_ filter: @escaping Filter) {
             self.filter = filter
-            queue = DispatchQueue(label: "TestingLogHandler.Container:\(type(of: filter))")
+            queue = DispatchQueue(label: "TestLogHandler.Container:\(type(of: filter))")
         }
 
-        public var messages: [LogMessage] {
-            var result: [LogMessage] = []
+        public var messages: [CapturedLogMessage] {
+            var result: [CapturedLogMessage] = []
             queue.sync {
                 result = self._messages
             }
             return result
         }
 
-        public func append(_ message: LogMessage) -> Bool {
+        public func append(_ message: CapturedLogMessage) -> Bool {
             if filter(message) {
                 queue.sync {
                     _messages.append(message)
@@ -157,9 +172,15 @@ public struct TestingLogHandler: LogHandler, Sendable {
                 self._messages = []
             }
         }
+
+        public var factory: (String) -> TestLogHandler {
+            { label in
+                TestLogHandler(label: label, container: self)
+            }
+        }
     }
 
-    private static let queue = DispatchQueue(label: "TestingLogHandler")
+    private static let queue = DispatchQueue(label: "TestLogHandler")
 
     // Guarded by queue:
     private static var isInitialized = false
@@ -177,23 +198,11 @@ public struct TestingLogHandler: LogHandler, Sendable {
         }
     }
 
-    internal static func bootstrapInternal() {
-        queue.sync {
-            if !isInitialized {
-                isInitialized = true
-                LoggingSystem.bootstrapInternal({ TestingLogHandler(label: $0) })
-            }
-        }
-    }
-
     // Call in order to create a container of log messages which will only
     // contain messages that match the filter.
     public static func container(_ filter: @escaping Filter) -> Container {
         let container = Container(filter)
         queue.sync {
-            if !isInitialized {
-                fatalError("You must call TestingLogHandler.bootstrap() first. Ideally in your `override class func setUp() {...}")
-            }
             Self._containers.append(Weak(container))
         }
         return container
@@ -217,6 +226,7 @@ public struct TestingLogHandler: LogHandler, Sendable {
 
     private let label: String
     private var _logLevel: Logger.Level? = nil
+    private let container: Container?
 
     // Defined in LogHandler protocol:
     public var metadata: Logger.Metadata = [:]
@@ -243,6 +253,12 @@ public struct TestingLogHandler: LogHandler, Sendable {
 
     public init(label: String) {
         self.label = label
+        self.container = nil
+    }
+
+    private init(label: String, container: Container) {
+        self.label = label
+        self.container = container
     }
 
     public func log(
@@ -257,7 +273,7 @@ public struct TestingLogHandler: LogHandler, Sendable {
         var metadata = metadata ?? [:]
         metadata.merge(self.metadata, uniquingKeysWith: { left, _ in left })
 
-        let message = LogMessage(
+        let message = CapturedLogMessage(
             label: label,
             level: level,
             message: message,
@@ -268,9 +284,15 @@ public struct TestingLogHandler: LogHandler, Sendable {
             line: line
         )
         var inContainer = false
-        for container in Self.containers {
+        if let container = self.container {
             if container.append(message) {
                 inContainer = true
+            }
+        } else {
+            for container in Self.containers {
+                if container.append(message) {
+                    inContainer = true
+                }
             }
         }
         if !inContainer, effectiveLogLevel <= level {
