@@ -166,6 +166,20 @@ extension Logger {
         }
     }
 
+    /// Convenience function for merging multiple metadata items into a Logger's existing metadata.
+    ///
+    /// - parameters:
+    ///    - metadata: The metadata to merge into a Logger's existing metadata.
+    ///
+    /// - note: Logging metadata behaves as a value that means a change to the logging metadata will only affect the
+    ///         very `Logger` it was changed on.
+    @inlinable
+    public mutating func mergeMetadata(_ metadata: Logger.Metadata) {
+        metadata.forEach { (key, value) in
+            self.handler[metadataKey: key] = value
+        }
+    }
+
     /// Get or set the log level configured for this `Logger`.
     ///
     /// - note: `Logger`s treat `logLevel` as a value. This means that a change in `logLevel` will only affect this
