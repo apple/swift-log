@@ -38,6 +38,6 @@ with the all the required detail.
   and in the Server → Security Updates category on the [Swift forums][swift-forums-sec].
 
 [sswg]: https://github.com/swift-server/sswg
-[sswg-security]: https://github.com/swift-server/sswg/blob/main/security/README.md
+[sswg-security]: https://www.swift.org/sswg/security/
 [swift-forums-sec]: https://forums.swift.org/c/server/security-updates/
 [mitre]: https://cveform.mitre.org/
