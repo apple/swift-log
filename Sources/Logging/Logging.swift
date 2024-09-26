@@ -1093,7 +1093,11 @@ internal struct StdioOutputStream: TextOutputStream, @unchecked Sendable {
         #elseif os(Windows)
         let systemStderr = CRT.stderr
         #elseif canImport(Glibc)
+        #if os(Android)
+        let systemStderr = Glibc.stderr
+        #else
         let systemStderr = Glibc.stderr!
+        #endif
         #elseif canImport(Musl)
         let systemStderr = Musl.stderr!
         #elseif canImport(WASILibc)
@@ -1111,7 +1115,11 @@ internal struct StdioOutputStream: TextOutputStream, @unchecked Sendable {
         #elseif os(Windows)
         let systemStdout = CRT.stdout
         #elseif canImport(Glibc)
+        #if os(Android)
+        let systemStdout = Glibc.stdout
+        #else
         let systemStdout = Glibc.stdout!
+        #endif
         #elseif canImport(Musl)
         let systemStdout = Musl.stdout!
         #elseif canImport(WASILibc)
