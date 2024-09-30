@@ -22,6 +22,8 @@ import CRT
 #else
 import Glibc
 #endif
+#elseif canImport(Android)
+import Android
 #elseif canImport(Musl)
 import Musl
 #elseif canImport(WASILibc)
@@ -1094,6 +1096,8 @@ internal struct StdioOutputStream: TextOutputStream, @unchecked Sendable {
         let systemStderr = CRT.stderr
         #elseif canImport(Glibc)
         let systemStderr = Glibc.stderr!
+        #elseif canImport(Android)
+        let systemStderr = Android.stderr
         #elseif canImport(Musl)
         let systemStderr = Musl.stderr!
         #elseif canImport(WASILibc)
@@ -1112,6 +1116,8 @@ internal struct StdioOutputStream: TextOutputStream, @unchecked Sendable {
         let systemStdout = CRT.stdout
         #elseif canImport(Glibc)
         let systemStdout = Glibc.stdout!
+        #elseif canImport(Android)
+        let systemStdout = Android.stdout
         #elseif canImport(Musl)
         let systemStdout = Musl.stdout!
         #elseif canImport(WASILibc)
