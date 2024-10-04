@@ -45,6 +45,9 @@ import WASILibc
 /// logger.info("Hello World!")
 /// ```
 public struct Logger {
+    @available(macOS 10.15, *)
+    @TaskLocal
+    public static var logger: Logger = Logger(label: "NoOp")
     /// Storage class to hold the label and log handler
     @usableFromInline
     internal final class Storage: @unchecked /* and not actually */ Sendable /* but safe if only used with CoW */ {
@@ -92,8 +95,9 @@ public struct Logger {
         return self.handler.metadataProvider
     }
 
-    @usableFromInline
-    internal init(label: String, _ handler: any LogHandler) {
+    /// Creates a logger with a specific label and handler.
+    @inlinable
+    public init(label: String, _ handler: any LogHandler) {
         self._storage = Storage(label: label, handler: handler)
     }
 }
