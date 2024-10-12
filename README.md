@@ -169,7 +169,9 @@ public protocol LogHandler {
 
 Instructing `SwiftLog` to use your logging backend as the one the whole application (including all libraries) should use is very simple:
 
-    LoggingSystem.bootstrap(MyLogHandler.init)
+```swift
+LoggingSystem.bootstrap(MyLogHandler.init)
+```
 
 ### Implementation considerations
 
