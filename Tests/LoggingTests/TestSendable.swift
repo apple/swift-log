@@ -11,8 +11,10 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 //===----------------------------------------------------------------------===//
-@testable import Logging
+
 import XCTest
+
+@testable import Logging
 
 class SendableTest: XCTestCase {
     func testSendableLogger() async {

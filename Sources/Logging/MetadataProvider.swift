@@ -60,18 +60,18 @@ extension Logger {
     public struct MetadataProvider: _SwiftLogSendable {
         /// Provide ``Logger.Metadata`` from current context.
         @usableFromInline
-        internal let _provideMetadata: @Sendable() -> Metadata
+        internal let _provideMetadata: @Sendable () -> Metadata
 
         /// Create a new `MetadataProvider`.
         ///
         /// - Parameter provideMetadata: A closure extracting metadata from the current execution context.
-        public init(_ provideMetadata: @escaping @Sendable() -> Metadata) {
+        public init(_ provideMetadata: @escaping @Sendable () -> Metadata) {
             self._provideMetadata = provideMetadata
         }
 
         /// Invoke the metadata provider and return the generated contextual ``Logger/Metadata``.
         public func get() -> Metadata {
-            return self._provideMetadata()
+            self._provideMetadata()
         }
     }
 }

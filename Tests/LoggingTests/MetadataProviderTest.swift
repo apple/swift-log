@@ -11,8 +11,10 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 //===----------------------------------------------------------------------===//
-@testable import Logging
+
 import XCTest
+
+@testable import Logging
 
 #if canImport(Darwin)
 import Darwin
@@ -25,22 +27,30 @@ import Glibc
 final class MetadataProviderTest: XCTestCase {
     func testLoggingMergesOneOffMetadataWithProvidedMetadataFromExplicitlyPassed() throws {
         let logging = TestLogging()
-        LoggingSystem.bootstrapInternal({ logging.makeWithMetadataProvider(label: $0, metadataProvider: $1) },
-                                        metadataProvider: .init { ["common": "initial"]
-        })
+        LoggingSystem.bootstrapInternal(
+            { logging.makeWithMetadataProvider(label: $0, metadataProvider: $1) },
+            metadataProvider: .init {
+                ["common": "initial"]
+            }
+        )
 
-        let logger = Logger(label: #function, metadataProvider: .init {
-            [
-                "common": "provider",
-                "provider": "42",
-            ]
-        })
+        let logger = Logger(
+            label: #function,
+            metadataProvider: .init {
+                [
+                    "common": "provider",
+                    "provider": "42",
+                ]
+            }
+        )
 
         logger.log(level: .info, "test", metadata: ["one-off": "42", "common": "one-off"])
 
-        logging.history.assertExist(level: .info,
-                                    message: "test",
-                                    metadata: ["common": "one-off", "one-off": "42", "provider": "42"])
+        logging.history.assertExist(
+            level: .info,
+            message: "test",
+            metadata: ["common": "one-off", "one-off": "42", "provider": "42"]
+        )
     }
 
     func testLogHandlerThatDidNotImplementProvidersButSomeoneAttemptsToSetOneOnIt() {
@@ -51,7 +61,12 @@ final class MetadataProviderTest: XCTestCase {
 
         handler.metadataProvider = .simpleTestProvider
 
-        logging.history.assertExist(level: .warning, message: "Attempted to set metadataProvider on LogHandlerThatDidNotImplementMetadataProviders that did not implement support for them. Please contact the log handler maintainer to implement metadata provider support.", source: "Logging")
+        logging.history.assertExist(
+            level: .warning,
+            message:
+                "Attempted to set metadataProvider on LogHandlerThatDidNotImplementMetadataProviders that did not implement support for them. Please contact the log handler maintainer to implement metadata provider support.",
+            source: "Logging"
+        )
 
         let countBefore = logging.history.entries.count
         handler.metadataProvider = .simpleTestProvider
@@ -67,15 +82,20 @@ final class MetadataProviderTest: XCTestCase {
 
         handler.metadataProvider = .simpleTestProvider
 
-        logging.history.assertNotExist(level: .warning, message: "Attempted to set metadataProvider on LogHandlerThatDidImplementMetadataProviders that did not implement support for them. Please contact the log handler maintainer to implement metadata provider support.", source: "Logging")
+        logging.history.assertNotExist(
+            level: .warning,
+            message:
+                "Attempted to set metadataProvider on LogHandlerThatDidImplementMetadataProviders that did not implement support for them. Please contact the log handler maintainer to implement metadata provider support.",
+            source: "Logging"
+        )
         #endif
     }
 }
 
 extension Logger.MetadataProvider {
     static var simpleTestProvider: Logger.MetadataProvider {
-        return Logger.MetadataProvider {
-            return ["test": "provided"]
+        Logger.MetadataProvider {
+            ["test": "provided"]
         }
     }
 }
@@ -88,7 +108,7 @@ public struct LogHandlerThatDidNotImplementMetadataProviders: LogHandler {
 
     public subscript(metadataKey _: String) -> Logging.Logger.Metadata.Value? {
         get {
-            return nil
+            nil
         }
         set(newValue) {
             // ignore
@@ -99,14 +119,24 @@ public struct LogHandlerThatDidNotImplementMetadataProviders: LogHandler {
 
     public var logLevel: Logging.Logger.Level = .trace
 
-    public func log(level: Logger.Level,
-                    message: Logger.Message,
-                    metadata: Logger.Metadata?,
-                    source: String,
-                    file: String,
-                    function: String,
-                    line: UInt) {
-        self.testLogging.make(label: "fake").log(level: level, message: message, metadata: metadata, source: source, file: file, function: function, line: line)
+    public func log(
+        level: Logger.Level,
+        message: Logger.Message,
+        metadata: Logger.Metadata?,
+        source: String,
+        file: String,
+        function: String,
+        line: UInt
+    ) {
+        self.testLogging.make(label: "fake").log(
+            level: level,
+            message: message,
+            metadata: metadata,
+            source: source,
+            file: file,
+            function: function,
+            line: line
+        )
     }
 }
 
@@ -118,7 +148,7 @@ public struct LogHandlerThatDidImplementMetadataProviders: LogHandler {
 
     public subscript(metadataKey _: String) -> Logging.Logger.Metadata.Value? {
         get {
-            return nil
+            nil
         }
         set(newValue) {
             // ignore
@@ -131,13 +161,23 @@ public struct LogHandlerThatDidImplementMetadataProviders: LogHandler {
 
     public var metadataProvider: Logger.MetadataProvider?
 
-    public func log(level: Logger.Level,
-                    message: Logger.Message,
-                    metadata: Logger.Metadata?,
-                    source: String,
-                    file: String,
-                    function: String,
-                    line: UInt) {
-        self.testLogging.make(label: "fake").log(level: level, message: message, metadata: metadata, source: source, file: file, function: function, line: line)
+    public func log(
+        level: Logger.Level,
+        message: Logger.Message,
+        metadata: Logger.Metadata?,
+        source: String,
+        file: String,
+        function: String,
+        line: UInt
+    ) {
+        self.testLogging.make(label: "fake").log(
+            level: level,
+            message: message,
+            metadata: metadata,
+            source: source,
+            file: file,
+            function: function,
+            line: line
+        )
     }
 }
