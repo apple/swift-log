@@ -18,7 +18,7 @@ import PackageDescription
 let package = Package(
     name: "swift-log",
     products: [
-        .library(name: "Logging", targets: ["Logging"]),
+        .library(name: "Logging", targets: ["Logging"])
     ],
     targets: [
         .target(
