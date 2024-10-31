@@ -1076,7 +1076,11 @@ class LoggingTest: XCTestCase {
             let testString = "hello\u{0} world"
             log.critical("\(testString)")
 
+            #if os(Windows)
+            let size = _read(readFD, readBuffer, 256)
+            #else
             let size = read(readFD, readBuffer, 256)
+            #endif
 
             let output = String(
                 decoding: UnsafeRawBufferPointer(start: UnsafeRawPointer(readBuffer), count: numericCast(size)),
@@ -1094,11 +1098,20 @@ class LoggingTest: XCTestCase {
             LoggingSystem.bootstrapInternal { StreamLogHandler(label: $0, stream: logStream) }
             Logger(label: "test").critical("test")
 
+            #if os(Windows)
+            let size = _read(readFD, readBuffer, 256)
+            #else
             let size = read(readFD, readBuffer, 256)
+            #endif
             XCTAssertGreaterThan(size, -1, "expected flush")
 
             logStream.flush()
+
+            #if os(Windows)
+            let size2 = _read(readFD, readBuffer, 256)
+            #else
             let size2 = read(readFD, readBuffer, 256)
+            #endif
             XCTAssertEqual(size2, -1, "expected no flush")
         }
         // default flushing
@@ -1107,11 +1120,20 @@ class LoggingTest: XCTestCase {
             LoggingSystem.bootstrapInternal { StreamLogHandler(label: $0, stream: logStream) }
             Logger(label: "test").critical("test")
 
+            #if os(Windows)
+            let size = _read(readFD, readBuffer, 256)
+            #else
             let size = read(readFD, readBuffer, 256)
+            #endif
             XCTAssertEqual(size, -1, "expected no flush")
 
             logStream.flush()
+
+            #if os(Windows)
+            let size2 = _read(readFD, readBuffer, 256)
+            #else
             let size2 = read(readFD, readBuffer, 256)
+            #endif
             XCTAssertGreaterThan(size2, -1, "expected flush")
         }
     }
@@ -1123,14 +1145,15 @@ class LoggingTest: XCTestCase {
             let err = _pipe($0.baseAddress, 256, _O_BINARY)
             XCTAssertEqual(err, 0, "_pipe failed \(err)")
         }
+        let writeFD = _fdopen(fds[1], "w")
         #else
         fds.withUnsafeMutableBufferPointer { ptr in
             let err = pipe(ptr.baseAddress!)
             XCTAssertEqual(err, 0, "pipe failed \(err)")
         }
+        let writeFD = fdopen(fds[1], "w")
         #endif
 
-        let writeFD = fdopen(fds[1], "w")
         let writeBuffer = UnsafeMutablePointer<Int8>.allocate(capacity: 256)
         defer {
             writeBuffer.deinitialize(count: 256)
@@ -1163,7 +1186,11 @@ class LoggingTest: XCTestCase {
         body(writeFD!, readFD, readBuffer)
 
         for fd in fds {
+            #if os(Windows)
+            _close(fd)
+            #else
             close(fd)
+            #endif
         }
     }
 
