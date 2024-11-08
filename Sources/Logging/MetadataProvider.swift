@@ -99,3 +99,63 @@ extension Logger.MetadataProvider {
         }
     }
 }
+
+
+extension Logger.MetadataValue: Codable {
+    private enum CodingKeys: String, CodingKey {
+        case type
+        case value
+    }
+    
+    private enum ValueType: String, Codable {
+        case string
+        case stringConvertible
+        case dictionary
+        case array
+    }
+    
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        
+        switch self {
+        case .string(let stringValue):
+            try container.encode(ValueType.string, forKey: .type)
+            try container.encode(stringValue, forKey: .value)
+            
+        case .stringConvertible(let customValue):
+            try container.encode(ValueType.stringConvertible, forKey: .type)
+            try container.encode(customValue.description, forKey: .value) // Encode description
+            
+        case .dictionary(let dictValue):
+            try container.encode(ValueType.dictionary, forKey: .type)
+            try container.encode(dictValue, forKey: .value)
+            
+        case .array(let arrayValue):
+            try container.encode(ValueType.array, forKey: .type)
+            try container.encode(arrayValue, forKey: .value)
+        }
+    }
+    
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        let type = try container.decode(ValueType.self, forKey: .type)
+        
+        switch type {
+        case .string:
+            let stringValue = try container.decode(String.self, forKey: .value)
+            self = .string(stringValue)
+            
+        case .stringConvertible:
+            let stringValue = try container.decode(String.self, forKey: .value)
+            self = .stringConvertible(stringValue) // Store as `stringConvertible` using `String` type
+            
+        case .dictionary:
+            let dictValue = try container.decode(Logger.Metadata.self, forKey: .value)
+            self = .dictionary(dictValue)
+            
+        case .array:
+            let arrayValue = try container.decode([Logger.MetadataValue].self, forKey: .value)
+            self = .array(arrayValue)
+        }
+    }
+}
