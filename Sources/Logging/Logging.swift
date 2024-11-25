@@ -22,6 +22,8 @@ import CRT
 #else
 import Glibc
 #endif
+#elseif canImport(Android)
+import Android
 #elseif canImport(Musl)
 import Musl
 #elseif canImport(WASILibc)
@@ -33,7 +35,7 @@ import WASILibc
 /// A `Logger` is the central type in `SwiftLog`. Its central function is to emit log messages using one of the methods
 /// corresponding to a log level.
 ///
-/// `Logger`s are value types with respect to the ``logLevel`` and the ``metadata`` (as well as the immutable `label`
+/// `Logger`s are value types with respect to the ``Logger/Level`` and the ``Metadata`` (as well as the immutable `label`
 /// and the selected ``LogHandler``). Therefore, `Logger`s are suitable to be passed around between libraries if you want
 /// to preserve metadata across libraries.
 ///
@@ -44,8 +46,9 @@ import WASILibc
 /// ```
 public struct Logger {
     /// Storage class to hold the label and log handler
+    // The storage implements CoW to become Sendable
     @usableFromInline
-    internal final class Storage: @unchecked /* and not actually */ Sendable /* but safe if only used with CoW */ {
+    internal final class Storage: @unchecked Sendable {
         @usableFromInline
         var label: String
 
@@ -60,21 +63,21 @@ public struct Logger {
 
         @inlinable
         func copy() -> Storage {
-            return Storage(label: self.label, handler: self.handler)
+            Storage(label: self.label, handler: self.handler)
         }
     }
 
     @usableFromInline
     internal var _storage: Storage
     public var label: String {
-        return self._storage.label
+        self._storage.label
     }
 
     /// A computed property to access the `LogHandler`.
     @inlinable
     public var handler: any LogHandler {
         get {
-            return self._storage.handler
+            self._storage.handler
         }
         set {
             if !isKnownUniquelyReferenced(&self._storage) {
@@ -87,7 +90,7 @@ public struct Logger {
     /// The metadata provider this logger was created with.
     @inlinable
     public var metadataProvider: Logger.MetadataProvider? {
-        return self.handler.metadataProvider
+        self.handler.metadataProvider
     }
 
     @usableFromInline
@@ -115,17 +118,25 @@ extension Logger {
     ///    - line: The line this log message originates from (there's usually no need to pass it explicitly as it
     ///            defaults to `#line`).
     @inlinable
-    public func log(level: Logger.Level,
-                    _ message: @autoclosure () -> Logger.Message,
-                    metadata: @autoclosure () -> Logger.Metadata? = nil,
-                    source: @autoclosure () -> String? = nil,
-                    file: String = #fileID, function: String = #function, line: UInt = #line) {
+    public func log(
+        level: Logger.Level,
+        _ message: @autoclosure () -> Logger.Message,
+        metadata: @autoclosure () -> Logger.Metadata? = nil,
+        source: @autoclosure () -> String? = nil,
+        file: String = #fileID,
+        function: String = #function,
+        line: UInt = #line
+    ) {
         if self.logLevel <= level {
-            self.handler.log(level: level,
-                             message: message(),
-                             metadata: metadata(),
-                             source: source() ?? Logger.currentModule(fileID: (file)),
-                             file: file, function: function, line: line)
+            self.handler.log(
+                level: level,
+                message: message(),
+                metadata: metadata(),
+                source: source() ?? Logger.currentModule(fileID: (file)),
+                file: file,
+                function: function,
+                line: line
+            )
         }
     }
 
@@ -145,10 +156,14 @@ extension Logger {
     ///    - line: The line this log message originates from (there's usually no need to pass it explicitly as it
     ///            defaults to `#line`).
     @inlinable
-    public func log(level: Logger.Level,
-                    _ message: @autoclosure () -> Logger.Message,
-                    metadata: @autoclosure () -> Logger.Metadata? = nil,
-                    file: String = #fileID, function: String = #function, line: UInt = #line) {
+    public func log(
+        level: Logger.Level,
+        _ message: @autoclosure () -> Logger.Message,
+        metadata: @autoclosure () -> Logger.Metadata? = nil,
+        file: String = #fileID,
+        function: String = #function,
+        line: UInt = #line
+    ) {
         self.log(level: level, message(), metadata: metadata(), source: nil, file: file, function: function, line: line)
     }
 
@@ -159,7 +174,7 @@ extension Logger {
     @inlinable
     public subscript(metadataKey metadataKey: String) -> Logger.Metadata.Value? {
         get {
-            return self.handler[metadataKey: metadataKey]
+            self.handler[metadataKey: metadataKey]
         }
         set {
             self.handler[metadataKey: metadataKey] = newValue
@@ -175,7 +190,7 @@ extension Logger {
     @inlinable
     public var logLevel: Logger.Level {
         get {
-            return self.handler.logLevel
+            self.handler.logLevel
         }
         set {
             self.handler.logLevel = newValue
@@ -201,11 +216,23 @@ extension Logger {
     ///    - line: The line this log message originates from (there's usually no need to pass it explicitly as it
     ///            defaults to `#line`).
     @inlinable
-    public func trace(_ message: @autoclosure () -> Logger.Message,
-                      metadata: @autoclosure () -> Logger.Metadata? = nil,
-                      source: @autoclosure () -> String? = nil,
-                      file: String = #fileID, function: String = #function, line: UInt = #line) {
-        self.log(level: .trace, message(), metadata: metadata(), source: source(), file: file, function: function, line: line)
+    public func trace(
+        _ message: @autoclosure () -> Logger.Message,
+        metadata: @autoclosure () -> Logger.Metadata? = nil,
+        source: @autoclosure () -> String? = nil,
+        file: String = #fileID,
+        function: String = #function,
+        line: UInt = #line
+    ) {
+        self.log(
+            level: .trace,
+            message(),
+            metadata: metadata(),
+            source: source(),
+            file: file,
+            function: function,
+            line: line
+        )
     }
 
     /// Log a message passing with the ``Logger/Level/trace`` log level.
@@ -223,9 +250,13 @@ extension Logger {
     ///    - line: The line this log message originates from (there's usually no need to pass it explicitly as it
     ///            defaults to `#line`).
     @inlinable
-    public func trace(_ message: @autoclosure () -> Logger.Message,
-                      metadata: @autoclosure () -> Logger.Metadata? = nil,
-                      file: String = #fileID, function: String = #function, line: UInt = #line) {
+    public func trace(
+        _ message: @autoclosure () -> Logger.Message,
+        metadata: @autoclosure () -> Logger.Metadata? = nil,
+        file: String = #fileID,
+        function: String = #function,
+        line: UInt = #line
+    ) {
         self.trace(message(), metadata: metadata(), source: nil, file: file, function: function, line: line)
     }
 
@@ -246,11 +277,23 @@ extension Logger {
     ///    - line: The line this log message originates from (there's usually no need to pass it explicitly as it
     ///            defaults to `#line`).
     @inlinable
-    public func debug(_ message: @autoclosure () -> Logger.Message,
-                      metadata: @autoclosure () -> Logger.Metadata? = nil,
-                      source: @autoclosure () -> String? = nil,
-                      file: String = #fileID, function: String = #function, line: UInt = #line) {
-        self.log(level: .debug, message(), metadata: metadata(), source: source(), file: file, function: function, line: line)
+    public func debug(
+        _ message: @autoclosure () -> Logger.Message,
+        metadata: @autoclosure () -> Logger.Metadata? = nil,
+        source: @autoclosure () -> String? = nil,
+        file: String = #fileID,
+        function: String = #function,
+        line: UInt = #line
+    ) {
+        self.log(
+            level: .debug,
+            message(),
+            metadata: metadata(),
+            source: source(),
+            file: file,
+            function: function,
+            line: line
+        )
     }
 
     /// Log a message passing with the ``Logger/Level/debug`` log level.
@@ -268,9 +311,13 @@ extension Logger {
     ///    - line: The line this log message originates from (there's usually no need to pass it explicitly as it
     ///            defaults to `#line`).
     @inlinable
-    public func debug(_ message: @autoclosure () -> Logger.Message,
-                      metadata: @autoclosure () -> Logger.Metadata? = nil,
-                      file: String = #fileID, function: String = #function, line: UInt = #line) {
+    public func debug(
+        _ message: @autoclosure () -> Logger.Message,
+        metadata: @autoclosure () -> Logger.Metadata? = nil,
+        file: String = #fileID,
+        function: String = #function,
+        line: UInt = #line
+    ) {
         self.debug(message(), metadata: metadata(), source: nil, file: file, function: function, line: line)
     }
 
@@ -291,11 +338,23 @@ extension Logger {
     ///    - line: The line this log message originates from (there's usually no need to pass it explicitly as it
     ///            defaults to `#line`).
     @inlinable
-    public func info(_ message: @autoclosure () -> Logger.Message,
-                     metadata: @autoclosure () -> Logger.Metadata? = nil,
-                     source: @autoclosure () -> String? = nil,
-                     file: String = #fileID, function: String = #function, line: UInt = #line) {
-        self.log(level: .info, message(), metadata: metadata(), source: source(), file: file, function: function, line: line)
+    public func info(
+        _ message: @autoclosure () -> Logger.Message,
+        metadata: @autoclosure () -> Logger.Metadata? = nil,
+        source: @autoclosure () -> String? = nil,
+        file: String = #fileID,
+        function: String = #function,
+        line: UInt = #line
+    ) {
+        self.log(
+            level: .info,
+            message(),
+            metadata: metadata(),
+            source: source(),
+            file: file,
+            function: function,
+            line: line
+        )
     }
 
     /// Log a message passing with the ``Logger/Level/info`` log level.
@@ -313,9 +372,13 @@ extension Logger {
     ///    - line: The line this log message originates from (there's usually no need to pass it explicitly as it
     ///            defaults to `#line`).
     @inlinable
-    public func info(_ message: @autoclosure () -> Logger.Message,
-                     metadata: @autoclosure () -> Logger.Metadata? = nil,
-                     file: String = #fileID, function: String = #function, line: UInt = #line) {
+    public func info(
+        _ message: @autoclosure () -> Logger.Message,
+        metadata: @autoclosure () -> Logger.Metadata? = nil,
+        file: String = #fileID,
+        function: String = #function,
+        line: UInt = #line
+    ) {
         self.info(message(), metadata: metadata(), source: nil, file: file, function: function, line: line)
     }
 
@@ -336,11 +399,23 @@ extension Logger {
     ///    - line: The line this log message originates from (there's usually no need to pass it explicitly as it
     ///            defaults to `#line`).
     @inlinable
-    public func notice(_ message: @autoclosure () -> Logger.Message,
-                       metadata: @autoclosure () -> Logger.Metadata? = nil,
-                       source: @autoclosure () -> String? = nil,
-                       file: String = #fileID, function: String = #function, line: UInt = #line) {
-        self.log(level: .notice, message(), metadata: metadata(), source: source(), file: file, function: function, line: line)
+    public func notice(
+        _ message: @autoclosure () -> Logger.Message,
+        metadata: @autoclosure () -> Logger.Metadata? = nil,
+        source: @autoclosure () -> String? = nil,
+        file: String = #fileID,
+        function: String = #function,
+        line: UInt = #line
+    ) {
+        self.log(
+            level: .notice,
+            message(),
+            metadata: metadata(),
+            source: source(),
+            file: file,
+            function: function,
+            line: line
+        )
     }
 
     /// Log a message passing with the ``Logger/Level/notice`` log level.
@@ -358,9 +433,13 @@ extension Logger {
     ///    - line: The line this log message originates from (there's usually no need to pass it explicitly as it
     ///            defaults to `#line`).
     @inlinable
-    public func notice(_ message: @autoclosure () -> Logger.Message,
-                       metadata: @autoclosure () -> Logger.Metadata? = nil,
-                       file: String = #fileID, function: String = #function, line: UInt = #line) {
+    public func notice(
+        _ message: @autoclosure () -> Logger.Message,
+        metadata: @autoclosure () -> Logger.Metadata? = nil,
+        file: String = #fileID,
+        function: String = #function,
+        line: UInt = #line
+    ) {
         self.notice(message(), metadata: metadata(), source: nil, file: file, function: function, line: line)
     }
 
@@ -381,11 +460,23 @@ extension Logger {
     ///    - line: The line this log message originates from (there's usually no need to pass it explicitly as it
     ///            defaults to `#line`).
     @inlinable
-    public func warning(_ message: @autoclosure () -> Logger.Message,
-                        metadata: @autoclosure () -> Logger.Metadata? = nil,
-                        source: @autoclosure () -> String? = nil,
-                        file: String = #fileID, function: String = #function, line: UInt = #line) {
-        self.log(level: .warning, message(), metadata: metadata(), source: source(), file: file, function: function, line: line)
+    public func warning(
+        _ message: @autoclosure () -> Logger.Message,
+        metadata: @autoclosure () -> Logger.Metadata? = nil,
+        source: @autoclosure () -> String? = nil,
+        file: String = #fileID,
+        function: String = #function,
+        line: UInt = #line
+    ) {
+        self.log(
+            level: .warning,
+            message(),
+            metadata: metadata(),
+            source: source(),
+            file: file,
+            function: function,
+            line: line
+        )
     }
 
     /// Log a message passing with the ``Logger/Level/warning`` log level.
@@ -403,9 +494,13 @@ extension Logger {
     ///    - line: The line this log message originates from (there's usually no need to pass it explicitly as it
     ///            defaults to `#line`).
     @inlinable
-    public func warning(_ message: @autoclosure () -> Logger.Message,
-                        metadata: @autoclosure () -> Logger.Metadata? = nil,
-                        file: String = #fileID, function: String = #function, line: UInt = #line) {
+    public func warning(
+        _ message: @autoclosure () -> Logger.Message,
+        metadata: @autoclosure () -> Logger.Metadata? = nil,
+        file: String = #fileID,
+        function: String = #function,
+        line: UInt = #line
+    ) {
         self.warning(message(), metadata: metadata(), source: nil, file: file, function: function, line: line)
     }
 
@@ -426,11 +521,23 @@ extension Logger {
     ///    - line: The line this log message originates from (there's usually no need to pass it explicitly as it
     ///            defaults to `#line`).
     @inlinable
-    public func error(_ message: @autoclosure () -> Logger.Message,
-                      metadata: @autoclosure () -> Logger.Metadata? = nil,
-                      source: @autoclosure () -> String? = nil,
-                      file: String = #fileID, function: String = #function, line: UInt = #line) {
-        self.log(level: .error, message(), metadata: metadata(), source: source(), file: file, function: function, line: line)
+    public func error(
+        _ message: @autoclosure () -> Logger.Message,
+        metadata: @autoclosure () -> Logger.Metadata? = nil,
+        source: @autoclosure () -> String? = nil,
+        file: String = #fileID,
+        function: String = #function,
+        line: UInt = #line
+    ) {
+        self.log(
+            level: .error,
+            message(),
+            metadata: metadata(),
+            source: source(),
+            file: file,
+            function: function,
+            line: line
+        )
     }
 
     /// Log a message passing with the ``Logger/Level/error`` log level.
@@ -448,9 +555,13 @@ extension Logger {
     ///    - line: The line this log message originates from (there's usually no need to pass it explicitly as it
     ///            defaults to `#line`).
     @inlinable
-    public func error(_ message: @autoclosure () -> Logger.Message,
-                      metadata: @autoclosure () -> Logger.Metadata? = nil,
-                      file: String = #fileID, function: String = #function, line: UInt = #line) {
+    public func error(
+        _ message: @autoclosure () -> Logger.Message,
+        metadata: @autoclosure () -> Logger.Metadata? = nil,
+        file: String = #fileID,
+        function: String = #function,
+        line: UInt = #line
+    ) {
         self.error(message(), metadata: metadata(), source: nil, file: file, function: function, line: line)
     }
 
@@ -470,11 +581,23 @@ extension Logger {
     ///    - line: The line this log message originates from (there's usually no need to pass it explicitly as it
     ///            defaults to `#line`).
     @inlinable
-    public func critical(_ message: @autoclosure () -> Logger.Message,
-                         metadata: @autoclosure () -> Logger.Metadata? = nil,
-                         source: @autoclosure () -> String? = nil,
-                         file: String = #fileID, function: String = #function, line: UInt = #line) {
-        self.log(level: .critical, message(), metadata: metadata(), source: source(), file: file, function: function, line: line)
+    public func critical(
+        _ message: @autoclosure () -> Logger.Message,
+        metadata: @autoclosure () -> Logger.Metadata? = nil,
+        source: @autoclosure () -> String? = nil,
+        file: String = #fileID,
+        function: String = #function,
+        line: UInt = #line
+    ) {
+        self.log(
+            level: .critical,
+            message(),
+            metadata: metadata(),
+            source: source(),
+            file: file,
+            function: function,
+            line: line
+        )
     }
 
     /// Log a message passing with the ``Logger/Level/critical`` log level.
@@ -491,9 +614,13 @@ extension Logger {
     ///    - line: The line this log message originates from (there's usually no need to pass it explicitly as it
     ///            defaults to `#line`).
     @inlinable
-    public func critical(_ message: @autoclosure () -> Logger.Message,
-                         metadata: @autoclosure () -> Logger.Metadata? = nil,
-                         file: String = #fileID, function: String = #function, line: UInt = #line) {
+    public func critical(
+        _ message: @autoclosure () -> Logger.Message,
+        metadata: @autoclosure () -> Logger.Metadata? = nil,
+        file: String = #fileID,
+        function: String = #function,
+        line: UInt = #line
+    ) {
         self.critical(message(), metadata: metadata(), source: nil, file: file, function: function, line: line)
     }
 }
@@ -502,9 +629,14 @@ extension Logger {
 /// configured. `LoggingSystem` is set up just once in a given program to set up the desired logging backend
 /// implementation.
 public enum LoggingSystem {
-    private static let _factory = FactoryBox({ label, _ in StreamLogHandler.standardError(label: label) },
-                                             violationErrorMesage: "logging system can only be initialized once per process.")
-    private static let _metadataProviderFactory = MetadataProviderBox(nil, violationErrorMesage: "logging system can only be initialized once per process.")
+    private static let _factory = FactoryBox(
+        { label, _ in StreamLogHandler.standardError(label: label) },
+        violationErrorMesage: "logging system can only be initialized once per process."
+    )
+    private static let _metadataProviderFactory = MetadataProviderBox(
+        nil,
+        violationErrorMesage: "logging system can only be initialized once per process."
+    )
 
     #if DEBUG
     private static let _warnOnceBox: WarnOnceBox = WarnOnceBox()
@@ -517,10 +649,13 @@ public enum LoggingSystem {
     /// - parameters:
     ///     - factory: A closure that given a `Logger` identifier, produces an instance of the `LogHandler`.
     @preconcurrency
-    public static func bootstrap(_ factory: @escaping @Sendable(String) -> any LogHandler) {
-        self._factory.replace({ label, _ in
-            factory(label)
-        }, validate: true)
+    public static func bootstrap(_ factory: @escaping @Sendable (String) -> any LogHandler) {
+        self._factory.replace(
+            { label, _ in
+                factory(label)
+            },
+            validate: true
+        )
     }
 
     /// `bootstrap` is a one-time configuration function which globally selects the desired logging backend
@@ -534,29 +669,36 @@ public enum LoggingSystem {
     ///     - metadataProvider: The `MetadataProvider` used to inject runtime-generated metadata from the execution context.
     ///     - factory: A closure that given a `Logger` identifier, produces an instance of the `LogHandler`.
     @preconcurrency
-    public static func bootstrap(_ factory: @escaping @Sendable(String, Logger.MetadataProvider?) -> any LogHandler,
-                                 metadataProvider: Logger.MetadataProvider?) {
+    public static func bootstrap(
+        _ factory: @escaping @Sendable (String, Logger.MetadataProvider?) -> any LogHandler,
+        metadataProvider: Logger.MetadataProvider?
+    ) {
         self._metadataProviderFactory.replace(metadataProvider, validate: true)
         self._factory.replace(factory, validate: true)
     }
 
     // for our testing we want to allow multiple bootstrapping
-    internal static func bootstrapInternal(_ factory: @escaping @Sendable(String) -> any LogHandler) {
+    internal static func bootstrapInternal(_ factory: @escaping @Sendable (String) -> any LogHandler) {
         self._metadataProviderFactory.replace(nil, validate: false)
-        self._factory.replace({ label, _ in
-            factory(label)
-        }, validate: false)
+        self._factory.replace(
+            { label, _ in
+                factory(label)
+            },
+            validate: false
+        )
     }
 
     // for our testing we want to allow multiple bootstrapping
-    internal static func bootstrapInternal(_ factory: @escaping @Sendable(String, Logger.MetadataProvider?) -> any LogHandler,
-                                           metadataProvider: Logger.MetadataProvider?) {
+    internal static func bootstrapInternal(
+        _ factory: @escaping @Sendable (String, Logger.MetadataProvider?) -> any LogHandler,
+        metadataProvider: Logger.MetadataProvider?
+    ) {
         self._metadataProviderFactory.replace(metadataProvider, validate: false)
         self._factory.replace(factory, validate: false)
     }
 
     fileprivate static var factory: (String, Logger.MetadataProvider?) -> any LogHandler {
-        return { label, metadataProvider in
+        { label, metadataProvider in
             self._factory.underlying(label, metadataProvider)
         }
     }
@@ -571,14 +713,16 @@ public enum LoggingSystem {
     /// factory to avoid using the bootstrapped metadata provider may sometimes be useful, usually it will lead to
     /// un-expected behavior, so make sure to always propagate it to your handlers.
     public static var metadataProvider: Logger.MetadataProvider? {
-        return self._metadataProviderFactory.underlying
+        self._metadataProviderFactory.underlying
     }
 
     #if DEBUG
     /// Used to warn only once about a specific ``LogHandler`` type when it does not support ``Logger/MetadataProvider``,
     /// but an attempt was made to set a metadata provider on such handler. In order to avoid flooding the system with
     /// warnings such warning is only emitted in debug mode, and even then at-most once for a handler type.
-    internal static func warnOnceLogHandlerNotSupportedMetadataProvider<Handler: LogHandler>(_ type: Handler.Type) -> Bool {
+    internal static func warnOnceLogHandlerNotSupportedMetadataProvider<Handler: LogHandler>(
+        _ type: Handler.Type
+    ) -> Bool {
         self._warnOnceBox.warnOnceLogHandlerNotSupportedMetadataProvider(type: type)
     }
     #endif
@@ -620,7 +764,7 @@ public enum LoggingSystem {
             }
 
             var underlying: BoxedType {
-                return self._underlying
+                self._underlying
             }
 
             init(underlying: BoxedType, violationErrorMessage: String) {
@@ -632,8 +776,12 @@ public enum LoggingSystem {
         private let storage: RWLockedValueBox<ReplaceOnce>
 
         init(_ underlying: BoxedType, violationErrorMesage: String) {
-            self.storage = .init(initialValue: ReplaceOnce(underlying: underlying,
-                                                           violationErrorMessage: violationErrorMesage))
+            self.storage = .init(
+                initialValue: ReplaceOnce(
+                    underlying: underlying,
+                    violationErrorMessage: violationErrorMesage
+                )
+            )
         }
 
         func replace(_ newUnderlying: BoxedType, validate: Bool) {
@@ -645,7 +793,9 @@ public enum LoggingSystem {
         }
     }
 
-    private typealias FactoryBox = ReplaceOnceBox< @Sendable(_ label: String, _ provider: Logger.MetadataProvider?) -> any LogHandler>
+    private typealias FactoryBox = ReplaceOnceBox<
+        @Sendable (_ label: String, _ provider: Logger.MetadataProvider?) -> any LogHandler
+    >
 
     private typealias MetadataProviderBox = ReplaceOnceBox<Logger.MetadataProvider?>
 }
@@ -780,11 +930,14 @@ extension Logger {
     ///     - metadataProvider: The custom metadata provider this logger should invoke,
     ///                         instead of the system wide bootstrapped one, when a log statement is about to be emitted.
     public init(label: String, metadataProvider: MetadataProvider) {
-        self = Logger(label: label, factory: { label in
-            var handler = LoggingSystem.factory(label, metadataProvider)
-            handler.metadataProvider = metadataProvider
-            return handler
-        })
+        self = Logger(
+            label: label,
+            factory: { label in
+                var handler = LoggingSystem.factory(label, metadataProvider)
+                handler.metadataProvider = metadataProvider
+                return handler
+            }
+        )
     }
 }
 
@@ -811,7 +964,7 @@ extension Logger.Level {
 
 extension Logger.Level: Comparable {
     public static func < (lhs: Logger.Level, rhs: Logger.Level) -> Bool {
-        return lhs.naturalIntegralValue < rhs.naturalIntegralValue
+        lhs.naturalIntegralValue < rhs.naturalIntegralValue
     }
 }
 
@@ -848,7 +1001,9 @@ extension Logger {
     ///
     ///     logger.info("Hello \(world)")
     ///
-    public struct Message: ExpressibleByStringLiteral, Equatable, CustomStringConvertible, ExpressibleByStringInterpolation {
+    public struct Message: ExpressibleByStringLiteral, Equatable, CustomStringConvertible,
+        ExpressibleByStringInterpolation
+    {
         public typealias StringLiteralType = String
 
         private var value: String
@@ -858,7 +1013,7 @@ extension Logger {
         }
 
         public var description: String {
-            return self.value
+            self.value
         }
     }
 }
@@ -934,7 +1089,7 @@ public struct MultiplexLogHandler: LogHandler {
 
     public var logLevel: Logger.Level {
         get {
-            return self.effectiveLogLevel
+            self.effectiveLogLevel
         }
         set {
             self.mutatingForEachHandler { $0.logLevel = newValue }
@@ -979,15 +1134,25 @@ public struct MultiplexLogHandler: LogHandler {
         }
     }
 
-    public func log(level: Logger.Level,
-                    message: Logger.Message,
-                    metadata: Logger.Metadata?,
-                    source: String,
-                    file: String,
-                    function: String,
-                    line: UInt) {
+    public func log(
+        level: Logger.Level,
+        message: Logger.Message,
+        metadata: Logger.Metadata?,
+        source: String,
+        file: String,
+        function: String,
+        line: UInt
+    ) {
         for handler in self.handlers where handler.logLevel <= level {
-            handler.log(level: level, message: message, metadata: metadata, source: source, file: file, function: function, line: line)
+            handler.log(
+                level: level,
+                message: message,
+                metadata: metadata,
+                source: source,
+                file: file,
+                function: function,
+                line: line
+            )
         }
     }
 
@@ -996,7 +1161,9 @@ public struct MultiplexLogHandler: LogHandler {
             var effective: Logger.Metadata = [:]
             // as a rough estimate we assume that the underlying handlers have a similar metadata count,
             // and we use the first one's current count to estimate how big of a dictionary we need to allocate:
-            effective.reserveCapacity(self.handlers.first!.metadata.count) // !-safe, we always have at least one handler
+
+            // !-safe, we always have at least one handler
+            effective.reserveCapacity(self.handlers.first!.metadata.count)
 
             for handler in self.handlers {
                 effective.merge(handler.metadata, uniquingKeysWith: { _, handlerMetadata in handlerMetadata })
@@ -1094,6 +1261,8 @@ internal struct StdioOutputStream: TextOutputStream, @unchecked Sendable {
         let systemStderr = CRT.stderr
         #elseif canImport(Glibc)
         let systemStderr = Glibc.stderr!
+        #elseif canImport(Android)
+        let systemStderr = Android.stderr
         #elseif canImport(Musl)
         let systemStderr = Musl.stderr!
         #elseif canImport(WASILibc)
@@ -1112,6 +1281,8 @@ internal struct StdioOutputStream: TextOutputStream, @unchecked Sendable {
         let systemStdout = CRT.stdout
         #elseif canImport(Glibc)
         let systemStdout = Glibc.stdout!
+        #elseif canImport(Android)
+        let systemStdout = Android.stdout
         #elseif canImport(Musl)
         let systemStdout = Musl.stdout!
         #elseif canImport(WASILibc)
@@ -1141,22 +1312,30 @@ public struct StreamLogHandler: LogHandler {
 
     /// Factory that makes a `StreamLogHandler` to directs its output to `stdout`
     public static func standardOutput(label: String) -> StreamLogHandler {
-        return StreamLogHandler(label: label, stream: StdioOutputStream.stdout, metadataProvider: LoggingSystem.metadataProvider)
+        StreamLogHandler(
+            label: label,
+            stream: StdioOutputStream.stdout,
+            metadataProvider: LoggingSystem.metadataProvider
+        )
     }
 
     /// Factory that makes a `StreamLogHandler` that directs its output to `stdout`
     public static func standardOutput(label: String, metadataProvider: Logger.MetadataProvider?) -> StreamLogHandler {
-        return StreamLogHandler(label: label, stream: StdioOutputStream.stdout, metadataProvider: metadataProvider)
+        StreamLogHandler(label: label, stream: StdioOutputStream.stdout, metadataProvider: metadataProvider)
     }
 
     /// Factory that makes a `StreamLogHandler` that directs its output to `stderr`
     public static func standardError(label: String) -> StreamLogHandler {
-        return StreamLogHandler(label: label, stream: StdioOutputStream.stderr, metadataProvider: LoggingSystem.metadataProvider)
+        StreamLogHandler(
+            label: label,
+            stream: StdioOutputStream.stderr,
+            metadataProvider: LoggingSystem.metadataProvider
+        )
     }
 
     /// Factory that makes a `StreamLogHandler` that direct its output to `stderr`
     public static func standardError(label: String, metadataProvider: Logger.MetadataProvider?) -> StreamLogHandler {
-        return StreamLogHandler(label: label, stream: StdioOutputStream.stderr, metadataProvider: metadataProvider)
+        StreamLogHandler(label: label, stream: StdioOutputStream.stderr, metadataProvider: metadataProvider)
     }
 
     private let stream: any _SendableTextOutputStream
@@ -1175,7 +1354,7 @@ public struct StreamLogHandler: LogHandler {
 
     public subscript(metadataKey metadataKey: String) -> Logger.Metadata.Value? {
         get {
-            return self.metadata[metadataKey]
+            self.metadata[metadataKey]
         }
         set {
             self.metadata[metadataKey] = newValue
@@ -1194,14 +1373,20 @@ public struct StreamLogHandler: LogHandler {
         self.metadataProvider = metadataProvider
     }
 
-    public func log(level: Logger.Level,
-                    message: Logger.Message,
-                    metadata explicitMetadata: Logger.Metadata?,
-                    source: String,
-                    file: String,
-                    function: String,
-                    line: UInt) {
-        let effectiveMetadata = StreamLogHandler.prepareMetadata(base: self.metadata, provider: self.metadataProvider, explicit: explicitMetadata)
+    public func log(
+        level: Logger.Level,
+        message: Logger.Message,
+        metadata explicitMetadata: Logger.Metadata?,
+        source: String,
+        file: String,
+        function: String,
+        line: UInt
+    ) {
+        let effectiveMetadata = StreamLogHandler.prepareMetadata(
+            base: self.metadata,
+            provider: self.metadataProvider,
+            explicit: explicitMetadata
+        )
 
         let prettyMetadata: String?
         if let effectiveMetadata = effectiveMetadata {
@@ -1211,10 +1396,16 @@ public struct StreamLogHandler: LogHandler {
         }
 
         var stream = self.stream
-        stream.write("\(self.timestamp()) \(level) \(self.label) :\(prettyMetadata.map { " \($0)" } ?? "") [\(source)] \(message)\n")
+        stream.write(
+            "\(self.timestamp()) \(level) \(self.label) :\(prettyMetadata.map { " \($0)" } ?? "") [\(source)] \(message)\n"
+        )
     }
 
-    internal static func prepareMetadata(base: Logger.Metadata, provider: Logger.MetadataProvider?, explicit: Logger.Metadata?) -> Logger.Metadata? {
+    internal static func prepareMetadata(
+        base: Logger.Metadata,
+        provider: Logger.MetadataProvider?,
+        explicit: Logger.Metadata?
+    ) -> Logger.Metadata? {
         var metadata = base
 
         let provided = provider?.get() ?? [:]
@@ -1274,33 +1465,42 @@ public struct SwiftLogNoOpLogHandler: LogHandler {
 
     public init(_: String) {}
 
-    @inlinable public func log(level: Logger.Level, message: Logger.Message, metadata: Logger.Metadata?, file: String, function: String, line: UInt) {}
+    @inlinable public func log(
+        level: Logger.Level,
+        message: Logger.Message,
+        metadata: Logger.Metadata?,
+        file: String,
+        function: String,
+        line: UInt
+    ) {}
 
-    public func log(level: Logger.Level,
-                    message: Logger.Message,
-                    metadata: Logger.Metadata?,
-                    source: String,
-                    file: String,
-                    function: String,
-                    line: UInt) {}
+    public func log(
+        level: Logger.Level,
+        message: Logger.Message,
+        metadata: Logger.Metadata?,
+        source: String,
+        file: String,
+        function: String,
+        line: UInt
+    ) {}
 
     @inlinable public subscript(metadataKey _: String) -> Logger.Metadata.Value? {
         get {
-            return nil
+            nil
         }
         set {}
     }
 
     @inlinable public var metadata: Logger.Metadata {
         get {
-            return [:]
+            [:]
         }
         set {}
     }
 
     @inlinable public var logLevel: Logger.Level {
         get {
-            return .critical
+            .critical
         }
         set {}
     }
@@ -1312,7 +1512,7 @@ extension Logger {
         let utf8All = filePath.utf8
         return filePath.utf8.lastIndex(of: UInt8(ascii: "/")).flatMap { lastSlash -> Substring? in
             utf8All[..<lastSlash].lastIndex(of: UInt8(ascii: "/")).map { secondLastSlash -> Substring in
-                filePath[utf8All.index(after: secondLastSlash) ..< lastSlash]
+                filePath[utf8All.index(after: secondLastSlash)..<lastSlash]
             }
         }.map {
             String($0)
@@ -1394,7 +1594,7 @@ private final class WarnOnceBox: @unchecked Sendable {
         self.lock.withLock {
             let id = ObjectIdentifier(type)
             let (inserted, _) = warnOnceLogHandlerNotSupportedMetadataProviderPerType.insert(id)
-            return inserted // warn about this handler type, it is the first time we encountered it
+            return inserted  // warn about this handler type, it is the first time we encountered it
         }
     }
 }

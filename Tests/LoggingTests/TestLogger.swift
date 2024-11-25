@@ -11,9 +11,12 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 //===----------------------------------------------------------------------===//
+
 import Foundation
-@testable import Logging
 import XCTest
+
+@testable import Logging
+
 #if os(Windows)
 import WinSDK
 #endif
@@ -24,11 +27,11 @@ import Dispatch
 #endif
 
 internal struct TestLogging {
-    private let _config = Config() // shared among loggers
-    private let recorder = Recorder() // shared among loggers
+    private let _config = Config()  // shared among loggers
+    private let recorder = Recorder()  // shared among loggers
 
     func make(label: String) -> some LogHandler {
-        return TestLogHandler(
+        TestLogHandler(
             label: label,
             config: self.config,
             recorder: self.recorder,
@@ -37,7 +40,7 @@ internal struct TestLogging {
     }
 
     func makeWithMetadataProvider(label: String, metadataProvider: Logger.MetadataProvider?) -> (some LogHandler) {
-        return TestLogHandler(
+        TestLogHandler(
             label: label,
             config: self.config,
             recorder: self.recorder,
@@ -45,14 +48,14 @@ internal struct TestLogging {
         )
     }
 
-    var config: Config { return self._config }
-    var history: some History { return self.recorder }
+    var config: Config { self._config }
+    var history: some History { self.recorder }
 }
 
 internal struct TestLogHandler: LogHandler {
     private let recorder: Recorder
     private let config: Config
-    private var logger: Logger // the actual logger
+    private var logger: Logger  // the actual logger
 
     let label: String
     public var metadataProvider: Logger.MetadataProvider?
@@ -75,11 +78,15 @@ internal struct TestLogHandler: LogHandler {
         self.metadataProvider = LoggingSystem.metadataProvider
     }
 
-    func log(level: Logger.Level,
-             message: Logger.Message,
-             metadata explicitMetadata: Logger.Metadata?,
-             source: String,
-             file: String, function: String, line: UInt) {
+    func log(
+        level: Logger.Level,
+        message: Logger.Message,
+        metadata explicitMetadata: Logger.Metadata?,
+        source: String,
+        file: String,
+        function: String,
+        line: UInt
+    ) {
         // baseline metadata, that was set on handler:
         var metadata = self._metadataSet ? self.metadata : MDC.global.metadata
         // contextual metadata, e.g. from task-locals:
@@ -92,7 +99,15 @@ internal struct TestLogHandler: LogHandler {
             metadata.merge(explicitMetadata, uniquingKeysWith: { _, explicit in explicit })
         }
 
-        self.logger.log(level: level, message, metadata: metadata, source: source, file: file, function: function, line: line)
+        self.logger.log(
+            level: level,
+            message,
+            metadata: metadata,
+            source: source,
+            file: file,
+            function: function,
+            line: line
+        )
         self.recorder.record(level: level, metadata: metadata, message: message, source: source)
     }
 
@@ -100,7 +115,7 @@ internal struct TestLogHandler: LogHandler {
     var logLevel: Logger.Level {
         get {
             // get from config unless set
-            return self._logLevel ?? self.config.get(key: self.label)
+            self._logLevel ?? self.config.get(key: self.label)
         }
         set {
             self._logLevel = newValue
@@ -116,7 +131,7 @@ internal struct TestLogHandler: LogHandler {
 
     public var metadata: Logger.Metadata {
         get {
-            return self._metadata
+            self._metadata
         }
         set {
             self._metadata = newValue
@@ -126,7 +141,7 @@ internal struct TestLogHandler: LogHandler {
     // TODO: would be nice to delegate to local copy of logger but StdoutLogger is a reference type. why?
     subscript(metadataKey metadataKey: Logger.Metadata.Key) -> Logger.Metadata.Value? {
         get {
-            return self._metadata[metadataKey]
+            self._metadata[metadataKey]
         }
         set {
             self._metadata[metadataKey] = newValue
@@ -141,7 +156,7 @@ internal class Config {
     private var storage = [String: Logger.Level]()
 
     func get(key: String) -> Logger.Level {
-        return self.get(key) ?? self.get(Config.ALL) ?? Logger.Level.debug
+        self.get(key) ?? self.get(Config.ALL) ?? Logger.Level.debug
     }
 
     func get(_ key: String) -> Logger.Level? {
@@ -165,13 +180,15 @@ internal class Recorder: History {
     private var _entries = [LogEntry]()
 
     func record(level: Logger.Level, metadata: Logger.Metadata?, message: Logger.Message, source: String) {
-        return self.lock.withLock {
-            self._entries.append(LogEntry(level: level, metadata: metadata, message: message.description, source: source))
+        self.lock.withLock {
+            self._entries.append(
+                LogEntry(level: level, metadata: metadata, message: message.description, source: source)
+            )
         }
     }
 
     var entries: [LogEntry] {
-        return self.lock.withLock { self._entries }
+        self.lock.withLock { self._entries }
     }
 }
 
@@ -179,31 +196,31 @@ internal protocol History {
     var entries: [LogEntry] { get }
 }
 
-internal extension History {
+extension History {
     func atLevel(level: Logger.Level) -> [LogEntry] {
-        return self.entries.filter { entry in
+        self.entries.filter { entry in
             level == entry.level
         }
     }
 
     var trace: [LogEntry] {
-        return self.atLevel(level: .debug)
+        self.atLevel(level: .debug)
     }
 
     var debug: [LogEntry] {
-        return self.atLevel(level: .debug)
+        self.atLevel(level: .debug)
     }
 
     var info: [LogEntry] {
-        return self.atLevel(level: .info)
+        self.atLevel(level: .info)
     }
 
     var warning: [LogEntry] {
-        return self.atLevel(level: .warning)
+        self.atLevel(level: .warning)
     }
 
     var error: [LogEntry] {
-        return self.atLevel(level: .error)
+        self.atLevel(level: .error)
     }
 }
 
@@ -215,34 +232,46 @@ internal struct LogEntry {
 }
 
 extension History {
-    func assertExist(level: Logger.Level,
-                     message: String,
-                     metadata: Logger.Metadata? = nil,
-                     source: String? = nil,
-                     file: StaticString = #filePath,
-                     fileID: String = #fileID,
-                     line: UInt = #line) {
+    func assertExist(
+        level: Logger.Level,
+        message: String,
+        metadata: Logger.Metadata? = nil,
+        source: String? = nil,
+        file: StaticString = #filePath,
+        fileID: String = #fileID,
+        line: UInt = #line
+    ) {
         let source = source ?? Logger.currentModule(fileID: "\(fileID)")
         let entry = self.find(level: level, message: message, metadata: metadata, source: source)
-        XCTAssertNotNil(entry, "entry not found: \(level), \(source), \(String(describing: metadata)), \(message)",
-                        file: file, line: line)
+        XCTAssertNotNil(
+            entry,
+            "entry not found: \(level), \(source), \(String(describing: metadata)), \(message)",
+            file: file,
+            line: line
+        )
     }
 
-    func assertNotExist(level: Logger.Level,
-                        message: String,
-                        metadata: Logger.Metadata? = nil,
-                        source: String? = nil,
-                        file: StaticString = #filePath,
-                        fileID: String = #file,
-                        line: UInt = #line) {
+    func assertNotExist(
+        level: Logger.Level,
+        message: String,
+        metadata: Logger.Metadata? = nil,
+        source: String? = nil,
+        file: StaticString = #filePath,
+        fileID: String = #file,
+        line: UInt = #line
+    ) {
         let source = source ?? Logger.currentModule(fileID: "\(fileID)")
         let entry = self.find(level: level, message: message, metadata: metadata, source: source)
-        XCTAssertNil(entry, "entry was found: \(level), \(source), \(String(describing: metadata)), \(message)",
-                     file: file, line: line)
+        XCTAssertNil(
+            entry,
+            "entry was found: \(level), \(source), \(String(describing: metadata)), \(message)",
+            file: file,
+            line: line
+        )
     }
 
     func find(level: Logger.Level, message: String, metadata: Logger.Metadata? = nil, source: String) -> LogEntry? {
-        return self.entries.first { entry in
+        self.entries.first { entry in
             if entry.level != level {
                 return false
             }
@@ -287,7 +316,7 @@ public class MDC {
 
     public subscript(metadataKey: String) -> Logger.Metadata.Value? {
         get {
-            return self.lock.withLock {
+            self.lock.withLock {
                 self.storage[self.threadId]?[metadataKey]
             }
         }
@@ -302,7 +331,7 @@ public class MDC {
     }
 
     public var metadata: Logger.Metadata {
-        return self.lock.withLock {
+        self.lock.withLock {
             self.storage[self.threadId] ?? [:]
         }
     }
@@ -314,17 +343,25 @@ public class MDC {
     }
 
     public func with(metadata: Logger.Metadata, _ body: () throws -> Void) rethrows {
-        metadata.forEach { self[$0] = $1 }
+        for (key, value) in metadata {
+            self[key] = value
+        }
         defer {
-            metadata.keys.forEach { self[$0] = nil }
+            for (key, _) in metadata {
+                self[key] = nil
+            }
         }
         try body()
     }
 
     public func with<T>(metadata: Logger.Metadata, _ body: () throws -> T) rethrows -> T {
-        metadata.forEach { self[$0] = $1 }
+        for (key, value) in metadata {
+            self[key] = value
+        }
         defer {
-            metadata.keys.forEach { self[$0] = nil }
+            for (key, _) in metadata {
+                self[key] = nil
+            }
         }
         return try body()
     }
@@ -347,7 +384,7 @@ public class MDC {
     }
 }
 
-internal extension NSLock {
+extension NSLock {
     func withLock<T>(_ body: () -> T) -> T {
         self.lock()
         defer {
@@ -367,7 +404,7 @@ internal struct TestLibrary: Sendable {
         self.logger.info("TestLibrary::doSomething")
     }
 
-    public func doSomethingAsync(completion: @escaping @Sendable() -> Void) {
+    public func doSomethingAsync(completion: @escaping @Sendable () -> Void) {
         // libraries that use global loggers and async, need to make sure they propagate the
         // logging metadata when creating a new thread
         let metadata = MDC.global.metadata
