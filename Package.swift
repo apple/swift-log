@@ -1,4 +1,4 @@
-// swift-tools-version:5.8
+// swift-tools-version:5.9
 //===----------------------------------------------------------------------===//
 //
 // This source file is part of the Swift Logging API open source project
@@ -31,3 +31,9 @@ let package = Package(
         ),
     ]
 )
+
+for target in package.targets {
+    var settings = target.swiftSettings ?? []
+    settings.append(.enableExperimentalFeature("StrictConcurrency=complete"))
+    target.swiftSettings = settings
+}
