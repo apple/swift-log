@@ -750,7 +750,7 @@ public enum LoggingSystem {
     }
 
     /// Protects an object applying the constraints that it can only be accessed through a Reader-Writer lock
-    /// and can ony bre updated once from the initial value given.
+    /// and can only be updated once from the initial value given.
     private struct ReplaceOnceBox<BoxedType: Sendable> {
         private struct ReplaceOnce: Sendable {
             private var initialized = false
