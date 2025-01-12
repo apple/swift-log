@@ -87,7 +87,7 @@ You can choose from one of the following backends to consume your logs. If you a
 | [ShipBook/swift-log-**shipbook**](https://github.com/ShipBook/swift-log-shipbook) | a logging backend that sends log entries to [Shipbook](https://www.shipbook.io) - Shipbook gives you the power to remotely gather, search and analyze your user logs and exceptions in the cloud, on a per-user & session basis. |
 | [kasianov-mikhail/scout](https://github.com/kasianov-mikhail/scout) | CloudKit as a log storage |
 | [PADL/AndroidLogging](https://github.com/PADL/AndroidLogging) | a logging backend for the Android in-kernel log buffer |
-| [PADL/swift-log-systemd.git](https://github.com/PADL/swift-log-systemd.git) | a logging backend for the [systemd](https://systemd.io/) journal |
+| [xtremekforever/swift-systemd](https://github.com/xtremekforever/swift-systemd) | a logging backend for the [systemd](https://systemd.io/) journal |
 | Your library? | [Get in touch!](https://forums.swift.org/c/server) |
 
 ## What is an API package?
