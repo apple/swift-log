@@ -1242,7 +1242,6 @@ internal struct StdioOutputStream: TextOutputStream, @unchecked Sendable {
     }
 
     /// Flush the underlying stream.
-    /// This has no effect when using the `.always` flush mode, which is the default
     internal func flush() {
         _ = fflush(self.file)
     }
