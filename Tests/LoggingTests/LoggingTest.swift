@@ -1145,13 +1145,19 @@ class LoggingTest: XCTestCase {
             let err = _pipe($0.baseAddress, 256, _O_BINARY)
             XCTAssertEqual(err, 0, "_pipe failed \(err)")
         }
-        let writeFD = _fdopen(fds[1], "w")
+        guard let writeFD = _fdopen(fds[1], "w") else {
+            XCTFail("Failed to open file")
+            return
+        }
         #else
         fds.withUnsafeMutableBufferPointer { ptr in
             let err = pipe(ptr.baseAddress!)
             XCTAssertEqual(err, 0, "pipe failed \(err)")
         }
-        let writeFD = fdopen(fds[1], "w")
+        guard let writeFD = fdopen(fds[1], "w") else {
+            XCTFail("Failed to open file")
+            return
+        }
         #endif
 
         let writeBuffer = UnsafeMutablePointer<Int8>.allocate(capacity: 256)
@@ -1183,7 +1189,7 @@ class LoggingTest: XCTestCase {
         }
 
         // the actual test
-        body(writeFD!, readFD, readBuffer)
+        body(writeFD, readFD, readBuffer)
 
         for fd in fds {
             #if os(Windows)
