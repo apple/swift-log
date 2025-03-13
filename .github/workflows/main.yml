@@ -26,3 +26,8 @@ jobs:
   cxx-interop:
     name: Cxx interop
     uses: apple/swift-nio/.github/workflows/cxx_interop.yml@main
+
+  static-sdk:
+    name: Static SDK
+    # Workaround https://github.com/nektos/act/issues/1875
+    uses: apple/swift-nio/.github/workflows/static_sdk.yml@main
