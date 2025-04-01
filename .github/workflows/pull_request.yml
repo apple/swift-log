@@ -30,3 +30,10 @@ jobs:
   cxx-interop:
     name: Cxx interop
     uses: apple/swift-nio/.github/workflows/cxx_interop.yml@main
+
+  macos-tests:
+    name: macOS tests
+    uses: apple/swift-nio/.github/workflows/macos_tests.yml@main
+    with:
+      runner_pool: general
+      build_scheme: swift-log
