@@ -31,19 +31,23 @@
 /// When developing your `LogHandler`, please make sure the following test works.
 ///
 /// ```swift
-/// LoggingSystem.bootstrap(MyLogHandler.init) // your LogHandler might have a different bootstrapping step
-/// var logger1 = Logger(label: "first logger")
-/// logger1.logLevel = .debug
-/// logger1[metadataKey: "only-on"] = "first"
+/// @Test
+/// func logHandlerValueSemantics() {
+///     LoggingSystem.bootstrap(MyLogHandler.init)
+///     var logger1 = Logger(label: "first logger")
+///     logger1.logLevel = .debug
+///     logger1[metadataKey: "only-on"] = "first"
 ///
-/// var logger2 = logger1
-/// logger2.logLevel = .error                  // this must not override `logger1`'s log level
-/// logger2[metadataKey: "only-on"] = "second" // this must not override `logger1`'s metadata
+///     var logger2 = logger1
+///     logger2.logLevel = .error                  // Must not affect logger1
+///     logger2[metadataKey: "only-on"] = "second" // Must not affect logger1
 ///
-/// XCTAssertEqual(.debug, logger1.logLevel)
-/// XCTAssertEqual(.error, logger2.logLevel)
-/// XCTAssertEqual("first", logger1[metadataKey: "only-on"])
-/// XCTAssertEqual("second", logger2[metadataKey: "only-on"])
+///     // These expectations must pass
+///     #expect(logger1.logLevel == .debug)
+///     #expect(logger2.logLevel == .error)
+///     #expect(logger1[metadataKey: "only-on"] == "first")
+///     #expect(logger2[metadataKey: "only-on"] == "second")
+/// }
 /// ```
 ///
 /// ### Special cases
