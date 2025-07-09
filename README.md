@@ -88,6 +88,7 @@ You can choose from one of the following backends to consume your logs. If you a
 | [kasianov-mikhail/scout](https://github.com/kasianov-mikhail/scout) | CloudKit as a log storage |
 | [PADL/AndroidLogging](https://github.com/PADL/AndroidLogging) | a logging backend for the Android in-kernel log buffer |
 | [xtremekforever/swift-systemd](https://github.com/xtremekforever/swift-systemd) | a logging backend for the [systemd](https://systemd.io/) journal |
+| [atacan/postgres-for-swift-log](https://github.com/atacan/postgres-for-swift-log) | a [_Service_](https://github.com/swift-server/swift-service-lifecycle/) inserting the logs into a Postgres table using PostgresNIO |
 | Your library? | [Get in touch!](https://forums.swift.org/c/server) |
 
 ## What is an API package?
