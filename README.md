@@ -4,7 +4,7 @@ This repository contains a logging API implementation for Swift.
 SwiftLog provides a unified, performant, and ergonomic logging API that can be
 adopted by libraries and applications across the Swift ecosystem.
 
-- 📚 **Documentation** and **tutorials** are available on the [Swift Package Index][spi-swift-log]
+- 📚 **Documentation** and **tutorials** are available on the [Swift Package Index](https://swiftpackageindex.com/apple/swift-log)
 - 🚀 **Contributions** are welcome, please see [CONTRIBUTING.md](CONTRIBUTING.md)
 - 🪪 **License** is Apache 2.0, repeated in [LICENSE.txt](LICENSE.txt)
 - 🔒 **Security** issues should be reported via the process in [SECURITY.md](SECURITY.md)
