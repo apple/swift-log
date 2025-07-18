@@ -989,7 +989,31 @@ class LoggingTest: XCTestCase {
         log.critical("\(testString)", source: source)
 
         let pattern =
-            "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\+|-)\\d{4}\\s\(Logger.Level.critical)\\s\(label)\\s:\\s\\[\(source)\\]\\s\(testString)$"
+            "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\+|-)\\d{4}\\s\(Logger.Level.critical)\\s\(label):\\s\\[\(source)\\]\\s\(testString)$"
+
+        let messageSucceeded =
+            interceptStream.interceptedText?.trimmingCharacters(in: .whitespacesAndNewlines).range(
+                of: pattern,
+                options: .regularExpression
+            ) != nil
+
+        XCTAssertTrue(messageSucceeded)
+        XCTAssertEqual(interceptStream.strings.count, 1)
+    }
+
+    func testStreamLogHandlerOutputFormatWithEmptyLabel() {
+        let interceptStream = InterceptStream()
+        LoggingSystem.bootstrapInternal { label in
+            StreamLogHandler(label: label, stream: interceptStream)
+        }
+        let source = "testSource"
+        let log = Logger(label: "")
+
+        let testString = "my message is better than yours"
+        log.critical("\(testString)", source: source)
+
+        let pattern =
+            "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\+|-)\\d{4}\\s\(Logger.Level.critical):\\s\\[\(source)\\]\\s\(testString)$"
 
         let messageSucceeded =
             interceptStream.interceptedText?.trimmingCharacters(in: .whitespacesAndNewlines).range(
@@ -1014,7 +1038,7 @@ class LoggingTest: XCTestCase {
         log.critical("\(testString)", metadata: ["test": "test"], source: source)
 
         let pattern =
-            "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\+|-)\\d{4}\\s\(Logger.Level.critical)\\s\(label)\\s:\\stest=test\\s\\[\(source)\\]\\s\(testString)$"
+            "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\+|-)\\d{4}\\s\(Logger.Level.critical)\\s\(label):\\stest=test\\s\\[\(source)\\]\\s\(testString)$"
 
         let messageSucceeded =
             interceptStream.interceptedText?.trimmingCharacters(in: .whitespacesAndNewlines).range(

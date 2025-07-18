@@ -1396,7 +1396,7 @@ public struct StreamLogHandler: LogHandler {
 
         var stream = self.stream
         stream.write(
-            "\(self.timestamp()) \(level) \(self.label) :\(prettyMetadata.map { " \($0)" } ?? "") [\(source)] \(message)\n"
+            "\(self.timestamp()) \(level)\(self.label.isEmpty ? "" : " ")\(self.label):\(prettyMetadata.map { " \($0)" } ?? "") [\(source)] \(message)\n"
         )
     }
 
