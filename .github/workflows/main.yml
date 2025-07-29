@@ -41,3 +41,7 @@ jobs:
     with:
       runner_pool: nightly
       build_scheme: swift-log
+
+  release-builds:
+    name: Release builds
+    uses: apple/swift-nio/.github/workflows/release_builds.yml@main
