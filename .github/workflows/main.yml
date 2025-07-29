@@ -45,3 +45,8 @@ jobs:
   release-builds:
     name: Release builds
     uses: apple/swift-nio/.github/workflows/release_builds.yml@main
+    with:
+      windows_6_0_enabled: true
+      windows_6_1_enabled: true
+      windows_nightly_next_enabled: true
+      windows_nightly_main_enabled: true
