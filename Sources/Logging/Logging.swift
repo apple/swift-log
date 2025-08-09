@@ -112,7 +112,7 @@ extension Logger {
     ///    - source: The source this log messages originates from. Defaults
     ///              to the module emitting the log message.
     ///    - file: The file this log message originates from (there's usually no need to pass it explicitly as it
-    ///            defaults to `#fileID`.
+    ///            defaults to `#fileID`).
     ///    - function: The function this log message originates from (there's usually no need to pass it explicitly as
     ///                it defaults to `#function`).
     ///    - line: The line this log message originates from (there's usually no need to pass it explicitly as it
@@ -150,7 +150,7 @@ extension Logger {
     ///    - message: The message to be logged. `message` can be used with any string interpolation literal.
     ///    - metadata: One-off metadata to attach to this log message.
     ///    - file: The file this log message originates from (there's usually no need to pass it explicitly as it
-    ///            defaults to `#fileID`.
+    ///            defaults to `#fileID`).
     ///    - function: The function this log message originates from (there's usually no need to pass it explicitly as
     ///                it defaults to `#function`).
     ///    - line: The line this log message originates from (there's usually no need to pass it explicitly as it
@@ -210,7 +210,7 @@ extension Logger {
     ///    - source: The source this log messages originates from. Defaults
     ///              to the module emitting the log message.
     ///    - file: The file this log message originates from (there's usually no need to pass it explicitly as it
-    ///            defaults to `#fileID`.
+    ///            defaults to `#fileID`).
     ///    - function: The function this log message originates from (there's usually no need to pass it explicitly as
     ///                it defaults to `#function`).
     ///    - line: The line this log message originates from (there's usually no need to pass it explicitly as it
@@ -244,7 +244,7 @@ extension Logger {
     ///    - message: The message to be logged. `message` can be used with any string interpolation literal.
     ///    - metadata: One-off metadata to attach to this log message
     ///    - file: The file this log message originates from (there's usually no need to pass it explicitly as it
-    ///            defaults to `#fileID`.
+    ///            defaults to `#fileID`).
     ///    - function: The function this log message originates from (there's usually no need to pass it explicitly as
     ///                it defaults to `#function`).
     ///    - line: The line this log message originates from (there's usually no need to pass it explicitly as it
@@ -271,7 +271,7 @@ extension Logger {
     ///    - source: The source this log messages originates from. Defaults
     ///              to the module emitting the log message.
     ///    - file: The file this log message originates from (there's usually no need to pass it explicitly as it
-    ///            defaults to `#fileID`.
+    ///            defaults to `#fileID`).
     ///    - function: The function this log message originates from (there's usually no need to pass it explicitly as
     ///                it defaults to `#function`).
     ///    - line: The line this log message originates from (there's usually no need to pass it explicitly as it
@@ -305,7 +305,7 @@ extension Logger {
     ///    - message: The message to be logged. `message` can be used with any string interpolation literal.
     ///    - metadata: One-off metadata to attach to this log message.
     ///    - file: The file this log message originates from (there's usually no need to pass it explicitly as it
-    ///            defaults to `#fileID`.
+    ///            defaults to `#fileID`).
     ///    - function: The function this log message originates from (there's usually no need to pass it explicitly as
     ///                it defaults to `#function`).
     ///    - line: The line this log message originates from (there's usually no need to pass it explicitly as it
@@ -332,7 +332,7 @@ extension Logger {
     ///    - source: The source this log messages originates from. Defaults
     ///              to the module emitting the log message.
     ///    - file: The file this log message originates from (there's usually no need to pass it explicitly as it
-    ///            defaults to `#fileID`.
+    ///            defaults to `#fileID`).
     ///    - function: The function this log message originates from (there's usually no need to pass it explicitly as
     ///                it defaults to `#function`).
     ///    - line: The line this log message originates from (there's usually no need to pass it explicitly as it
@@ -366,7 +366,7 @@ extension Logger {
     ///    - message: The message to be logged. `message` can be used with any string interpolation literal.
     ///    - metadata: One-off metadata to attach to this log message.
     ///    - file: The file this log message originates from (there's usually no need to pass it explicitly as it
-    ///            defaults to `#fileID`.
+    ///            defaults to `#fileID`).
     ///    - function: The function this log message originates from (there's usually no need to pass it explicitly as
     ///                it defaults to `#function`).
     ///    - line: The line this log message originates from (there's usually no need to pass it explicitly as it
@@ -393,7 +393,7 @@ extension Logger {
     ///    - source: The source this log messages originates from. Defaults
     ///              to the module emitting the log message.
     ///    - file: The file this log message originates from (there's usually no need to pass it explicitly as it
-    ///            defaults to `#fileID`.
+    ///            defaults to `#fileID`).
     ///    - function: The function this log message originates from (there's usually no need to pass it explicitly as
     ///                it defaults to `#function`).
     ///    - line: The line this log message originates from (there's usually no need to pass it explicitly as it
@@ -427,7 +427,7 @@ extension Logger {
     ///    - message: The message to be logged. `message` can be used with any string interpolation literal.
     ///    - metadata: One-off metadata to attach to this log message.
     ///    - file: The file this log message originates from (there's usually no need to pass it explicitly as it
-    ///            defaults to `#fileID`.
+    ///            defaults to `#fileID`).
     ///    - function: The function this log message originates from (there's usually no need to pass it explicitly as
     ///                it defaults to `#function`).
     ///    - line: The line this log message originates from (there's usually no need to pass it explicitly as it
@@ -454,7 +454,7 @@ extension Logger {
     ///    - source: The source this log messages originates from. Defaults
     ///              to the module emitting the log message.
     ///    - file: The file this log message originates from (there's usually no need to pass it explicitly as it
-    ///            defaults to `#fileID`.
+    ///            defaults to `#fileID`).
     ///    - function: The function this log message originates from (there's usually no need to pass it explicitly as
     ///                it defaults to `#function`).
     ///    - line: The line this log message originates from (there's usually no need to pass it explicitly as it
@@ -488,7 +488,7 @@ extension Logger {
     ///    - message: The message to be logged. `message` can be used with any string interpolation literal.
     ///    - metadata: One-off metadata to attach to this log message.
     ///    - file: The file this log message originates from (there's usually no need to pass it explicitly as it
-    ///            defaults to `#fileID`.
+    ///            defaults to `#fileID`).
     ///    - function: The function this log message originates from (there's usually no need to pass it explicitly as
     ///                it defaults to `#function`).
     ///    - line: The line this log message originates from (there's usually no need to pass it explicitly as it
@@ -515,7 +515,7 @@ extension Logger {
     ///    - source: The source this log messages originates from. Defaults
     ///              to the module emitting the log message.
     ///    - file: The file this log message originates from (there's usually no need to pass it explicitly as it
-    ///            defaults to `#fileID`.
+    ///            defaults to `#fileID`).
     ///    - function: The function this log message originates from (there's usually no need to pass it explicitly as
     ///                it defaults to `#function`).
     ///    - line: The line this log message originates from (there's usually no need to pass it explicitly as it
@@ -549,7 +549,7 @@ extension Logger {
     ///    - message: The message to be logged. `message` can be used with any string interpolation literal.
     ///    - metadata: One-off metadata to attach to this log message.
     ///    - file: The file this log message originates from (there's usually no need to pass it explicitly as it
-    ///            defaults to `#fileID`.
+    ///            defaults to `#fileID`).
     ///    - function: The function this log message originates from (there's usually no need to pass it explicitly as
     ///                it defaults to `#function`).
     ///    - line: The line this log message originates from (there's usually no need to pass it explicitly as it
@@ -575,7 +575,7 @@ extension Logger {
     ///    - source: The source this log messages originates from. Defaults
     ///              to the module emitting the log message.
     ///    - file: The file this log message originates from (there's usually no need to pass it explicitly as it
-    ///            defaults to `#fileID`.
+    ///            defaults to `#fileID`).
     ///    - function: The function this log message originates from (there's usually no need to pass it explicitly as
     ///                it defaults to `#function`).
     ///    - line: The line this log message originates from (there's usually no need to pass it explicitly as it
@@ -608,7 +608,7 @@ extension Logger {
     ///    - message: The message to be logged. `message` can be used with any string interpolation literal.
     ///    - metadata: One-off metadata to attach to this log message.
     ///    - file: The file this log message originates from (there's usually no need to pass it explicitly as it
-    ///            defaults to `#fileID`.
+    ///            defaults to `#fileID`).
     ///    - function: The function this log message originates from (there's usually no need to pass it explicitly as
     ///                it defaults to `#function`).
     ///    - line: The line this log message originates from (there's usually no need to pass it explicitly as it
