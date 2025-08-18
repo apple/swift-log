@@ -1,7 +1,6 @@
 # 001: Choosing log levels
 
-Best practice for selecting appropriate log levels in applications and
-libraries.
+Select appropriate log levels in applications and libraries.
 
 ## Overview
 
@@ -39,29 +38,30 @@ its logging environment.
 
 #### For libraries
 
-Libraries should use **info level or lower** (info, debug, trace). Each level
-serves different purposes:
+Libraries should use **info level or less severe** (info, debug, trace).
 
 Libraries **should not** log information on **warning or more severe levels**,
 unless it is a one-time (for example during startup) warning, that cannot lead
 to overwhelming log outputs.
 
+Each level serves different purposes:
+
 ##### Trace Level
-- **Usage**: Log everything needed to diagnose hard-to-reproduce bugs
-- **Performance**: May impact performance; assume it won't be used in production
-- **Content**: Internal state, detailed operation flows, diagnostic information
+- **Usage**: Log everything needed to diagnose hard-to-reproduce bugs.
+- **Performance**: May impact performance; assume it won't be used in production.
+- **Content**: Internal state, detailed operation flows, diagnostic information.
 
 ##### Debug Level  
-- **Usage**: May be enabled in some production deployments
-- **Performance**: Should not significantly undermine production performance
-- **Content**: High-level operation overview, connection events, major decisions
+- **Usage**: May be enabled in some production deployments.
+- **Performance**: Should not significantly undermine production performance.
+- **Content**: High-level operation overview, connection events, major decisions.
 
 ##### Info Level
 - **Usage**: Reserved for things that went wrong but can't be communicated
-through other means like throwing from a method
+through other means, like throwing from a method.
 - **Examples**: Connection retry attempts, fallback mechanisms, recoverable
-  failures
-- **Guideline**: Use sparingly - not for normal successful operations
+  failures.
+- **Guideline**: Use sparingly - Don't use for normal successful operations.
 
 #### For applications
 
@@ -133,6 +133,6 @@ logger.info("Response sent")
 
 // ✅ Good: Use appropriate levels instead
 logger.debug("Processing request", metadata: ["path": "\(path)"])
-logger.trace("Query", , metadata: ["path": "\(query)"])
+logger.trace("Query", metadata: ["sql": "\(query)"])
 logger.debug("Request completed", metadata: ["status": "\(status)"])
 ```
