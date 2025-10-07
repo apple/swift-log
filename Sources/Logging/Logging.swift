@@ -630,7 +630,13 @@ extension Logger {
 /// implementation.
 public enum LoggingSystem {
     private static let _factory = FactoryBox(
-        { label, _ in StreamLogHandler.standardError(label: label) },
+        { label, _ in
+            #if !os(Android)
+            StreamLogHandler.standardError(label: label)
+            #else
+            SwiftLogNoOpLogHandler()
+            #endif
+        },
         violationErrorMesage: "logging system can only be initialized once per process."
     )
     private static let _metadataProviderFactory = MetadataProviderBox(
@@ -1203,7 +1209,9 @@ public struct MultiplexLogHandler: LogHandler {
     }
 }
 
-#if canImport(WASILibc) || os(Android)
+#if !os(Android)
+
+#if canImport(WASILibc)
 internal typealias CFilePointer = OpaquePointer
 #else
 internal typealias CFilePointer = UnsafeMutablePointer<FILE>
@@ -1457,6 +1465,8 @@ public struct StreamLogHandler: LogHandler {
         }
     }
 }
+
+#endif
 
 /// No operation LogHandler, used when no logging is required
 public struct SwiftLogNoOpLogHandler: LogHandler {
