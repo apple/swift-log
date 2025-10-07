@@ -24,6 +24,7 @@ import Glibc
 #endif
 #elseif canImport(Android)
 import Android
+import CSwiftLogAndroidSupport
 #elseif canImport(Musl)
 import Musl
 #elseif canImport(WASILibc)
@@ -630,13 +631,7 @@ extension Logger {
 /// implementation.
 public enum LoggingSystem {
     private static let _factory = FactoryBox(
-        { label, _ in
-            #if !os(Android)
-            StreamLogHandler.standardError(label: label)
-            #else
-            SwiftLogNoOpLogHandler()
-            #endif
-        },
+        { label, _ in StreamLogHandler.standardError(label: label) },
         violationErrorMesage: "logging system can only be initialized once per process."
     )
     private static let _metadataProviderFactory = MetadataProviderBox(
@@ -1209,10 +1204,10 @@ public struct MultiplexLogHandler: LogHandler {
     }
 }
 
-#if !os(Android)
-
 #if canImport(WASILibc)
 internal typealias CFilePointer = OpaquePointer
+#elseif canImport(Android)
+internal typealias CFilePointer = UnsafeMutableRawPointer
 #else
 internal typealias CFilePointer = UnsafeMutablePointer<FILE>
 #endif
@@ -1230,6 +1225,8 @@ internal struct StdioOutputStream: TextOutputStream, @unchecked Sendable {
             _lock_file(self.file)
             #elseif canImport(WASILibc)
             // no file locking on WASI
+            #elseif canImport(Android)
+            shim_flockfile(self.file)
             #else
             flockfile(self.file)
             #endif
@@ -1238,11 +1235,17 @@ internal struct StdioOutputStream: TextOutputStream, @unchecked Sendable {
                 _unlock_file(self.file)
                 #elseif canImport(WASILibc)
                 // no file locking on WASI
+                #elseif canImport(Android)
+                shim_funlockfile(self.file)
                 #else
                 funlockfile(self.file)
                 #endif
             }
+            #if canImport(Android)
+            _ = shim_fwrite(utf8Bytes.baseAddress!, 1, utf8Bytes.count, self.file)
+            #else
             _ = fwrite(utf8Bytes.baseAddress!, 1, utf8Bytes.count, self.file)
+            #endif
             if case .always = self.flushMode {
                 self.flush()
             }
@@ -1251,7 +1254,11 @@ internal struct StdioOutputStream: TextOutputStream, @unchecked Sendable {
 
     /// Flush the underlying stream.
     internal func flush() {
+        #if canImport(Android)
+        _ = shim_fflush(self.file)
+        #else
         _ = fflush(self.file)
+        #endif
     }
 
     internal func contiguousUTF8(_ string: String) -> String.UTF8View {
@@ -1269,7 +1276,7 @@ internal struct StdioOutputStream: TextOutputStream, @unchecked Sendable {
         #elseif canImport(Glibc)
         let systemStderr = Glibc.stderr!
         #elseif canImport(Android)
-        let systemStderr = Android.stderr
+        let systemStderr = shim_stderr()!
         #elseif canImport(Musl)
         let systemStderr = Musl.stderr!
         #elseif canImport(WASILibc)
@@ -1289,7 +1296,7 @@ internal struct StdioOutputStream: TextOutputStream, @unchecked Sendable {
         #elseif canImport(Glibc)
         let systemStdout = Glibc.stdout!
         #elseif canImport(Android)
-        let systemStdout = Android.stdout
+        let systemStdout = shim_stdout()!
         #elseif canImport(Musl)
         let systemStdout = Musl.stdout!
         #elseif canImport(WASILibc)
@@ -1465,8 +1472,6 @@ public struct StreamLogHandler: LogHandler {
         }
     }
 }
-
-#endif
 
 /// No operation LogHandler, used when no logging is required
 public struct SwiftLogNoOpLogHandler: LogHandler {
