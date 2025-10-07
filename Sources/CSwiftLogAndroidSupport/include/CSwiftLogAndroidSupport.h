@@ -6,7 +6,6 @@
 // These C functions will be called from Swift. They provide a stable
 // interface, hiding the pointer type differences between Android versions.
 
-// Get opaque pointers to standard streams.
 void *shim_stdout(void);
 void *shim_stderr(void);
 
