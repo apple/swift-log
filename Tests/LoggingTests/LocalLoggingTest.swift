@@ -11,14 +11,22 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 //===----------------------------------------------------------------------===//
-@testable import Logging
+
 import XCTest
+
+@testable import Logging
+
+#if compiler(>=6.0) || canImport(Darwin)
+import Dispatch
+#else
+@preconcurrency import Dispatch
+#endif
 
 class LocalLoggerTest: XCTestCase {
     func test1() throws {
         // bootstrap with our test logging impl
         let logging = TestLogging()
-        LoggingSystem.bootstrapInternal(logging.make)
+        LoggingSystem.bootstrapInternal { logging.make(label: $0) }
 
         // change test logging config to log traces and above
         logging.config.set(value: Logger.Level.debug)
@@ -35,7 +43,11 @@ class LocalLoggerTest: XCTestCase {
         logging.history.assertExist(level: .warning, message: "Struct3::doSomethingElseAsync", metadata: ["bar": "baz"])
         logging.history.assertExist(level: .info, message: "TestLibrary::doSomething")
         logging.history.assertExist(level: .info, message: "TestLibrary::doSomethingAsync")
-        logging.history.assertExist(level: .debug, message: "Struct3::doSomethingElse::Local", metadata: ["bar": "baz", "baz": "qux"])
+        logging.history.assertExist(
+            level: .debug,
+            message: "Struct3::doSomethingElse::Local",
+            metadata: ["bar": "baz", "baz": "qux"]
+        )
         logging.history.assertExist(level: .debug, message: "Struct3::doSomethingElse::end", metadata: ["bar": "baz"])
         logging.history.assertExist(level: .debug, message: "Struct3::doSomething::end", metadata: ["bar": "baz"])
         logging.history.assertExist(level: .debug, message: "Struct2::doSomethingElse::end")
@@ -46,7 +58,7 @@ class LocalLoggerTest: XCTestCase {
     func test2() throws {
         // bootstrap with our test logging impl
         let logging = TestLogging()
-        LoggingSystem.bootstrapInternal(logging.make)
+        LoggingSystem.bootstrapInternal { logging.make(label: $0) }
 
         // change test logging config to log errors and above
         logging.config.set(value: Logger.Level.error)
@@ -54,21 +66,40 @@ class LocalLoggerTest: XCTestCase {
         let context = Context()
         Struct1().doSomething(context: context)
         // test results
-        logging.history.assertNotExist(level: .debug, message: "Struct1::doSomething") // global context
-        logging.history.assertNotExist(level: .debug, message: "Struct1::doSomethingElse") // global context
-        logging.history.assertExist(level: .info, message: "Struct2::doSomething") // local context
-        logging.history.assertExist(level: .info, message: "Struct2::doSomethingElse") // local context
-        logging.history.assertExist(level: .error, message: "Struct3::doSomething", metadata: ["bar": "baz"]) // local context
-        logging.history.assertExist(level: .error, message: "Struct3::doSomethingElse", metadata: ["bar": "baz"]) // local context
-        logging.history.assertExist(level: .warning, message: "Struct3::doSomethingElseAsync", metadata: ["bar": "baz"]) // local context
-        logging.history.assertNotExist(level: .info, message: "TestLibrary::doSomething") // global context
-        logging.history.assertNotExist(level: .info, message: "TestLibrary::doSomethingAsync") // global context
-        logging.history.assertExist(level: .debug, message: "Struct3::doSomethingElse::Local", metadata: ["bar": "baz", "baz": "qux"]) // hyper local context
-        logging.history.assertExist(level: .debug, message: "Struct3::doSomethingElse::end", metadata: ["bar": "baz"]) // local context
-        logging.history.assertExist(level: .debug, message: "Struct2::doSomethingElse::end") // local context
-        logging.history.assertExist(level: .debug, message: "Struct3::doSomething::end", metadata: ["bar": "baz"]) // local context
-        logging.history.assertNotExist(level: .debug, message: "Struct1::doSomethingElse::end") // global context
-        logging.history.assertNotExist(level: .debug, message: "Struct1::doSomething::end") // global context
+        // global context
+        logging.history.assertNotExist(level: .debug, message: "Struct1::doSomething")
+        // global context
+        logging.history.assertNotExist(level: .debug, message: "Struct1::doSomethingElse")
+        // local context
+        logging.history.assertExist(level: .info, message: "Struct2::doSomething")
+        // local context
+        logging.history.assertExist(level: .info, message: "Struct2::doSomethingElse")
+        // local context
+        logging.history.assertExist(level: .error, message: "Struct3::doSomething", metadata: ["bar": "baz"])
+        // local context
+        logging.history.assertExist(level: .error, message: "Struct3::doSomethingElse", metadata: ["bar": "baz"])
+        // local context
+        logging.history.assertExist(level: .warning, message: "Struct3::doSomethingElseAsync", metadata: ["bar": "baz"])
+        // global context
+        logging.history.assertNotExist(level: .info, message: "TestLibrary::doSomething")
+        // global context
+        logging.history.assertNotExist(level: .info, message: "TestLibrary::doSomethingAsync")
+        // hyper local context
+        logging.history.assertExist(
+            level: .debug,
+            message: "Struct3::doSomethingElse::Local",
+            metadata: ["bar": "baz", "baz": "qux"]
+        )
+        // local context
+        logging.history.assertExist(level: .debug, message: "Struct3::doSomethingElse::end", metadata: ["bar": "baz"])
+        // local context
+        logging.history.assertExist(level: .debug, message: "Struct2::doSomethingElse::end")
+        // local context
+        logging.history.assertExist(level: .debug, message: "Struct3::doSomething::end", metadata: ["bar": "baz"])
+        // global context
+        logging.history.assertNotExist(level: .debug, message: "Struct1::doSomethingElse::end")
+        // global context
+        logging.history.assertNotExist(level: .debug, message: "Struct1::doSomething::end")
     }
 }
 
@@ -78,13 +109,13 @@ private struct Context {
 
     // since logger is a value type, we can reuse our copy to manage logLevel
     var logLevel: Logger.Level {
-        get { return self.logger.logLevel }
+        get { self.logger.logLevel }
         set { self.logger.logLevel = newValue }
     }
 
     // since logger is a value type, we can reuse our copy to manage metadata
     subscript(metadataKey: String) -> Logger.Metadata.Value? {
-        get { return self.logger[metadataKey: metadataKey] }
+        get { self.logger[metadataKey: metadataKey] }
         set { self.logger[metadataKey: metadataKey] = newValue }
     }
 }
@@ -109,7 +140,7 @@ private struct Struct1 {
 private struct Struct2 {
     func doSomething(context: Context) {
         var c = context
-        c.logLevel = .info // only effects from this point on
+        c.logLevel = .info  // only effects from this point on
         c.logger.info("Struct2::doSomething")
         self.doSomethingElse(context: c)
         c.logger.debug("Struct2::doSomething::end")
@@ -117,7 +148,7 @@ private struct Struct2 {
 
     private func doSomethingElse(context: Context) {
         var c = context
-        c.logLevel = .debug // only effects from this point on
+        c.logLevel = .debug  // only effects from this point on
         c.logger.info("Struct2::doSomethingElse")
         Struct3().doSomething(context: c)
         c.logger.debug("Struct2::doSomethingElse::end")
@@ -129,7 +160,7 @@ private struct Struct3 {
 
     func doSomething(context: Context) {
         var c = context
-        c["bar"] = "baz" // only effects from this point on
+        c["bar"] = "baz"  // only effects from this point on
         c.logger.error("Struct3::doSomething")
         self.doSomethingElse(context: c)
         c.logger.debug("Struct3::doSomething::end")

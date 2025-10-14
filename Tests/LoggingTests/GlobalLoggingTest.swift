@@ -11,14 +11,22 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 //===----------------------------------------------------------------------===//
-@testable import Logging
+
 import XCTest
+
+@testable import Logging
+
+#if compiler(>=6.0) || canImport(Darwin)
+import Dispatch
+#else
+@preconcurrency import Dispatch
+#endif
 
 class GlobalLoggerTest: XCTestCase {
     func test1() throws {
         // bootstrap with our test logging impl
         let logging = TestLogging()
-        LoggingSystem.bootstrapInternal(logging.make)
+        LoggingSystem.bootstrapInternal { logging.make(label: $0) }
 
         // change test logging config to log traces and above
         logging.config.set(value: Logger.Level.debug)
@@ -45,7 +53,7 @@ class GlobalLoggerTest: XCTestCase {
     func test2() throws {
         // bootstrap with our test logging impl
         let logging = TestLogging()
-        LoggingSystem.bootstrapInternal(logging.make)
+        LoggingSystem.bootstrapInternal { logging.make(label: $0) }
 
         // change test logging config to log errors and above
         logging.config.set(value: Logger.Level.error)
@@ -58,10 +66,18 @@ class GlobalLoggerTest: XCTestCase {
         logging.history.assertNotExist(level: .info, message: "Struct2::doSomethingElse")
         logging.history.assertExist(level: .error, message: "Struct3::doSomething")
         logging.history.assertExist(level: .error, message: "Struct3::doSomethingElse", metadata: ["foo": "bar"])
-        logging.history.assertNotExist(level: .warning, message: "Struct3::doSomethingElseAsync", metadata: ["foo": "bar"])
+        logging.history.assertNotExist(
+            level: .warning,
+            message: "Struct3::doSomethingElseAsync",
+            metadata: ["foo": "bar"]
+        )
         logging.history.assertNotExist(level: .info, message: "TestLibrary::doSomething", metadata: ["foo": "bar"])
         logging.history.assertNotExist(level: .info, message: "TestLibrary::doSomethingAsync", metadata: ["foo": "bar"])
-        logging.history.assertNotExist(level: .debug, message: "Struct3::doSomethingElse::Local", metadata: ["baz": "qux"])
+        logging.history.assertNotExist(
+            level: .debug,
+            message: "Struct3::doSomethingElse::Local",
+            metadata: ["baz": "qux"]
+        )
         logging.history.assertNotExist(level: .debug, message: "Struct3::doSomethingElse::end")
         logging.history.assertNotExist(level: .debug, message: "Struct3::doSomething::end")
         logging.history.assertNotExist(level: .debug, message: "Struct2::doSomethingElse::end")
@@ -72,7 +88,7 @@ class GlobalLoggerTest: XCTestCase {
     func test3() throws {
         // bootstrap with our test logging impl
         let logging = TestLogging()
-        LoggingSystem.bootstrapInternal(logging.make)
+        LoggingSystem.bootstrapInternal { logging.make(label: $0) }
 
         // change test logging config
         logging.config.set(value: .warning)
@@ -90,7 +106,11 @@ class GlobalLoggerTest: XCTestCase {
         logging.history.assertExist(level: .warning, message: "Struct3::doSomethingElseAsync", metadata: ["foo": "bar"])
         logging.history.assertExist(level: .info, message: "TestLibrary::doSomething", metadata: ["foo": "bar"])
         logging.history.assertExist(level: .info, message: "TestLibrary::doSomethingAsync", metadata: ["foo": "bar"])
-        logging.history.assertNotExist(level: .debug, message: "Struct3::doSomethingElse::Local", metadata: ["baz": "qux"])
+        logging.history.assertNotExist(
+            level: .debug,
+            message: "Struct3::doSomethingElse::Local",
+            metadata: ["baz": "qux"]
+        )
         logging.history.assertNotExist(level: .debug, message: "Struct3::doSomethingElse::end")
         logging.history.assertNotExist(level: .debug, message: "Struct3::doSomething::end")
         logging.history.assertNotExist(level: .debug, message: "Struct2::doSomethingElse::end")

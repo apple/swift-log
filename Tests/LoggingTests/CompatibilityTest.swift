@@ -12,14 +12,16 @@
 //
 //===----------------------------------------------------------------------===//
 
-/* NOT @testable */ import Logging
+// Not testable
+import Logging
 import XCTest
 
 final class CompatibilityTest: XCTestCase {
+    @available(*, deprecated, message: "Testing deprecated functionality")
     func testAllLogLevelsWorkWithOldSchoolLogHandlerWorks() {
         let testLogging = OldSchoolTestLogging()
 
-        var logger = Logger(label: "\(#function)", factory: testLogging.make)
+        var logger = Logger(label: "\(#function)", factory: { testLogging.make(label: $0) })
         logger.logLevel = .trace
 
         logger.trace("yes: trace")
@@ -42,37 +44,48 @@ final class CompatibilityTest: XCTestCase {
 }
 
 private struct OldSchoolTestLogging {
-    private let _config = Config() // shared among loggers
-    private let recorder = Recorder() // shared among loggers
+    private let _config = Config()  // shared among loggers
+    private let recorder = Recorder()  // shared among loggers
 
-    func make(label: String) -> LogHandler {
-        return OldSchoolLogHandler(label: label,
-                                   config: self.config,
-                                   recorder: self.recorder,
-                                   metadata: [:],
-                                   logLevel: .info)
+    @available(*, deprecated, message: "Testing deprecated functionality")
+    func make(label: String) -> any LogHandler {
+        OldSchoolLogHandler(
+            label: label,
+            config: self.config,
+            recorder: self.recorder,
+            metadata: [:],
+            logLevel: .info
+        )
     }
 
-    var config: Config { return self._config }
-    var history: History { return self.recorder }
+    var config: Config { self._config }
+    var history: some History { self.recorder }
 }
 
+@available(*, deprecated, message: "Testing deprecated functionality")
 private struct OldSchoolLogHandler: LogHandler {
     var label: String
     let config: Config
     let recorder: Recorder
 
-    func make(label: String) -> LogHandler {
-        return TestLogHandler(label: label, config: self.config, recorder: self.recorder)
+    func make(label: String) -> some LogHandler {
+        TestLogHandler(label: label, config: self.config, recorder: self.recorder)
     }
 
-    func log(level: Logger.Level, message: Logger.Message, metadata: Logger.Metadata?, file: String, function: String, line: UInt) {
+    func log(
+        level: Logger.Level,
+        message: Logger.Message,
+        metadata: Logger.Metadata?,
+        file: String,
+        function: String,
+        line: UInt
+    ) {
         self.recorder.record(level: level, metadata: metadata, message: message, source: "no source")
     }
 
     subscript(metadataKey metadataKey: String) -> Logger.Metadata.Value? {
         get {
-            return self.metadata[metadataKey]
+            self.metadata[metadataKey]
         }
         set {
             self.metadata[metadataKey] = newValue

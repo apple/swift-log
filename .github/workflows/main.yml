@@ -1,0 +1,52 @@
+name: Main
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: "0 8,20 * * *"
+
+jobs:
+  unit-tests:
+    name: Unit tests
+    uses: apple/swift-nio/.github/workflows/unit_tests.yml@main
+    with:
+      linux_5_9_arguments_override: "--explicit-target-dependency-import-check error"
+      linux_5_10_arguments_override: "--explicit-target-dependency-import-check error"
+      linux_6_0_arguments_override: "-Xswiftc -warnings-as-errors --explicit-target-dependency-import-check error -Xswiftc -require-explicit-sendable"
+      linux_6_1_arguments_override: "-Xswiftc -warnings-as-errors --explicit-target-dependency-import-check error -Xswiftc -require-explicit-sendable"
+      linux_nightly_next_arguments_override: "--explicit-target-dependency-import-check error -Xswiftc -require-explicit-sendable"
+      linux_nightly_main_arguments_override: "--explicit-target-dependency-import-check error -Xswiftc -require-explicit-sendable"
+      windows_6_0_enabled: true
+      windows_6_1_enabled: true
+      windows_nightly_next_enabled: true
+      windows_nightly_main_enabled: true
+      windows_6_0_arguments_override: "-Xswiftc -warnings-as-errors --explicit-target-dependency-import-check error -Xswiftc -require-explicit-sendable"
+      windows_6_1_arguments_override: "-Xswiftc -warnings-as-errors --explicit-target-dependency-import-check error -Xswiftc -require-explicit-sendable"
+      windows_nightly_next_arguments_override: "--explicit-target-dependency-import-check error -Xswiftc -require-explicit-sendable"
+      windows_nightly_main_arguments_override: "--explicit-target-dependency-import-check error -Xswiftc -require-explicit-sendable"
+
+  cxx-interop:
+    name: Cxx interop
+    uses: apple/swift-nio/.github/workflows/cxx_interop.yml@main
+
+  static-sdk:
+    name: Static SDK
+    # Workaround https://github.com/nektos/act/issues/1875
+    uses: apple/swift-nio/.github/workflows/static_sdk.yml@main
+
+  macos-tests:
+    name: macOS tests
+    uses: apple/swift-nio/.github/workflows/macos_tests.yml@main
+    with:
+      runner_pool: nightly
+      build_scheme: swift-log
+
+  release-builds:
+    name: Release builds
+    uses: apple/swift-nio/.github/workflows/release_builds.yml@main
+    with:
+      windows_6_0_enabled: true
+      windows_6_1_enabled: true
+      windows_nightly_next_enabled: true
+      windows_nightly_main_enabled: true

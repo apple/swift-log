@@ -28,14 +28,16 @@
 
 #if canImport(WASILibc)
 // No locking on WASILibc
-#else
-
-#if os(macOS) || os(iOS) || os(tvOS) || os(watchOS)
+#elseif canImport(Darwin)
 import Darwin
 #elseif os(Windows)
 import WinSDK
 #elseif canImport(Glibc)
 import Glibc
+#elseif canImport(Android)
+import Android
+#elseif canImport(Musl)
+import Musl
 #else
 #error("Unsupported runtime")
 #endif
@@ -46,8 +48,10 @@ import Glibc
 /// of lock is safe to use with `libpthread`-based threading models, such as the
 /// one used by NIO. On Windows, the lock is based on the substantially similar
 /// `SRWLOCK` type.
-internal final class Lock {
-    #if os(Windows)
+internal final class Lock: @unchecked Sendable {
+    #if canImport(WASILibc)
+    // WASILibc is single threaded, provides no locks
+    #elseif os(Windows)
     fileprivate let mutex: UnsafeMutablePointer<SRWLOCK> =
         UnsafeMutablePointer.allocate(capacity: 1)
     #else
@@ -57,7 +61,9 @@ internal final class Lock {
 
     /// Create a new lock.
     public init() {
-        #if os(Windows)
+        #if canImport(WASILibc)
+        // WASILibc is single threaded, provides no locks
+        #elseif os(Windows)
         InitializeSRWLock(self.mutex)
         #else
         var attr = pthread_mutexattr_t()
@@ -70,13 +76,16 @@ internal final class Lock {
     }
 
     deinit {
-        #if os(Windows)
+        #if canImport(WASILibc)
+        // WASILibc is single threaded, provides no locks
+        #elseif os(Windows)
         // SRWLOCK does not need to be free'd
+        self.mutex.deallocate()
         #else
         let err = pthread_mutex_destroy(self.mutex)
         precondition(err == 0, "\(#function) failed in pthread_mutex with error \(err)")
-        #endif
         self.mutex.deallocate()
+        #endif
     }
 
     /// Acquire the lock.
@@ -84,7 +93,9 @@ internal final class Lock {
     /// Whenever possible, consider using `withLock` instead of this method and
     /// `unlock`, to simplify lock handling.
     public func lock() {
-        #if os(Windows)
+        #if canImport(WASILibc)
+        // WASILibc is single threaded, provides no locks
+        #elseif os(Windows)
         AcquireSRWLockExclusive(self.mutex)
         #else
         let err = pthread_mutex_lock(self.mutex)
@@ -97,7 +108,9 @@ internal final class Lock {
     /// Whenever possible, consider using `withLock` instead of this method and
     /// `lock`, to simplify lock handling.
     public func unlock() {
-        #if os(Windows)
+        #if canImport(WASILibc)
+        // WASILibc is single threaded, provides no locks
+        #elseif os(Windows)
         ReleaseSRWLockExclusive(self.mutex)
         #else
         let err = pthread_mutex_unlock(self.mutex)
@@ -137,8 +150,10 @@ extension Lock {
 /// of lock is safe to use with `libpthread`-based threading models, such as the
 /// one used by NIO. On Windows, the lock is based on the substantially similar
 /// `SRWLOCK` type.
-internal final class ReadWriteLock {
-    #if os(Windows)
+internal final class ReadWriteLock: @unchecked Sendable {
+    #if canImport(WASILibc)
+    // WASILibc is single threaded, provides no locks
+    #elseif os(Windows)
     fileprivate let rwlock: UnsafeMutablePointer<SRWLOCK> =
         UnsafeMutablePointer.allocate(capacity: 1)
     fileprivate var shared: Bool = true
@@ -149,7 +164,9 @@ internal final class ReadWriteLock {
 
     /// Create a new lock.
     public init() {
-        #if os(Windows)
+        #if canImport(WASILibc)
+        // WASILibc is single threaded, provides no locks
+        #elseif os(Windows)
         InitializeSRWLock(self.rwlock)
         #else
         let err = pthread_rwlock_init(self.rwlock, nil)
@@ -158,21 +175,26 @@ internal final class ReadWriteLock {
     }
 
     deinit {
-        #if os(Windows)
+        #if canImport(WASILibc)
+        // WASILibc is single threaded, provides no locks
+        #elseif os(Windows)
         // SRWLOCK does not need to be free'd
+        self.rwlock.deallocate()
         #else
         let err = pthread_rwlock_destroy(self.rwlock)
         precondition(err == 0, "\(#function) failed in pthread_rwlock with error \(err)")
-        #endif
         self.rwlock.deallocate()
+        #endif
     }
 
     /// Acquire a reader lock.
     ///
     /// Whenever possible, consider using `withReaderLock` instead of this
     /// method and `unlock`, to simplify lock handling.
-    public func lockRead() {
-        #if os(Windows)
+    fileprivate func lockRead() {
+        #if canImport(WASILibc)
+        // WASILibc is single threaded, provides no locks
+        #elseif os(Windows)
         AcquireSRWLockShared(self.rwlock)
         self.shared = true
         #else
@@ -185,8 +207,10 @@ internal final class ReadWriteLock {
     ///
     /// Whenever possible, consider using `withWriterLock` instead of this
     /// method and `unlock`, to simplify lock handling.
-    public func lockWrite() {
-        #if os(Windows)
+    fileprivate func lockWrite() {
+        #if canImport(WASILibc)
+        // WASILibc is single threaded, provides no locks
+        #elseif os(Windows)
         AcquireSRWLockExclusive(self.rwlock)
         self.shared = false
         #else
@@ -200,8 +224,10 @@ internal final class ReadWriteLock {
     /// Whenever possible, consider using `withReaderLock` and `withWriterLock`
     /// instead of this method and `lockRead` and `lockWrite`, to simplify lock
     /// handling.
-    public func unlock() {
-        #if os(Windows)
+    fileprivate func unlock() {
+        #if canImport(WASILibc)
+        // WASILibc is single threaded, provides no locks
+        #elseif os(Windows)
         if self.shared {
             ReleaseSRWLockShared(self.rwlock)
         } else {
@@ -261,4 +287,3 @@ extension ReadWriteLock {
         try self.withWriterLock(body)
     }
 }
-#endif

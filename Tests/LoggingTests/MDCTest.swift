@@ -12,34 +12,35 @@
 //
 //===----------------------------------------------------------------------===//
 import Dispatch
-@testable import Logging
 import XCTest
+
+@testable import Logging
 
 class MDCTest: XCTestCase {
     func test1() throws {
         // bootstrap with our test logger
         let logging = TestLogging()
-        LoggingSystem.bootstrapInternal(logging.make)
+        LoggingSystem.bootstrapInternal { logging.make(label: $0) }
 
         // run the program
         MDC.global["foo"] = "bar"
         let group = DispatchGroup()
-        for r in 5 ... 10 {
+        for r in 5...10 {
             group.enter()
             DispatchQueue(label: "mdc-test-queue-\(r)").async {
-                let add = Int.random(in: 10 ... 1000)
-                let remove = Int.random(in: 0 ... add - 1)
-                for i in 0 ... add {
+                let add = Int.random(in: 10...1000)
+                let remove = Int.random(in: 0...add - 1)
+                for i in 0...add {
                     MDC.global["key-\(i)"] = "value-\(i)"
                 }
-                for i in 0 ... remove {
+                for i in 0...remove {
                     MDC.global["key-\(i)"] = nil
                 }
                 XCTAssertEqual(add - remove, MDC.global.metadata.count, "expected number of entries to match")
-                for i in remove + 1 ... add {
+                for i in remove + 1...add {
                     XCTAssertNotNil(MDC.global["key-\(i)"], "expecting value for key-\(i)")
                 }
-                for i in 0 ... remove {
+                for i in 0...remove {
                     XCTAssertNil(MDC.global["key-\(i)"], "not expecting value for key-\(i)")
                 }
                 MDC.global.clear()
