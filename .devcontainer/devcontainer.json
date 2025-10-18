@@ -1,0 +1,51 @@
+{
+    "name": "Swift 6.2",
+    "build": {
+        "dockerfile": "Dockerfile",
+        "args": {
+            "SWIFT_VERSION" : "6.2.0"
+        }
+    },
+    "features": {
+        "ghcr.io/devcontainers/features/common-utils:2": {
+            "installZsh": "false",
+            "username": "ubuntu",
+            "userUid": "automatic",
+            "userGid": "automatic",
+            "upgradePackages": "false"
+        },
+        "ghcr.io/devcontainers/features/git:1": {
+            "version": "os-provided",
+            "ppa": "false"
+        }
+    },
+    "runArgs": [
+        "--cap-add=SYS_PTRACE",
+        "--security-opt",
+        "seccomp=unconfined",
+        "--network=host"
+    ],
+    // Configure tool-specific properties.
+    "customizations": {
+        // Configure properties specific to VS Code.
+        "vscode": {
+            // Set *default* container specific settings.json values on container create.
+            "settings": {
+                "lldb.library": "/usr/lib/liblldb.so"
+            },
+            // Add the IDs of extensions you want installed when the container is created.
+            "extensions": [
+                "swiftlang.swift-vscode"
+            ]
+        }
+    },
+    // Use 'forwardPorts' to make a list of ports inside the container available locally.
+    // "forwardPorts": [],
+    "containerEnv": {
+        "HYLO_LLVM_BUILD_TYPE": "${localEnv:HYLO_LLVM_BUILD_TYPE:MinSizeRel}",
+        "HYLO_USE_BUILTIN_STDLIB": "true"
+    },
+    // "postCreateCommand": "sudo ./.devcontainer/postCreateCommand.sh",
+    // Set `remoteUser` to `root` to connect as root instead. More info: https://aka.ms/vscode-remote/containers/non-root.
+    "remoteUser": "ubuntu"
+}
