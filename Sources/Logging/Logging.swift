@@ -621,9 +621,19 @@ extension Logger {
     }
 }
 
-/// The `LoggingSystem` is a global facility where the default logging backend implementation (`LogHandler`) can be
-/// configured. `LoggingSystem` is set up just once in a given program to set up the desired logging backend
-/// implementation.
+/// The logging system is a global facility where you can configure the default logging backend implementation.
+///
+/// `LoggingSystem` is set up just once in a given program to set up the desired logging backend implementation.
+/// The default behavior, if you don't define otherwise, sets the ``LogHandler`` to use a ``StreamLogHandler`` that presents its output to `STDOUT`.
+///
+/// You can configure that handler to present the output to `STDERR` instead using the following code:
+///
+/// ```swift
+/// LoggingSystem.bootstrap(StreamLogHandler.standardError)
+/// ```
+///
+/// The default (``StreamLogHandler``) is intended to be a convenience.
+/// For production applications, implement the ``LogHandler`` protocol directly, or use a community-maintained backend.
 public enum LoggingSystem {
     private static let _factory = FactoryBox(
         { label, _ in StreamLogHandler.standardError(label: label) },
