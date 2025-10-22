@@ -12,19 +12,19 @@
 //
 //===----------------------------------------------------------------------===//
 
-/// A `LogHandler` is an implementation of a logging backend.
+/// A log handler provides an implementation of a logging backend.
 ///
-/// This type is an implementation detail and should not normally be used, unless implementing your own logging backend.
+/// This type is an implementation detail and should not normally be used, unless you implement your own logging backend.
 /// To use the SwiftLog API, please refer to the documentation of ``Logger``.
 ///
 /// # Implementation requirements
 ///
 /// To implement your own `LogHandler` you should respect a few requirements that are necessary so applications work
-/// as expected regardless of the selected `LogHandler` implementation.
+/// as expected, regardless of the selected `LogHandler` implementation.
 ///
 /// - The ``LogHandler`` must be a `struct`.
 /// - The metadata and `logLevel` properties must be implemented so that setting them on a `Logger` does not affect
-///   other `Logger`s.
+///   other instances of `Logger`.
 ///
 /// ### Treat log level & metadata as values
 ///
@@ -52,18 +52,21 @@
 ///
 /// ### Special cases
 ///
-/// In certain special cases, the log level behaving like a value on `Logger` might not be what you want. For example,
-/// you might want to set the log level across _all_ `Logger`s to `.debug` when say a signal (eg. `SIGUSR1`) is received
-/// to be able to debug special failures in production. This special case is acceptable but we urge you to create a
-/// solution specific to your `LogHandler` implementation to achieve that. Please find an example implementation of this
-/// behavior below, on reception of the signal you would call
+/// In certain special cases, the log level behaving like a value on `Logger` might not be what you want.
+/// For example, you might want to set the log level across _all_ `Logger`s to `.debug` when a signal
+/// (for example `SIGUSR1`) is received to be able to debug special failures in production.
+/// This special case is acceptable but please create a solution specific to your `LogHandler` implementation to achieve that.
+///
+/// The following code illustrates an example implementation of this behavior.
+/// On reception of the signal you would call
 /// `LogHandlerWithGlobalLogLevelOverride.overrideGlobalLogLevel = .debug`, for example.
 ///
 /// ```swift
 /// import class Foundation.NSLock
 ///
 /// public struct LogHandlerWithGlobalLogLevelOverride: LogHandler {
-///     // the static properties hold the globally overridden log level (if overridden)
+///     // The static properties hold the globally overridden
+///     // log level (if overridden).
 ///     private static let overrideLock = NSLock()
 ///     private static var overrideLogLevel: Logger.Level? = nil
 ///
@@ -78,21 +81,29 @@
 ///     }
 ///
 ///     public var logLevel: Logger.Level {
-///         // when we get asked for the log level, we check if it was globally overridden or not
+///         // When asked for the log level, check
+///         // if it was globally overridden or not.
 ///         get {
 ///             LogHandlerWithGlobalLogLevelOverride.overrideLock.lock()
 ///             defer { LogHandlerWithGlobalLogLevelOverride.overrideLock.unlock() }
 ///             return LogHandlerWithGlobalLogLevelOverride.overrideLogLevel ?? self._logLevel
 ///         }
-///         // we set the log level whenever we're asked (note: this might not have an effect if globally
-///         // overridden)
+///         // Set the log level whenever asked
+///         // (note: this might not have an effect if globally
+///         // overridden).
 ///         set {
 ///             self._logLevel = newValue
 ///         }
 ///     }
 ///
-///     public func log(level: Logger.Level, message: Logger.Message, metadata: Logger.Metadata?,
-///                     source: String, file: String, function: String, line: UInt) {
+///     public func log(
+///         level: Logger.Level,
+///         message: Logger.Message,
+///         metadata: Logger.Metadata?,
+///         source: String,
+///         file: String,
+///         function: String,
+///         line: UInt) {
 ///         // [...]
 ///     }
 ///
@@ -105,7 +116,8 @@
 ///         }
 ///     }
 ///
-///     // this is the function to globally override the log level, it is not part of the `LogHandler` protocol
+///     // This is the function to globally override the log level,
+///     // it is not part of the `LogHandler` protocol.
 ///     public static func overrideGlobalLogLevel(_ logLevel: Logger.Level) {
 ///         LogHandlerWithGlobalLogLevelOverride.overrideLock.lock()
 ///         defer { LogHandlerWithGlobalLogLevelOverride.overrideLock.unlock() }
@@ -114,28 +126,30 @@
 /// }
 /// ```
 ///
-/// Please note that the above `LogHandler` will still pass the 'log level is a value' test above it iff the global log
-/// level has not been overridden. And most importantly it passes the requirement listed above: A change to the log
-/// level on one `Logger` should not affect the log level of another `Logger` variable.
+/// > Note: The above `LogHandler` still passes the 'log level is a value' test above it if the global log
+/// > level has not been overridden. Most importantly, it passes the requirement listed above: A change to the log
+/// > level on one `Logger` should not affect the log level of another `Logger` variable.
 public protocol LogHandler: _SwiftLogSendableLogHandler {
-    /// The metadata provider this `LogHandler` will use when a log statement is about to be emitted.
+    /// The metadata provider this log handler uses when a log statement is about to be emitted.
     ///
     /// A ``Logger/MetadataProvider`` may add a constant set of metadata,
     /// or use task-local values to pick up contextual metadata and add it to emitted logs.
     var metadataProvider: Logger.MetadataProvider? { get set }
 
-    /// This method is called when a `LogHandler` must emit a log message. There is no need for the `LogHandler` to
-    /// check if the `level` is above or below the configured `logLevel` as `Logger` already performed this check and
+    /// The library calls this method when a log handler must emit a log message.
+    ///
+    /// There is no need for the `LogHandler` to check if the `level` is above or
+    /// below the configured `logLevel` as `Logger` already performed this check and
     /// determined that a message should be logged.
     ///
-    /// - parameters:
-    ///     - level: The log level the message was logged at.
-    ///     - message: The message to log. To obtain a `String` representation call `message.description`.
-    ///     - metadata: The metadata associated to this log message.
-    ///     - source: The source where the log message originated, for example the logging module.
-    ///     - file: The file the log message was emitted from.
-    ///     - function: The function the log line was emitted from.
-    ///     - line: The line the log message was emitted from.
+    /// - Parameters:
+    ///   - level: The log level of the message.
+    ///   - message: The message to log. To obtain a `String` representation call `message.description`.
+    ///   - metadata: The metadata associated to this log message.
+    ///   - source: The source where the log message originated, for example the logging module.
+    ///   - file: The file this log message originates from.
+    ///   - function: The function this log message originates from.
+    ///   - line: The line this log message originates from.
     func log(
         level: Logger.Level,
         message: Logger.Message,
@@ -146,8 +160,9 @@ public protocol LogHandler: _SwiftLogSendableLogHandler {
         line: UInt
     )
 
-    /// SwiftLog 1.0 compatibility method. Please do _not_ implement, implement
-    /// `log(level:message:metadata:source:file:function:line:)` instead.
+    /// SwiftLog 1.0 log compatibility method.
+    ///
+    /// Please do _not_ implement, implement `log(level:message:metadata:source:file:function:line:)` instead.
     @available(*, deprecated, renamed: "log(level:message:metadata:source:file:function:line:)")
     func log(
         level: Logging.Logger.Level,
@@ -183,8 +198,9 @@ public protocol LogHandler: _SwiftLogSendableLogHandler {
 }
 
 extension LogHandler {
-    /// Default implementation for `metadataProvider` which defaults to `nil`.
-    /// This default exists in order to facilitate source-compatible introduction of the `metadataProvider` protocol requirement.
+    /// Default implementation for a metadata provider that defaults to nil.
+    ///
+    /// This default exists in order to facilitate the source-compatible introduction of the `metadataProvider` protocol requirement.
     public var metadataProvider: Logger.MetadataProvider? {
         get {
             nil

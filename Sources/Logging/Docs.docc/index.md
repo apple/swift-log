@@ -77,9 +77,9 @@ backend.
 
 ### Logging API
 
+- <doc:UnderstandingLoggers>
 - ``Logger``
 - ``LoggingSystem``
-- <doc:UnderstandingLoggers>
 
 ### Log Handlers
 
@@ -91,5 +91,4 @@ backend.
 ### Best Practices
 
 - <doc:LoggingBestPractices>
-- <doc:001-ChoosingLogLevels>
-
+- <doc:ImplementingALogHandler>
