@@ -26,8 +26,8 @@ struct GlobalLoggerTest {
         let logging = TestLogging()
         LoggingSystem.bootstrapInternal { logging.make(label: $0) }
 
-        // change test logging config to log traces and above
-        logging.config.set(value: Logger.Level.debug)
+        // change test logging config to log trace and above
+        logging.config.set(value: Logger.Level.trace)
         // run our program
         Struct1().doSomething()
         // test results
@@ -43,9 +43,13 @@ struct GlobalLoggerTest {
         logging.history.assertExist(level: .debug, message: "Struct3::doSomethingElse::Local", metadata: ["baz": "qux"])
         logging.history.assertExist(level: .debug, message: "Struct3::doSomethingElse::end")
         logging.history.assertExist(level: .debug, message: "Struct3::doSomething::end")
+        logging.history.assertExist(level: .trace, message: "Struct3::doSomething::end::lastLine")
         logging.history.assertExist(level: .debug, message: "Struct2::doSomethingElse::end")
+        logging.history.assertExist(level: .trace, message: "Struct2::doSomethingElse::end::lastLine")
         logging.history.assertExist(level: .debug, message: "Struct1::doSomethingElse::end")
         logging.history.assertExist(level: .debug, message: "Struct1::doSomething::end")
+        logging.history.assertExist(level: .trace, message: "Struct1::doSomething::end::lastLine")
+
     }
 
     @Test func errorAndAbove() throws {
@@ -78,9 +82,12 @@ struct GlobalLoggerTest {
         )
         logging.history.assertNotExist(level: .debug, message: "Struct3::doSomethingElse::end")
         logging.history.assertNotExist(level: .debug, message: "Struct3::doSomething::end")
+        logging.history.assertNotExist(level: .trace, message: "Struct3::doSomething::end::lastLine")
         logging.history.assertNotExist(level: .debug, message: "Struct2::doSomethingElse::end")
+        logging.history.assertNotExist(level: .trace, message: "Struct2::doSomethingElse::end::lastLine")
         logging.history.assertNotExist(level: .debug, message: "Struct1::doSomethingElse::end")
         logging.history.assertNotExist(level: .debug, message: "Struct1::doSomething::end")
+        logging.history.assertNotExist(level: .trace, message: "Struct1::doSomething::end::lastLine")
     }
 
     @Test func warningAndAbove() throws {
@@ -130,6 +137,7 @@ private struct Struct1 {
         self.logger.debug("Struct1::doSomethingElse")
         Struct2().doSomething()
         self.logger.debug("Struct1::doSomethingElse::end")
+        self.logger.trace("Struct1::doSomething::end::lastLine")
     }
 }
 
@@ -146,6 +154,7 @@ private struct Struct2 {
         self.logger.info("Struct2::doSomethingElse")
         Struct3().doSomething()
         self.logger.debug("Struct2::doSomethingElse::end")
+        self.logger.trace("Struct2::doSomethingElse::end::lastLine")
     }
 }
 
@@ -157,6 +166,7 @@ private struct Struct3 {
         self.logger.error("Struct3::doSomething")
         self.doSomethingElse()
         self.logger.debug("Struct3::doSomething::end")
+        self.logger.trace("Struct3::doSomething::end::lastLine")
     }
 
     private func doSomethingElse() {
