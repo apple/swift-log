@@ -12,6 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+import Dispatch
 import Foundation
 import XCTest
 
@@ -19,11 +20,6 @@ import XCTest
 
 #if os(Windows)
 import WinSDK
-#endif
-#if compiler(>=6.0) || canImport(Darwin)
-import Dispatch
-#else
-@preconcurrency import Dispatch
 #endif
 
 internal struct TestLogging {

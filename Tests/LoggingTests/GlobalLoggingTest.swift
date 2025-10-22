@@ -12,15 +12,10 @@
 //
 //===----------------------------------------------------------------------===//
 
+import Dispatch
 import XCTest
 
 @testable import Logging
-
-#if compiler(>=6.0) || canImport(Darwin)
-import Dispatch
-#else
-@preconcurrency import Dispatch
-#endif
 
 class GlobalLoggerTest: XCTestCase {
     func test1() throws {
