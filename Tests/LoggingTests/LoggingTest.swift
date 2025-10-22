@@ -12,7 +12,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-import XCTest
+import Foundation
+import Testing
 
 @testable import Logging
 
@@ -40,30 +41,34 @@ extension LogHandler {
     }
 }
 
-class LoggingTest: XCTestCase {
-    func testAutoclosure() throws {
-        // bootstrap with our test logging impl
+struct LoggingTest {
+    @Test func autoclosure() throws {
+        // create test logging impl, do not bootstrap global LoggingSystem
         let logging = TestLogging()
-        LoggingSystem.bootstrapInternal { logging.make(label: $0) }
 
-        var logger = Logger(label: "test")
+        var logger = Logger(
+            label: "test",
+            factory: {
+                logging.make(label: $0)
+            }
+        )
         logger.logLevel = .info
         logger.log(
             level: .debug,
             {
-                XCTFail("debug should not be called")
+                Issue.record("debug should not be called")
                 return "debug"
             }()
         )
         logger.trace(
             {
-                XCTFail("trace should not be called")
+                Issue.record("trace should not be called")
                 return "trace"
             }()
         )
         logger.debug(
             {
-                XCTFail("debug should not be called")
+                Issue.record("debug should not be called")
                 return "debug"
             }()
         )
@@ -82,7 +87,7 @@ class LoggingTest: XCTestCase {
                 "error"
             }()
         )
-        XCTAssertEqual(3, logging.history.entries.count, "expected number of entries to match")
+        #expect(3 == logging.history.entries.count, "expected number of entries to match")
         logging.history.assertNotExist(level: .debug, message: "trace")
         logging.history.assertNotExist(level: .debug, message: "debug")
         logging.history.assertExist(level: .info, message: "info")
@@ -90,13 +95,17 @@ class LoggingTest: XCTestCase {
         logging.history.assertExist(level: .error, message: "error")
     }
 
-    func testMultiplex() throws {
-        // bootstrap with our test logging impl
+    @Test func multiplex() throws {
+        // create test logging impl, do not bootstrap global LoggingSystem
         let logging1 = TestLogging()
         let logging2 = TestLogging()
-        LoggingSystem.bootstrapInternal { MultiplexLogHandler([logging1.make(label: $0), logging2.make(label: $0)]) }
 
-        var logger = Logger(label: "test")
+        var logger = Logger(
+            label: "test",
+            factory: {
+                MultiplexLogHandler([logging1.make(label: $0), logging2.make(label: $0)])
+            }
+        )
         logger.logLevel = .warning
         logger.info("hello world?")
         logger[metadataKey: "foo"] = "bar"
@@ -107,18 +116,19 @@ class LoggingTest: XCTestCase {
         logging2.history.assertExist(level: .warning, message: "hello world!", metadata: ["foo": "bar"])
     }
 
-    func testMultiplexLogHandlerWithVariousLogLevels() throws {
+    @Test func multiplexLogHandlerWithVariousLogLevels() throws {
         let logging1 = TestLogging()
         let logging2 = TestLogging()
 
         let logger1 = logging1.make(label: "1").with(logLevel: .info)
         let logger2 = logging2.make(label: "2").with(logLevel: .debug)
 
-        LoggingSystem.bootstrapInternal { _ in
-            MultiplexLogHandler([logger1, logger2])
-        }
-
-        let multiplexLogger = Logger(label: "test")
+        let multiplexLogger = Logger(
+            label: "test",
+            factory: { _ in
+                MultiplexLogHandler([logger1, logger2])
+            }
+        )
         multiplexLogger.trace("trace")
         multiplexLogger.debug("debug")
         multiplexLogger.info("info")
@@ -135,21 +145,22 @@ class LoggingTest: XCTestCase {
         logging2.history.assertExist(level: .warning, message: "warning")
     }
 
-    func testMultiplexLogHandlerNeedNotMaterializeValuesMultipleTimes() throws {
+    @Test func multiplexLogHandlerNeedNotMaterializeValuesMultipleTimes() throws {
         let logging1 = TestLogging()
         let logging2 = TestLogging()
 
         let logger1 = logging1.make(label: "1").with(logLevel: .info)
         let logger2 = logging2.make(label: "2").with(logLevel: .info)
 
-        LoggingSystem.bootstrapInternal { _ in
-            MultiplexLogHandler([logger1, logger2])
-        }
-
         var messageMaterializations: Int = 0
         var metadataMaterializations: Int = 0
 
-        let multiplexLogger = Logger(label: "test")
+        let multiplexLogger = Logger(
+            label: "test",
+            factory: { _ in
+                MultiplexLogHandler([logger1, logger2])
+            }
+        )
         multiplexLogger.info(
             { () -> Logger.Message in
                 messageMaterializations += 1
@@ -164,11 +175,11 @@ class LoggingTest: XCTestCase {
         logging1.history.assertExist(level: .info, message: "info")
         logging2.history.assertExist(level: .info, message: "info")
 
-        XCTAssertEqual(messageMaterializations, 1)
-        XCTAssertEqual(metadataMaterializations, 1)
+        #expect(messageMaterializations == 1)
+        #expect(metadataMaterializations == 1)
     }
 
-    func testMultiplexLogHandlerMetadata_settingMetadataThroughToUnderlyingHandlers() {
+    @Test func multiplexLogHandlerMetadata_settingMetadataThroughToUnderlyingHandlers() {
         let logging1 = TestLogging()
         let logging2 = TestLogging()
 
@@ -179,11 +190,12 @@ class LoggingTest: XCTestCase {
             .withMetadata("two", "222")
             .withMetadata("in", "in-2")
 
-        LoggingSystem.bootstrapInternal { _ in
-            MultiplexLogHandler([logger1, logger2])
-        }
-
-        var multiplexLogger = Logger(label: "test")
+        var multiplexLogger = Logger(
+            label: "test",
+            factory: { _ in
+                MultiplexLogHandler([logger1, logger2])
+            }
+        )
 
         // each logs its own metadata
         multiplexLogger.info("info")
@@ -249,7 +261,7 @@ class LoggingTest: XCTestCase {
         )
     }
 
-    func testMultiplexLogHandlerMetadata_readingHandlerMetadata() {
+    @Test func multiplexLogHandlerMetadata_readingHandlerMetadata() {
         let logging1 = TestLogging()
         let logging2 = TestLogging()
 
@@ -260,15 +272,15 @@ class LoggingTest: XCTestCase {
             .withMetadata("two", "222")
             .withMetadata("in", "in-2")
 
-        LoggingSystem.bootstrapInternal { _ in
-            MultiplexLogHandler([logger1, logger2])
-        }
+        let multiplexLogger = Logger(
+            label: "test",
+            factory: { _ in
+                MultiplexLogHandler([logger1, logger2])
+            }
+        )
 
-        let multiplexLogger = Logger(label: "test")
-
-        XCTAssertEqual(
-            multiplexLogger.handler.metadata,
-            [
+        #expect(
+            multiplexLogger.handler.metadata == [
                 "one": "111",
                 "two": "222",
                 "in": "in-2",
@@ -276,7 +288,7 @@ class LoggingTest: XCTestCase {
         )
     }
 
-    func testMultiplexMetadataProviderSet() {
+    @Test func multiplexMetadataProviderSet() {
         let logging1 = TestLogging()
         let logging2 = TestLogging()
 
@@ -301,15 +313,15 @@ class LoggingTest: XCTestCase {
             return handler2
         }()
 
-        LoggingSystem.bootstrapInternal { _ in
-            MultiplexLogHandler([handler1, handler2])
-        }
+        let multiplexLogger = Logger(
+            label: "test",
+            factory: { _ in
+                MultiplexLogHandler([handler1, handler2])
+            }
+        )
 
-        let multiplexLogger = Logger(label: "test")
-
-        XCTAssertEqual(
-            multiplexLogger.handler.metadata,
-            [
+        #expect(
+            multiplexLogger.handler.metadata == [
                 "one": "111",
                 "two": "222",
                 "in": "in-2",
@@ -318,9 +330,8 @@ class LoggingTest: XCTestCase {
                 "provider-overlap": "provided-222",
             ]
         )
-        XCTAssertEqual(
-            multiplexLogger.handler.metadataProvider?.get(),
-            [
+        #expect(
+            multiplexLogger.handler.metadataProvider?.get() == [
                 "provider-1": "provided-111",
                 "provider-2": "provided-222",
                 "provider-overlap": "provided-222",
@@ -328,7 +339,7 @@ class LoggingTest: XCTestCase {
         )
     }
 
-    func testMultiplexMetadataProviderExtract() {
+    @Test func multiplexMetadataProviderExtract() {
         let logging1 = TestLogging()
         let logging2 = TestLogging()
 
@@ -351,25 +362,22 @@ class LoggingTest: XCTestCase {
             return handler2
         }()
 
-        LoggingSystem.bootstrapInternal(
-            { _, metadataProvider in
+        let multiplexLogger = Logger(
+            label: "test",
+            factory: { _ in
                 MultiplexLogHandler(
                     [handler1, handler2],
-                    metadataProvider: metadataProvider
+                    metadataProvider: .constant([
+                        "provider-overlap": "provided-outer"
+                    ])
                 )
-            },
-            metadataProvider: .constant([
-                "provider-overlap": "provided-outer"
-            ])
+            }
         )
-
-        let multiplexLogger = Logger(label: "test")
 
         let provider = multiplexLogger.metadataProvider!
 
-        XCTAssertEqual(
-            provider.get(),
-            [
+        #expect(
+            provider.get() == [
                 "provider-1": "provided-111",
                 "provider-2": "provided-222",
                 "provider-overlap": "provided-outer",
@@ -381,11 +389,15 @@ class LoggingTest: XCTestCase {
         case boom
     }
 
-    func testDictionaryMetadata() {
+    @Test func dictionaryMetadata() {
         let testLogging = TestLogging()
-        LoggingSystem.bootstrapInternal { testLogging.make(label: $0) }
 
-        var logger = Logger(label: "\(#function)")
+        var logger = Logger(
+            label: "\(#function)",
+            factory: {
+                testLogging.make(label: $0)
+            }
+        )
         logger[metadataKey: "foo"] = ["bar": "buz"]
         logger[metadataKey: "empty-dict"] = [:]
         logger[metadataKey: "nested-dict"] = ["l1key": ["l2key": ["l3key": "l3value"]]]
@@ -401,11 +413,15 @@ class LoggingTest: XCTestCase {
         )
     }
 
-    func testListMetadata() {
+    @Test func listMetadata() {
         let testLogging = TestLogging()
-        LoggingSystem.bootstrapInternal { testLogging.make(label: $0) }
 
-        var logger = Logger(label: "\(#function)")
+        var logger = Logger(
+            label: "\(#function)",
+            factory: {
+                testLogging.make(label: $0)
+            }
+        )
         logger[metadataKey: "foo"] = ["bar", "buz"]
         logger[metadataKey: "empty-list"] = []
         logger[metadataKey: "nested-list"] = ["l1str", ["l2str1", "l2str2"]]
@@ -448,10 +464,14 @@ class LoggingTest: XCTestCase {
         }
     }
 
-    func testStringConvertibleMetadata() {
+    @Test func stringConvertibleMetadata() {
         let testLogging = TestLogging()
-        LoggingSystem.bootstrapInternal { testLogging.make(label: $0) }
-        var logger = Logger(label: "\(#function)")
+        var logger = Logger(
+            label: "\(#function)",
+            factory: {
+                testLogging.make(label: $0)
+            }
+        )
 
         logger[metadataKey: "foo"] = .stringConvertible("raw-string")
         let lazyBox = LazyMetadataBox { "rendered-at-first-use" }
@@ -467,16 +487,28 @@ class LoggingTest: XCTestCase {
         )
     }
 
-    private func dontEvaluateThisString(file: StaticString = #filePath, line: UInt = #line) -> Logger.Message {
-        XCTFail("should not have been evaluated", file: file, line: line)
+    private func dontEvaluateThisString(
+        fileID: String = #fileID,
+        file: StaticString = #filePath,
+        line: UInt = #line,
+        column: UInt = #column
+    ) -> Logger.Message {
+        Issue.record(
+            "should not have been evaluated",
+            sourceLocation: SourceLocation(fileID: fileID, filePath: "\(file)", line: Int(line), column: Int(column))
+        )
         return "should not have been evaluated"
     }
 
-    func testAutoClosuresAreNotForcedUnlessNeeded() {
+    @Test func autoClosuresAreNotForcedUnlessNeeded() {
         let testLogging = TestLogging()
-        LoggingSystem.bootstrapInternal { testLogging.make(label: $0) }
 
-        var logger = Logger(label: "\(#function)")
+        var logger = Logger(
+            label: "\(#function)",
+            factory: {
+                testLogging.make(label: $0)
+            }
+        )
         logger.logLevel = .error
 
         logger.debug(self.dontEvaluateThisString(), metadata: ["foo": "\(self.dontEvaluateThisString())"])
@@ -486,11 +518,15 @@ class LoggingTest: XCTestCase {
         logger.log(level: .warning, self.dontEvaluateThisString())
     }
 
-    func testLocalMetadata() {
+    @Test func localMetadata() {
         let testLogging = TestLogging()
-        LoggingSystem.bootstrapInternal { testLogging.make(label: $0) }
 
-        var logger = Logger(label: "\(#function)")
+        var logger = Logger(
+            label: "\(#function)",
+            factory: {
+                testLogging.make(label: $0)
+            }
+        )
         logger.info("hello world!", metadata: ["foo": "bar"])
         logger[metadataKey: "bar"] = "baz"
         logger[metadataKey: "baz"] = "qux"
@@ -505,7 +541,7 @@ class LoggingTest: XCTestCase {
         testLogging.history.assertExist(level: .error, message: "hello world!", metadata: ["bar": "baz", "baz": "quc"])
     }
 
-    func testCustomFactory() {
+    @Test func customFactory() {
         struct CustomHandler: LogHandler {
             func log(
                 level: Logger.Level,
@@ -534,16 +570,20 @@ class LoggingTest: XCTestCase {
         }
 
         let logger1 = Logger(label: "foo")
-        XCTAssertFalse(logger1.handler is CustomHandler, "expected non-custom log handler")
+        #expect(!(logger1.handler is CustomHandler), "expected non-custom log handler")
         let logger2 = Logger(label: "foo", factory: { _ in CustomHandler() })
-        XCTAssertTrue(logger2.handler is CustomHandler, "expected custom log handler")
+        #expect(logger2.handler is CustomHandler, "expected custom log handler")
     }
 
-    func testAllLogLevelsExceptCriticalCanBeBlocked() {
+    @Test func allLogLevelsExceptCriticalCanBeBlocked() {
         let testLogging = TestLogging()
-        LoggingSystem.bootstrapInternal { testLogging.make(label: $0) }
 
-        var logger = Logger(label: "\(#function)")
+        var logger = Logger(
+            label: "\(#function)",
+            factory: {
+                testLogging.make(label: $0)
+            }
+        )
         logger.logLevel = .critical
 
         logger.trace("no")
@@ -563,11 +603,15 @@ class LoggingTest: XCTestCase {
         testLogging.history.assertExist(level: .critical, message: "yes: critical")
     }
 
-    func testAllLogLevelsWork() {
+    @Test func allLogLevelsWork() {
         let testLogging = TestLogging()
-        LoggingSystem.bootstrapInternal { testLogging.make(label: $0) }
 
-        var logger = Logger(label: "\(#function)")
+        var logger = Logger(
+            label: "\(#function)",
+            factory: {
+                testLogging.make(label: $0)
+            }
+        )
         logger.logLevel = .trace
 
         logger.trace("yes: trace")
@@ -587,11 +631,15 @@ class LoggingTest: XCTestCase {
         testLogging.history.assertExist(level: .critical, message: "yes: critical")
     }
 
-    func testAllLogLevelByFunctionRefWithSource() {
+    @Test func allLogLevelByFunctionRefWithSource() {
         let testLogging = TestLogging()
-        LoggingSystem.bootstrapInternal { testLogging.make(label: $0) }
 
-        var logger = Logger(label: "\(#function)")
+        var logger = Logger(
+            label: "\(#function)",
+            factory: {
+                testLogging.make(label: $0)
+            }
+        )
         logger.logLevel = .trace
 
         let trace = logger.trace(_:metadata:source:file:function:line:)
@@ -619,11 +667,15 @@ class LoggingTest: XCTestCase {
         testLogging.history.assertExist(level: .critical, message: "yes: critical", source: "foo")
     }
 
-    func testAllLogLevelByFunctionRefWithoutSource() {
+    @Test func allLogLevelByFunctionRefWithoutSource() {
         let testLogging = TestLogging()
-        LoggingSystem.bootstrapInternal { testLogging.make(label: $0) }
 
-        var logger = Logger(label: "\(#function)")
+        var logger = Logger(
+            label: "\(#function)",
+            factory: {
+                testLogging.make(label: $0)
+            }
+        )
         logger.logLevel = .trace
 
         let trace = logger.trace(_:metadata:file:function:line:)
@@ -651,11 +703,15 @@ class LoggingTest: XCTestCase {
         testLogging.history.assertExist(level: .critical, message: "yes: critical")
     }
 
-    func testLogsEmittedFromSubdirectoryGetCorrectModuleInNewerSwifts() {
+    @Test func logsEmittedFromSubdirectoryGetCorrectModuleInNewerSwifts() {
         let testLogging = TestLogging()
-        LoggingSystem.bootstrapInternal { testLogging.make(label: $0) }
 
-        var logger = Logger(label: "\(#function)")
+        var logger = Logger(
+            label: "\(#function)",
+            factory: {
+                testLogging.make(label: $0)
+            }
+        )
         logger.logLevel = .trace
 
         emitLogMessage("hello", to: logger)
@@ -671,11 +727,15 @@ class LoggingTest: XCTestCase {
         testLogging.history.assertExist(level: .critical, message: "hello", source: moduleName)
     }
 
-    func testLogMessageWithStringInterpolation() {
+    @Test func logMessageWithStringInterpolation() {
         let testLogging = TestLogging()
-        LoggingSystem.bootstrapInternal { testLogging.make(label: $0) }
 
-        var logger = Logger(label: "\(#function)")
+        var logger = Logger(
+            label: "\(#function)",
+            factory: {
+                testLogging.make(label: $0)
+            }
+        )
         logger.logLevel = .debug
 
         let someInt = Int.random(in: 23..<42)
@@ -686,11 +746,15 @@ class LoggingTest: XCTestCase {
         )
     }
 
-    func testLoggingAString() {
+    @Test func loggingAString() {
         let testLogging = TestLogging()
-        LoggingSystem.bootstrapInternal { testLogging.make(label: $0) }
 
-        var logger = Logger(label: "\(#function)")
+        var logger = Logger(
+            label: "\(#function)",
+            factory: {
+                testLogging.make(label: $0)
+            }
+        )
         logger.logLevel = .debug
 
         let anActualString: String = "hello world!"
@@ -702,7 +766,7 @@ class LoggingTest: XCTestCase {
         testLogging.history.assertExist(level: .debug, message: "hello world!")
     }
 
-    func testMultiplexMetadataProviderMergesInSpecifiedOrder() {
+    @Test func multiplexMetadataProviderMergesInSpecifiedOrder() {
         let logging = TestLogging()
 
         let providerA = Logger.MetadataProvider { ["provider": "a", "a": "foo"] }
@@ -723,14 +787,14 @@ class LoggingTest: XCTestCase {
         )
     }
 
-    func testLoggerWithoutFactoryOverrideDefaultsToUsingLoggingSystemMetadataProvider() {
+    @Test func loggerWithoutFactoryOverrideDefaultsToUsingLoggingSystemMetadataProvider() {
         let logging = TestLogging()
-        LoggingSystem.bootstrapInternal(
-            { logging.makeWithMetadataProvider(label: $0, metadataProvider: $1) },
-            metadataProvider: .init { ["provider": "42"] }
-        )
 
-        let logger = Logger(label: #function)
+        let metadataProvider: Logger.MetadataProvider = .init { ["provider": "42"] }
+        let logger = Logger(
+            label: #function,
+            factory: { logging.makeWithMetadataProvider(label: $0, metadataProvider: metadataProvider) }
+        )
 
         logger.log(level: .info, "test", metadata: ["one-off": "42"])
 
@@ -741,14 +805,15 @@ class LoggingTest: XCTestCase {
         )
     }
 
-    func testLoggerWithPredefinedLibraryMetadataProvider() {
+    @Test func loggerWithPredefinedLibraryMetadataProvider() {
         let logging = TestLogging()
-        LoggingSystem.bootstrapInternal(
-            { logging.makeWithMetadataProvider(label: $0, metadataProvider: $1) },
-            metadataProvider: .exampleProvider
-        )
 
-        let logger = Logger(label: #function)
+        let logger = Logger(
+            label: #function,
+            factory: {
+                logging.makeWithMetadataProvider(label: $0, metadataProvider: .exampleProvider)
+            }
+        )
 
         logger.log(level: .info, "test", metadata: ["one-off": "42"])
 
@@ -759,17 +824,13 @@ class LoggingTest: XCTestCase {
         )
     }
 
-    func testLoggerWithFactoryOverrideDefaultsToUsingLoggingSystemMetadataProvider() {
+    @Test func loggerWithFactoryOverrideDefaultsToUsingLoggingSystemMetadataProvider() {
         let logging = TestLogging()
-        LoggingSystem.bootstrapInternal(
-            { logging.makeWithMetadataProvider(label: $0, metadataProvider: $1) },
-            metadataProvider: .init { ["provider": "42"] }
-        )
 
         let logger = Logger(
             label: #function,
-            factory: { label in
-                logging.makeWithMetadataProvider(label: label, metadataProvider: LoggingSystem.metadataProvider)
+            factory: {
+                logging.makeWithMetadataProvider(label: $0, metadataProvider: .init { ["provider": "42"] })
             }
         )
 
@@ -782,28 +843,30 @@ class LoggingTest: XCTestCase {
         )
     }
 
-    func testMultiplexerIsValue() {
+    @Test func multiplexerIsValue() {
         let multi = MultiplexLogHandler([
             StreamLogHandler.standardOutput(label: "x"), StreamLogHandler.standardOutput(label: "y"),
         ])
-        LoggingSystem.bootstrapInternal { _ in
-            print("new multi")
-            return multi
-        }
         let logger1: Logger = {
-            var logger = Logger(label: "foo")
+            var logger = Logger(
+                label: "foo",
+                factory: { _ in
+                    print("new multi")
+                    return multi
+                }
+            )
             logger.logLevel = .debug
             logger[metadataKey: "only-on"] = "first"
             return logger
         }()
-        XCTAssertEqual(.debug, logger1.logLevel)
+        #expect(.debug == logger1.logLevel)
         var logger2 = logger1
         logger2.logLevel = .error
         logger2[metadataKey: "only-on"] = "second"
-        XCTAssertEqual(.error, logger2.logLevel)
-        XCTAssertEqual(.debug, logger1.logLevel)
-        XCTAssertEqual("first", logger1[metadataKey: "only-on"])
-        XCTAssertEqual("second", logger2[metadataKey: "only-on"])
+        #expect(.error == logger2.logLevel)
+        #expect(.debug == logger1.logLevel)
+        #expect("first" == logger1[metadataKey: "only-on"])
+        #expect("second" == logger2[metadataKey: "only-on"])
         logger1.error("hey")
     }
 
@@ -834,7 +897,7 @@ class LoggingTest: XCTestCase {
         }
     }
 
-    func testLoggerWithGlobalOverride() {
+    @Test func loggerWithGlobalOverride() {
         struct LogHandlerWithGlobalLogLevelOverride: LogHandler {
             // the static properties hold the globally overridden log level (if overridden)
             private static let overrideLogLevel = LockedValueBox<Logger.Level?>(initialValue: nil)
@@ -890,20 +953,22 @@ class LoggingTest: XCTestCase {
         }
 
         let logRecorder = Recorder()
-        LoggingSystem.bootstrapInternal { _ in
-            LogHandlerWithGlobalLogLevelOverride(recorder: logRecorder)
-        }
 
-        var logger1 = Logger(label: "logger-\(#file):\(#line)")
+        var logger1 = Logger(
+            label: "logger-\(#file):\(#line)",
+            factory: { _ in
+                LogHandlerWithGlobalLogLevelOverride(recorder: logRecorder)
+            }
+        )
         var logger2 = logger1
         logger1.logLevel = .warning
         logger1[metadataKey: "only-on"] = "first"
         logger2.logLevel = .error
         logger2[metadataKey: "only-on"] = "second"
-        XCTAssertEqual(.error, logger2.logLevel)
-        XCTAssertEqual(.warning, logger1.logLevel)
-        XCTAssertEqual("first", logger1[metadataKey: "only-on"])
-        XCTAssertEqual("second", logger2[metadataKey: "only-on"])
+        #expect(.error == logger2.logLevel)
+        #expect(.warning == logger1.logLevel)
+        #expect("first" == logger1[metadataKey: "only-on"])
+        #expect("second" == logger2[metadataKey: "only-on"])
 
         logger1.notice("logger1, before")
         logger2.notice("logger2, before")
@@ -919,33 +984,33 @@ class LoggingTest: XCTestCase {
         logRecorder.assertExist(level: .notice, message: "logger2, after")
     }
 
-    func testLogLevelCases() {
+    @Test func logLevelCases() {
         let levels = Logger.Level.allCases
-        XCTAssertEqual(7, levels.count)
+        #expect(7 == levels.count)
     }
 
-    func testLogLevelOrdering() {
-        XCTAssertLessThan(Logger.Level.trace, Logger.Level.debug)
-        XCTAssertLessThan(Logger.Level.trace, Logger.Level.info)
-        XCTAssertLessThan(Logger.Level.trace, Logger.Level.notice)
-        XCTAssertLessThan(Logger.Level.trace, Logger.Level.warning)
-        XCTAssertLessThan(Logger.Level.trace, Logger.Level.error)
-        XCTAssertLessThan(Logger.Level.trace, Logger.Level.critical)
-        XCTAssertLessThan(Logger.Level.debug, Logger.Level.info)
-        XCTAssertLessThan(Logger.Level.debug, Logger.Level.notice)
-        XCTAssertLessThan(Logger.Level.debug, Logger.Level.warning)
-        XCTAssertLessThan(Logger.Level.debug, Logger.Level.error)
-        XCTAssertLessThan(Logger.Level.debug, Logger.Level.critical)
-        XCTAssertLessThan(Logger.Level.info, Logger.Level.notice)
-        XCTAssertLessThan(Logger.Level.info, Logger.Level.warning)
-        XCTAssertLessThan(Logger.Level.info, Logger.Level.error)
-        XCTAssertLessThan(Logger.Level.info, Logger.Level.critical)
-        XCTAssertLessThan(Logger.Level.notice, Logger.Level.warning)
-        XCTAssertLessThan(Logger.Level.notice, Logger.Level.error)
-        XCTAssertLessThan(Logger.Level.notice, Logger.Level.critical)
-        XCTAssertLessThan(Logger.Level.warning, Logger.Level.error)
-        XCTAssertLessThan(Logger.Level.warning, Logger.Level.critical)
-        XCTAssertLessThan(Logger.Level.error, Logger.Level.critical)
+    @Test func logLevelOrdering() {
+        #expect(Logger.Level.trace < Logger.Level.debug)
+        #expect(Logger.Level.trace < Logger.Level.info)
+        #expect(Logger.Level.trace < Logger.Level.notice)
+        #expect(Logger.Level.trace < Logger.Level.warning)
+        #expect(Logger.Level.trace < Logger.Level.error)
+        #expect(Logger.Level.trace < Logger.Level.critical)
+        #expect(Logger.Level.debug < Logger.Level.info)
+        #expect(Logger.Level.debug < Logger.Level.notice)
+        #expect(Logger.Level.debug < Logger.Level.warning)
+        #expect(Logger.Level.debug < Logger.Level.error)
+        #expect(Logger.Level.debug < Logger.Level.critical)
+        #expect(Logger.Level.info < Logger.Level.notice)
+        #expect(Logger.Level.info < Logger.Level.warning)
+        #expect(Logger.Level.info < Logger.Level.error)
+        #expect(Logger.Level.info < Logger.Level.critical)
+        #expect(Logger.Level.notice < Logger.Level.warning)
+        #expect(Logger.Level.notice < Logger.Level.error)
+        #expect(Logger.Level.notice < Logger.Level.critical)
+        #expect(Logger.Level.warning < Logger.Level.error)
+        #expect(Logger.Level.warning < Logger.Level.critical)
+        #expect(Logger.Level.error < Logger.Level.critical)
     }
 
     final class InterceptStream: TextOutputStream {
@@ -959,12 +1024,14 @@ class LoggingTest: XCTestCase {
         }
     }
 
-    func testStreamLogHandlerWritesToAStream() {
+    @Test func streamLogHandlerWritesToAStream() {
         let interceptStream = InterceptStream()
-        LoggingSystem.bootstrapInternal { _ in
-            StreamLogHandler(label: "test", stream: interceptStream)
-        }
-        let log = Logger(label: "test")
+        let log = Logger(
+            label: "test",
+            factory: {
+                StreamLogHandler(label: $0, stream: interceptStream)
+            }
+        )
 
         let testString = "my message is better than yours"
         log.critical("\(testString)")
@@ -972,18 +1039,20 @@ class LoggingTest: XCTestCase {
         let messageSucceeded = interceptStream.interceptedText?.trimmingCharacters(in: .whitespacesAndNewlines)
             .hasSuffix(testString)
 
-        XCTAssertTrue(messageSucceeded ?? false)
-        XCTAssertEqual(interceptStream.strings.count, 1)
+        #expect(messageSucceeded ?? false)
+        #expect(interceptStream.strings.count == 1)
     }
 
-    func testStreamLogHandlerOutputFormat() {
+    @Test func streamLogHandlerOutputFormat() {
         let interceptStream = InterceptStream()
         let label = "testLabel"
-        LoggingSystem.bootstrapInternal { label in
-            StreamLogHandler(label: label, stream: interceptStream)
-        }
         let source = "testSource"
-        let log = Logger(label: label)
+        let log = Logger(
+            label: label,
+            factory: {
+                StreamLogHandler(label: $0, stream: interceptStream)
+            }
+        )
 
         let testString = "my message is better than yours"
         log.critical("\(testString)", source: source)
@@ -997,17 +1066,19 @@ class LoggingTest: XCTestCase {
                 options: .regularExpression
             ) != nil
 
-        XCTAssertTrue(messageSucceeded)
-        XCTAssertEqual(interceptStream.strings.count, 1)
+        #expect(messageSucceeded)
+        #expect(interceptStream.strings.count == 1)
     }
 
-    func testStreamLogHandlerOutputFormatWithEmptyLabel() {
+    @Test func streamLogHandlerOutputFormatWithEmptyLabel() {
         let interceptStream = InterceptStream()
-        LoggingSystem.bootstrapInternal { label in
-            StreamLogHandler(label: label, stream: interceptStream)
-        }
         let source = "testSource"
-        let log = Logger(label: "")
+        let log = Logger(
+            label: "",
+            factory: {
+                StreamLogHandler(label: $0, stream: interceptStream)
+            }
+        )
 
         let testString = "my message is better than yours"
         log.critical("\(testString)", source: source)
@@ -1021,18 +1092,20 @@ class LoggingTest: XCTestCase {
                 options: .regularExpression
             ) != nil
 
-        XCTAssertTrue(messageSucceeded)
-        XCTAssertEqual(interceptStream.strings.count, 1)
+        #expect(messageSucceeded)
+        #expect(interceptStream.strings.count == 1)
     }
 
-    func testStreamLogHandlerOutputFormatWithMetaData() {
+    @Test func streamLogHandlerOutputFormatWithMetaData() {
         let interceptStream = InterceptStream()
         let label = "testLabel"
-        LoggingSystem.bootstrapInternal { label in
-            StreamLogHandler(label: label, stream: interceptStream)
-        }
         let source = "testSource"
-        let log = Logger(label: label)
+        let log = Logger(
+            label: label,
+            factory: {
+                StreamLogHandler(label: $0, stream: interceptStream)
+            }
+        )
 
         let testString = "my message is better than yours"
         log.critical("\(testString)", metadata: ["test": "test"], source: source)
@@ -1046,41 +1119,41 @@ class LoggingTest: XCTestCase {
                 options: .regularExpression
             ) != nil
 
-        XCTAssertTrue(messageSucceeded)
-        XCTAssertEqual(interceptStream.strings.count, 1)
+        #expect(messageSucceeded)
+        #expect(interceptStream.strings.count == 1)
     }
 
-    func testStreamLogHandlerOutputFormatWithOrderedMetadata() {
+    @Test func streamLogHandlerOutputFormatWithOrderedMetadata() {
         let interceptStream = InterceptStream()
-        let label = "testLabel"
-        LoggingSystem.bootstrapInternal { label in
-            StreamLogHandler(label: label, stream: interceptStream)
-        }
-        let log = Logger(label: label)
+        let log = Logger(
+            label: "testLabel",
+            factory: {
+                StreamLogHandler(label: $0, stream: interceptStream)
+            }
+        )
 
         let testString = "my message is better than yours"
         log.critical("\(testString)", metadata: ["a": "a0", "b": "b0"])
         log.critical("\(testString)", metadata: ["b": "b1", "a": "a1"])
 
-        XCTAssertEqual(interceptStream.strings.count, 2)
+        #expect(interceptStream.strings.count == 2)
         guard interceptStream.strings.count == 2 else {
-            XCTFail("Intercepted \(interceptStream.strings.count) logs, expected 2")
+            Issue.record("Intercepted \(interceptStream.strings.count) logs, expected 2")
             return
         }
 
-        XCTAssert(interceptStream.strings[0].contains("a=a0 b=b0"), "LINES: \(interceptStream.strings[0])")
-        XCTAssert(interceptStream.strings[1].contains("a=a1 b=b1"), "LINES: \(interceptStream.strings[1])")
+        #expect(interceptStream.strings[0].contains("a=a0 b=b0"), "LINES: \(interceptStream.strings[0])")
+        #expect(interceptStream.strings[1].contains("a=a1 b=b1"), "LINES: \(interceptStream.strings[1])")
     }
 
-    func testStreamLogHandlerWritesIncludeMetadataProviderMetadata() {
+    @Test func streamLogHandlerWritesIncludeMetadataProviderMetadata() {
         let interceptStream = InterceptStream()
-        LoggingSystem.bootstrapInternal(
-            { _, metadataProvider in
-                StreamLogHandler(label: "test", stream: interceptStream, metadataProvider: metadataProvider)
-            },
-            metadataProvider: .exampleProvider
+        let log = Logger(
+            label: "test",
+            factory: {
+                StreamLogHandler(label: $0, stream: interceptStream, metadataProvider: .exampleProvider)
+            }
         )
-        let log = Logger(label: "test")
 
         let testString = "my message is better than yours"
         log.critical("\(testString)")
@@ -1088,17 +1161,21 @@ class LoggingTest: XCTestCase {
         let messageSucceeded = interceptStream.interceptedText?.trimmingCharacters(in: .whitespacesAndNewlines)
             .hasSuffix(testString)
 
-        XCTAssertTrue(messageSucceeded ?? false)
-        XCTAssertEqual(interceptStream.strings.count, 1)
+        #expect(messageSucceeded ?? false)
+        #expect(interceptStream.strings.count == 1)
         let message = interceptStream.strings.first!
-        XCTAssertTrue(message.contains("example=example-value"), "message must contain metadata, was: \(message)")
+        #expect(message.contains("example=example-value"), "message must contain metadata, was: \(message)")
     }
 
-    func testStdioOutputStreamWrite() {
+    @Test func stdioOutputStreamWrite() {
         self.withWriteReadFDsAndReadBuffer { writeFD, readFD, readBuffer in
             let logStream = StdioOutputStream(file: writeFD, flushMode: .always)
-            LoggingSystem.bootstrapInternal { StreamLogHandler(label: $0, stream: logStream) }
-            let log = Logger(label: "test")
+            let log = Logger(
+                label: "test",
+                factory: {
+                    StreamLogHandler(label: $0, stream: logStream)
+                }
+            )
             let testString = "hello\u{0} world"
             log.critical("\(testString)")
 
@@ -1113,23 +1190,27 @@ class LoggingTest: XCTestCase {
                 as: UTF8.self
             )
             let messageSucceeded = output.trimmingCharacters(in: .whitespacesAndNewlines).hasSuffix(testString)
-            XCTAssertTrue(messageSucceeded)
+            #expect(messageSucceeded)
         }
     }
 
-    func testStdioOutputStreamFlush() {
+    @Test func stdioOutputStreamFlush() {
         // flush on every statement
         self.withWriteReadFDsAndReadBuffer { writeFD, readFD, readBuffer in
             let logStream = StdioOutputStream(file: writeFD, flushMode: .always)
-            LoggingSystem.bootstrapInternal { StreamLogHandler(label: $0, stream: logStream) }
-            Logger(label: "test").critical("test")
+            Logger(
+                label: "test",
+                factory: {
+                    StreamLogHandler(label: $0, stream: logStream)
+                }
+            ).critical("test")
 
             #if os(Windows)
             let size = _read(readFD, readBuffer, 256)
             #else
             let size = read(readFD, readBuffer, 256)
             #endif
-            XCTAssertGreaterThan(size, -1, "expected flush")
+            #expect(size > -1, "expected flush")
 
             logStream.flush()
 
@@ -1138,20 +1219,24 @@ class LoggingTest: XCTestCase {
             #else
             let size2 = read(readFD, readBuffer, 256)
             #endif
-            XCTAssertEqual(size2, -1, "expected no flush")
+            #expect(size2 == -1, "expected no flush")
         }
         // default flushing
         self.withWriteReadFDsAndReadBuffer { writeFD, readFD, readBuffer in
             let logStream = StdioOutputStream(file: writeFD, flushMode: .undefined)
-            LoggingSystem.bootstrapInternal { StreamLogHandler(label: $0, stream: logStream) }
-            Logger(label: "test").critical("test")
+            Logger(
+                label: "test",
+                factory: {
+                    StreamLogHandler(label: $0, stream: logStream)
+                }
+            ).critical("test")
 
             #if os(Windows)
             let size = _read(readFD, readBuffer, 256)
             #else
             let size = read(readFD, readBuffer, 256)
             #endif
-            XCTAssertEqual(size, -1, "expected no flush")
+            #expect(size == -1, "expected no flush")
 
             logStream.flush()
 
@@ -1160,7 +1245,7 @@ class LoggingTest: XCTestCase {
             #else
             let size2 = read(readFD, readBuffer, 256)
             #endif
-            XCTAssertGreaterThan(size2, -1, "expected flush")
+            #expect(size2 > -1, "expected flush")
         }
     }
 
@@ -1169,19 +1254,19 @@ class LoggingTest: XCTestCase {
         #if os(Windows)
         fds.withUnsafeMutableBufferPointer {
             let err = _pipe($0.baseAddress, 256, _O_BINARY)
-            XCTAssertEqual(err, 0, "_pipe failed \(err)")
+            #expect(err == 0, "_pipe failed \(err)")
         }
         guard let writeFD = _fdopen(fds[1], "w") else {
-            XCTFail("Failed to open file")
+            Issue.record("Failed to open file")
             return
         }
         #else
         fds.withUnsafeMutableBufferPointer { ptr in
             let err = pipe(ptr.baseAddress!)
-            XCTAssertEqual(err, 0, "pipe failed \(err)")
+            #expect(err == 0, "pipe failed \(err)")
         }
         guard let writeFD = fdopen(fds[1], "w") else {
-            XCTFail("Failed to open file")
+            Issue.record("Failed to open file")
             return
         }
         #endif
@@ -1193,19 +1278,19 @@ class LoggingTest: XCTestCase {
         }
 
         var err = setvbuf(writeFD, writeBuffer, _IOFBF, 256)
-        XCTAssertEqual(err, 0, "setvbuf failed \(err)")
+        #expect(err == 0, "setvbuf failed \(err)")
 
         let readFD = fds[0]
         #if os(Windows)
         let hPipe: HANDLE = HANDLE(bitPattern: _get_osfhandle(readFD))!
-        XCTAssertFalse(hPipe == INVALID_HANDLE_VALUE)
+        #expect(hPipe != INVALID_HANDLE_VALUE)
 
         var dwMode: DWORD = DWORD(PIPE_NOWAIT)
         let bSucceeded = SetNamedPipeHandleState(hPipe, &dwMode, nil, nil)
-        XCTAssertTrue(bSucceeded)
+        #expect(bSucceeded)
         #else
         err = fcntl(readFD, F_SETFL, fcntl(readFD, F_GETFL) | O_NONBLOCK)
-        XCTAssertEqual(err, 0, "fcntl failed \(err)")
+        #expect(err == 0, "fcntl failed \(err)")
         #endif
 
         let readBuffer = UnsafeMutablePointer<Int8>.allocate(capacity: 256)
@@ -1226,75 +1311,39 @@ class LoggingTest: XCTestCase {
         }
     }
 
-    func testOverloadingError() {
+    @Test func overloadingError() {
         struct Dummy: Error, LocalizedError {
             var errorDescription: String? {
                 "errorDescription"
             }
         }
-        // bootstrap with our test logging impl
+        // create test logging impl, do not bootstrap global LoggingSystem
         let logging = TestLogging()
-        LoggingSystem.bootstrapInternal { logging.make(label: $0) }
 
-        var logger = Logger(label: "test")
+        var logger = Logger(
+            label: "test",
+            factory: {
+                logging.make(label: $0)
+            }
+        )
         logger.logLevel = .error
         logger.error(error: Dummy())
 
         logging.history.assertExist(level: .error, message: "errorDescription")
     }
 
-    func testCompileInitializeStandardStreamLogHandlersWithMetadataProviders() {
-        // avoid "unreachable code" warnings
-        let dontExecute = Int.random(in: 100...200) == 1
-        guard dontExecute else {
-            return
-        }
-
-        // default usage
-        LoggingSystem.bootstrap { (label: String) in StreamLogHandler.standardOutput(label: label) }
-        LoggingSystem.bootstrap { (label: String) in StreamLogHandler.standardError(label: label) }
-
-        // with metadata handler, explicitly, public api
-        LoggingSystem.bootstrap(
-            { label, metadataProvider in
-                StreamLogHandler.standardOutput(label: label, metadataProvider: metadataProvider)
-            },
-            metadataProvider: .exampleProvider
-        )
-        LoggingSystem.bootstrap(
-            { label, metadataProvider in
-                StreamLogHandler.standardError(label: label, metadataProvider: metadataProvider)
-            },
-            metadataProvider: .exampleProvider
-        )
-
-        // with metadata handler, still pretty
-        LoggingSystem.bootstrap(
-            { (label: String, metadataProvider: Logger.MetadataProvider?) in
-                StreamLogHandler.standardOutput(label: label, metadataProvider: metadataProvider)
-            },
-            metadataProvider: .exampleProvider
-        )
-        LoggingSystem.bootstrap(
-            { (label: String, metadataProvider: Logger.MetadataProvider?) in
-                StreamLogHandler.standardError(label: label, metadataProvider: metadataProvider)
-            },
-            metadataProvider: .exampleProvider
-        )
-    }
-
-    func testLoggerIsJustHoldingASinglePointer() {
+    @Test func loggerIsJustHoldingASinglePointer() {
         let expectedSize = MemoryLayout<UnsafeRawPointer>.size
-        XCTAssertEqual(MemoryLayout<Logger>.size, expectedSize)
+        #expect(MemoryLayout<Logger>.size == expectedSize)
     }
 
-    func testLoggerCopyOnWrite() {
+    @Test func loggerCopyOnWrite() {
         var logger1 = Logger(label: "foo")
         logger1.logLevel = .error
         var logger2 = logger1
         logger2.logLevel = .trace
-        XCTAssertEqual(.error, logger1.logLevel)
-        XCTAssertEqual(.trace, logger2.logLevel)
+        #expect(.error == logger1.logLevel)
+        #expect(.trace == logger2.logLevel)
     }
 }
 

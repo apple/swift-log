@@ -12,16 +12,20 @@
 //
 //===----------------------------------------------------------------------===//
 
-import XCTest
+import Testing
 
 @testable import Logging
 
-class SendableTest: XCTestCase {
-    func testSendableLogger() async {
+struct SendableTest {
+    @Test func sendableLogger() async {
         let testLogging = TestLogging()
-        LoggingSystem.bootstrapInternal { testLogging.make(label: $0) }
 
-        let logger = Logger(label: "test")
+        let logger = Logger(
+            label: "test",
+            factory: {
+                testLogging.make(label: $0)
+            }
+        )
         let message1 = Logger.Message(stringLiteral: "critical 1")
         let message2 = Logger.Message(stringLiteral: "critical 2")
         let metadata: Logger.Metadata = ["key": "value"]

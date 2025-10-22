@@ -12,16 +12,12 @@
 //
 //===----------------------------------------------------------------------===//
 import Dispatch
-import XCTest
+import Testing
 
 @testable import Logging
 
-class MDCTest: XCTestCase {
-    func test1() throws {
-        // bootstrap with our test logger
-        let logging = TestLogging()
-        LoggingSystem.bootstrapInternal { logging.make(label: $0) }
-
+struct MDCTest {
+    @Test func test() throws {
         // run the program
         MDC.global["foo"] = "bar"
         let group = DispatchGroup()
@@ -36,20 +32,20 @@ class MDCTest: XCTestCase {
                 for i in 0...remove {
                     MDC.global["key-\(i)"] = nil
                 }
-                XCTAssertEqual(add - remove, MDC.global.metadata.count, "expected number of entries to match")
+                #expect((add - remove) == MDC.global.metadata.count, "expected number of entries to match")
                 for i in remove + 1...add {
-                    XCTAssertNotNil(MDC.global["key-\(i)"], "expecting value for key-\(i)")
+                    #expect(MDC.global["key-\(i)"] != nil, "expecting value for key-\(i)")
                 }
                 for i in 0...remove {
-                    XCTAssertNil(MDC.global["key-\(i)"], "not expecting value for key-\(i)")
+                    #expect(MDC.global["key-\(i)"] == nil, "not expecting value for key-\(i)")
                 }
                 MDC.global.clear()
                 group.leave()
             }
         }
         group.wait()
-        XCTAssertEqual(MDC.global["foo"], "bar", "expecting to find top items")
+        #expect(MDC.global["foo"] == "bar", "expecting to find top items")
         MDC.global["foo"] = nil
-        XCTAssertTrue(MDC.global.metadata.isEmpty, "MDC should be empty")
+        #expect(MDC.global.metadata.isEmpty, "MDC should be empty")
     }
 }

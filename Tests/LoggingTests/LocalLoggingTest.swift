@@ -13,20 +13,19 @@
 //===----------------------------------------------------------------------===//
 
 import Dispatch
-import XCTest
+import Testing
 
 @testable import Logging
 
-class LocalLoggerTest: XCTestCase {
-    func test1() throws {
-        // bootstrap with our test logging impl
+struct LocalLoggerTest {
+    @Test func traceAndAbove() throws {
+        // create test logging impl, do not bootstrap global LoggingSystem
         let logging = TestLogging()
-        LoggingSystem.bootstrapInternal { logging.make(label: $0) }
 
         // change test logging config to log traces and above
         logging.config.set(value: Logger.Level.debug)
         // run our program
-        let context = Context()
+        let context = Context { logging.make(label: $0) }
         Struct1().doSomething(context: context)
         // test results
         logging.history.assertExist(level: .debug, message: "Struct1::doSomething", source: "LoggingTests")
@@ -36,8 +35,6 @@ class LocalLoggerTest: XCTestCase {
         logging.history.assertExist(level: .error, message: "Struct3::doSomething", metadata: ["bar": "baz"])
         logging.history.assertExist(level: .error, message: "Struct3::doSomethingElse", metadata: ["bar": "baz"])
         logging.history.assertExist(level: .warning, message: "Struct3::doSomethingElseAsync", metadata: ["bar": "baz"])
-        logging.history.assertExist(level: .info, message: "TestLibrary::doSomething")
-        logging.history.assertExist(level: .info, message: "TestLibrary::doSomethingAsync")
         logging.history.assertExist(
             level: .debug,
             message: "Struct3::doSomethingElse::Local",
@@ -50,15 +47,14 @@ class LocalLoggerTest: XCTestCase {
         logging.history.assertExist(level: .debug, message: "Struct1::doSomething::end")
     }
 
-    func test2() throws {
-        // bootstrap with our test logging impl
+    @Test func errorAndAbove() throws {
+        // create test logging impl, do not bootstrap global LoggingSystem
         let logging = TestLogging()
-        LoggingSystem.bootstrapInternal { logging.make(label: $0) }
 
         // change test logging config to log errors and above
         logging.config.set(value: Logger.Level.error)
         // run our program
-        let context = Context()
+        let context = Context { logging.make(label: $0) }
         Struct1().doSomething(context: context)
         // test results
         // global context
@@ -100,7 +96,11 @@ class LocalLoggerTest: XCTestCase {
 
 //  systems that follow the context pattern  need to implement something like this
 private struct Context {
-    var logger = Logger(label: "LocalLoggerTest::ContextLogger")
+    var logger: Logger
+
+    init(_ factory: (String) -> any LogHandler) {
+        self.logger = Logger(label: "LocalLoggerTest::ContextLogger", factory: factory)
+    }
 
     // since logger is a value type, we can reuse our copy to manage logLevel
     var logLevel: Logger.Level {

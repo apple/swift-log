@@ -13,12 +13,15 @@
 //===----------------------------------------------------------------------===//
 
 import Dispatch
-import XCTest
+import Testing
 
 @testable import Logging
 
-class GlobalLoggerTest: XCTestCase {
-    func test1() throws {
+/// This is the only test suite allowed to use global LoggingSystem bootstrapping,
+/// tests in the suite are executed one by one
+@Suite(.serialized)
+struct GlobalLoggerTest {
+    @Test func traceAndAbove() throws {
         // bootstrap with our test logging impl
         let logging = TestLogging()
         LoggingSystem.bootstrapInternal { logging.make(label: $0) }
@@ -45,7 +48,7 @@ class GlobalLoggerTest: XCTestCase {
         logging.history.assertExist(level: .debug, message: "Struct1::doSomething::end")
     }
 
-    func test2() throws {
+    @Test func errorAndAbove() throws {
         // bootstrap with our test logging impl
         let logging = TestLogging()
         LoggingSystem.bootstrapInternal { logging.make(label: $0) }
@@ -80,7 +83,7 @@ class GlobalLoggerTest: XCTestCase {
         logging.history.assertNotExist(level: .debug, message: "Struct1::doSomething::end")
     }
 
-    func test3() throws {
+    @Test func warningAndAbove() throws {
         // bootstrap with our test logging impl
         let logging = TestLogging()
         LoggingSystem.bootstrapInternal { logging.make(label: $0) }
@@ -179,5 +182,80 @@ private struct Struct3 {
         l[metadataKey: "baz"] = "qux"
         l.debug("Struct3::doSomethingElse::Local")
         self.logger.debug("Struct3::doSomethingElse::end")
+    }
+}
+
+/// MetadataProvider tests relying on the global state
+extension GlobalLoggerTest {
+    @Test func loggingMergesOneOffMetadataWithProvidedMetadataFromExplicitlyPassed() throws {
+        let logging = TestLogging()
+
+        LoggingSystem.bootstrapInternal(
+            { logging.makeWithMetadataProvider(label: $0, metadataProvider: $1) },
+            metadataProvider: .init {
+                ["common": "initial"]
+            }
+        )
+
+        let logger = Logger(
+            label: #function,
+            metadataProvider: .init {
+                [
+                    "common": "provider",
+                    "provider": "42",
+                ]
+            }
+        )
+
+        logger.log(level: .info, "test", metadata: ["one-off": "42", "common": "one-off"])
+
+        logging.history.assertExist(
+            level: .info,
+            message: "test",
+            metadata: ["common": "one-off", "one-off": "42", "provider": "42"]
+        )
+    }
+}
+
+/// StreamLogHandler tests relying on the global state
+extension GlobalLoggerTest {
+    @Test func compileInitializeStandardStreamLogHandlersWithMetadataProviders() {
+        // avoid "unreachable code" warnings
+        let dontExecute = Int.random(in: 100...200) == 1
+        guard dontExecute else {
+            return
+        }
+
+        // default usage
+        LoggingSystem.bootstrap { (label: String) in StreamLogHandler.standardOutput(label: label) }
+        LoggingSystem.bootstrap { (label: String) in StreamLogHandler.standardError(label: label) }
+
+        // with metadata handler, explicitly, public api
+        LoggingSystem.bootstrap(
+            { label, metadataProvider in
+                StreamLogHandler.standardOutput(label: label, metadataProvider: metadataProvider)
+            },
+            metadataProvider: .exampleProvider
+        )
+        LoggingSystem.bootstrap(
+            { label, metadataProvider in
+                StreamLogHandler.standardError(label: label, metadataProvider: metadataProvider)
+            },
+            metadataProvider: .exampleProvider
+        )
+
+        // with metadata handler, still pretty
+        LoggingSystem.bootstrap(
+            { (label: String, metadataProvider: Logger.MetadataProvider?) in
+                StreamLogHandler.standardOutput(label: label, metadataProvider: metadataProvider)
+            },
+            metadataProvider: .exampleProvider
+        )
+        LoggingSystem.bootstrap(
+            { (label: String, metadataProvider: Logger.MetadataProvider?) in
+                StreamLogHandler.standardError(label: label, metadataProvider: metadataProvider)
+            },
+            metadataProvider: .exampleProvider
+        )
     }
 }

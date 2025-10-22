@@ -62,8 +62,7 @@ We require that your commit messages match our template. The easiest way to do t
 
 ### Make sure Tests work on Linux
 
-SwiftLog uses XCTest to run tests on both macOS and Linux. While the macOS version of XCTest is able to use the Objective-C runtime to discover tests at execution time, the Linux version is not.
-For this reason, whenever you add new tests **you have to run a script** that generates the hooks needed to run those tests on Linux, or our CI will complain that the tests are not all present on Linux. To do this, merely execute `ruby ./scripts/generate_linux_tests.rb` at the root of the package and check the changes it made.
+SwiftLog uses Swift Testing to run tests on all supported platforms.
 
 ### Run `./scripts/soundness.sh`
 
