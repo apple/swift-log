@@ -124,6 +124,96 @@ struct GlobalLoggerTest {
     }
 }
 
+/// MetadataProvider tests relying on the global state
+extension GlobalLoggerTest {
+    @Test func loggingMergesOneOffMetadataWithProvidedMetadataFromExplicitlyPassed() throws {
+        let logging = TestLogging()
+
+        LoggingSystem.bootstrapInternal(
+            { logging.makeWithMetadataProvider(label: $0, metadataProvider: $1) },
+            metadataProvider: .init {
+                ["common": "initial"]
+            }
+        )
+
+        let logger = Logger(
+            label: #function,
+            metadataProvider: .init {
+                [
+                    "common": "provider",
+                    "provider": "42",
+                ]
+            }
+        )
+
+        logger.log(level: .info, "test", metadata: ["one-off": "42", "common": "one-off"])
+
+        logging.history.assertExist(
+            level: .info,
+            message: "test",
+            metadata: ["common": "one-off", "one-off": "42", "provider": "42"]
+        )
+    }
+
+    @Test func loggerWithoutFactoryOverrideDefaultsToUsingLoggingSystemMetadataProvider() {
+        let logging = TestLogging()
+        LoggingSystem.bootstrapInternal(
+            { logging.makeWithMetadataProvider(label: $0, metadataProvider: $1) },
+            metadataProvider: .init { ["provider": "42"] }
+        )
+
+        let logger = Logger(label: #function)
+
+        logger.log(level: .info, "test", metadata: ["one-off": "42"])
+
+        logging.history.assertExist(
+            level: .info,
+            message: "test",
+            metadata: ["provider": "42", "one-off": "42"]
+        )
+    }
+
+    @Test func loggerWithPredefinedLibraryMetadataProvider() {
+        let logging = TestLogging()
+        LoggingSystem.bootstrapInternal(
+            { logging.makeWithMetadataProvider(label: $0, metadataProvider: $1) },
+            metadataProvider: .exampleProvider
+        )
+
+        let logger = Logger(label: #function)
+
+        logger.log(level: .info, "test", metadata: ["one-off": "42"])
+
+        logging.history.assertExist(
+            level: .info,
+            message: "test",
+            metadata: ["example": "example-value", "one-off": "42"]
+        )
+    }
+
+    @Test func loggerWithFactoryOverrideDefaultsToUsingLoggingSystemMetadataProvider() {
+        let logging = TestLogging()
+        LoggingSystem.bootstrapInternal(
+            { logging.makeWithMetadataProvider(label: $0, metadataProvider: $1) },
+            metadataProvider: .init { ["provider": "42"] }
+        )
+
+        let logger = Logger(
+            label: #function,
+            factory: { label in
+                logging.makeWithMetadataProvider(label: label, metadataProvider: LoggingSystem.metadataProvider)
+            }
+        )
+        logger.log(level: .info, "test", metadata: ["one-off": "42"])
+
+        logging.history.assertExist(
+            level: .info,
+            message: "test",
+            metadata: ["provider": "42", "one-off": "42"]
+        )
+    }
+}
+
 private struct Struct1 {
     private let logger = Logger(label: "GlobalLoggerTest::Struct1")
 
@@ -192,80 +282,5 @@ private struct Struct3 {
         l[metadataKey: "baz"] = "qux"
         l.debug("Struct3::doSomethingElse::Local")
         self.logger.debug("Struct3::doSomethingElse::end")
-    }
-}
-
-/// MetadataProvider tests relying on the global state
-extension GlobalLoggerTest {
-    @Test func loggingMergesOneOffMetadataWithProvidedMetadataFromExplicitlyPassed() throws {
-        let logging = TestLogging()
-
-        LoggingSystem.bootstrapInternal(
-            { logging.makeWithMetadataProvider(label: $0, metadataProvider: $1) },
-            metadataProvider: .init {
-                ["common": "initial"]
-            }
-        )
-
-        let logger = Logger(
-            label: #function,
-            metadataProvider: .init {
-                [
-                    "common": "provider",
-                    "provider": "42",
-                ]
-            }
-        )
-
-        logger.log(level: .info, "test", metadata: ["one-off": "42", "common": "one-off"])
-
-        logging.history.assertExist(
-            level: .info,
-            message: "test",
-            metadata: ["common": "one-off", "one-off": "42", "provider": "42"]
-        )
-    }
-}
-
-/// StreamLogHandler tests relying on the global state
-extension GlobalLoggerTest {
-    @Test func compileInitializeStandardStreamLogHandlersWithMetadataProviders() {
-        // avoid "unreachable code" warnings
-        let dontExecute = Int.random(in: 100...200) == 1
-        guard dontExecute else {
-            return
-        }
-
-        // default usage
-        LoggingSystem.bootstrap { (label: String) in StreamLogHandler.standardOutput(label: label) }
-        LoggingSystem.bootstrap { (label: String) in StreamLogHandler.standardError(label: label) }
-
-        // with metadata handler, explicitly, public api
-        LoggingSystem.bootstrap(
-            { label, metadataProvider in
-                StreamLogHandler.standardOutput(label: label, metadataProvider: metadataProvider)
-            },
-            metadataProvider: .exampleProvider
-        )
-        LoggingSystem.bootstrap(
-            { label, metadataProvider in
-                StreamLogHandler.standardError(label: label, metadataProvider: metadataProvider)
-            },
-            metadataProvider: .exampleProvider
-        )
-
-        // with metadata handler, still pretty
-        LoggingSystem.bootstrap(
-            { (label: String, metadataProvider: Logger.MetadataProvider?) in
-                StreamLogHandler.standardOutput(label: label, metadataProvider: metadataProvider)
-            },
-            metadataProvider: .exampleProvider
-        )
-        LoggingSystem.bootstrap(
-            { (label: String, metadataProvider: Logger.MetadataProvider?) in
-                StreamLogHandler.standardError(label: label, metadataProvider: metadataProvider)
-            },
-            metadataProvider: .exampleProvider
-        )
     }
 }

@@ -787,62 +787,6 @@ struct LoggingTest {
         )
     }
 
-    @Test func loggerWithoutFactoryOverrideDefaultsToUsingLoggingSystemMetadataProvider() {
-        let logging = TestLogging()
-
-        let metadataProvider: Logger.MetadataProvider = .init { ["provider": "42"] }
-        let logger = Logger(
-            label: #function,
-            factory: { logging.makeWithMetadataProvider(label: $0, metadataProvider: metadataProvider) }
-        )
-
-        logger.log(level: .info, "test", metadata: ["one-off": "42"])
-
-        logging.history.assertExist(
-            level: .info,
-            message: "test",
-            metadata: ["provider": "42", "one-off": "42"]
-        )
-    }
-
-    @Test func loggerWithPredefinedLibraryMetadataProvider() {
-        let logging = TestLogging()
-
-        let logger = Logger(
-            label: #function,
-            factory: {
-                logging.makeWithMetadataProvider(label: $0, metadataProvider: .exampleProvider)
-            }
-        )
-
-        logger.log(level: .info, "test", metadata: ["one-off": "42"])
-
-        logging.history.assertExist(
-            level: .info,
-            message: "test",
-            metadata: ["example": "example-value", "one-off": "42"]
-        )
-    }
-
-    @Test func loggerWithFactoryOverrideDefaultsToUsingLoggingSystemMetadataProvider() {
-        let logging = TestLogging()
-
-        let logger = Logger(
-            label: #function,
-            factory: {
-                logging.makeWithMetadataProvider(label: $0, metadataProvider: .init { ["provider": "42"] })
-            }
-        )
-
-        logger.log(level: .info, "test", metadata: ["one-off": "42"])
-
-        logging.history.assertExist(
-            level: .info,
-            message: "test",
-            metadata: ["provider": "42", "one-off": "42"]
-        )
-    }
-
     @Test func multiplexerIsValue() {
         let multi = MultiplexLogHandler([
             StreamLogHandler.standardOutput(label: "x"), StreamLogHandler.standardOutput(label: "y"),
@@ -1330,6 +1274,46 @@ struct LoggingTest {
         logger.error(error: Dummy())
 
         logging.history.assertExist(level: .error, message: "errorDescription")
+    }
+
+    @Test func compileInitializeStandardStreamLogHandlersWithMetadataProviders() {
+        // avoid "unreachable code" warnings
+        let dontExecute = Int.random(in: 100...200) == 1
+        guard dontExecute else {
+            return
+        }
+
+        // default usage
+        LoggingSystem.bootstrap { (label: String) in StreamLogHandler.standardOutput(label: label) }
+        LoggingSystem.bootstrap { (label: String) in StreamLogHandler.standardError(label: label) }
+
+        // with metadata handler, explicitly, public api
+        LoggingSystem.bootstrap(
+            { label, metadataProvider in
+                StreamLogHandler.standardOutput(label: label, metadataProvider: metadataProvider)
+            },
+            metadataProvider: .exampleProvider
+        )
+        LoggingSystem.bootstrap(
+            { label, metadataProvider in
+                StreamLogHandler.standardError(label: label, metadataProvider: metadataProvider)
+            },
+            metadataProvider: .exampleProvider
+        )
+
+        // with metadata handler, still pretty
+        LoggingSystem.bootstrap(
+            { (label: String, metadataProvider: Logger.MetadataProvider?) in
+                StreamLogHandler.standardOutput(label: label, metadataProvider: metadataProvider)
+            },
+            metadataProvider: .exampleProvider
+        )
+        LoggingSystem.bootstrap(
+            { (label: String, metadataProvider: Logger.MetadataProvider?) in
+                StreamLogHandler.standardError(label: label, metadataProvider: metadataProvider)
+            },
+            metadataProvider: .exampleProvider
+        )
     }
 
     @Test func loggerIsJustHoldingASinglePointer() {
