@@ -12,7 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-import XCTest
+import Testing
 
 @testable import Logging
 
@@ -26,36 +26,8 @@ import Android
 import Glibc
 #endif
 
-final class MetadataProviderTest: XCTestCase {
-    func testLoggingMergesOneOffMetadataWithProvidedMetadataFromExplicitlyPassed() throws {
-        let logging = TestLogging()
-        LoggingSystem.bootstrapInternal(
-            { logging.makeWithMetadataProvider(label: $0, metadataProvider: $1) },
-            metadataProvider: .init {
-                ["common": "initial"]
-            }
-        )
-
-        let logger = Logger(
-            label: #function,
-            metadataProvider: .init {
-                [
-                    "common": "provider",
-                    "provider": "42",
-                ]
-            }
-        )
-
-        logger.log(level: .info, "test", metadata: ["one-off": "42", "common": "one-off"])
-
-        logging.history.assertExist(
-            level: .info,
-            message: "test",
-            metadata: ["common": "one-off", "one-off": "42", "provider": "42"]
-        )
-    }
-
-    func testLogHandlerThatDidNotImplementProvidersButSomeoneAttemptsToSetOneOnIt() {
+struct MetadataProviderTest {
+    @Test func logHandlerThatDidNotImplementProvidersButSomeoneAttemptsToSetOneOnIt() {
         #if DEBUG
         // we only emit these warnings in debug mode
         let logging = TestLogging()
@@ -72,11 +44,11 @@ final class MetadataProviderTest: XCTestCase {
 
         let countBefore = logging.history.entries.count
         handler.metadataProvider = .simpleTestProvider
-        XCTAssertEqual(countBefore, logging.history.entries.count, "Should only log the warning once")
+        #expect(countBefore == logging.history.entries.count, "Should only log the warning once")
         #endif
     }
 
-    func testLogHandlerThatDidImplementProvidersButSomeoneAttemptsToSetOneOnIt() {
+    @Test func logHandlerThatDidImplementProvidersButSomeoneAttemptsToSetOneOnIt() {
         #if DEBUG
         // we only emit these warnings in debug mode
         let logging = TestLogging()

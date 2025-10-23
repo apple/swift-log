@@ -14,7 +14,7 @@
 
 import Dispatch
 import Foundation
-import XCTest
+import Testing
 
 @testable import Logging
 
@@ -22,7 +22,7 @@ import XCTest
 import WinSDK
 #endif
 
-internal struct TestLogging {
+struct TestLogging {
     private let _config = Config()  // shared among loggers
     private let recorder = Recorder()  // shared among loggers
 
@@ -233,17 +233,17 @@ extension History {
         message: String,
         metadata: Logger.Metadata? = nil,
         source: String? = nil,
-        file: StaticString = #filePath,
+        file: String = #filePath,
         fileID: String = #fileID,
-        line: UInt = #line
+        line: Int = #line,
+        column: Int = #column
     ) {
         let source = source ?? Logger.currentModule(fileID: "\(fileID)")
         let entry = self.find(level: level, message: message, metadata: metadata, source: source)
-        XCTAssertNotNil(
-            entry,
+        #expect(
+            entry != nil,
             "entry not found: \(level), \(source), \(String(describing: metadata)), \(message)",
-            file: file,
-            line: line
+            sourceLocation: SourceLocation(fileID: fileID, filePath: file, line: line, column: column)
         )
     }
 
@@ -252,17 +252,17 @@ extension History {
         message: String,
         metadata: Logger.Metadata? = nil,
         source: String? = nil,
-        file: StaticString = #filePath,
+        file: String = #filePath,
         fileID: String = #file,
-        line: UInt = #line
+        line: Int = #line,
+        column: Int = #column
     ) {
         let source = source ?? Logger.currentModule(fileID: "\(fileID)")
         let entry = self.find(level: level, message: message, metadata: metadata, source: source)
-        XCTAssertNil(
-            entry,
+        #expect(
+            entry == nil,
             "entry was found: \(level), \(source), \(String(describing: metadata)), \(message)",
-            file: file,
-            line: line
+            sourceLocation: SourceLocation(fileID: fileID, filePath: file, line: line, column: column)
         )
     }
 
@@ -302,6 +302,7 @@ extension History {
     }
 }
 
+/// MDC stands for Mapped Diagnostic Context
 public class MDC {
     private let lock = NSLock()
     private var storage = [Int: Logger.Metadata]()
@@ -377,16 +378,6 @@ public class MDC {
         #else
         return Int(pthread_self())
         #endif
-    }
-}
-
-extension NSLock {
-    func withLock<T>(_ body: () -> T) -> T {
-        self.lock()
-        defer {
-            self.unlock()
-        }
-        return body()
     }
 }
 

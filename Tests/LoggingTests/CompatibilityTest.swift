@@ -14,11 +14,11 @@
 
 // Not testable
 import Logging
-import XCTest
+import Testing
 
-final class CompatibilityTest: XCTestCase {
+struct CompatibilityTest {
     @available(*, deprecated, message: "Testing deprecated functionality")
-    func testAllLogLevelsWorkWithOldSchoolLogHandlerWorks() {
+    @Test func allLogLevelsWorkWithOldSchoolLogHandlerWorks() {
         let testLogging = OldSchoolTestLogging()
 
         var logger = Logger(label: "\(#function)", factory: { testLogging.make(label: $0) })

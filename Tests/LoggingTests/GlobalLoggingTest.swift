@@ -13,18 +13,21 @@
 //===----------------------------------------------------------------------===//
 
 import Dispatch
-import XCTest
+import Testing
 
 @testable import Logging
 
-class GlobalLoggerTest: XCTestCase {
-    func test1() throws {
+/// This is the only test suite allowed to use global LoggingSystem bootstrapping,
+/// tests in the suite are executed one by one
+@Suite(.serialized)
+struct GlobalLoggerTest {
+    @Test func traceAndAbove() throws {
         // bootstrap with our test logging impl
         let logging = TestLogging()
         LoggingSystem.bootstrapInternal { logging.make(label: $0) }
 
-        // change test logging config to log traces and above
-        logging.config.set(value: Logger.Level.debug)
+        // change test logging config to log trace and above
+        logging.config.set(value: Logger.Level.trace)
         // run our program
         Struct1().doSomething()
         // test results
@@ -40,12 +43,16 @@ class GlobalLoggerTest: XCTestCase {
         logging.history.assertExist(level: .debug, message: "Struct3::doSomethingElse::Local", metadata: ["baz": "qux"])
         logging.history.assertExist(level: .debug, message: "Struct3::doSomethingElse::end")
         logging.history.assertExist(level: .debug, message: "Struct3::doSomething::end")
+        logging.history.assertExist(level: .trace, message: "Struct3::doSomething::end::lastLine")
         logging.history.assertExist(level: .debug, message: "Struct2::doSomethingElse::end")
+        logging.history.assertExist(level: .trace, message: "Struct2::doSomethingElse::end::lastLine")
         logging.history.assertExist(level: .debug, message: "Struct1::doSomethingElse::end")
         logging.history.assertExist(level: .debug, message: "Struct1::doSomething::end")
+        logging.history.assertExist(level: .trace, message: "Struct1::doSomething::end::lastLine")
+
     }
 
-    func test2() throws {
+    @Test func errorAndAbove() throws {
         // bootstrap with our test logging impl
         let logging = TestLogging()
         LoggingSystem.bootstrapInternal { logging.make(label: $0) }
@@ -75,12 +82,15 @@ class GlobalLoggerTest: XCTestCase {
         )
         logging.history.assertNotExist(level: .debug, message: "Struct3::doSomethingElse::end")
         logging.history.assertNotExist(level: .debug, message: "Struct3::doSomething::end")
+        logging.history.assertNotExist(level: .trace, message: "Struct3::doSomething::end::lastLine")
         logging.history.assertNotExist(level: .debug, message: "Struct2::doSomethingElse::end")
+        logging.history.assertNotExist(level: .trace, message: "Struct2::doSomethingElse::end::lastLine")
         logging.history.assertNotExist(level: .debug, message: "Struct1::doSomethingElse::end")
         logging.history.assertNotExist(level: .debug, message: "Struct1::doSomething::end")
+        logging.history.assertNotExist(level: .trace, message: "Struct1::doSomething::end::lastLine")
     }
 
-    func test3() throws {
+    @Test func warningAndAbove() throws {
         // bootstrap with our test logging impl
         let logging = TestLogging()
         LoggingSystem.bootstrapInternal { logging.make(label: $0) }
@@ -114,6 +124,96 @@ class GlobalLoggerTest: XCTestCase {
     }
 }
 
+/// MetadataProvider tests relying on the global state
+extension GlobalLoggerTest {
+    @Test func loggingMergesOneOffMetadataWithProvidedMetadataFromExplicitlyPassed() throws {
+        let logging = TestLogging()
+
+        LoggingSystem.bootstrapInternal(
+            { logging.makeWithMetadataProvider(label: $0, metadataProvider: $1) },
+            metadataProvider: .init {
+                ["common": "initial"]
+            }
+        )
+
+        let logger = Logger(
+            label: #function,
+            metadataProvider: .init {
+                [
+                    "common": "provider",
+                    "provider": "42",
+                ]
+            }
+        )
+
+        logger.log(level: .info, "test", metadata: ["one-off": "42", "common": "one-off"])
+
+        logging.history.assertExist(
+            level: .info,
+            message: "test",
+            metadata: ["common": "one-off", "one-off": "42", "provider": "42"]
+        )
+    }
+
+    @Test func loggerWithoutFactoryOverrideDefaultsToUsingLoggingSystemMetadataProvider() {
+        let logging = TestLogging()
+        LoggingSystem.bootstrapInternal(
+            { logging.makeWithMetadataProvider(label: $0, metadataProvider: $1) },
+            metadataProvider: .init { ["provider": "42"] }
+        )
+
+        let logger = Logger(label: #function)
+
+        logger.log(level: .info, "test", metadata: ["one-off": "42"])
+
+        logging.history.assertExist(
+            level: .info,
+            message: "test",
+            metadata: ["provider": "42", "one-off": "42"]
+        )
+    }
+
+    @Test func loggerWithPredefinedLibraryMetadataProvider() {
+        let logging = TestLogging()
+        LoggingSystem.bootstrapInternal(
+            { logging.makeWithMetadataProvider(label: $0, metadataProvider: $1) },
+            metadataProvider: .exampleProvider
+        )
+
+        let logger = Logger(label: #function)
+
+        logger.log(level: .info, "test", metadata: ["one-off": "42"])
+
+        logging.history.assertExist(
+            level: .info,
+            message: "test",
+            metadata: ["example": "example-value", "one-off": "42"]
+        )
+    }
+
+    @Test func loggerWithFactoryOverrideDefaultsToUsingLoggingSystemMetadataProvider() {
+        let logging = TestLogging()
+        LoggingSystem.bootstrapInternal(
+            { logging.makeWithMetadataProvider(label: $0, metadataProvider: $1) },
+            metadataProvider: .init { ["provider": "42"] }
+        )
+
+        let logger = Logger(
+            label: #function,
+            factory: { label in
+                logging.makeWithMetadataProvider(label: label, metadataProvider: LoggingSystem.metadataProvider)
+            }
+        )
+        logger.log(level: .info, "test", metadata: ["one-off": "42"])
+
+        logging.history.assertExist(
+            level: .info,
+            message: "test",
+            metadata: ["provider": "42", "one-off": "42"]
+        )
+    }
+}
+
 private struct Struct1 {
     private let logger = Logger(label: "GlobalLoggerTest::Struct1")
 
@@ -127,6 +227,7 @@ private struct Struct1 {
         self.logger.debug("Struct1::doSomethingElse")
         Struct2().doSomething()
         self.logger.debug("Struct1::doSomethingElse::end")
+        self.logger.trace("Struct1::doSomething::end::lastLine")
     }
 }
 
@@ -143,6 +244,7 @@ private struct Struct2 {
         self.logger.info("Struct2::doSomethingElse")
         Struct3().doSomething()
         self.logger.debug("Struct2::doSomethingElse::end")
+        self.logger.trace("Struct2::doSomethingElse::end::lastLine")
     }
 }
 
@@ -154,6 +256,7 @@ private struct Struct3 {
         self.logger.error("Struct3::doSomething")
         self.doSomethingElse()
         self.logger.debug("Struct3::doSomething::end")
+        self.logger.trace("Struct3::doSomething::end::lastLine")
     }
 
     private func doSomethingElse() {
