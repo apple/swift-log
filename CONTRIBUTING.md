@@ -64,12 +64,40 @@ We require that your commit messages match our template. The easiest way to do t
 
 SwiftLog uses Swift Testing to run tests on all supported platforms.
 
-### Run `swift-format`
+### Run CI checks locally
 
-The repository contains a `.swift-format` configuration file with [`swift-format`](https://github.com/swiftlang/swift-format) configuration.
+You can run the Github Actions workflows locally using
+[act](https://github.com/nektos/act). To run all the jobs that run on a pull
+request, use the following command:
 
-Please make sure to run the formatting before pushing a change upstream, otherwise it is likely the PR validation will fail
-on minor changes such as a missing `self.` or similar formatting issues.
+```
+% act pull_request
+```
+
+To run just a single job, use `workflow_call -j <job>`, and specify the inputs
+the job expects. For example, to run just shellcheck:
+
+```
+% act workflow_call -j soundness --input shell_check_enabled=true
+```
+
+To bind-mount the working directory to the container, rather than a copy, use
+`--bind`. For example, to run just the formatting, and have the results
+reflected in your working directory:
+
+```
+% act --bind workflow_call -j soundness --input format_check_enabled=true
+```
+
+If you'd like `act` to always run with certain flags, these can be be placed in
+an `.actrc` file either in the current working directory or your home
+directory, for example:
+
+```
+--container-architecture=linux/amd64
+--remote-name upstream
+--action-offline-mode
+```
 
 ## How to contribute your work
 
