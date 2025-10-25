@@ -64,7 +64,7 @@ extension Logger {
 
         /// Creates a new metadata provider.
         ///
-        /// - Parameter provideMetadata: A closure extracting metadata from the current execution context.
+        /// - Parameter provideMetadata: A closure that extracts metadata from the current execution context.
         public init(_ provideMetadata: @escaping @Sendable () -> Metadata) {
             self._provideMetadata = provideMetadata
         }

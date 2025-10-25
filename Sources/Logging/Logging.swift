@@ -97,7 +97,7 @@ public struct Logger {
 }
 
 extension Logger {
-    /// Log a message using the log level and source you provide.
+    /// Log a message using the log level and source that you provide.
     ///
     /// If the `logLevel` passed to this method is more severe than the `Logger`'s ``logLevel``, the library
     /// logs the message, otherwise nothing will happen.
@@ -195,7 +195,7 @@ extension Logger {
 }
 
 extension Logger {
-    /// Log a message at the 'trace' log level with the source you provide.
+    /// Log a message at the 'trace' log level with the source that you provide.
     ///
     /// If ``Level/trace`` is at least as severe as this logger's ``logLevel`` the system logs the message;
     /// otherwise nothing will happen.
@@ -256,7 +256,7 @@ extension Logger {
         self.trace(message(), metadata: metadata(), source: nil, file: file, function: function, line: line)
     }
 
-    /// Log a message at the 'debug' log level with the source you provide.
+    /// Log a message at the 'debug' log level with the source that you provide.
     ///
     /// If ``Level/debug`` is at least as severe as this logger's ``logLevel`` the system logs the message;
     /// otherwise nothing will happen.
@@ -317,7 +317,7 @@ extension Logger {
         self.debug(message(), metadata: metadata(), source: nil, file: file, function: function, line: line)
     }
 
-    /// Log a message at the 'info' log level with the source you provide.
+    /// Log a message at the 'info' log level with the source that you provide.
     ///
     /// If ``Level/info`` is at least as severe as this logger's ``logLevel`` the system logs the message;
     /// otherwise nothing will happen.
@@ -378,7 +378,7 @@ extension Logger {
         self.info(message(), metadata: metadata(), source: nil, file: file, function: function, line: line)
     }
 
-    /// Log a message at the 'notice' log level with the source you provide.
+    /// Log a message at the 'notice' log level with the source that you provide.
     ///
     /// If ``Level/notice`` is at least as severe as this logger's ``logLevel`` the system logs the message;
     /// otherwise nothing will happen.
@@ -439,7 +439,7 @@ extension Logger {
         self.notice(message(), metadata: metadata(), source: nil, file: file, function: function, line: line)
     }
 
-    /// Log a message at the 'warning' log level with the source you provide.
+    /// Log a message at the 'warning' log level with the source that you provide.
     ///
     /// If ``Level/warning`` is at least as severe as this logger's ``logLevel`` the system logs the message;
     /// otherwise nothing will happen.
@@ -500,7 +500,7 @@ extension Logger {
         self.warning(message(), metadata: metadata(), source: nil, file: file, function: function, line: line)
     }
 
-    /// Log a message at the 'error' log level with the source you provide.
+    /// Log a message at the 'error' log level with the source that you provide.
     ///
     /// If ``Level/error`` is at least as severe as this logger's ``logLevel`` the system logs the message;
     /// otherwise nothing will happen.
@@ -561,7 +561,7 @@ extension Logger {
         self.error(message(), metadata: metadata(), source: nil, file: file, function: function, line: line)
     }
 
-    /// Log a message at the 'critical' log level with the source you provide.
+    /// Log a message at the 'critical' log level with the source that you provide.
     ///
     /// If ``Level/critical`` is at least as severe as this logger's ``logLevel`` the system logs the message;
     /// otherwise nothing will happen.
@@ -926,7 +926,7 @@ extension Logger {
         case critical
     }
 
-    /// Construct a `Logger` given a `label` that identifies the creator of the `Logger`.
+    /// Construct a logger with the label you provide to identify the creator of the logger.
     ///
     /// The `label` should identify the creator of the `Logger`.
     /// This can be an application, a sub-system, or a datatype.
@@ -1023,6 +1023,11 @@ extension Logger.Level: Comparable {
 // Then we could write it as follows and it would work under Swift 5 and not only 4 as it does currently:
 // extension Logger.Metadata.Value: Equatable {
 extension Logger.MetadataValue: Equatable {
+    /// Returns a Boolean value that indicates whether two metadata values are equal.
+    /// - Parameters:
+    ///   - lhs: The first metadata value.
+    ///   - rhs: The second metadata value.
+    /// - Returns: Returns `true` if the metadata values are equivalent; otherwise `false`.
     public static func == (lhs: Logger.Metadata.Value, rhs: Logger.Metadata.Value) -> Bool {
         switch (lhs, rhs) {
         case (.string(let lhs), .string(let rhs)):
@@ -1123,7 +1128,7 @@ public struct MultiplexLogHandler: LogHandler {
     /// This metadata provider runs after all metadata providers of the multiplexed handlers.
     private var _metadataProvider: Logger.MetadataProvider?
 
-    /// Creates a multiplex log handler.
+    /// Create a multiplex log handler.
     ///
     /// - parameters:
     ///    - handlers: An array of `LogHandler`s, each of which will receive the log messages sent to this `Logger`.
@@ -1134,7 +1139,7 @@ public struct MultiplexLogHandler: LogHandler {
         self.effectiveLogLevel = handlers.map { $0.logLevel }.min() ?? .trace
     }
     
-    /// Creates a multiplex log handler with the metadata provider you provide.
+    /// Create a multiplex log handler with the metadata provider you provide.
     /// - Parameters:
     ///   - handlers: An array of `LogHandler`s, each of which will receive the log messages sent to this `Logger`.
     ///                The array must not be empty.
@@ -1145,7 +1150,13 @@ public struct MultiplexLogHandler: LogHandler {
         self.effectiveLogLevel = handlers.map { $0.logLevel }.min() ?? .trace
         self._metadataProvider = metadataProvider
     }
-
+    
+    /// Get or set the log level configured for this `Logger`.
+    ///
+    /// > Note: Changing the log level threshold for a logger only affects the instance of the the `Logger` where you change it.
+    /// > It is acceptable for logging backends to have some form of global log level override
+    /// > that affects multiple or even all loggers. This means a change in `logLevel` to one `Logger` might in
+    /// > certain cases have no effect.
     public var logLevel: Logger.Level {
         get {
             self.effectiveLogLevel
@@ -1155,7 +1166,8 @@ public struct MultiplexLogHandler: LogHandler {
             self.effectiveLogLevel = newValue
         }
     }
-
+    
+    /// The metadata provider.
     public var metadataProvider: Logger.MetadataProvider? {
         get {
             if self.handlers.count == 1 {
@@ -1192,7 +1204,21 @@ public struct MultiplexLogHandler: LogHandler {
             self.mutatingForEachHandler { $0.metadataProvider = newValue }
         }
     }
-
+    
+    /// Log a message using the log level and source that you provide.
+    ///
+    /// - parameters:
+    ///    - level: The log level to log the `message`.
+    ///    - message: The message to be logged. The `message` parameter supports any string interpolation literal.
+    ///    - metadata: One-off metadata to attach to this log message.
+    ///    - source: The source this log message originates from. The value defaults
+    ///              to the module that emits the log message.
+    ///    - file: The file this log message originates from. There's usually no need to pass it explicitly, as it
+    ///            defaults to `#fileID`.
+    ///    - function: The function this log message originates from. There's usually no need to pass it explicitly, as
+    ///                it defaults to `#function`.
+    ///    - line: The line this log message originates from. There's usually no need to pass it explicitly, as it
+    ///            defaults to `#line`.
     public func log(
         level: Logger.Level,
         message: Logger.Message,
@@ -1214,7 +1240,7 @@ public struct MultiplexLogHandler: LogHandler {
             )
         }
     }
-
+    /// Get or set the entire metadata storage as a dictionary.
     public var metadata: Logger.Metadata {
         get {
             var effective: Logger.Metadata = [:]
@@ -1241,6 +1267,9 @@ public struct MultiplexLogHandler: LogHandler {
         }
     }
 
+    /// Add, change, or remove a logging metadata item.
+    ///
+    /// > Note: Changing the logging metadata only affects the instance of the `Logger` where you change it.
     public subscript(metadataKey metadataKey: Logger.Metadata.Key) -> Logger.Metadata.Value? {
         get {
             for handler in self.handlers {
@@ -1401,17 +1430,29 @@ public struct StreamLogHandler: LogHandler {
     private let stream: any _SendableTextOutputStream
     private let label: String
 
+    /// Get the log level configured for this `Logger`.
+    ///
+    /// > Note: Changing the log level threshold for a logger only affects the instance of the the `Logger` where you change it.
+    /// > It is acceptable for logging backends to have some form of global log level override
+    /// > that affects multiple or even all loggers. This means a change in `logLevel` to one `Logger` might in
+    /// > certain cases have no effect.
     public var logLevel: Logger.Level = .info
 
+    
+    /// The metadata provider.
     public var metadataProvider: Logger.MetadataProvider?
 
     private var prettyMetadata: String?
+    /// Get or set the entire metadata storage as a dictionary.
     public var metadata = Logger.Metadata() {
         didSet {
             self.prettyMetadata = self.prettify(self.metadata)
         }
     }
 
+    /// Add, change, or remove a logging metadata item.
+    ///
+    /// > Note: Changing the logging metadata only affects the instance of the `Logger` where you change it.
     public subscript(metadataKey metadataKey: String) -> Logger.Metadata.Value? {
         get {
             self.metadata[metadataKey]
@@ -1433,6 +1474,20 @@ public struct StreamLogHandler: LogHandler {
         self.metadataProvider = metadataProvider
     }
 
+    /// Log a message using the log level and source that you provide.
+    /// 
+    /// - parameters:
+    ///    - level: The log level to log the `message`.
+    ///    - message: The message to be logged. The `message` parameter supports any string interpolation literal.
+    ///    - explicitMetadata: One-off metadata to attach to this log message.
+    ///    - source: The source this log message originates from. The value defaults
+    ///              to the module that emits the log message.
+    ///    - file: The file this log message originates from. There's usually no need to pass it explicitly, as it
+    ///            defaults to `#fileID`.
+    ///    - function: The function this log message originates from. There's usually no need to pass it explicitly, as
+    ///                it defaults to `#function`.
+    ///    - line: The line this log message originates from. There's usually no need to pass it explicitly, as it
+    ///            defaults to `#line`.
     public func log(
         level: Logger.Level,
         message: Logger.Message,
@@ -1548,7 +1603,7 @@ public struct SwiftLogNoOpLogHandler: LogHandler {
         line: UInt
     ) {}
     
-    /// A proxy that doesn't log a message using the log level and source you provide.
+    /// A proxy that doesn't log a message using the log level and source that you provide.
     ///
     /// - parameters:
     ///    - level: The log level to log the `message`.
@@ -1572,7 +1627,9 @@ public struct SwiftLogNoOpLogHandler: LogHandler {
         line: UInt
     ) {}
 
-    /// Add, remove, or change the logging metadata.
+    /// Add, change, or remove a logging metadata item.
+    ///
+    /// > Note: Changing the logging metadata only affects the instance of the `Logger` where you change it.
     @inlinable public subscript(metadataKey _: String) -> Logger.Metadata.Value? {
         get {
             nil
@@ -1588,7 +1645,12 @@ public struct SwiftLogNoOpLogHandler: LogHandler {
         set {}
     }
 
-    /// Get or set the configured log level.
+    /// Get or set the log level configured for this `Logger`.
+    ///
+    /// > Note: Changing the log level threshold for a logger only affects the instance of the the `Logger` where you change it.
+    /// > It is acceptable for logging backends to have some form of global log level override
+    /// > that affects multiple or even all loggers. This means a change in `logLevel` to one `Logger` might in
+    /// > certain cases have no effect.
     @inlinable public var logLevel: Logger.Level {
         get {
             .critical
@@ -1624,8 +1686,11 @@ extension Logger {
 // Extension has to be done on explicit type rather than Logger.Metadata.Value as workaround for
 // https://bugs.swift.org/browse/SR-9686
 extension Logger.MetadataValue: ExpressibleByStringLiteral {
+    /// The type that represents a string literal.
     public typealias StringLiteralType = String
-
+    
+    /// Create a new metadata value from the string literal value that you provide.
+    /// - Parameter value: The metadata value.
     public init(stringLiteral value: String) {
         self = .string(value)
     }
@@ -1634,6 +1699,7 @@ extension Logger.MetadataValue: ExpressibleByStringLiteral {
 // Extension has to be done on explicit type rather than Logger.Metadata.Value as workaround for
 // https://bugs.swift.org/browse/SR-9686
 extension Logger.MetadataValue: CustomStringConvertible {
+    /// A string representation of the metadata value.
     public var description: String {
         switch self {
         case .dictionary(let dict):
@@ -1655,9 +1721,13 @@ extension Logger.MetadataValue: ExpressibleByStringInterpolation {}
 // Extension has to be done on explicit type rather than Logger.Metadata.Value as workaround for
 // https://bugs.swift.org/browse/SR-9686
 extension Logger.MetadataValue: ExpressibleByDictionaryLiteral {
+    /// The type of a metadata value key.
     public typealias Key = String
+    /// The type of the value for a metadata value.
     public typealias Value = Logger.Metadata.Value
-
+    
+    /// Create a new metadata value from the dictionary literal that you provide.
+    /// - Parameter elements: A dictionary literal of metadata values.
     public init(dictionaryLiteral elements: (String, Logger.Metadata.Value)...) {
         self = .dictionary(.init(uniqueKeysWithValues: elements))
     }
@@ -1666,8 +1736,11 @@ extension Logger.MetadataValue: ExpressibleByDictionaryLiteral {
 // Extension has to be done on explicit type rather than Logger.Metadata.Value as workaround for
 // https://bugs.swift.org/browse/SR-9686
 extension Logger.MetadataValue: ExpressibleByArrayLiteral {
+    /// The type that the array literal element represents.
     public typealias ArrayLiteralElement = Logger.Metadata.Value
-
+    
+    /// Create a new metadata value from the array literal that you provide.
+    /// - Parameter elements: A array literal of metadata values.
     public init(arrayLiteral elements: Logger.Metadata.Value...) {
         self = .array(elements)
     }

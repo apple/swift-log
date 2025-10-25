@@ -162,7 +162,16 @@ public protocol LogHandler: _SwiftLogSendableLogHandler {
 
     /// SwiftLog 1.0 log compatibility method.
     ///
-    /// Please do _not_ implement, implement `log(level:message:metadata:source:file:function:line:)` instead.
+    /// Please do _not_ implement this method when you create a LogHandler implementation.
+    /// Iimplement `log(level:message:metadata:source:file:function:line:)` instead.
+    ///
+    /// - Parameters:
+    ///   - level: The log level of the message.
+    ///   - message: The message to log. To obtain a `String` representation call `message.description`.
+    ///   - metadata: The metadata associated to this log message.
+    ///   - file: The file this log message originates from.
+    ///   - function: The function this log message originates from.
+    ///   - line: The line this log message originates from.
     @available(*, deprecated, renamed: "log(level:message:metadata:source:file:function:line:)")
     func log(
         level: Logging.Logger.Level,
@@ -225,6 +234,15 @@ extension LogHandler {
 }
 
 extension LogHandler {
+    /// A default implementation for a log message handler that forwards the source location for the message.
+    /// - Parameters:
+    ///   - level: The log level of the message.
+    ///   - message: The message to log. To obtain a `String` representation call `message.description`.
+    ///   - metadata: The metadata associated to this log message.
+    ///   - source: The source where the log message originated, for example the logging module.
+    ///   - file: The file this log message originates from.
+    ///   - function: The function this log message originates from.
+    ///   - line: The line this log message originates from.
     @available(*, deprecated, message: "You should implement this method instead of using the default implementation")
     public func log(
         level: Logger.Level,
@@ -237,7 +255,15 @@ extension LogHandler {
     ) {
         self.log(level: level, message: message, metadata: metadata, file: file, function: function, line: line)
     }
-
+    
+    /// A default implementation for a log message handler.
+    /// - Parameters:
+    ///   - level: The log level of the message.
+    ///   - message: The message to log. To obtain a `String` representation call `message.description`.
+    ///   - metadata: The metadata associated to this log message.
+    ///   - file: The file this log message originates from.
+    ///   - function: The function this log message originates from.
+    ///   - line: The line this log message originates from.
     @available(*, deprecated, renamed: "log(level:message:metadata:source:file:function:line:)")
     public func log(
         level: Logging.Logger.Level,
