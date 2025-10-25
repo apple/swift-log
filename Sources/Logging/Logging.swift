@@ -968,10 +968,10 @@ extension Logger {
     }
 
     /// Creates a logger using the label that identifies the creator of the logger or a non-standard log handler.
-    /// 
+    ///
     /// The `label` should identify the creator of the `Logger`.
     /// The label can represent an application, a sub-system, or even a datatype.
-    /// 
+    ///
     /// This initializer provides an escape hatch in case the global default logging backend implementation (set up
     /// using `LoggingSystem.bootstrap`) is not appropriate for this particular logger.
     ///
@@ -1138,7 +1138,7 @@ public struct MultiplexLogHandler: LogHandler {
         self.handlers = handlers
         self.effectiveLogLevel = handlers.map { $0.logLevel }.min() ?? .trace
     }
-    
+
     /// Create a multiplex log handler with the metadata provider you provide.
     /// - Parameters:
     ///   - handlers: An array of `LogHandler`s, each of which will receive the log messages sent to this `Logger`.
@@ -1150,7 +1150,7 @@ public struct MultiplexLogHandler: LogHandler {
         self.effectiveLogLevel = handlers.map { $0.logLevel }.min() ?? .trace
         self._metadataProvider = metadataProvider
     }
-    
+
     /// Get or set the log level configured for this `Logger`.
     ///
     /// > Note: Changing the log level threshold for a logger only affects the instance of the `Logger` where you change it.
@@ -1166,7 +1166,7 @@ public struct MultiplexLogHandler: LogHandler {
             self.effectiveLogLevel = newValue
         }
     }
-    
+
     /// The metadata provider.
     public var metadataProvider: Logger.MetadataProvider? {
         get {
@@ -1204,7 +1204,7 @@ public struct MultiplexLogHandler: LogHandler {
             self.mutatingForEachHandler { $0.metadataProvider = newValue }
         }
     }
-    
+
     /// Log a message using the log level and source that you provide.
     ///
     /// - parameters:
@@ -1438,7 +1438,6 @@ public struct StreamLogHandler: LogHandler {
     /// > certain cases have no effect.
     public var logLevel: Logger.Level = .info
 
-    
     /// The metadata provider.
     public var metadataProvider: Logger.MetadataProvider?
 
@@ -1475,7 +1474,7 @@ public struct StreamLogHandler: LogHandler {
     }
 
     /// Log a message using the log level and source that you provide.
-    /// 
+    ///
     /// - parameters:
     ///    - level: The log level to log the `message`.
     ///    - message: The message to be logged. The `message` parameter supports any string interpolation literal.
@@ -1602,7 +1601,7 @@ public struct SwiftLogNoOpLogHandler: LogHandler {
         function: String,
         line: UInt
     ) {}
-    
+
     /// A proxy that doesn't log a message using the log level and source that you provide.
     ///
     /// - parameters:
@@ -1688,7 +1687,7 @@ extension Logger {
 extension Logger.MetadataValue: ExpressibleByStringLiteral {
     /// The type that represents a string literal.
     public typealias StringLiteralType = String
-    
+
     /// Create a new metadata value from the string literal value that you provide.
     /// - Parameter value: The metadata value.
     public init(stringLiteral value: String) {
@@ -1725,7 +1724,7 @@ extension Logger.MetadataValue: ExpressibleByDictionaryLiteral {
     public typealias Key = String
     /// The type of the value for a metadata value.
     public typealias Value = Logger.Metadata.Value
-    
+
     /// Create a new metadata value from the dictionary literal that you provide.
     /// - Parameter elements: A dictionary literal of metadata values.
     public init(dictionaryLiteral elements: (String, Logger.Metadata.Value)...) {
@@ -1738,7 +1737,7 @@ extension Logger.MetadataValue: ExpressibleByDictionaryLiteral {
 extension Logger.MetadataValue: ExpressibleByArrayLiteral {
     /// The type that the array literal element represents.
     public typealias ArrayLiteralElement = Logger.Metadata.Value
-    
+
     /// Create a new metadata value from the array literal that you provide.
     /// - Parameter elements: A array literal of metadata values.
     public init(arrayLiteral elements: Logger.Metadata.Value...) {

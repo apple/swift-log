@@ -255,7 +255,7 @@ extension LogHandler {
     ) {
         self.log(level: level, message: message, metadata: metadata, file: file, function: function, line: line)
     }
-    
+
     /// A default implementation for a log message handler.
     /// - Parameters:
     ///   - level: The log level of the message.
