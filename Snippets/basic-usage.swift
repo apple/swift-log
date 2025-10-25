@@ -6,4 +6,3 @@ let logger = Logger(label: "MyLogger")
 
 // Use it to log messages
 logger.info("Hello World!")
-
