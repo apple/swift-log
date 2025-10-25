@@ -28,11 +28,11 @@ import WASILibc
 #error("Unsupported runtime")
 #endif
 
-/// A Logger emit logs messages using methods that correspond to a log level.
+/// A Logger emits log messages using methods that correspond to a log level.
 ///
-/// `Logger` is a value types with respect to the ``Logger/Level`` and the ``Metadata`` (as well as the immutable `label`
+/// `Logger` is a value type with respect to the ``Logger/Level`` and the ``Metadata`` (as well as the immutable `label`
 /// and the selected ``LogHandler``).
-/// Therefore, you can pass an instance of`Logger` between libraries to preserve metadata across libraries.
+/// Therefore, you can pass an instance of `Logger` between libraries to preserve metadata across libraries.
 ///
 /// The most basic usage of a `Logger` is:
 ///
@@ -70,7 +70,7 @@ public struct Logger {
 
     /// The log handler.
     ///
-    /// This property provides a computed property to access the `LogHandler`.
+    /// This computed property provides access to the `LogHandler`.
     @inlinable
     public var handler: any LogHandler {
         get {
@@ -179,7 +179,7 @@ extension Logger {
 
     /// Get or set the log level configured for this `Logger`.
     ///
-    /// > Note: Changing the log level threshold for a logger only affects the instance of the the `Logger` where you change it.
+    /// > Note: Changing the log level threshold for a logger only affects the instance of the `Logger` where you change it.
     /// > It is acceptable for logging backends to have some form of global log level override
     /// > that affects multiple or even all loggers. This means a change in `logLevel` to one `Logger` might in
     /// > certain cases have no effect.
@@ -758,7 +758,7 @@ public enum LoggingSystem {
         }
     }
 
-    /// Protects an object applying the constraints that it can only be accessed through a Reader-Writer lock
+    /// Protects an object by applying the constraints that it can only be accessed through a Reader-Writer lock
     /// and can only be updated once from the initial value given.
     private struct ReplaceOnceBox<BoxedType: Sendable> {
         private struct ReplaceOnce: Sendable {
@@ -824,7 +824,7 @@ extension Logger {
     /// that when constructing `MetadataValue`s you should default to using Swift's usual literals.
     ///
     ///
-    ///  Prefer using string intropolation for convenience, for example:
+    ///  Prefer using string interpolation for convenience, for example:
     ///  ```swift
     ///  logger.info("user logged in",
     ///              metadata: ["user-id": "\(user.id)"])
@@ -1153,7 +1153,7 @@ public struct MultiplexLogHandler: LogHandler {
     
     /// Get or set the log level configured for this `Logger`.
     ///
-    /// > Note: Changing the log level threshold for a logger only affects the instance of the the `Logger` where you change it.
+    /// > Note: Changing the log level threshold for a logger only affects the instance of the `Logger` where you change it.
     /// > It is acceptable for logging backends to have some form of global log level override
     /// > that affects multiple or even all loggers. This means a change in `logLevel` to one `Logger` might in
     /// > certain cases have no effect.
@@ -1399,7 +1399,7 @@ internal struct StdioOutputStream: TextOutputStream, @unchecked Sendable {
 public struct StreamLogHandler: LogHandler {
     internal typealias _SendableTextOutputStream = TextOutputStream & Sendable
 
-    /// Creates a stream log handler to directs its output to STDOUT.
+    /// Creates a stream log handler that directs its output to STDOUT.
     public static func standardOutput(label: String) -> StreamLogHandler {
         StreamLogHandler(
             label: label,
@@ -1408,12 +1408,12 @@ public struct StreamLogHandler: LogHandler {
         )
     }
 
-    /// Creates a stream log handler to directs its output to STDOUT using the metadata provider you provide.
+    /// Creates a stream log handler that directs its output to STDOUT using the metadata provider you provide.
     public static func standardOutput(label: String, metadataProvider: Logger.MetadataProvider?) -> StreamLogHandler {
         StreamLogHandler(label: label, stream: StdioOutputStream.stdout, metadataProvider: metadataProvider)
     }
 
-    /// Creates a stream log handler to directs its output to STDERR.
+    /// Creates a stream log handler that directs its output to STDERR.
     public static func standardError(label: String) -> StreamLogHandler {
         StreamLogHandler(
             label: label,
@@ -1422,7 +1422,7 @@ public struct StreamLogHandler: LogHandler {
         )
     }
 
-    /// Creates a stream log handler to directs its output to STDERR using the metadata provider you provide.
+    /// Creates a stream log handler that directs its output to STDERR using the metadata provider you provide.
     public static func standardError(label: String, metadataProvider: Logger.MetadataProvider?) -> StreamLogHandler {
         StreamLogHandler(label: label, stream: StdioOutputStream.stderr, metadataProvider: metadataProvider)
     }
@@ -1432,7 +1432,7 @@ public struct StreamLogHandler: LogHandler {
 
     /// Get the log level configured for this `Logger`.
     ///
-    /// > Note: Changing the log level threshold for a logger only affects the instance of the the `Logger` where you change it.
+    /// > Note: Changing the log level threshold for a logger only affects the instance of the `Logger` where you change it.
     /// > It is acceptable for logging backends to have some form of global log level override
     /// > that affects multiple or even all loggers. This means a change in `logLevel` to one `Logger` might in
     /// > certain cases have no effect.
@@ -1647,7 +1647,7 @@ public struct SwiftLogNoOpLogHandler: LogHandler {
 
     /// Get or set the log level configured for this `Logger`.
     ///
-    /// > Note: Changing the log level threshold for a logger only affects the instance of the the `Logger` where you change it.
+    /// > Note: Changing the log level threshold for a logger only affects the instance of the `Logger` where you change it.
     /// > It is acceptable for logging backends to have some form of global log level override
     /// > that affects multiple or even all loggers. This means a change in `logLevel` to one `Logger` might in
     /// > certain cases have no effect.

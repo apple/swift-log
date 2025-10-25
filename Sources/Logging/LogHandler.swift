@@ -163,7 +163,7 @@ public protocol LogHandler: _SwiftLogSendableLogHandler {
     /// SwiftLog 1.0 log compatibility method.
     ///
     /// Please do _not_ implement this method when you create a LogHandler implementation.
-    /// Iimplement `log(level:message:metadata:source:file:function:line:)` instead.
+    /// Implement `log(level:message:metadata:source:file:function:line:)` instead.
     ///
     /// - Parameters:
     ///   - level: The log level of the message.

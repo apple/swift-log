@@ -58,7 +58,7 @@ extension Logger {
     /// possible to make use of metadata providers independently of tracing and instruments provided by that library,
     /// if necessary.
     public struct MetadataProvider: _SwiftLogSendable {
-        /// Provide ``Logger.Metadata`` from current context.
+        /// Provide ``Logger.Metadata`` from the current context.
         @usableFromInline
         internal let _provideMetadata: @Sendable () -> Metadata
 
