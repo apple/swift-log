@@ -31,7 +31,7 @@ import WASILibc
 @preconcurrency protocol _SwiftLogSendable: Sendable {}
 
 extension Logger {
-    /// A `MetadataProvider` is used to automatically inject runtime-generated metadata
+    /// A MetadataProvider automatically injects runtime-generated metadata
     /// to all logs emitted by a logger.
     ///
     /// ### Example
@@ -58,18 +58,18 @@ extension Logger {
     /// possible to make use of metadata providers independently of tracing and instruments provided by that library,
     /// if necessary.
     public struct MetadataProvider: _SwiftLogSendable {
-        /// Provide ``Logger.Metadata`` from current context.
+        /// Provide ``Logger.Metadata`` from the current context.
         @usableFromInline
         internal let _provideMetadata: @Sendable () -> Metadata
 
-        /// Create a new `MetadataProvider`.
+        /// Creates a new metadata provider.
         ///
-        /// - Parameter provideMetadata: A closure extracting metadata from the current execution context.
+        /// - Parameter provideMetadata: A closure that extracts metadata from the current execution context.
         public init(_ provideMetadata: @escaping @Sendable () -> Metadata) {
             self._provideMetadata = provideMetadata
         }
 
-        /// Invoke the metadata provider and return the generated contextual ``Logger/Metadata``.
+        /// Invokes the metadata provider and returns the generated contextual metadata.
         public func get() -> Metadata {
             self._provideMetadata()
         }
@@ -77,7 +77,7 @@ extension Logger {
 }
 
 extension Logger.MetadataProvider {
-    /// A pseudo-`MetadataProvider` that can be used to merge metadata from multiple other `MetadataProvider`s.
+    /// A pseudo metadata provider that merges metadata from multiple other metadata providers.
     ///
     /// ### Merging conflicting keys
     ///
