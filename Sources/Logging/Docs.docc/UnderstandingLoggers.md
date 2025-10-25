@@ -1,11 +1,11 @@
 # Understanding Loggers and Log Handlers
 
-<!--@START_MENU_TOKEN@-->Summary<!--@END_MENU_TOKEN@-->
+Learn how to create and configure loggers, set log levels, and use metadata to add context to your log messages.
 
 ## Overview
 
-Creating and retrieving a logger provides an instance that you can use to log messages.
-Instances of loggers have a level that you use when logging a message to indicate the importance of the message.
+Create or retrieve a logger to get an instance for logging messages.
+Loggers have a level that you use when logging a message to indicate the message's importance.
 
 SwiftLog defines seven log levels, represented by ``Logger/Level``, ordered from least to
 most severe:
@@ -18,9 +18,9 @@ most severe:
 - ``Logger/Level/error``
 - ``Logger/Level/critical``
 
-Once sent a message is sent to a logger, it is processed by a log handler. 
-A handler is configured by the app using the logger, usually for the environment in which that app runs and processing messages appropriate to that environment.
-If the app doesn't provide its own log handler, swift-log defaults to use a ``StreamLogHandler`` that presents the log messages at `STDOUT`.
+Once a message is sent to a logger, a log handler processes it.
+The app using the logger configures the handler, usually for the environment in which that app runs, processing messages appropriate to that environment.
+If the app doesn't provide its own log handler, SwiftLog defaults to using a ``StreamLogHandler`` that outputs log messages to `STDOUT`.
 
 ### Loggers
 

@@ -19,8 +19,8 @@ libraries.
 
 ## Getting Started
 
-Use this If you are writing a cross-platform application (for example, Linux and
-macOS) or library, target this logging API.
+Use this package if you're writing a cross-platform application (for example, Linux and
+macOS) or library, and want to target this logging API.
 
 ### Adding the Dependency
 
@@ -56,7 +56,7 @@ logger.info("Hello World!")
 
 This outputs:
 ```
-2019-03-13T15:46:38+0000 info: Hello World!
+2025-10-24T17:26:47-0700 info MyLogger: [your_app] Hello World!
 ```
 
 ### Default Behavior
