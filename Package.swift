@@ -20,9 +20,6 @@ let package = Package(
     products: [
         .library(name: "Logging", targets: ["Logging"])
     ],
-    dependencies: [
-        .package(url: "https://github.com/swiftlang/swift-docc-plugin", from: "1.0.0"),
-    ],
     targets: [
         .target(
             name: "Logging",
