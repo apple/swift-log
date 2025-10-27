@@ -983,9 +983,6 @@ extension Logger {
     /// The `label` should identify the creator of the `Logger`.
     /// The label can represent an application, a sub-system, or even a datatype.
     ///
-    /// This initializer provides an escape hatch in case the global default logging backend implementation (set up
-    /// using `LoggingSystem.bootstrap`) is not appropriate for this particular logger.
-    ///
     /// - Parameters:
     ///   - label: An identifier for the creator of a `Logger`.
     ///   - metadataProvider: The custom metadata provider this logger should invoke,
