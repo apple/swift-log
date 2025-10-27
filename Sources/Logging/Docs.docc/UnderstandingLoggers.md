@@ -70,7 +70,7 @@ Metadata provides contextual information crucial for debugging:
 
 ```swift
 var logger = Logger(label: "com.example.server")
-logger[metadataKey: "request-uuid"] = "\(UUID())"
+logger[metadataKey: "request.id"] = "\(UUID())"
 logger.info("Processing request")
 ```
 
