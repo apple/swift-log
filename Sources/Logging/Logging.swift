@@ -1141,8 +1141,8 @@ public struct MultiplexLogHandler: LogHandler {
 
     /// Create a multiplex log handler with the metadata provider you provide.
     /// - Parameters:
-    ///   - handlers: An array of `LogHandler`s, each of which will receive the log messages sent to this `Logger`.
-    ///                The array must not be empty.
+    ///   - handlers: An array of `LogHandler`s, each of which will receive every log message sent to this `Logger`.
+    ///    The array must not be empty.
     ///   - metadataProvider: The metadata provider that adds metadata to log messages for this handler.
     public init(_ handlers: [any LogHandler], metadataProvider: Logger.MetadataProvider?) {
         assert(!handlers.isEmpty, "MultiplexLogHandler.handlers MUST NOT be empty")
