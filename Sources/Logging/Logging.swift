@@ -817,7 +817,7 @@ extension Logger {
 
     /// A logging metadata value.
     ///
-    /// `Logger.MetadataValue` is string, array, and dictionary literal convertible.
+    /// `Logger.MetadataValue` is a string, array, or a dictionary literal convertible.
     ///
     /// `MetadataValue` provides convenient conformances to `ExpressibleByStringInterpolation`,
     /// `ExpressibleByStringLiteral`, `ExpressibleByArrayLiteral`, and `ExpressibleByDictionaryLiteral` which means
