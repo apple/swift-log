@@ -5,7 +5,7 @@ Learn how to create and configure loggers, set log levels, and use metadata to a
 ## Overview
 
 Create or retrieve a logger to get an instance for logging messages.
-Loggers have a level that you use when logging a message to indicate the message's importance.
+Log messages have a level that you use to indicate the message's importance.
 
 SwiftLog defines seven log levels, represented by ``Logger/Level``, ordered from least to
 most severe:
