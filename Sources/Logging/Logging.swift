@@ -826,46 +826,57 @@ extension Logger {
     ///
     ///  Prefer using string interpolation for convenience, for example:
     ///  ```swift
-    ///  logger.info("user logged in",
-    ///              metadata: ["user-id": "\(user.id)"])
+    ///  logger.info(
+    ///      "user logged in",
+    ///      metadata: ["user-id": "\(user.id)"]
+    ///  )
     ///  ```
     ///  over:
     ///  ```swift
-    ///  logger.info("user logged in",
-    ///              metadata: ["user-id": .string(user.id.description)])
+    ///  logger.info(
+    ///      "user logged in",
+    ///      metadata: ["user-id": .string(user.id.description)]
+    ///  )
     ///  ```
     ///
     ///  Rather than explicitly asserting that the metadata is an array or dictionary, use the string literal to interpolate into the result:
     ///  ```swift
-    ///  logger.info("user selected colors",
-    ///              metadata: ["colors": ["\(user.topColor)",
-    ///                         "\(user.secondColor)"]])
+    ///  logger.info(
+    ///      "user selected colors",
+    ///      metadata: ["colors": ["\(user.topColor)", "\(user.secondColor)"]])
     ///  ```
     ///  over:
     ///  ```swift
-    ///  logger.info("user selected colors",
-    ///              metadata: ["colors": .array([.string("\(user.topColor)"),
-    ///                         .string("\(user.secondColor)")])
+    ///  logger.info(
+    ///      "user selected colors",
+    ///      metadata: [
+    ///          "colors": .array([.string("\(user.topColor)"), .string("\(user.secondColor)")
+    ///      ]
+    ///  )
     ///  ```
     ///
     ///  and an example that illustrates presenting a dictionary:
     ///
     ///  ```swift
-    ///  logger.info("nested info", metadata: [
-    ///      "nested": [
+    ///  logger.info(
+    ///      "nested info",
+    ///      metadata: [
+    ///        "nested": [
     ///          "fave-numbers": ["\(1)", "\(2)", "\(3)"],
     ///          "foo": "bar"
-    ///          ]
+    ///        ]
     ///      ]
     ///  )
     ///  ```
     ///  over
     ///  ```swift
-    ///  logger.info("nested info", metadata: [
-    ///      "nested": .dictionary([
-    ///           "fave-numbers": ["\(1)", "\(2)", "\(3)"],
-    ///           "foo": "bar"
-    ///      ])
+    ///  logger.info(
+    ///      "nested info",
+    ///      metadata: [
+    ///        "nested": .dictionary([
+    ///          "fave-numbers": ["\(1)", "\(2)", "\(3)"],
+    ///          "foo": "bar"
+    ///        ])
     ///  ])
     ///  ```
     ///
