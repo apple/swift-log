@@ -1602,7 +1602,7 @@ public struct SwiftLogNoOpLogHandler: LogHandler {
         line: UInt
     ) {}
 
-    /// A proxy that doesn't log a message using the log level and source that you provide.
+    /// A proxy that discards every log message that you provide.
     ///
     /// - parameters:
     ///    - level: The log level to log the `message`.
