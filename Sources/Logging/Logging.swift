@@ -1581,7 +1581,7 @@ public struct SwiftLogNoOpLogHandler: LogHandler {
     /// Creates a no-op log handler.
     public init(_: String) {}
 
-    /// A proxy that doesn't log a message using the log level you provide.
+    /// A proxy that discards every log message it receives.
     ///
     /// - parameters:
     ///    - level: The log level to log the `message`.
