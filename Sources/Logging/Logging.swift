@@ -103,7 +103,7 @@ extension Logger {
     /// logs the message, otherwise nothing will happen.
     ///
     /// - parameters:
-    ///    - level: The log level to log the `message`.
+    ///    - level: The severity level of the `message`.
     ///    - message: The message to be logged. The `message` parameter supports any string interpolation literal.
     ///    - metadata: One-off metadata to attach to this log message.
     ///    - source: The source this log message originates from. The value defaults
