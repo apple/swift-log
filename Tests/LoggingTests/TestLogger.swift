@@ -77,6 +77,7 @@ internal struct TestLogHandler: LogHandler {
     func log(
         level: Logger.Level,
         message: Logger.Message,
+        error: Error?,
         metadata explicitMetadata: Logger.Metadata?,
         source: String,
         file: String,
@@ -98,13 +99,14 @@ internal struct TestLogHandler: LogHandler {
         self.logger.log(
             level: level,
             message,
+            error: error,
             metadata: metadata,
             source: source,
             file: file,
             function: function,
             line: line
         )
-        self.recorder.record(level: level, metadata: metadata, message: message, source: source)
+        self.recorder.record(level: level, metadata: metadata, message: message, error: error, source: source)
     }
 
     private var _logLevel: Logger.Level?
@@ -175,10 +177,10 @@ internal class Recorder: History {
     private let lock = NSLock()
     private var _entries = [LogEntry]()
 
-    func record(level: Logger.Level, metadata: Logger.Metadata?, message: Logger.Message, source: String) {
+    func record(level: Logger.Level, metadata: Logger.Metadata?, message: Logger.Message, error: Error?, source: String) {
         self.lock.withLock {
             self._entries.append(
-                LogEntry(level: level, metadata: metadata, message: message.description, source: source)
+                LogEntry(level: level, metadata: metadata, message: message.description, error: error, source: source)
             )
         }
     }
@@ -224,6 +226,7 @@ internal struct LogEntry {
     let level: Logger.Level
     let metadata: Logger.Metadata?
     let message: String
+    let error: Error?
     let source: String
 }
 
@@ -231,6 +234,7 @@ extension History {
     func assertExist(
         level: Logger.Level,
         message: String,
+        error: Error? = nil,
         metadata: Logger.Metadata? = nil,
         source: String? = nil,
         file: String = #filePath,
@@ -239,7 +243,7 @@ extension History {
         column: Int = #column
     ) {
         let source = source ?? Logger.currentModule(fileID: "\(fileID)")
-        let entry = self.find(level: level, message: message, metadata: metadata, source: source)
+        let entry = self.find(level: level, message: message, error: error, metadata: metadata, source: source)
         #expect(
             entry != nil,
             "entry not found: \(level), \(source), \(String(describing: metadata)), \(message)",
@@ -250,6 +254,7 @@ extension History {
     func assertNotExist(
         level: Logger.Level,
         message: String,
+        error: Error? = nil,
         metadata: Logger.Metadata? = nil,
         source: String? = nil,
         file: String = #filePath,
@@ -258,20 +263,23 @@ extension History {
         column: Int = #column
     ) {
         let source = source ?? Logger.currentModule(fileID: "\(fileID)")
-        let entry = self.find(level: level, message: message, metadata: metadata, source: source)
+        let entry = self.find(level: level, message: message, error: error, metadata: metadata, source: source)
         #expect(
             entry == nil,
-            "entry was found: \(level), \(source), \(String(describing: metadata)), \(message)",
+            "entry was found: \(level), \(source), \(String(describing: metadata)), \(message), \(error)",
             sourceLocation: SourceLocation(fileID: fileID, filePath: file, line: line, column: column)
         )
     }
 
-    func find(level: Logger.Level, message: String, metadata: Logger.Metadata? = nil, source: String) -> LogEntry? {
+    func find(level: Logger.Level, message: String, error: Error?, metadata: Logger.Metadata? = nil, source: String) -> LogEntry? {
         self.entries.first { entry in
             if entry.level != level {
                 return false
             }
             if entry.message != message {
+                return false
+            }
+            if "\(entry.error, default: "")" != "\(error, default: "")" {
                 return false
             }
             if let lhs = entry.metadata, let rhs = metadata {
@@ -300,6 +308,10 @@ extension History {
             return true
         }
     }
+}
+
+public enum TestError: Error, Equatable {
+    case error
 }
 
 /// MDC stands for Mapped Diagnostic Context

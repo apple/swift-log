@@ -96,6 +96,7 @@ public struct LogHandlerThatDidNotImplementMetadataProviders: LogHandler {
     public func log(
         level: Logger.Level,
         message: Logger.Message,
+        error: Error?,
         metadata: Logger.Metadata?,
         source: String,
         file: String,
@@ -105,6 +106,7 @@ public struct LogHandlerThatDidNotImplementMetadataProviders: LogHandler {
         self.testLogging.make(label: "fake").log(
             level: level,
             message: message,
+            error: error,
             metadata: metadata,
             source: source,
             file: file,
@@ -138,6 +140,7 @@ public struct LogHandlerThatDidImplementMetadataProviders: LogHandler {
     public func log(
         level: Logger.Level,
         message: Logger.Message,
+        error: Error?,
         metadata: Logger.Metadata?,
         source: String,
         file: String,
@@ -147,6 +150,7 @@ public struct LogHandlerThatDidImplementMetadataProviders: LogHandler {
         self.testLogging.make(label: "fake").log(
             level: level,
             message: message,
+            error: error,
             metadata: metadata,
             source: source,
             file: file,
