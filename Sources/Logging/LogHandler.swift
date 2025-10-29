@@ -139,6 +139,20 @@ public protocol LogHandler: _SwiftLogSendableLogHandler {
     func log(
         level: Logger.Level,
         message: Logger.Message,
+        error: Error?,
+        metadata: Logger.Metadata?,
+        source: String,
+        file: String,
+        function: String,
+        line: UInt
+    )
+    
+    /// SwiftLog 1.6 compatibility method. Please do _not_ implement, implement
+    /// `log(level:message:error:metadata:source:file:function:line:)` instead.
+    @available(*, deprecated, renamed: "log(level:message:error:metadata:source:file:function:line:)")
+    func log(
+        level: Logger.Level,
+        message: Logger.Message,
         metadata: Logger.Metadata?,
         source: String,
         file: String,
@@ -147,8 +161,8 @@ public protocol LogHandler: _SwiftLogSendableLogHandler {
     )
 
     /// SwiftLog 1.0 compatibility method. Please do _not_ implement, implement
-    /// `log(level:message:metadata:source:file:function:line:)` instead.
-    @available(*, deprecated, renamed: "log(level:message:metadata:source:file:function:line:)")
+    /// `log(level:message:error:metadata:source:file:function:line:)` instead.
+    @available(*, deprecated, renamed: "log(level:message:error:metadata:source:file:function:line:)")
     func log(
         level: Logging.Logger.Level,
         message: Logging.Logger.Message,
@@ -196,6 +210,7 @@ extension LogHandler {
                     level: .warning,
                     message:
                         "Attempted to set metadataProvider on \(Self.self) that did not implement support for them. Please contact the log handler maintainer to implement metadata provider support.",
+                    error: nil,
                     metadata: nil,
                     source: "Logging",
                     file: #file,
@@ -213,6 +228,20 @@ extension LogHandler {
     public func log(
         level: Logger.Level,
         message: Logger.Message,
+        error: Error?,
+        metadata: Logger.Metadata?,
+        source: String,
+        file: String,
+        function: String,
+        line: UInt
+    ) {
+        self.log(level: level, message: message, metadata: metadata, source: source, file: file, function: function, line: line)
+    }
+    
+    @available(*, deprecated, renamed: "log(level:message:error:metadata:source:file:function:line:)")
+    public func log(
+        level: Logger.Level,
+        message: Logger.Message,
         metadata: Logger.Metadata?,
         source: String,
         file: String,
@@ -222,7 +251,7 @@ extension LogHandler {
         self.log(level: level, message: message, metadata: metadata, file: file, function: function, line: line)
     }
 
-    @available(*, deprecated, renamed: "log(level:message:metadata:source:file:function:line:)")
+    @available(*, deprecated, renamed: "log(level:message:error:metadata:source:file:function:line:)")
     public func log(
         level: Logging.Logger.Level,
         message: Logging.Logger.Message,
@@ -234,6 +263,7 @@ extension LogHandler {
         self.log(
             level: level,
             message: message,
+            error: nil,
             metadata: metadata,
             source: Logger.currentModule(filePath: file),
             file: file,

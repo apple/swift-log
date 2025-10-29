@@ -385,10 +385,6 @@ struct LoggingTest {
         )
     }
 
-    enum TestError: Error {
-        case boom
-    }
-
     @Test func dictionaryMetadata() {
         let testLogging = TestLogging()
 
@@ -546,6 +542,7 @@ struct LoggingTest {
             func log(
                 level: Logger.Level,
                 message: Logger.Message,
+                error: Error?,
                 metadata: Logger.Metadata?,
                 source: String,
                 file: String,
@@ -629,6 +626,42 @@ struct LoggingTest {
         testLogging.history.assertExist(level: .warning, message: "yes: warning")
         testLogging.history.assertExist(level: .error, message: "yes: error")
         testLogging.history.assertExist(level: .critical, message: "yes: critical")
+    }
+    
+    @Test func allLogLevelByFunctionRefWithError() {
+        let testLogging = TestLogging()
+
+        var logger = Logger(
+            label: "\(#function)",
+            factory: {
+                testLogging.make(label: $0)
+            }
+        )
+        logger.logLevel = .trace
+        
+        let trace = logger.trace(_:error:metadata:source:file:function:line:)
+        let debug = logger.debug(_:error:metadata:source:file:function:line:)
+        let info = logger.info(_:error:metadata:source:file:function:line:)
+        let notice = logger.notice(_:error:metadata:source:file:function:line:)
+        let warning = logger.warning(_:error:metadata:source:file:function:line:)
+        let error = logger.error(_:error:metadata:source:file:function:line:)
+        let critical = logger.critical(_:error:metadata:source:file:function:line:)
+
+        trace("yes: trace", TestError.error, [:], "foo", #file, #function, #line)
+        debug("yes: debug", TestError.error, [:], "foo", #file, #function, #line)
+        info("yes: info", TestError.error, [:], "foo", #file, #function, #line)
+        notice("yes: notice", TestError.error, [:], "foo", #file, #function, #line)
+        warning("yes: warning", TestError.error, [:], "foo", #file, #function, #line)
+        error("yes: error", TestError.error, [:], "foo", #file, #function, #line)
+        critical("yes: critical", TestError.error, [:], "foo", #file, #function, #line)
+
+        testLogging.history.assertExist(level: .trace, message: "yes: trace", error: TestError.error, source: "foo")
+        testLogging.history.assertExist(level: .debug, message: "yes: debug", error: TestError.error, source: "foo")
+        testLogging.history.assertExist(level: .info, message: "yes: info", error: TestError.error, source: "foo")
+        testLogging.history.assertExist(level: .notice, message: "yes: notice", error: TestError.error, source: "foo")
+        testLogging.history.assertExist(level: .warning, message: "yes: warning", error: TestError.error, source: "foo")
+        testLogging.history.assertExist(level: .error, message: "yes: error", error: TestError.error, source: "foo")
+        testLogging.history.assertExist(level: .critical, message: "yes: critical", error: TestError.error, source: "foo")
     }
 
     @Test func allLogLevelByFunctionRefWithSource() {
@@ -872,13 +905,14 @@ struct LoggingTest {
             func log(
                 level: Logger.Level,
                 message: Logger.Message,
+                error: Error?,
                 metadata: Logger.Metadata?,
                 source: String,
                 file: String,
                 function: String,
                 line: UInt
             ) {
-                self.recorder.record(level: level, metadata: metadata, message: message, source: source)
+                self.recorder.record(level: level, metadata: metadata, message: message, error: error, source: source)
             }
 
             subscript(metadataKey metadataKey: String) -> Logger.Metadata.Value? {
@@ -1037,6 +1071,31 @@ struct LoggingTest {
             ) != nil
 
         #expect(messageSucceeded)
+        #expect(interceptStream.strings.count == 1)
+    }
+    
+    @Test func streamLogHandlerOutputFormatWithError() {
+        let interceptStream = InterceptStream()
+        let label = "testLabel"
+        let source = "testSource"
+        let log = Logger(
+            label: label,
+            factory: {
+                StreamLogHandler(label: $0, stream: interceptStream)
+            }
+        )
+
+        let testString = "my message is better than yours"
+        let error = TestError.error
+        log.error("\(testString)", error: error, source: source)
+
+        let pattern =
+            "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\+|-)\\d{4}\\s\(Logger.Level.error)\\s\(label):\\s\\[\(source)\\]\\s\(testString)\\s-\\s\(error)$"
+
+        let output = interceptStream.interceptedText?.trimmingCharacters(in: .whitespacesAndNewlines)
+        let messageSucceeded = output?.range(of: pattern, options: .regularExpression) != nil
+
+        #expect(messageSucceeded, "Expected '\(output)' to match regex")
         #expect(interceptStream.strings.count == 1)
     }
 
