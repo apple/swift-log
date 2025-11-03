@@ -19,8 +19,8 @@ libraries.
 
 ## Getting Started
 
-Use this If you are writing a cross-platform application (for example, Linux and
-macOS) or library, target this logging API.
+Use this package if you're writing a cross-platform application (for example, Linux and
+macOS) or library, and want to target this logging API.
 
 ### Adding the Dependency
 
@@ -56,7 +56,7 @@ logger.info("Hello World!")
 
 This outputs:
 ```
-2019-03-13T15:46:38+0000 info: Hello World!
+2025-10-24T17:26:47-0700 info MyLogger: [your_app] Hello World!
 ```
 
 ### Default Behavior
@@ -72,83 +72,12 @@ LoggingSystem.bootstrap(StreamLogHandler.standardError)
 implement the ``LogHandler`` protocol directly or use a community-maintained
 backend.
 
-## Core Concepts
-
-### Loggers
-
-Loggers are used to emit log messages at different severity levels:
-
-```swift
-// Informational message
-logger.info("Processing request")
-
-// Something went wrong
-logger.error("Houston, we have a problem")
-```
-
-``Logger`` is a value type with value semantics, meaning that when you modify a
-logger's configuration (like its log level or metadata), it only affects that
-specific logger instance:
-
-```swift
-let baseLogger = Logger(label: "MyApp")
-
-// Create a new logger with different configuration.
-var requestLogger = baseLogger
-requestLogger.logLevel = .debug
-requestLogger[metadataKey: "request-id"] = "\(UUID())"
-
-// baseLogger is unchanged. It still has default log level and no metadata
-// requestLogger has debug level and request-id metadata.
-```
-
-This value type behavior makes loggers safe to pass between functions and modify
-without unexpected side effects.
-
-### Log Levels
-
-SwiftLog supports seven log levels (from least to most severe):
-- ``Logger/Level/trace``
-- ``Logger/Level/debug`` 
-- ``Logger/Level/info``
-- ``Logger/Level/notice``
-- ``Logger/Level/warning``
-- ``Logger/Level/error``
-- ``Logger/Level/critical``
-
-Log levels can be changed per logger without affecting others:
-
-```swift
-var logger = Logger(label: "MyLogger")
-logger.logLevel = .debug
-```
-
-### Logging Metadata
-
-Metadata provides contextual information crucial for debugging:
-
-```swift
-var logger = Logger(label: "com.example.server")
-logger[metadataKey: "request-uuid"] = "\(UUID())"
-logger.info("Processing request")
-```
-
-Output:
-```
-2019-03-13T18:30:02+0000 info: request-uuid=F8633013-3DD8-481C-9256-B296E43443ED Processing request
-```
-
-### Source vs Label
-
-A ``Logger`` has an immutable `label` identifying its creator, while each log
-message carries a `source` parameter identifying where the message originated.
-Use `source` for filtering messages from specific subsystems.
-
 
 ## Topics
 
 ### Logging API
 
+- <doc:UnderstandingLoggers>
 - ``Logger``
 - ``LoggingSystem``
 
@@ -162,5 +91,4 @@ Use `source` for filtering messages from specific subsystems.
 ### Best Practices
 
 - <doc:LoggingBestPractices>
-- <doc:001-ChoosingLogLevels>
-
+- <doc:ImplementingALogHandler>
