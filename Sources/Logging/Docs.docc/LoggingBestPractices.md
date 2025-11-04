@@ -39,3 +39,5 @@ practice includes:
 ## Topics
 
 - <doc:001-ChoosingLogLevels>
+- <doc:002-StructuredLogging>
+- <doc:003-AcceptingLoggers>
