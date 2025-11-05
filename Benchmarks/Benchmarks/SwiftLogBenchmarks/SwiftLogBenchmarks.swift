@@ -33,7 +33,8 @@ let benchmarks: @Sendable () -> Void = {
                 configuration: .init(
                     metrics: metrics,
                     maxIterations: iterations
-                )) { benchmark in
+                )
+            ) { benchmark in
                 // This is what we actually benchmark
                 logger.log(level: logLevelUsed, "hello, benchmarking world")
             }
