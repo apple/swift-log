@@ -35,6 +35,11 @@ jobs:
     uses: apple/swift-nio/.github/workflows/benchmarks.yml@main
     with:
       benchmark_package_path: "Benchmarks"
+      linux_6_0_enabled: true
+      linux_6_1_enabled: false
+      linux_6_2_enabled: false
+      linux_nightly_next_enabled: false
+      linux_nightly_main_enabled: false
 
   cxx-interop:
     name: Cxx interop
