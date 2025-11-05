@@ -17,7 +17,7 @@ let benchmarks: @Sendable () -> Void = {
         configuration: .init(
             metrics: metrics,
             maxIterations: iterations,
-            thresholds: [.instructions: .init(absolute: [.p90: 0])],
+            thresholds: [.instructions: .init(absolute: [.p90: 0])]
         )
     ) { benchmark in
         blackHole(nothingFunc())
@@ -29,7 +29,7 @@ let benchmarks: @Sendable () -> Void = {
             var logger = Logger(label: "BenchmarkRunner_\(logLevel)_\(logLevelUsed)")
             logger.logLevel = logLevel
             Benchmark(
-                "\(logLevelUsed) instructions count with \(logLevel) log level",
+                "\(logLevelUsed) log with \(logLevel) log level",
                 configuration: .init(
                     metrics: metrics,
                     maxIterations: iterations
