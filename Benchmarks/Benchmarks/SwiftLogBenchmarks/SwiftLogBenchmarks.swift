@@ -16,7 +16,8 @@ let benchmarks: @Sendable () -> Void = {
         "Nothing benchmark",
         configuration: .init(
             metrics: metrics,
-            maxIterations: iterations
+            maxIterations: iterations,
+            thresholds: [.instructions: .init(absolute: [.p90: 0])],
         )
     ) { benchmark in
         blackHole(nothingFunc())
@@ -25,19 +26,15 @@ let benchmarks: @Sendable () -> Void = {
     let logLevelParameterization: [Logger.Level] = Logger.Level.allCases
     for logLevel in logLevelParameterization {
         for logLevelUsed in logLevelParameterization {
-            Benchmark.defaultConfiguration = .init(
-                metrics: metrics,
-                tags: [
-                    "logLevel": "\(logLevel)",
-                    "logLevelUsed": "\(logLevelUsed)",
-                ],
-                maxIterations: iterations
-            )
-
             var logger = Logger(label: "BenchmarkRunner_\(logLevel)_\(logLevelUsed)")
             logger.logLevel = logLevel
-
-            Benchmark("\(logLevelUsed) instructions count with \(logLevel) log level") { benchmark in
+            Benchmark(
+                "\(logLevelUsed) instructions count with \(logLevel) log level",
+                configuration: .init(
+                    metrics: metrics,
+                    maxIterations: iterations
+                )) { benchmark in
+                // This is what we actually benchmark
                 logger.log(level: logLevelUsed, "hello, benchmarking world")
             }
         }
