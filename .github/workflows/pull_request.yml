@@ -36,7 +36,8 @@ jobs:
 
   benchmarks:
     name: Benchmarks
-    uses: apple/swift-nio/.github/workflows/benchmarks.yml@main
+    # uses: apple/swift-nio/.github/workflows/benchmarks.yml@main
+    uses: kukushechkin/swift-nio/.github/workflows/benchmarks.yml@priviledged-docker-for-instructions-benchmarks
     with:
       benchmark_package_path: "Benchmarks"
 
