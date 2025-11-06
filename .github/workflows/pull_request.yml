@@ -59,6 +59,7 @@ jobs:
       build_scheme: swift-log
       swift_test_enabled: true
       swift_package_benchmark_enabled: true
+      benchmark_package_path: "Benchmarks"
 
   release-builds:
     name: Release builds
