@@ -1444,7 +1444,11 @@ internal struct StdioOutputStream: TextOutputStream, @unchecked Sendable {
         #elseif os(Windows)
         let systemStderr = CRT.stderr
         #elseif canImport(Glibc)
+        #if os(FreeBSD) || os(OpenBSD)
+        let systemStderr = Glibc.stderr
+        #else
         let systemStderr = Glibc.stderr!
+        #endif
         #elseif canImport(Android)
         let systemStderr = Android.stderr
         #elseif canImport(Musl)
@@ -1464,7 +1468,11 @@ internal struct StdioOutputStream: TextOutputStream, @unchecked Sendable {
         #elseif os(Windows)
         let systemStdout = CRT.stdout
         #elseif canImport(Glibc)
+        #if os(FreeBSD) || os(OpenBSD)
+        let systemStdout = Glibc.stdout
+        #else
         let systemStdout = Glibc.stdout!
+        #endif
         #elseif canImport(Android)
         let systemStdout = Android.stdout
         #elseif canImport(Musl)
