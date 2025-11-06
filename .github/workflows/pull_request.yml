@@ -55,6 +55,8 @@ jobs:
     with:
       runner_pool: general
       build_scheme: swift-log
+      swift_test_enabled: true
+
 
   release-builds:
     name: Release builds
