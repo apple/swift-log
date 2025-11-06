@@ -10,7 +10,7 @@ let package = Package(
     ],
     dependencies: [
         .package(path: "../"),
-        .package(url: "https://github.com/ordo-one/package-benchmark.git", from: "1.29.6"),
+        .package(url: "https://github.com/kukushechkin/package-benchmark.git", branch: "enable-logs"),
     ]
 )
 
