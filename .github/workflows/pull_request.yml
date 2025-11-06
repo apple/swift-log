@@ -34,12 +34,12 @@ jobs:
       windows_nightly_next_arguments_override: "--explicit-target-dependency-import-check error -Xswiftc -require-explicit-sendable"
       windows_nightly_main_arguments_override: "--explicit-target-dependency-import-check error -Xswiftc -require-explicit-sendable"
 
-  benchmarks:
-    name: Benchmarks
-    # uses: apple/swift-nio/.github/workflows/benchmarks.yml@main
-    uses: kukushechkin/swift-nio/.github/workflows/benchmarks.yml@priviledged-docker-for-instructions-benchmarks
-    with:
-      benchmark_package_path: "Benchmarks"
+  # benchmarks:
+  #   name: Benchmarks
+  #   # uses: apple/swift-nio/.github/workflows/benchmarks.yml@main
+  #   uses: kukushechkin/swift-nio/.github/workflows/benchmarks.yml@priviledged-docker-for-instructions-benchmarks
+  #   with:
+  #     benchmark_package_path: "Benchmarks"
 
   cxx-interop:
     name: Cxx interop
@@ -52,10 +52,13 @@ jobs:
 
   macos-tests:
     name: macOS tests
-    uses: apple/swift-nio/.github/workflows/macos_tests.yml@main
+    # uses: apple/swift-nio/.github/workflows/macos_tests.yml@main
+    uses: kukushechkin/swift-nio/.github/workflows/macos_tests.yml@priviledged-docker-for-instructions-benchmarks
     with:
       runner_pool: general
       build_scheme: swift-log
+      swift_test_enabled: true
+      swift_package_benchmark_enabled: true
 
   release-builds:
     name: Release builds
