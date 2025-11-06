@@ -21,7 +21,7 @@ func nothingFunc() {
 }
 
 let benchmarks: @Sendable () -> Void = {
-    let iterations = 1
+    let iterations = 1 // poke CI
     let metrics: [BenchmarkMetric] = [.instructions, .objectAllocCount]
 
     Benchmark(
