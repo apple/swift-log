@@ -21,7 +21,7 @@ func nothingFunc() {
 }
 
 let benchmarks: @Sendable () -> Void = {
-    let iterations = 100
+    let iterations = 10000
     let metrics: [BenchmarkMetric] = [.instructions, .objectAllocCount]
 
     Benchmark(
@@ -29,7 +29,7 @@ let benchmarks: @Sendable () -> Void = {
         configuration: .init(
             metrics: metrics,
             maxIterations: iterations,
-            thresholds: [.instructions: .init(absolute: [.p90: 0])]
+            thresholds: [.instructions: .init(absolute: [.p100: 0])]
         )
     ) { benchmark in
         blackHole(nothingFunc())
@@ -44,7 +44,8 @@ let benchmarks: @Sendable () -> Void = {
                 "\(logLevelUsed) log with \(logLevel) log level",
                 configuration: .init(
                     metrics: metrics,
-                    maxIterations: iterations
+                    maxIterations: iterations,
+                    thresholds: [.instructions: .init(relative: [.p100: 5.0])]
                 )
             ) { benchmark in
                 // This is what we actually benchmark
