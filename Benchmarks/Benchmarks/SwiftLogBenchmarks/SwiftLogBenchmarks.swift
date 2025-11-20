@@ -17,7 +17,7 @@ import Foundation
 import Logging
 
 let benchmarks: @Sendable () -> Void = {
-    let iterations = 1000000
+    let iterations = 1_000_000
     let metrics: [BenchmarkMetric] = [.instructions, .objectAllocCount]
 
     let logLevelParameterization: [Logger.Level] = Logger.Level.allCases
