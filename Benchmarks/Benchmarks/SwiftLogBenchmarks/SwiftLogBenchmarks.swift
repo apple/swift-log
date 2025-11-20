@@ -41,7 +41,7 @@ let benchmarks: @Sendable () -> Void = {
             var logger = Logger(label: "BenchmarkRunner_\(logLevel)_\(logLevelUsed)")
             logger.logLevel = logLevel
             Benchmark(
-                "\(logLevelUsed) log with \(logLevel) log level",
+                "\(logLevelUsed)_log_with_\(logLevel)_log_level",
                 configuration: .init(
                     metrics: metrics,
                     maxIterations: iterations,
