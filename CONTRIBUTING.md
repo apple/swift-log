@@ -101,7 +101,7 @@ directory, for example:
 
 ## Benchmarks
 
-Benchmarks for `swift-certificates` are in a separate Swift Package in the `Benchmarks` subfolder of this repository.
+Benchmarks for `swift-log` are in a separate Swift Package in the `Benchmarks` subfolder of this repository.
 They use the [`package-benchmark`](https://github.com/ordo-one/package-benchmark) plugin.
 Benchmarks depends on the [`jemalloc`](https://jemalloc.net) memory allocation library, which is used by `package-benchmark` to capture memory allocation statistics.
 An installation guide can be found in the [Getting Started article](https://swiftpackageindex.com/ordo-one/package-benchmark/documentation/benchmark/gettingstarted#Installing-Prerequisites-and-Platform-Support) of `package-benchmark`.
