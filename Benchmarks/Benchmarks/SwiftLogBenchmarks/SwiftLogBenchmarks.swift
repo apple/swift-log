@@ -17,7 +17,7 @@ import Foundation
 import Logging
 
 let benchmarks: @Sendable () -> Void = {
-    let iterations = 1000
+    let iterations = 10000
     let metrics: [BenchmarkMetric] = [.instructions, .objectAllocCount]
 
     let logLevelParameterization: [Logger.Level] = Logger.Level.allCases
@@ -34,7 +34,18 @@ let benchmarks: @Sendable () -> Void = {
                 configuration: .init(
                     metrics: metrics,
                     maxIterations: iterations,
-                    thresholds: [.instructions: .default]
+                    thresholds: [
+                        .instructions: BenchmarkThresholds(
+                            relative: [
+                                .p90: 5.0  // we only record p90
+                            ]
+                        ),
+                        .objectAllocCount: BenchmarkThresholds(
+                            absolute: [
+                                .p90: 0  // we only record p90
+                            ]
+                        ),
+                    ]
                 )
             ) { benchmark in
                 // This is what we actually benchmark
