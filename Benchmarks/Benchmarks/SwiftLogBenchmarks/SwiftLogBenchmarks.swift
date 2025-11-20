@@ -16,24 +16,9 @@ import Benchmark
 import Foundation
 import Logging
 
-func nothingFunc() {
-    // nothing
-}
-
 let benchmarks: @Sendable () -> Void = {
     let iterations = 1000
     let metrics: [BenchmarkMetric] = [.instructions, .objectAllocCount]
-
-    Benchmark(
-        "Nothing benchmark",
-        configuration: .init(
-            metrics: metrics,
-            maxIterations: iterations,
-            thresholds: [.instructions: .init(absolute: [.p100: 0])]
-        )
-    ) { benchmark in
-        blackHole(nothingFunc())
-    }
 
     let logLevelParameterization: [Logger.Level] = Logger.Level.allCases
     for logLevel in logLevelParameterization {
