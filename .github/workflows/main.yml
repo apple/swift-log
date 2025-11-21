@@ -35,9 +35,7 @@ jobs:
     uses: apple/swift-nio/.github/workflows/benchmarks.yml@main
     with:
       benchmark_package_path: "Benchmarks"
-      macos_xcode_16_3_enabled: true
       macos_xcode_16_4_enabled: true
-      macos_xcode_26_0_enabled: true
       macos_xcode_26_1_enabled: true
 
   cxx-interop:

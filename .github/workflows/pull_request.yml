@@ -40,9 +40,7 @@ jobs:
     with:
       benchmark_package_path: "Benchmarks"
       macos_runner_pool: general
-      macos_xcode_16_3_enabled: true
       macos_xcode_16_4_enabled: true
-      macos_xcode_26_0_enabled: true
       macos_xcode_26_1_enabled: true
 
   cxx-interop:
