@@ -20,7 +20,8 @@ let benchmarks: @Sendable () -> Void = {
     let iterations = 1_000_000
     let metrics: [BenchmarkMetric] = [.instructions, .objectAllocCount]
 
-    let logLevelParameterization: [Logger.Level] = Logger.Level.allCases
+    // Take a pair of levels to cover all condition ranges between the active level and logged level.
+    let logLevelParameterization: [Logger.Level] = [.debug, .error]
     for logLevel in logLevelParameterization {
         for logLevelUsed in logLevelParameterization {
             var logger = Logger(label: "BenchmarkRunner_\(logLevel)_\(logLevelUsed)")
