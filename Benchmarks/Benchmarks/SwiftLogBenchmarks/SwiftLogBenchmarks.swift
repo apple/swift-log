@@ -24,10 +24,10 @@ let benchmarks: @Sendable () -> Void = {
     for logLevel in logLevelParameterization {
         for logLevelUsed in logLevelParameterization {
             var logger = Logger(label: "BenchmarkRunner_\(logLevel)_\(logLevelUsed)")
-            logger.logLevel = logLevel
 
             // Use an empty logger to avoid polluting the logs
             logger.handler = EmptyLogHandler(label: "Empty logger")
+            logger.logLevel = logLevel
 
             Benchmark(
                 "\(logLevelUsed)_log_with_\(logLevel)_log_level",
