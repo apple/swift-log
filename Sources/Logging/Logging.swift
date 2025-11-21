@@ -124,7 +124,7 @@ extension Logger {
         function: String = #function,
         line: UInt = #line
     ) {
-        if self.logLevel <= level && level >= self.logLevel {
+        if self.logLevel <= level {
             self.handler.log(
                 level: level,
                 message: message(),
