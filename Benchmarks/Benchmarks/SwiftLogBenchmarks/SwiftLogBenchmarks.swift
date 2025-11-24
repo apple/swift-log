@@ -26,8 +26,8 @@ let benchmarks: @Sendable () -> Void = {
         for logLevelUsed in logLevelParameterization {
             var logger = Logger(label: "BenchmarkRunner_\(logLevel)_\(logLevelUsed)")
 
-            // Use an empty logger to avoid polluting the logs
-            logger.handler = EmptyLogHandler(label: "Empty logger")
+            // Use a NoOpLogHandler to avoid polluting the logs
+            logger.handler = NoOpLogHandler(label: "NoOpLogHandler")
             logger.logLevel = logLevel
 
             Benchmark(

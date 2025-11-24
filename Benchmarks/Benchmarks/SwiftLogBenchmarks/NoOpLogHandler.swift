@@ -14,7 +14,7 @@
 
 import Logging
 
-struct EmptyLogHandler: LogHandler {
+struct NoOpLogHandler: LogHandler {
     let label: String
     public var metadataProvider: Logger.MetadataProvider?
 
