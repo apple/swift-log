@@ -34,6 +34,15 @@ jobs:
       windows_nightly_next_arguments_override: "--explicit-target-dependency-import-check error -Xswiftc -require-explicit-sendable"
       windows_nightly_main_arguments_override: "--explicit-target-dependency-import-check error -Xswiftc -require-explicit-sendable"
 
+  benchmarks:
+    name: Benchmarks
+    uses: apple/swift-nio/.github/workflows/benchmarks.yml@main
+    with:
+      benchmark_package_path: "Benchmarks"
+      macos_runner_pool: general
+      macos_xcode_16_4_enabled: true
+      macos_xcode_26_1_enabled: true
+
   cxx-interop:
     name: Cxx interop
     uses: apple/swift-nio/.github/workflows/cxx_interop.yml@main
@@ -49,6 +58,8 @@ jobs:
     with:
       runner_pool: general
       build_scheme: swift-log
+      swift_test_enabled: true
+
 
   release-builds:
     name: Release builds
