@@ -32,7 +32,7 @@ func makeBenchmark(
     logger.logLevel = loggerLevel
 
     Benchmark(
-        "\(loggerLevel)_log_with_\(logLevel)_log_level\(extraNameSuffix)",
+        "\(logLevel)_log_with_\(loggerLevel)_log_level\(extraNameSuffix)",
         configuration: .init(
             metrics: metrics,
             maxIterations: iterations,
