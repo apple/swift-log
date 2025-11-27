@@ -92,3 +92,7 @@ backend.
 
 - <doc:LoggingBestPractices>
 - <doc:ImplementingALogHandler>
+
+### Contributing
+
+- <doc:Proposals>
