@@ -17,18 +17,18 @@ let package = Package(
             path: "../../"
         ),
         // Parent Benchmarks
-        .package(name: "BenchmarksFactory", path: "../"),
+        .package(name: "Benchmarks", path: "../"),
         .package(url: "https://github.com/ordo-one/package-benchmark.git", from: "1.29.6"),
     ],
     targets: [
         .executableTarget(
             name: "Benchmarks",
             dependencies: [
-                .product(name: "BenchmarksFactory", package: "BenchmarksFactory"),
+                .product(name: "BenchmarksFactory", package: "Benchmarks"),
                 .product(name: "Benchmark", package: "package-benchmark"),
                 .product(name: "Logging", package: "swift-log"),
             ],
-            path: "Benchmarks",
+            path: "Benchmarks/NoTraitsBenchmarks",
             plugins: [
                 .plugin(name: "BenchmarkPlugin", package: "package-benchmark")
             ]
