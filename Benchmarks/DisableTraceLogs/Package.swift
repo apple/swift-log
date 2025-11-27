@@ -18,18 +18,18 @@ let package = Package(
             traits: ["DisableTraceLogs"]
         ),
         // Parent Benchmarks
-        .package(name: "Benchmarks", path: "../"),
+        .package(name: "BenchmarksFactory", path: "../"),
         .package(url: "https://github.com/ordo-one/package-benchmark.git", from: "1.29.6"),
     ],
     targets: [
         .executableTarget(
             name: "DisableTraceLogs",
             dependencies: [
-                .product(name: "BenchmarksFactory", package: "Benchmarks"),
+                .product(name: "BenchmarksFactory", package: "BenchmarksFactory"),
                 .product(name: "Benchmark", package: "package-benchmark"),
                 .product(name: "Logging", package: "swift-log"),
             ],
-            path: "Benchmarks",
+            path: "Benchmarks/DisableTraceLogsBenchmarks",
             plugins: [
                 .plugin(name: "BenchmarkPlugin", package: "package-benchmark")
             ]
