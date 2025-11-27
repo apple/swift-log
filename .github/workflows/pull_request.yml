@@ -38,13 +38,16 @@ jobs:
     name: Benchmarks
     uses: apple/swift-nio/.github/workflows/benchmarks.yml@main
     with:
-      benchmark_package_path: "Benchmarks"
+      benchmark_package_path: "Benchmarks/NoTraits"
+      macos_runner_pool: general
+      macos_xcode_16_4_enabled: true
+      macos_xcode_26_1_enabled: true
 
-  macos-benchmarks:
-    name: macOS benchmarks
-    uses: apple/swift-nio/.github/workflows/macos_benchmarks.yml@main
+  benchmarks-DisableDebugLogs-trait:
+    name: Benchmarks
+    uses: apple/swift-nio/.github/workflows/benchmarks.yml@main
     with:
-      benchmark_package_path: "Benchmarks"
+      benchmark_package_path: "Benchmarks/DisableDebugLogs"
       macos_runner_pool: general
       macos_xcode_16_4_enabled: true
       macos_xcode_26_1_enabled: true
