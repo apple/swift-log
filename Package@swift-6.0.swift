@@ -1,4 +1,4 @@
-// swift-tools-version:6.1
+// swift-tools-version:6.0
 //===----------------------------------------------------------------------===//
 //
 // This source file is part of the Swift Logging API open source project
@@ -19,16 +19,6 @@ let package = Package(
     name: "swift-log",
     products: [
         .library(name: "Logging", targets: ["Logging"])
-    ],
-    traits: [
-        .trait(name: "DisableTraceLogs"),
-        .trait(name: "DisableDebugLogs"),
-        .trait(name: "DisableInfoLogs"),
-        .trait(name: "DisableNoticeLogs"),
-        .trait(name: "DisableWarningLogs"),
-        .trait(name: "DisableErrorLogs"),
-        .trait(name: "DisableCriticalLogs"),
-        .default(enabledTraits: []),
     ],
     targets: [
         .target(
