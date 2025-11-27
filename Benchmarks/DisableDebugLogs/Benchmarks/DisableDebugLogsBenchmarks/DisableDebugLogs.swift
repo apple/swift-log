@@ -19,6 +19,6 @@ import Logging
 
 public let benchmarks: @Sendable () -> Void = {
     makeBenchmark(loggerLevel: .debug, logLevel: .debug, "_DisableDebugLogs") { logger in
-        logger.trace("hello, benchmarking world")
+        logger.debug("hello, benchmarking world")
     }
 }
