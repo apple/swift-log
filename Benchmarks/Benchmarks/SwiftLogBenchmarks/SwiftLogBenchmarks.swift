@@ -16,42 +16,74 @@ import Benchmark
 import Foundation
 import Logging
 
-let benchmarks: @Sendable () -> Void = {
+func makeBenchmark(
+    loggerLevel: Logger.Level,
+    logLevel: Logger.Level,
+    _ extraNameSuffix: String = "",
+    _ body: @escaping (Logger) -> Void
+) {
     let iterations = 1_000_000
     let metrics: [BenchmarkMetric] = [.instructions, .objectAllocCount]
 
-    // Take a pair of levels to cover all condition ranges between the active level and logged level.
-    let logLevelParameterization: [Logger.Level] = [.debug, .error]
-    for logLevel in logLevelParameterization {
-        for logLevelUsed in logLevelParameterization {
-            var logger = Logger(label: "BenchmarkRunner_\(logLevel)_\(logLevelUsed)")
+    var logger = Logger(label: "BenchmarkRunner_\(loggerLevel)_\(logLevel)")
 
-            // Use a NoOpLogHandler to avoid polluting the logs
-            logger.handler = NoOpLogHandler(label: "NoOpLogHandler")
-            logger.logLevel = logLevel
+    // Use a NoOpLogHandler to avoid polluting the logs
+    logger.handler = NoOpLogHandler(label: "NoOpLogHandler")
+    logger.logLevel = loggerLevel
 
-            Benchmark(
-                "\(logLevelUsed)_log_with_\(logLevel)_log_level",
-                configuration: .init(
-                    metrics: metrics,
-                    maxIterations: iterations,
-                    thresholds: [
-                        .instructions: BenchmarkThresholds(
-                            relative: [
-                                .p90: 1.0  // we only record p90
-                            ]
-                        ),
-                        .objectAllocCount: BenchmarkThresholds(
-                            absolute: [
-                                .p90: 0  // we only record p90
-                            ]
-                        ),
+    Benchmark(
+        "\(loggerLevel)_log_with_\(logLevel)_log_level\(extraNameSuffix)",
+        configuration: .init(
+            metrics: metrics,
+            maxIterations: iterations,
+            thresholds: [
+                .instructions: BenchmarkThresholds(
+                    relative: [
+                        .p90: 1.0  // we only record p90
                     ]
-                )
-            ) { benchmark in
-                // This is what we actually benchmark
-                logger.log(level: logLevelUsed, "hello, benchmarking world")
-            }
-        }
+                ),
+                .objectAllocCount: BenchmarkThresholds(
+                    absolute: [
+                        .p90: 0  // we only record p90
+                    ]
+                ),
+            ]
+        )
+    ) { _ in
+        body(logger)
+    }
+}
+
+let benchmarks: @Sendable () -> Void = {
+    // Generic .log method. Should honor both runtime checks and `DisableXXXTrait`s,
+    // but does not offer any performance benefits.
+    makeBenchmark(loggerLevel: .error, logLevel: .debug) { logger in
+        logger.log(level: .debug, "hello, benchmarking world")
+    }
+    makeBenchmark(loggerLevel: .error, logLevel: .error) { logger in
+        logger.log(level: .error, "hello, benchmarking world")
+    }
+
+    // Level-specific methods should compile-out logging with the corresponding traits.
+    makeBenchmark(loggerLevel: .trace, logLevel: .trace, "_DisableTraceLogs") { logger in
+        logger.trace("hello, benchmarking world")
+    }
+    makeBenchmark(loggerLevel: .debug, logLevel: .debug, "_DisableDebugLogs") { logger in
+        logger.debug("hello, benchmarking world")
+    }
+    makeBenchmark(loggerLevel: .info, logLevel: .info, "_DisableInfoLogs") { logger in
+        logger.info("hello, benchmarking world")
+    }
+    makeBenchmark(loggerLevel: .notice, logLevel: .notice, "_DisableNoticeLogs") { logger in
+        logger.notice("hello, benchmarking world")
+    }
+    makeBenchmark(loggerLevel: .warning, logLevel: .warning, "_DisableWarningLogs") { logger in
+        logger.warning("hello, benchmarking world")
+    }
+    makeBenchmark(loggerLevel: .error, logLevel: .error, "_DisableErrorLogs") { logger in
+        logger.error("hello, benchmarking world")
+    }
+    makeBenchmark(loggerLevel: .critical, logLevel: .critical, "_DisableCriticalLogs") { logger in
+        logger.critical("hello, benchmarking world")
     }
 }
