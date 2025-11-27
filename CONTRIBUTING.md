@@ -47,7 +47,7 @@ My system has IPv6 disabled.
 
 ## Writing a Patch
 
-For non-trivial changes that affect the public API, it is good practice to have a discussion phase before writing code. Please follow the [proposal process](Sources/SystemMetrics/Docs.docc/Proposals/Proposals.md) to gather feedback and align on the approach with other contributors.
+For non-trivial changes that affect the public API, it is good practice to have a discussion phase before writing code. Please follow the [proposal process](Sources/Logging/Docs.docc/Proposals/Proposals.md) to gather feedback and align on the approach with other contributors.
 
 A good SwiftLog patch is:
 
