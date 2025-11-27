@@ -97,6 +97,46 @@ public struct Logger {
 }
 
 extension Logger {
+    /// Determines whether a message at the given log level should be logged.
+    ///
+    /// This method checks both compile-time and runtime log level filtering:
+    /// - **Compile-time**: If a log level is disabled via traits (e.g., `DisableDebugLogs`),
+    ///   messages at that level are rejected immediately, and the check is completely
+    ///   eliminated from the compiled binary.
+    /// - **Runtime**: For enabled log levels, the method performs the standard severity
+    ///   check: `self.logLevel <= level`.
+    ///
+    /// The method is marked `@inlinable` to ensure zero overhead - it's inlined at call
+    /// sites and optimized based on the specific build configuration.
+    ///
+    /// - Parameter level: The log level to check.
+    /// - Returns: `true` if the message should be logged, `false` otherwise.
+    @inlinable
+    internal func shouldLog(level: Logger.Level) -> Bool {
+        #if DisableTraceLogs
+        if level == .trace { return false }
+        #endif
+        #if DisableDebugLogs
+        if level == .debug { return false }
+        #endif
+        #if DisableInfoLogs
+        if level == .info { return false }
+        #endif
+        #if DisableNoticeLogs
+        if level == .notice { return false }
+        #endif
+        #if DisableWarningLogs
+        if level == .warning { return false }
+        #endif
+        #if DisableErrorLogs
+        if level == .error { return false }
+        #endif
+        #if DisableCriticalLogs
+        if level == .critical { return false }
+        #endif
+        return self.logLevel <= level
+    }
+
     /// Log a message using the log level and source that you provide.
     ///
     /// If the `logLevel` passed to this method is more severe than the `Logger`'s ``logLevel``, the library
@@ -124,7 +164,7 @@ extension Logger {
         function: String = #function,
         line: UInt = #line
     ) {
-        if self.logLevel <= level {
+        if shouldLog(level: level) {
             self.handler.log(
                 level: level,
                 message: message(),
@@ -220,6 +260,7 @@ extension Logger {
         function: String = #function,
         line: UInt = #line
     ) {
+        #if !DisableTraceLogs
         self.log(
             level: .trace,
             message(),
@@ -229,6 +270,7 @@ extension Logger {
             function: function,
             line: line
         )
+        #endif
     }
 
     /// Log a message at the 'trace' log level.
@@ -253,7 +295,9 @@ extension Logger {
         function: String = #function,
         line: UInt = #line
     ) {
+        #if !DisableTraceLogs
         self.trace(message(), metadata: metadata(), source: nil, file: file, function: function, line: line)
+        #endif
     }
 
     /// Log a message at the 'debug' log level with the source that you provide.
@@ -281,6 +325,7 @@ extension Logger {
         function: String = #function,
         line: UInt = #line
     ) {
+        #if !DisableDebugLogs
         self.log(
             level: .debug,
             message(),
@@ -290,6 +335,7 @@ extension Logger {
             function: function,
             line: line
         )
+        #endif
     }
 
     /// Log a message at the 'debug' log level.
@@ -314,7 +360,9 @@ extension Logger {
         function: String = #function,
         line: UInt = #line
     ) {
+        #if !DisableDebugLogs
         self.debug(message(), metadata: metadata(), source: nil, file: file, function: function, line: line)
+        #endif
     }
 
     /// Log a message at the 'info' log level with the source that you provide.
@@ -342,6 +390,7 @@ extension Logger {
         function: String = #function,
         line: UInt = #line
     ) {
+        #if !DisableInfoLogs
         self.log(
             level: .info,
             message(),
@@ -351,6 +400,7 @@ extension Logger {
             function: function,
             line: line
         )
+        #endif
     }
 
     /// Log a message at the 'info' log level.
@@ -375,7 +425,9 @@ extension Logger {
         function: String = #function,
         line: UInt = #line
     ) {
+        #if !DisableInfoLogs
         self.info(message(), metadata: metadata(), source: nil, file: file, function: function, line: line)
+        #endif
     }
 
     /// Log a message at the 'notice' log level with the source that you provide.
@@ -403,6 +455,7 @@ extension Logger {
         function: String = #function,
         line: UInt = #line
     ) {
+        #if !DisableNoticeLogs
         self.log(
             level: .notice,
             message(),
@@ -412,6 +465,7 @@ extension Logger {
             function: function,
             line: line
         )
+        #endif
     }
 
     /// Log a message at the 'notice' log level.
@@ -436,7 +490,9 @@ extension Logger {
         function: String = #function,
         line: UInt = #line
     ) {
+        #if !DisableNoticeLogs
         self.notice(message(), metadata: metadata(), source: nil, file: file, function: function, line: line)
+        #endif
     }
 
     /// Log a message at the 'warning' log level with the source that you provide.
@@ -464,6 +520,7 @@ extension Logger {
         function: String = #function,
         line: UInt = #line
     ) {
+        #if !DisableWarningLogs
         self.log(
             level: .warning,
             message(),
@@ -473,6 +530,7 @@ extension Logger {
             function: function,
             line: line
         )
+        #endif
     }
 
     /// Log a message at the 'warning' log level.
@@ -497,7 +555,9 @@ extension Logger {
         function: String = #function,
         line: UInt = #line
     ) {
+        #if !DisableWarningLogs
         self.warning(message(), metadata: metadata(), source: nil, file: file, function: function, line: line)
+        #endif
     }
 
     /// Log a message at the 'error' log level with the source that you provide.
@@ -525,6 +585,7 @@ extension Logger {
         function: String = #function,
         line: UInt = #line
     ) {
+        #if !DisableErrorLogs
         self.log(
             level: .error,
             message(),
@@ -534,6 +595,7 @@ extension Logger {
             function: function,
             line: line
         )
+        #endif
     }
 
     /// Log a message at the 'error' log level.
@@ -558,7 +620,9 @@ extension Logger {
         function: String = #function,
         line: UInt = #line
     ) {
+        #if !DisableErrorLogs
         self.error(message(), metadata: metadata(), source: nil, file: file, function: function, line: line)
+        #endif
     }
 
     /// Log a message at the 'critical' log level with the source that you provide.
@@ -586,6 +650,7 @@ extension Logger {
         function: String = #function,
         line: UInt = #line
     ) {
+        #if !DisableCriticalLogs
         self.log(
             level: .critical,
             message(),
@@ -595,6 +660,7 @@ extension Logger {
             function: function,
             line: line
         )
+        #endif
     }
 
     /// Log a message at the 'critical' log level.
@@ -619,7 +685,9 @@ extension Logger {
         function: String = #function,
         line: UInt = #line
     ) {
+        #if !DisableCriticalLogs
         self.critical(message(), metadata: metadata(), source: nil, file: file, function: function, line: line)
+        #endif
     }
 }
 

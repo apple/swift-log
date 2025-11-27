@@ -1,4 +1,4 @@
-// swift-tools-version: 6.0
+// swift-tools-version: 6.1
 // The swift-tools-version declares the minimum version of Swift required to build this package.
 
 import PackageDescription
@@ -9,7 +9,13 @@ let package = Package(
         .macOS(.v13)
     ],
     dependencies: [
-        .package(path: "../"),
+        .package(
+            path: "../",
+            traits: [
+                "DisableTraceLogs", "DisableDebugLogs", "DisableInfoLogs", "DisableNoticeLogs", "DisableWarningLogs",
+                // "DisableErrorLogs", "DisableCriticalLogs",
+            ]
+        ),
         .package(url: "https://github.com/ordo-one/package-benchmark.git", from: "1.29.6"),
     ]
 )
