@@ -18,7 +18,7 @@ import Foundation
 import Logging
 
 public let benchmarks: @Sendable () -> Void = {
-    makeBenchmark(loggerLevel: .error, logLevel: .error, "_DisableErrorLogs") { logger in
+    makeBenchmark(loggerLevel: .error, logLevel: .error) { logger in
         logger.error("hello, benchmarking world")
     }
 }
