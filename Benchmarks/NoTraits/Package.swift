@@ -4,12 +4,12 @@
 import PackageDescription
 
 let package = Package(
-    name: "Benchmarks",
+    name: "NoTraits",
     platforms: [
         .macOS(.v13)
     ],
     products: [
-        .executable(name: "Benchmarks", targets: ["Benchmarks"])
+        .executable(name: "NoTraits", targets: ["NoTraits"])
     ],
     dependencies: [
         // swift-log
@@ -22,7 +22,7 @@ let package = Package(
     ],
     targets: [
         .executableTarget(
-            name: "Benchmarks",
+            name: "NoTraits",
             dependencies: [
                 .product(name: "BenchmarksFactory", package: "Benchmarks"),
                 .product(name: "Benchmark", package: "package-benchmark"),
