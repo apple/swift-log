@@ -21,4 +21,7 @@ public let benchmarks: @Sendable () -> Void = {
     makeBenchmark(loggerLevel: .notice, logLevel: .notice) { logger in
         logger.notice("hello, benchmarking world")
     }
+    makeBenchmark(loggerLevel: .notice, logLevel: .notice, "_generic") { logger in
+        logger.log(level: .notice, "hello, benchmarking world")
+    }
 }
