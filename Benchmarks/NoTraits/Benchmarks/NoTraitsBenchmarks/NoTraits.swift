@@ -18,12 +18,10 @@ import Foundation
 import Logging
 
 let benchmarks: @Sendable () -> Void = {
-    // Generic .log method. Should honor both runtime checks and `DisableXXXTrait`s,
-    // but does not offer any performance benefits.
-    makeBenchmark(loggerLevel: .error, logLevel: .debug) { logger in
-        logger.log(level: .debug, "hello, benchmarking world")
-    }
     makeBenchmark(loggerLevel: .error, logLevel: .error) { logger in
         logger.log(level: .error, "hello, benchmarking world")
+    }
+    makeBenchmark(loggerLevel: .error, logLevel: .debug) { logger in
+        logger.log(level: .debug, "hello, benchmarking world")
     }
 }
