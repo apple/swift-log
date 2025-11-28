@@ -127,6 +127,8 @@ extension Logger {
         line: UInt = #line
     ) {
         #if DisableTraceLogs || DisableDebugLogs || DisableInfoLogs || DisableNoticeLogs || DisableWarningLogs || DisableErrorLogs || DisableCriticalLogs
+        // A constant overhead is added for dynamic log level calls if one of the traits is enabled.
+        // This allows picking the necessary implementaion with compiled out body in runtime.
         switch level {
         case .trace:
             self.trace(message(), metadata: metadata(), source: source(), file: file, function: function, line: line)
@@ -144,6 +146,7 @@ extension Logger {
             self.critical(message(), metadata: metadata(), source: source(), file: file, function: function, line: line)
         }
         #else
+        // If no logs are excluded in the compile time, we can avoid checking the log level that extra time and go log it.
         self._log(
             level: level,
             message(),
