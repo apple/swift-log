@@ -100,7 +100,8 @@ extension Logger {
     /// Log a message using the log level and source that you provide.
     ///
     /// If the `logLevel` passed to this method is more severe than the `Logger`'s ``logLevel``, the library
-    /// logs the message, otherwise nothing will happen.
+    /// logs the message, otherwise nothing will happen. This method adds a constant overhead over calling
+    /// level-specific methods.
     ///
     /// - parameters:
     ///    - level: The severity level of the `message`.
@@ -125,106 +126,60 @@ extension Logger {
         line: UInt = #line
     ) {
         switch level {
-        #if !DisableTraceLogs
         case .trace:
-            if self.logLevel <= .trace {
-                self.handler.log(
-                    level: level,
-                    message: message(),
-                    metadata: metadata(),
-                    source: source() ?? Logger.currentModule(fileID: (file)),
-                    file: file,
-                    function: function,
-                    line: line
-                )
-            }
-        #endif
-        #if !DisableDebugLogs
+            self.trace(message(), metadata: metadata(), source: source(), file: file, function: function, line: line)
         case .debug:
-            if self.logLevel <= .debug {
-                self.handler.log(
-                    level: level,
-                    message: message(),
-                    metadata: metadata(),
-                    source: source() ?? Logger.currentModule(fileID: (file)),
-                    file: file,
-                    function: function,
-                    line: line
-                )
-            }
-        #endif
-        #if !DisableInfoLogs
+            self.debug(message(), metadata: metadata(), source: source(), file: file, function: function, line: line)
         case .info:
-            if self.logLevel <= .info {
-                self.handler.log(
-                    level: level,
-                    message: message(),
-                    metadata: metadata(),
-                    source: source() ?? Logger.currentModule(fileID: (file)),
-                    file: file,
-                    function: function,
-                    line: line
-                )
-            }
-        #endif
-        #if !DisableNoticeLogs
+            self.info(message(), metadata: metadata(), source: source(), file: file, function: function, line: line)
         case .notice:
-            if self.logLevel <= .notice {
-                self.handler.log(
-                    level: level,
-                    message: message(),
-                    metadata: metadata(),
-                    source: source() ?? Logger.currentModule(fileID: (file)),
-                    file: file,
-                    function: function,
-                    line: line
-                )
-            }
-        #endif
-        #if !DisableWarningLogs
+            self.notice(message(), metadata: metadata(), source: source(), file: file, function: function, line: line)
         case .warning:
-            if self.logLevel <= .warning {
-                self.handler.log(
-                    level: level,
-                    message: message(),
-                    metadata: metadata(),
-                    source: source() ?? Logger.currentModule(fileID: (file)),
-                    file: file,
-                    function: function,
-                    line: line
-                )
-            }
-        #endif
-        #if !DisableErrorLogs
+            self.warning(message(), metadata: metadata(), source: source(), file: file, function: function, line: line)
         case .error:
-            if self.logLevel <= .error {
-                self.handler.log(
-                    level: level,
-                    message: message(),
-                    metadata: metadata(),
-                    source: source() ?? Logger.currentModule(fileID: (file)),
-                    file: file,
-                    function: function,
-                    line: line
-                )
-            }
-        #endif
-        #if !DisableCriticalLogs
+            self.error(message(), metadata: metadata(), source: source(), file: file, function: function, line: line)
         case .critical:
-            if self.logLevel <= .critical {
-                self.handler.log(
-                    level: level,
-                    message: message(),
-                    metadata: metadata(),
-                    source: source() ?? Logger.currentModule(fileID: (file)),
-                    file: file,
-                    function: function,
-                    line: line
-                )
-            }
-        #endif
-        default:
-            break
+            self.critical(message(), metadata: metadata(), source: source(), file: file, function: function, line: line)
+        }
+    }
+
+    /// Log a message using the log level and source that you provide.
+    ///
+    /// If the `logLevel` passed to this method is more severe than the `Logger`'s ``logLevel``, the library
+    /// logs the message, otherwise nothing will happen.
+    ///
+    /// - parameters:
+    ///    - level: The severity level of the `message`.
+    ///    - message: The message to be logged. The `message` parameter supports any string interpolation literal.
+    ///    - metadata: One-off metadata to attach to this log message.
+    ///    - source: The source this log message originates from. The value defaults
+    ///              to the module that emits the log message.
+    ///    - file: The file this log message originates from. There's usually no need to pass it explicitly, as it
+    ///            defaults to `#fileID`.
+    ///    - function: The function this log message originates from. There's usually no need to pass it explicitly, as
+    ///                it defaults to `#function`.
+    ///    - line: The line this log message originates from. There's usually no need to pass it explicitly, as it
+    ///            defaults to `#line`.
+    @inlinable
+    package func _log(
+        level: Logger.Level,
+        _ message: @autoclosure () -> Logger.Message,
+        metadata: @autoclosure () -> Logger.Metadata? = nil,
+        source: @autoclosure () -> String? = nil,
+        file: String = #fileID,
+        function: String = #function,
+        line: UInt = #line
+    ) {
+        if self.logLevel <= level {
+            self.handler.log(
+                level: level,
+                message: message(),
+                metadata: metadata(),
+                source: source() ?? Logger.currentModule(fileID: (file)),
+                file: file,
+                function: function,
+                line: line
+            )
         }
     }
 
@@ -312,17 +267,7 @@ extension Logger {
         line: UInt = #line
     ) {
         #if !DisableTraceLogs
-        if self.logLevel <= .trace {
-            self.handler.log(
-                level: .trace,
-                message: message(),
-                metadata: metadata(),
-                source: source() ?? Logger.currentModule(fileID: (file)),
-                file: file,
-                function: function,
-                line: line
-            )
-        }
+        self._log(level: .trace, message(), metadata: metadata(), source: source(), file: file, function: function, line: line)
         #endif
     }
 
@@ -348,9 +293,7 @@ extension Logger {
         function: String = #function,
         line: UInt = #line
     ) {
-        #if !DisableTraceLogs
         self.trace(message(), metadata: metadata(), source: nil, file: file, function: function, line: line)
-        #endif
     }
 
     /// Log a message at the 'debug' log level with the source that you provide.
@@ -379,17 +322,7 @@ extension Logger {
         line: UInt = #line
     ) {
         #if !DisableDebugLogs
-        if self.logLevel <= .debug {
-            self.handler.log(
-                level: .debug,
-                message: message(),
-                metadata: metadata(),
-                source: source() ?? Logger.currentModule(fileID: (file)),
-                file: file,
-                function: function,
-                line: line
-            )
-        }
+        self._log(level: .debug, message(), metadata: metadata(), source: source(), file: file, function: function, line: line)
         #endif
     }
 
@@ -415,9 +348,7 @@ extension Logger {
         function: String = #function,
         line: UInt = #line
     ) {
-        #if !DisableDebugLogs
         self.debug(message(), metadata: metadata(), source: nil, file: file, function: function, line: line)
-        #endif
     }
 
     /// Log a message at the 'info' log level with the source that you provide.
@@ -446,17 +377,7 @@ extension Logger {
         line: UInt = #line
     ) {
         #if !DisableInfoLogs
-        if self.logLevel <= .info {
-            self.handler.log(
-                level: .info,
-                message: message(),
-                metadata: metadata(),
-                source: source() ?? Logger.currentModule(fileID: (file)),
-                file: file,
-                function: function,
-                line: line
-            )
-        }
+        self._log(level: .info, message(), metadata: metadata(), source: source(), file: file, function: function, line: line)
         #endif
     }
 
@@ -482,9 +403,7 @@ extension Logger {
         function: String = #function,
         line: UInt = #line
     ) {
-        #if !DisableInfoLogs
         self.info(message(), metadata: metadata(), source: nil, file: file, function: function, line: line)
-        #endif
     }
 
     /// Log a message at the 'notice' log level with the source that you provide.
@@ -513,17 +432,7 @@ extension Logger {
         line: UInt = #line
     ) {
         #if !DisableNoticeLogs
-        if self.logLevel <= .notice {
-            self.handler.log(
-                level: .notice,
-                message: message(),
-                metadata: metadata(),
-                source: source() ?? Logger.currentModule(fileID: (file)),
-                file: file,
-                function: function,
-                line: line
-            )
-        }
+        self._log(level: .notice, message(), metadata: metadata(), source: source(), file: file, function: function, line: line)
         #endif
     }
 
@@ -549,9 +458,7 @@ extension Logger {
         function: String = #function,
         line: UInt = #line
     ) {
-        #if !DisableNoticeLogs
         self.notice(message(), metadata: metadata(), source: nil, file: file, function: function, line: line)
-        #endif
     }
 
     /// Log a message at the 'warning' log level with the source that you provide.
@@ -580,17 +487,7 @@ extension Logger {
         line: UInt = #line
     ) {
         #if !DisableWarningLogs
-        if self.logLevel <= .warning {
-            self.handler.log(
-                level: .warning,
-                message: message(),
-                metadata: metadata(),
-                source: source() ?? Logger.currentModule(fileID: (file)),
-                file: file,
-                function: function,
-                line: line
-            )
-        }
+        self._log(level: .warning, message(), metadata: metadata(), source: source(), file: file, function: function, line: line)
         #endif
     }
 
@@ -616,9 +513,7 @@ extension Logger {
         function: String = #function,
         line: UInt = #line
     ) {
-        #if !DisableWarningLogs
         self.warning(message(), metadata: metadata(), source: nil, file: file, function: function, line: line)
-        #endif
     }
 
     /// Log a message at the 'error' log level with the source that you provide.
@@ -647,17 +542,7 @@ extension Logger {
         line: UInt = #line
     ) {
         #if !DisableErrorLogs
-        if self.logLevel <= .error {
-            self.handler.log(
-                level: .error,
-                message: message(),
-                metadata: metadata(),
-                source: source() ?? Logger.currentModule(fileID: (file)),
-                file: file,
-                function: function,
-                line: line
-            )
-        }
+        self._log(level: .error, message(), metadata: metadata(), source: source(), file: file, function: function, line: line)
         #endif
     }
 
@@ -683,9 +568,7 @@ extension Logger {
         function: String = #function,
         line: UInt = #line
     ) {
-        #if !DisableErrorLogs
         self.error(message(), metadata: metadata(), source: nil, file: file, function: function, line: line)
-        #endif
     }
 
     /// Log a message at the 'critical' log level with the source that you provide.
@@ -714,17 +597,7 @@ extension Logger {
         line: UInt = #line
     ) {
         #if !DisableCriticalLogs
-        if self.logLevel <= .critical {
-            self.handler.log(
-                level: .critical,
-                message: message(),
-                metadata: metadata(),
-                source: source() ?? Logger.currentModule(fileID: (file)),
-                file: file,
-                function: function,
-                line: line
-            )
-        }
+        self._log(level: .critical, message(), metadata: metadata(), source: source(), file: file, function: function, line: line)
         #endif
     }
 
@@ -750,9 +623,7 @@ extension Logger {
         function: String = #function,
         line: UInt = #line
     ) {
-        #if !DisableCriticalLogs
         self.critical(message(), metadata: metadata(), source: nil, file: file, function: function, line: line)
-        #endif
     }
 }
 
