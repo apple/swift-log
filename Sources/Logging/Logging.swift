@@ -100,8 +100,9 @@ extension Logger {
     /// Log a message using the log level and source that you provide.
     ///
     /// If the `logLevel` passed to this method is more severe than the `Logger`'s ``logLevel``, the library
-    /// logs the message, otherwise nothing will happen. This method adds a constant overhead over calling
-    /// level-specific methods.
+    /// logs the message, otherwise nothing will happen.
+    ///
+    /// NOTE: This method adds a constant overhead over calling level-specific methods.
     ///
     /// - parameters:
     ///    - level: The severity level of the `message`.
@@ -125,6 +126,7 @@ extension Logger {
         function: String = #function,
         line: UInt = #line
     ) {
+        #if DisableTraceLogs || DisableDebugLogs || DisableInfoLogs || DisableNoticeLogs || DisableWarningLogs || DisableErrorLogs || DisableCriticalLogs
         switch level {
         case .trace:
             self.trace(message(), metadata: metadata(), source: source(), file: file, function: function, line: line)
@@ -141,6 +143,17 @@ extension Logger {
         case .critical:
             self.critical(message(), metadata: metadata(), source: source(), file: file, function: function, line: line)
         }
+        #else
+        self._log(
+            level: level,
+            message(),
+            metadata: metadata(),
+            source: source(),
+            file: file,
+            function: function,
+            line: line
+        )
+        #endif
     }
 
     /// Log a message using the log level and source that you provide.
@@ -267,7 +280,15 @@ extension Logger {
         line: UInt = #line
     ) {
         #if !DisableTraceLogs
-        self._log(level: .trace, message(), metadata: metadata(), source: source(), file: file, function: function, line: line)
+        self._log(
+            level: .trace,
+            message(),
+            metadata: metadata(),
+            source: source(),
+            file: file,
+            function: function,
+            line: line
+        )
         #endif
     }
 
@@ -322,7 +343,15 @@ extension Logger {
         line: UInt = #line
     ) {
         #if !DisableDebugLogs
-        self._log(level: .debug, message(), metadata: metadata(), source: source(), file: file, function: function, line: line)
+        self._log(
+            level: .debug,
+            message(),
+            metadata: metadata(),
+            source: source(),
+            file: file,
+            function: function,
+            line: line
+        )
         #endif
     }
 
@@ -377,7 +406,15 @@ extension Logger {
         line: UInt = #line
     ) {
         #if !DisableInfoLogs
-        self._log(level: .info, message(), metadata: metadata(), source: source(), file: file, function: function, line: line)
+        self._log(
+            level: .info,
+            message(),
+            metadata: metadata(),
+            source: source(),
+            file: file,
+            function: function,
+            line: line
+        )
         #endif
     }
 
@@ -432,7 +469,15 @@ extension Logger {
         line: UInt = #line
     ) {
         #if !DisableNoticeLogs
-        self._log(level: .notice, message(), metadata: metadata(), source: source(), file: file, function: function, line: line)
+        self._log(
+            level: .notice,
+            message(),
+            metadata: metadata(),
+            source: source(),
+            file: file,
+            function: function,
+            line: line
+        )
         #endif
     }
 
@@ -487,7 +532,15 @@ extension Logger {
         line: UInt = #line
     ) {
         #if !DisableWarningLogs
-        self._log(level: .warning, message(), metadata: metadata(), source: source(), file: file, function: function, line: line)
+        self._log(
+            level: .warning,
+            message(),
+            metadata: metadata(),
+            source: source(),
+            file: file,
+            function: function,
+            line: line
+        )
         #endif
     }
 
@@ -542,7 +595,15 @@ extension Logger {
         line: UInt = #line
     ) {
         #if !DisableErrorLogs
-        self._log(level: .error, message(), metadata: metadata(), source: source(), file: file, function: function, line: line)
+        self._log(
+            level: .error,
+            message(),
+            metadata: metadata(),
+            source: source(),
+            file: file,
+            function: function,
+            line: line
+        )
         #endif
     }
 
@@ -597,7 +658,15 @@ extension Logger {
         line: UInt = #line
     ) {
         #if !DisableCriticalLogs
-        self._log(level: .critical, message(), metadata: metadata(), source: source(), file: file, function: function, line: line)
+        self._log(
+            level: .critical,
+            message(),
+            metadata: metadata(),
+            source: source(),
+            file: file,
+            function: function,
+            line: line
+        )
         #endif
     }
 
