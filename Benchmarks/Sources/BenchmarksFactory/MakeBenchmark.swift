@@ -5,6 +5,7 @@ import Logging
 public func makeBenchmark(
     loggerLevel: Logger.Level,
     logLevel: Logger.Level,
+    _ suffix: String = "",
     _ body: @escaping (Logger) -> Void
 ) {
     let iterations = 1_000_000
@@ -17,7 +18,7 @@ public func makeBenchmark(
     logger.logLevel = loggerLevel
 
     Benchmark(
-        "\(logLevel)_log_with_\(loggerLevel)_log_level",
+        "\(logLevel)_log_with_\(loggerLevel)_log_level\(suffix)",
         configuration: .init(
             metrics: metrics,
             maxIterations: iterations,
