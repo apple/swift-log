@@ -23,8 +23,9 @@ let package = Package(
     targets: [
         .target(
             name: "Logging",
-            dependencies: []
+            dependencies: [.byName(name: "CSwiftLogAndroidSupport", condition: .when(platforms: [.android]))]
         ),
+        .target(name: "CSwiftLogAndroidSupport"),
         .testTarget(
             name: "LoggingTests",
             dependencies: ["Logging"]
