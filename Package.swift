@@ -21,14 +21,41 @@ let package = Package(
         .library(name: "Logging", targets: ["Logging"]),
         .library(name: "InMemoryLogging", targets: ["InMemoryLogging"]),
     ],
+    // MARK: - Package Traits
+    //
+    // swift-log provides compile-time traits to completely eliminate specific log levels from your binary.
+    // When a log level is disabled via a trait, both the level-specific method (e.g., `logger.debug()`)
+    // and calls to `logger.log(level: .debug)` become no-ops at compile time, with zero runtime overhead.
+    //
+    // Usage:
+    //   .package(url: "...", traits: ["DisableDebugLogs"])
+    //
+    // Performance impact:
+    //   - Level-specific methods (`.debug()`, `.info()`, etc.): Entire method body compiled out
+    //   - Generic `.log(level:)`: Uses O(1) switch statement; disabled levels jump to no-op default case
     traits: [
+        // DisableTraceLogs: Compile out all `.trace()` and `.log(level: .trace)` calls
         .trait(name: "DisableTraceLogs"),
+
+        // DisableDebugLogs: Compile out all `.debug()` and `.log(level: .debug)` calls
         .trait(name: "DisableDebugLogs"),
+
+        // DisableInfoLogs: Compile out all `.info()` and `.log(level: .info)` calls
         .trait(name: "DisableInfoLogs"),
+
+        // DisableNoticeLogs: Compile out all `.notice()` and `.log(level: .notice)` calls
         .trait(name: "DisableNoticeLogs"),
+
+        // DisableWarningLogs: Compile out all `.warning()` and `.log(level: .warning)` calls
         .trait(name: "DisableWarningLogs"),
+
+        // DisableErrorLogs: Compile out all `.error()` and `.log(level: .error)` calls
         .trait(name: "DisableErrorLogs"),
+
+        // DisableCriticalLogs: Compile out all `.critical()` and `.log(level: .critical)` calls
         .trait(name: "DisableCriticalLogs"),
+
+        // By default, no traits are enabled (all log levels available)
         .default(enabledTraits: []),
     ],
     targets: [
