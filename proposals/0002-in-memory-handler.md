@@ -1,10 +1,10 @@
-# SLG-0001: In memory log handler
+# SLG-0002: In memory log handler
 
 An in-memory handler to aid testing.
 
 ## Overview
 
-- Proposal: SLG-0001
+- Proposal: SLG-0002
 - Author(s): [Hamzah Malik](https://github.com/hamzahrmalik)
 - Status: **Awaiting Review**
 - Issue: [apple/swift-log#1](https://github.com/apple/swift-log/pull/390)
