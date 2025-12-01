@@ -56,7 +56,7 @@ public struct InMemoryLogHandler: LogHandler {
         }
     }
 
-    final class LogStore: Sendable {
+    private final class LogStore: Sendable {
         private let logs: Mutex<[Entry]> = .init([])
 
         fileprivate func append(level: Logger.Level, message: Logger.Message, metadata: Logger.Metadata) {

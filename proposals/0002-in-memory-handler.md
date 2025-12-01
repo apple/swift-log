@@ -27,9 +27,64 @@ Create a new InMemoryLogging product, which contains an InMemoryLogHandler
 
 This log handler can be used to make a logger, pass the logger into some function, and then assert that logs were emitted.
 
+### Example Usage
+
+```swift
+let logHandler = InMemoryLogHandler()
+let logger = Logger(
+    label: "MyApp",
+    factory: { _ in
+        logHandler
+    }
+)
+
+// Do something with logger
+someFunction(logger: logger)
+
+// Extract logged entries
+let entries = logHandler.entries       
+```
+
 ### Detailed design
 
-Implementation is in https://github.com/apple/swift-log/pull/390
+The proposal is to add a single new type, `InMemoryLogHandler`, which looks like:
+
+public struct InMemoryLogHandler : LogHandler {
+
+    public var metadata: Logger.Metadata
+
+    public var metadataProvider: Logger.MetadataProvider?
+
+    public var logLevel: Logger.Level
+
+    /// A single item which was logged.
+    public struct Entry : Sendable, Equatable {
+
+        /// The level we logged at.
+        public var level: Logger.Level
+
+        /// The message which was logged.
+        public var message: Logger.Message
+
+        /// The metadata which was logged.
+        public var metadata: Logger.Metadata
+
+        public init(level: Logger.Level, message: Logger.Message, metadata: Logger.Metadata)
+    }
+
+    /// Create a new ``InMemoryLogHandler``.
+    public init()
+
+    public func log(level: Logger.Level, message: Logger.Message, metadata: Logger.Metadata?, source: String, file: String, function: String, line: UInt)
+
+    public subscript(metadataKey key: String) -> Logger.Metadata.Value? { get set }
+
+    /// All logs that have been collected.
+    public var entries: [Entry] { get }
+
+    /// Clear all entries.
+    public func clear()
+}
 
 ### API stability
 
@@ -45,4 +100,5 @@ We could in future add convenience functions. For example
 ### Alternatives considered
 
 - Creating something specifically geared towards testing. For example, providing functions to do assertions on the logs with features such as wildcarding and predicates. However, this would complicate
-  the API, and it is preferable to create the minimal feature first, and then iterate on it. Furthermore, this log handler can be useful beyond testing, for example, for buffering before actually logging.
+  the API, and it is preferable to create the minimal feature first, and then iterate on it. Furthermore, this log handler can be useful beyond testing, for example, for buffering before actually
+  logging.
