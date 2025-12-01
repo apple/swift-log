@@ -25,8 +25,14 @@ let package = Package(
         .trait(name: "MaxLogLevelDebug", description: "Debug and above available (compiles out trace)"),
         .trait(name: "MaxLogLevelInfo", description: "Info and above available (compiles out trace, debug)"),
         .trait(name: "MaxLogLevelNotice", description: "Notice and above available (compiles out trace, debug, info)"),
-        .trait(name: "MaxLogLevelWarning", description: "Warning and above available (compiles out trace, debug, info, notice)"),
-        .trait(name: "MaxLogLevelError", description: "Error and above available (compiles out trace, debug, info, notice, warning)"),
+        .trait(
+            name: "MaxLogLevelWarning",
+            description: "Warning and above available (compiles out trace, debug, info, notice)"
+        ),
+        .trait(
+            name: "MaxLogLevelError",
+            description: "Error and above available (compiles out trace, debug, info, notice, warning)"
+        ),
         .trait(name: "MaxLogLevelCritical", description: "Only critical available (compiles out all except critical)"),
         .trait(name: "MaxLogLevelNone", description: "All logging compiled out (no log levels available)"),
 
