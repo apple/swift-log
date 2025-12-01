@@ -9,7 +9,7 @@ creating well-behaved libraries that don't overwhelm logging systems or misuse
 severity levels. This practice provides clear guidance on when to use each
 level.
 
-### Motivation 
+### Motivation
 
 Libraries must be well-behaved across various use cases and cannot assume
 specific logging backend configurations. Using inappropriate log levels can
@@ -51,7 +51,7 @@ Each level serves different purposes:
 - **Performance**: May impact performance; assume it won't be used in production.
 - **Content**: Internal state, detailed operation flows, diagnostic information.
 
-##### Debug Level  
+##### Debug Level
 - **Usage**: May be enabled in some production deployments.
 - **Performance**: Should not significantly undermine production performance.
 - **Content**: High-level operation overview, connection events, major decisions.
@@ -128,11 +128,84 @@ logger.info("Request failed")
 ```swift
 // ❌ Bad: Normal operations at info level flood production logs
 logger.info("HTTP request received")
-logger.info("Database query executed") 
+logger.info("Database query executed")
 logger.info("Response sent")
 
 // ✅ Good: Use appropriate levels instead
 logger.debug("Processing request", metadata: ["path": "\(path)"])
 logger.trace("Query", metadata: ["sql": "\(query)"])
 logger.debug("Request completed", metadata: ["status": "\(status)"])
+```
+
+### Disable log levels during compilation
+
+SwiftLog provides compile-time traits to eliminate less severe log levels from
+your binary reducing the runtime overhead.
+
+#### Motivation
+
+When deploying applications to production, you often know in advance which log
+levels will never be needed. For example, a production service might only need
+warning and above, while trace and debug levels are only useful during
+development. By using traits, you can completely remove these unnecessary log
+levels at compile time, achieving zero runtime overhead.
+
+#### Available traits
+
+SwiftLog defines seven maximum log level traits, ordered from most permissive
+to most restrictive:
+
+- `MaxLogLevelDebug`: Debug and above available (compiles out trace)
+- `MaxLogLevelInfo`: Info and above available (compiles out trace, debug)
+- `MaxLogLevelNotice`: Notice and above available (compiles out trace, debug,
+  info)
+- `MaxLogLevelWarning`: Warning and above available (compiles out trace, debug,
+  info, notice)
+- `MaxLogLevelError`: Error and above available (compiles out trace, debug,
+  info, notice, warning)
+- `MaxLogLevelCritical`: Only critical available (compiles out all except
+  critical)
+- `MaxLogLevelNone`: All logging compiled out (no log levels available)
+
+By default (when no traits are specified), all log levels are available.
+
+When you specify a maximum log level trait, all less severe levels are
+completely removed from your binary at compile time. This applies to both
+level-specific methods (e.g., `logger.debug()`) and calls to the generic
+`logger.log(level:)` method.
+
+> Note: Traits are additive. If multiple max level traits are specified, the
+> most restrictive one takes effect.
+
+#### Example
+
+To enable a trait, specify it when declaring your package dependency:
+
+```swift
+// In your Package.swift:
+dependencies: [
+    .package(
+        url: "https://github.com/apple/swift-log.git",
+        from: "1.0.0",
+        traits: ["MaxLogLevelWarning"]
+    )
+]
+```
+
+With `MaxLogLevelWarning` enabled, all trace, debug, info, and notice log
+statements are compiled out:
+
+```swift
+// These become no-ops (compiled out completely):
+logger.trace("This will not be in the binary")
+logger.debug("This will not be in the binary")
+logger.info("This will not be in the binary")
+logger.notice("This will not be in the binary")
+logger.log(level: .debug, "This will not log anything")
+
+// These work normally:
+logger.warning("This still works")
+logger.error("This still works")
+logger.critical("This still works")
+logger.log(level: .error, "This still works")
 ```
