@@ -18,10 +18,16 @@ import Foundation
 import Logging
 
 public let benchmarks: @Sendable () -> Void = {
-    makeBenchmark(loggerLevel: .error, logLevel: .error, "_generic") { logger in
-        logger.log(level: .error, "hello, benchmarking world")
+    makeBenchmark(loggerLevel: .notice, logLevel: .notice) { logger in
+        logger.notice("hello, benchmarking world")
     }
-    makeBenchmark(loggerLevel: .error, logLevel: .debug, "_generic") { logger in
-        logger.log(level: .debug, "hello, benchmarking world")
+    makeBenchmark(loggerLevel: .notice, logLevel: .notice, "_generic") { logger in
+        logger.log(level: .notice, "hello, benchmarking world")
+    }
+    makeBenchmark(loggerLevel: .warning, logLevel: .warning) { logger in
+        logger.warning("hello, benchmarking world")
+    }
+    makeBenchmark(loggerLevel: .warning, logLevel: .warning, "_generic") { logger in
+        logger.log(level: .warning, "hello, benchmarking world")
     }
 }

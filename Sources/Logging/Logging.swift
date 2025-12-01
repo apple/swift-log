@@ -282,7 +282,7 @@ extension Logger {
         function: String = #function,
         line: UInt = #line
     ) {
-        #if !DisableTraceLogs
+        #if !MaxLogLevelDebug && !MaxLogLevelInfo && !MaxLogLevelNotice && !MaxLogLevelWarning && !MaxLogLevelError && !MaxLogLevelCritical && !MaxLogLevelNone
         self._log(
             level: .trace,
             message(),
@@ -345,7 +345,7 @@ extension Logger {
         function: String = #function,
         line: UInt = #line
     ) {
-        #if !DisableDebugLogs
+        #if !MaxLogLevelInfo && !MaxLogLevelNotice && !MaxLogLevelWarning && !MaxLogLevelError && !MaxLogLevelCritical && !MaxLogLevelNone
         self._log(
             level: .debug,
             message(),
@@ -408,7 +408,7 @@ extension Logger {
         function: String = #function,
         line: UInt = #line
     ) {
-        #if !DisableInfoLogs
+        #if !MaxLogLevelNotice && !MaxLogLevelWarning && !MaxLogLevelError && !MaxLogLevelCritical && !MaxLogLevelNone
         self._log(
             level: .info,
             message(),
@@ -471,7 +471,7 @@ extension Logger {
         function: String = #function,
         line: UInt = #line
     ) {
-        #if !DisableNoticeLogs
+        #if !MaxLogLevelWarning && !MaxLogLevelError && !MaxLogLevelCritical && !MaxLogLevelNone
         self._log(
             level: .notice,
             message(),
@@ -534,7 +534,7 @@ extension Logger {
         function: String = #function,
         line: UInt = #line
     ) {
-        #if !DisableWarningLogs
+        #if !MaxLogLevelError && !MaxLogLevelCritical && !MaxLogLevelNone
         self._log(
             level: .warning,
             message(),
@@ -597,7 +597,7 @@ extension Logger {
         function: String = #function,
         line: UInt = #line
     ) {
-        #if !DisableErrorLogs
+        #if !MaxLogLevelCritical && !MaxLogLevelNone
         self._log(
             level: .error,
             message(),
@@ -660,7 +660,7 @@ extension Logger {
         function: String = #function,
         line: UInt = #line
     ) {
-        #if !DisableCriticalLogs
+        #if !MaxLogLevelNone
         self._log(
             level: .critical,
             message(),
