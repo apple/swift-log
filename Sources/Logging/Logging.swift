@@ -126,9 +126,9 @@ extension Logger {
         function: String = #function,
         line: UInt = #line
     ) {
-        #if DisableTraceLogs || DisableDebugLogs || DisableInfoLogs || DisableNoticeLogs || DisableWarningLogs || DisableErrorLogs || DisableCriticalLogs
+        #if MaxLogLevelDebug || MaxLogLevelInfo || MaxLogLevelNotice || MaxLogLevelWarning || MaxLogLevelError || MaxLogLevelCritical || MaxLogLevelNone
         // A constant overhead is added for dynamic log level calls if one of the traits is enabled.
-        // This allows picking the necessary implementaion with compiled out body in runtime.
+        // This allows picking the necessary implementation with compiled out body in runtime.
         switch level {
         case .trace:
             self.trace(message(), metadata: metadata(), source: source(), file: file, function: function, line: line)
