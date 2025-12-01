@@ -58,7 +58,7 @@ struct InMemoryLogHandlerTests {
     @available(macOS 15.0, iOS 18.0, tvOS 18.0, watchOS 11.0, *)
     func moreSpecificMetadataOverridesGlobal() {
         let testProvider = Logger.MetadataProvider {
-            ["a": "1", "b": "1", "c":"1"]
+            ["a": "1", "b": "1", "c": "1"]
         }
         var (logHandler, logger) = self.makeTestLogger(metadataProvider: testProvider)
         logger[metadataKey: "b"] = "2"
