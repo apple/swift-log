@@ -42,9 +42,6 @@ let package = Package(
     //
     // See Benchmarks/ directory for performance comparisons across different trait configurations.
     traits: [
-        // MaxLogLevelTrace: All log levels available (trace, debug, info, notice, warning, error, critical)
-        .trait(name: "MaxLogLevelTrace"),
-
         // MaxLogLevelDebug: Debug and above available (compiles out trace)
         .trait(name: "MaxLogLevelDebug"),
 
