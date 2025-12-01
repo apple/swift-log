@@ -21,47 +21,14 @@ let package = Package(
         .library(name: "Logging", targets: ["Logging"]),
         .library(name: "InMemoryLogging", targets: ["InMemoryLogging"]),
     ],
-    // MARK: - Package Traits
-    //
-    // swift-log provides compile-time traits to set a maximum log level, eliminating less severe
-    // levels from your binary. When a log level is compiled out, both the level-specific method
-    // (e.g., `logger.debug()`) and calls to `logger.log(level: .debug)` become no-ops at compile
-    // time, with zero runtime overhead.
-    //
-    // Usage:
-    //   .package(url: "...", traits: ["MaxLogLevelError"])
-    //
-    // Traits are additive - if multiple max level traits are specified, both traits are
-    // applied and the effective behavior is the most restrictive one. For example, specifying
-    // both MaxLogLevelError and MaxLogLevelWarning applies both traits, but the effective
-    // maximum log level will be MaxLogLevelError (the more restrictive one).
-    //
-    // Performance impact:
-    //   - Level-specific methods (`.debug()`, `.info()`, etc.): Entire method body compiled out
-    //   - Generic `.log(level:)`: Uses O(1) switch statement; disabled levels jump to no-op default case
-    //
-    // See Benchmarks/ directory for performance comparisons across different trait configurations.
     traits: [
-        // MaxLogLevelDebug: Debug and above available (compiles out trace)
-        .trait(name: "MaxLogLevelDebug"),
-
-        // MaxLogLevelInfo: Info and above available (compiles out trace, debug)
-        .trait(name: "MaxLogLevelInfo"),
-
-        // MaxLogLevelNotice: Notice and above available (compiles out trace, debug, info)
-        .trait(name: "MaxLogLevelNotice"),
-
-        // MaxLogLevelWarning: Warning and above available (compiles out trace, debug, info, notice)
-        .trait(name: "MaxLogLevelWarning"),
-
-        // MaxLogLevelError: Error and above available (compiles out trace, debug, info, notice, warning)
-        .trait(name: "MaxLogLevelError"),
-
-        // MaxLogLevelCritical: Only critical available (compiles out all except critical)
-        .trait(name: "MaxLogLevelCritical"),
-
-        // MaxLogLevelNone: All logging compiled out (no log levels available)
-        .trait(name: "MaxLogLevelNone"),
+        .trait(name: "MaxLogLevelDebug", description: "Debug and above available (compiles out trace)"),
+        .trait(name: "MaxLogLevelInfo", description: "Info and above available (compiles out trace, debug)"),
+        .trait(name: "MaxLogLevelNotice", description: "Notice and above available (compiles out trace, debug, info)"),
+        .trait(name: "MaxLogLevelWarning", description: "Warning and above available (compiles out trace, debug, info, notice)"),
+        .trait(name: "MaxLogLevelError", description: "Error and above available (compiles out trace, debug, info, notice, warning)"),
+        .trait(name: "MaxLogLevelCritical", description: "Only critical available (compiles out all except critical)"),
+        .trait(name: "MaxLogLevelNone", description: "All logging compiled out (no log levels available)"),
 
         // By default, no traits are enabled (all log levels available)
         .default(enabledTraits: []),
