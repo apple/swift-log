@@ -47,7 +47,7 @@ jobs:
     name: Benchmarks (MaxLogLevelWarning)
     uses: apple/swift-nio/.github/workflows/benchmarks.yml@main
     with:
-      benchmark_package_path: "Benchmarks/MaxLogLevelWarningBenchmarks"
+      benchmark_package_path: "Benchmarks/MaxLogLevelWarning"
       macos_runner_pool: general
       macos_xcode_26_1_enabled: true
 
