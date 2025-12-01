@@ -92,6 +92,7 @@ backend.
 
 - <doc:LoggingBestPractices>
 - <doc:ImplementingALogHandler>
+- <doc:DisableLogLevelsDuringCompilation>
 
 ### Contributing
 
