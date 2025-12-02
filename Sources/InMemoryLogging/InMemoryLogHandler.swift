@@ -15,9 +15,9 @@
 import Logging
 import Synchronization
 
-/// A custom log handler which doesn't actually emit logs, but just collects them into memory.
-/// You can then retrieve a list of what was logged and run assertions on it.
-/// This handler is intended to be used in tests.
+/// A custom log handler which just collects logs into memory.
+/// You can then retrieve an array of those log entries.
+/// Example use cases include testing and buffering.
 ///
 /// # Usage
 /// ```swift
@@ -28,9 +28,11 @@ import Synchronization
 ///       logHandler
 ///     }
 /// )
-/// // Use logger to emit some logs, then:
+/// // Use logger to emit some logs
+/// someFunction(logger: logger)
+///
+/// // Retrieve what was logged
 /// let logEntries = logger.entries
-/// #expect(logEntries.contains(...))
 /// ```
 ///
 @available(macOS 15.0, iOS 18.0, tvOS 18.0, watchOS 11.0, *)
