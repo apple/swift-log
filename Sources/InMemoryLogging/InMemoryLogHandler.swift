@@ -40,7 +40,7 @@ public struct InMemoryLogHandler: LogHandler {
     public var logLevel: Logger.Level = .info
     private let logStore: LogStore
 
-    /// A single item which was logged.
+    /// A struct representing a log entry.
     public struct Entry: Sendable, Equatable {
         /// The level we logged at.
         public var level: Logger.Level
