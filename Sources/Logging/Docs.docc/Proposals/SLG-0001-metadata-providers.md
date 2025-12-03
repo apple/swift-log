@@ -1,10 +1,10 @@
 # Metadata Providers
 
-Authors: [Moritz Lang](https://github.com/slashmo), [Konrad 'ktoso' Malawski](https://github.com/ktoso)
-
-## Introduction
-
 While global metadata attributes may be manually set on a `LogHandler` level, there's currently no way of reliably providing contextual, automatically propagated, metadata when logging with swift-log.
+
+## Authors
+
+[Moritz Lang](https://github.com/slashmo), [Konrad 'ktoso' Malawski](https://github.com/ktoso)
 
 ## Motivation
 
