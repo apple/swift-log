@@ -54,7 +54,7 @@ jobs:
       runner_pool: nightly
       build_scheme: swift-log-Package
       swift_test_enabled: true
-      
+
   wasm:
     name: Wasm Swift SDK
     uses: apple/swift-nio/.github/workflows/wasm_swift_sdk.yml@main
