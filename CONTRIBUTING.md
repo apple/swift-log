@@ -47,6 +47,8 @@ My system has IPv6 disabled.
 
 ## Writing a Patch
 
+For non-trivial changes that affect the public API, it is good practice to have a discussion phase before writing code. Please follow the [proposal process](Sources/Logging/Docs.docc/Proposals/Proposals.md) to gather feedback and align on the approach with other contributors.
+
 A good SwiftLog patch is:
 
 1. Concise, and contains as few changes as needed to achieve the end result.
@@ -62,34 +64,56 @@ We require that your commit messages match our template. The easiest way to do t
 
 ### Make sure Tests work on Linux
 
-SwiftLog uses XCTest to run tests on both macOS and Linux. While the macOS version of XCTest is able to use the Objective-C runtime to discover tests at execution time, the Linux version is not.
-For this reason, whenever you add new tests **you have to run a script** that generates the hooks needed to run those tests on Linux, or our CI will complain that the tests are not all present on Linux. To do this, merely execute `ruby ./scripts/generate_linux_tests.rb` at the root of the package and check the changes it made.
+SwiftLog uses Swift Testing to run tests on all supported platforms.
 
-### Run `./scripts/soundness.sh`
+### Run CI checks locally
 
-The scripts directory contains a [soundness.sh script](https://github.com/apple/swift-log/blob/main/scripts/soundness.sh) 
-that enforces additional checks, like license headers and formatting style.
+You can run the Github Actions workflows locally using
+[act](https://github.com/nektos/act). To run all the jobs that run on a pull
+request, use the following command:
 
-Please make sure to `./scripts/soundness.sh` before pushing a change upstream, otherwise it is likely the PR validation will fail
-on minor changes such as a missing `self.` or similar formatting issues.
-
-> The script also executes the above mentioned `generate_linux_tests.rb`.
-
-For frequent contributors, we recommend adding the script as a [git pre-push hook](https://git-scm.com/book/en/v2/Customizing-Git-Git-Hooks), which you can do via executing the following command in the project root directory: 
-
-```bash
-cat << EOF > .git/hooks/pre-push
-#!/bin/bash
-
-if [[ -f "scripts/soundness.sh" ]]; then
-  scripts/soundness.sh
-fi
-EOF
+```
+% act pull_request
 ```
 
-Which makes the script execute, and only allow the `git push` to complete if the check has passed.
+To run just a single job, use `workflow_call -j <job>`, and specify the inputs
+the job expects. For example, to run just shellcheck:
 
-In the case of formatting issues, you can then `git add` the formatting changes, and attempt the push again. 
+```
+% act workflow_call -j soundness --input shell_check_enabled=true
+```
+
+To bind-mount the working directory to the container, rather than a copy, use
+`--bind`. For example, to run just the formatting, and have the results
+reflected in your working directory:
+
+```
+% act --bind workflow_call -j soundness --input format_check_enabled=true
+```
+
+If you'd like `act` to always run with certain flags, these can be be placed in
+an `.actrc` file either in the current working directory or your home
+directory, for example:
+
+```
+--container-architecture=linux/amd64
+--remote-name upstream
+--action-offline-mode
+```
+
+## Benchmarks
+
+Benchmarks for `swift-log` are in a separate Swift Package in the `Benchmarks` subfolder of this repository.
+They use the [`package-benchmark`](https://github.com/ordo-one/package-benchmark) plugin.
+Benchmarks depends on the [`jemalloc`](https://jemalloc.net) memory allocation library, which is used by `package-benchmark` to capture memory allocation statistics.
+An installation guide can be found in the [Getting Started article](https://swiftpackageindex.com/ordo-one/package-benchmark/documentation/benchmark/gettingstarted#Installing-Prerequisites-and-Platform-Support) of `package-benchmark`.
+Afterwards you can run the benchmarks from CLI by going to the `Benchmarks` subfolder (e.g. `cd Benchmarks`) and invoking:
+```
+swift package benchmark
+```
+
+For more information please refer to `swift package benchmark --help` or the [documentation of `package-benchmark`](https://swiftpackageindex.com/ordo-one/package-benchmark/documentation/benchmark).
+
 
 ## How to contribute your work
 
