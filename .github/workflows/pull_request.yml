@@ -74,3 +74,7 @@ jobs:
       windows_6_2_enabled: true
       windows_nightly_next_enabled: true
       windows_nightly_main_enabled: true
+
+  wasm:
+    name: Wasm Swift SDK
+    uses: apple/swift-nio/.github/workflows/wasm_swift_sdk.yml@main
