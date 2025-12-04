@@ -13,7 +13,6 @@
 //===----------------------------------------------------------------------===//
 
 import Logging
-import Synchronization
 
 /// A custom log handler which just collects logs into memory.
 /// You can then retrieve an array of those log entries.
@@ -35,7 +34,6 @@ import Synchronization
 /// let logEntries = logger.entries
 /// ```
 ///
-@available(macOS 15.0, iOS 18.0, tvOS 18.0, watchOS 11.0, *)
 public struct InMemoryLogHandler: LogHandler {
     public var metadata: Logger.Metadata = [:]
     public var metadataProvider: Logger.MetadataProvider?
@@ -58,12 +56,13 @@ public struct InMemoryLogHandler: LogHandler {
         }
     }
 
-    private final class LogStore: Sendable {
-        private let logs: Mutex<[Entry]> = .init([])
+    private final class LogStore: @unchecked Sendable {
+        private var _entries: [Entry] = []
+        private let lock = Lock()
 
         fileprivate func append(level: Logger.Level, message: Logger.Message, metadata: Logger.Metadata) {
-            self.logs.withLock {
-                $0.append(
+            self.lock.withLockVoid {
+                self._entries.append(
                     Entry(
                         level: level,
                         message: message,
@@ -74,13 +73,13 @@ public struct InMemoryLogHandler: LogHandler {
         }
 
         fileprivate func clear() {
-            self.logs.withLock {
-                $0.removeAll()
+            self.lock.withLockVoid {
+                _entries.removeAll()
             }
         }
 
         var entries: [Entry] {
-            self.logs.withLock { $0 }
+            self.lock.withLock { self._entries }
         }
     }
 

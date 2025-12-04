@@ -48,7 +48,7 @@ import Musl
 /// of lock is safe to use with `libpthread`-based threading models, such as the
 /// one used by NIO. On Windows, the lock is based on the substantially similar
 /// `SRWLOCK` type.
-internal final class Lock: @unchecked Sendable {
+package final class Lock: @unchecked Sendable {
     #if canImport(WASILibc)
     // WASILibc is single threaded, provides no locks
     #elseif os(Windows)
@@ -60,7 +60,7 @@ internal final class Lock: @unchecked Sendable {
     #endif
 
     /// Create a new lock.
-    public init() {
+    package init() {
         #if canImport(WASILibc)
         // WASILibc is single threaded, provides no locks
         #elseif os(Windows)
@@ -92,7 +92,7 @@ internal final class Lock: @unchecked Sendable {
     ///
     /// Whenever possible, consider using `withLock` instead of this method and
     /// `unlock`, to simplify lock handling.
-    public func lock() {
+    package func lock() {
         #if canImport(WASILibc)
         // WASILibc is single threaded, provides no locks
         #elseif os(Windows)
@@ -107,7 +107,7 @@ internal final class Lock: @unchecked Sendable {
     ///
     /// Whenever possible, consider using `withLock` instead of this method and
     /// `lock`, to simplify lock handling.
-    public func unlock() {
+    package func unlock() {
         #if canImport(WASILibc)
         // WASILibc is single threaded, provides no locks
         #elseif os(Windows)
@@ -129,7 +129,7 @@ extension Lock {
     /// - Parameter body: The block to execute while holding the lock.
     /// - Returns: The value returned by the block.
     @inlinable
-    internal func withLock<T>(_ body: () throws -> T) rethrows -> T {
+    package func withLock<T>(_ body: () throws -> T) rethrows -> T {
         self.lock()
         defer {
             self.unlock()
@@ -139,7 +139,7 @@ extension Lock {
 
     // specialise Void return (for performance)
     @inlinable
-    internal func withLockVoid(_ body: () throws -> Void) rethrows {
+    package func withLockVoid(_ body: () throws -> Void) rethrows {
         try self.withLock(body)
     }
 }
