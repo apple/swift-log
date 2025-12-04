@@ -19,7 +19,7 @@ import CRT
 #elseif canImport(Glibc)
 @preconcurrency import Glibc
 #elseif canImport(Android)
-import Android
+@preconcurrency import Android
 #elseif canImport(Musl)
 import Musl
 #elseif canImport(WASILibc)
