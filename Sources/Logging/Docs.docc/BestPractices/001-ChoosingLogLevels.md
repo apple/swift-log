@@ -9,7 +9,7 @@ creating well-behaved libraries that don't overwhelm logging systems or misuse
 severity levels. This practice provides clear guidance on when to use each
 level.
 
-### Motivation 
+### Motivation
 
 Libraries must be well-behaved across various use cases and cannot assume
 specific logging backend configurations. Using inappropriate log levels can
@@ -51,7 +51,7 @@ Each level serves different purposes:
 - **Performance**: May impact performance; assume it won't be used in production.
 - **Content**: Internal state, detailed operation flows, diagnostic information.
 
-##### Debug Level  
+##### Debug Level
 - **Usage**: May be enabled in some production deployments.
 - **Performance**: Should not significantly undermine production performance.
 - **Content**: High-level operation overview, connection events, major decisions.
@@ -128,7 +128,7 @@ logger.info("Request failed")
 ```swift
 // ❌ Bad: Normal operations at info level flood production logs
 logger.info("HTTP request received")
-logger.info("Database query executed") 
+logger.info("Database query executed")
 logger.info("Response sent")
 
 // ✅ Good: Use appropriate levels instead
