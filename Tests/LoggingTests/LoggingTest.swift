@@ -957,6 +957,11 @@ struct LoggingTest {
         #expect(Logger.Level.error < Logger.Level.critical)
     }
 
+    @Test(arguments: Logger.Level.allCases) func logLevelDescription(level: Logger.Level) {
+        #expect(level.description == level.rawValue)
+        #expect(Logger.Level(level.rawValue.uppercased()) == level)
+    }
+
     final class InterceptStream: TextOutputStream {
         var interceptedText: String?
         var strings = [String]()

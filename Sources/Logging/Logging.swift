@@ -1026,6 +1026,19 @@ extension Logger.Level: Comparable {
     }
 }
 
+extension Logger.Level: CustomStringConvertible, LosslessStringConvertible {
+    /// A textual representation of the log level.
+    public var description: String {
+        self.rawValue
+    }
+
+    /// Creates a log level from its textual representation.
+    /// - Parameter description: A textual representation of the log level, case insensitive.
+    public init?(_ description: String) {
+        self.init(rawValue: description.lowercased())
+    }
+}
+
 // Extension has to be done on explicit type rather than Logger.Metadata.Value as workaround for
 // https://bugs.swift.org/browse/SR-9687
 // Then we could write it as follows and it would work under Swift 5 and not only 4 as it does currently:
