@@ -150,10 +150,51 @@ public protocol LogHandler: _SwiftLogSendableLogHandler {
     ///   - file: The file this log message originates from.
     ///   - function: The function this log message originates from.
     ///   - line: The line this log message originates from.
+    @available(
+        *,
+        deprecated,
+        message: "Use generalized log(level:message:attributedMetadata:source:file:function:line:) instead."
+    )
     func log(
         level: Logger.Level,
         message: Logger.Message,
         metadata: Logger.Metadata?,
+        source: String,
+        file: String,
+        function: String,
+        line: UInt
+    )
+
+    /// The library calls this method when a log handler must emit a log message with attributed metadata.
+    ///
+    /// This method is called when using the privacy-aware attributed metadata logging APIs.
+    ///
+    /// Handlers implementing this method are responsible for merging their own `metadata` property,
+    /// `metadataProvider` output, and the explicit `attributedMetadata` parameter. Handler metadata
+    /// and provider values should be treated as `.public()`. Explicit attributed metadata should take
+    /// precedence. The default implementation demonstrates this merging pattern.
+    ///
+    /// LogHandlers that don't implement this method will use the default implementation, which merges
+    /// metadata and redacts private values to `"<private>"` (similar to os_log), then calls the plain
+    /// metadata log method. This ensures privacy protection while maintaining visibility that sensitive
+    /// data was logged.
+    ///
+    /// There is no need for the `LogHandler` to check if the `level` is above or
+    /// below the configured `logLevel` as `Logger` already performed this check and
+    /// determined that a message should be logged.
+    ///
+    /// - Parameters:
+    ///   - level: The log level of the message.
+    ///   - message: The message to log. To obtain a `String` representation call `message.description`.
+    ///   - attributedMetadata: The attributed metadata associated with this log message, including privacy levels.
+    ///   - source: The source where the log message originated, for example the logging module.
+    ///   - file: The file this log message originates from.
+    ///   - function: The function this log message originates from.
+    ///   - line: The line this log message originates from.
+    func log(
+        level: Logger.Level,
+        message: Logger.Message,
+        attributedMetadata: Logger.AttributedMetadata?,
         source: String,
         file: String,
         function: String,
@@ -189,13 +230,30 @@ public protocol LogHandler: _SwiftLogSendableLogHandler {
     ///
     /// - parameters:
     ///    - metadataKey: The key for the metadata item
+    @available(*, deprecated, message: "Use generalized subscript(attributedMetadataKey:) instead.")
     subscript(metadataKey _: String) -> Logger.Metadata.Value? { get set }
 
     /// Get or set the entire metadata storage as a dictionary.
     ///
     /// - note: `LogHandler`s must treat logging metadata as a value type. This means that the change in metadata must
     ///         only affect this very `LogHandler`.
+    @available(*, deprecated, message: "Use generalized attributedMetadata instead.")
     var metadata: Logger.Metadata { get set }
+
+    /// Add, remove, or change the attributed logging metadata.
+    ///
+    /// - note: `LogHandler`s must treat logging metadata as a value type. This means that the change in metadata must
+    ///         only affect this very `LogHandler`.
+    ///
+    /// - parameters:
+    ///    - attributedMetadataKey: The key for the attributed metadata item
+    subscript(attributedMetadataKey _: String) -> Logger.AttributedMetadataValue? { get set }
+
+    /// Get or set the entire attributed metadata storage as a dictionary.
+    ///
+    /// - note: `LogHandler`s must treat logging metadata as a value type. This means that the change in metadata must
+    ///         only affect this very `LogHandler`.
+    var attributedMetadata: Logger.AttributedMetadata { get set }
 
     /// Get or set the configured log level.
     ///
@@ -204,6 +262,51 @@ public protocol LogHandler: _SwiftLogSendableLogHandler {
     ///         that means a change in log level on a particular `LogHandler` might not be reflected in any
     ///        `LogHandler`.
     var logLevel: Logger.Level { get set }
+}
+
+extension LogHandler {
+    /// Converts a plain metadata value to an attributed metadata value with public privacy.
+    ///
+    /// This helper is used by default implementations to convert plain metadata to attributed metadata.
+    ///
+    /// - Parameter plainValue: The plain metadata value to convert.
+    /// - Returns: An attributed metadata value with `.public` privacy level.
+    @inlinable
+    internal static func plainToAttributed(_ plainValue: Logger.Metadata.Value) -> Logger.AttributedMetadataValue {
+        Logger.AttributedMetadataValue(plainValue, privacy: .public)
+    }
+
+    /// Converts an attributed metadata value to a plain metadata value, redacting private values.
+    ///
+    /// This helper is used by default implementations to convert attributed metadata to plain metadata.
+    /// Private values are redacted using `AttributedMetadataValue.redactionMarker` to prevent
+    /// accidental exposure while indicating that sensitive data was logged.
+    ///
+    /// - Parameter attributedValue: The attributed metadata value to convert.
+    /// - Returns: A plain metadata value, with private values redacted.
+    @inlinable
+    internal static func attributedToPlain(_ attributedValue: Logger.AttributedMetadataValue) -> Logger.Metadata.Value {
+        if attributedValue.attributes.privacy == .public {
+            return attributedValue.value
+        } else {
+            // Redact private values for handlers that don't support privacy
+            return .string(Logger.AttributedMetadataValue.redactionMarker)
+        }
+    }
+
+    /// Converts an attributed metadata dictionary to a plain metadata dictionary, redacting private values.
+    ///
+    /// This helper is used by default implementations to convert attributed metadata to plain metadata.
+    /// Private values are redacted using `AttributedMetadataValue.redactionMarker` to prevent
+    /// accidental exposure while indicating that sensitive data was logged.
+    ///
+    /// - Parameter attributedMetadata: The attributed metadata dictionary to convert.
+    /// - Returns: A plain metadata dictionary, with private values redacted, or `nil` if the input was empty.
+    @inlinable
+    internal static func attributedToPlain(_ attributedMetadata: Logger.AttributedMetadata) -> Logger.Metadata? {
+        let plainMetadata = attributedMetadata.mapValues(Self.attributedToPlain)
+        return plainMetadata.isEmpty ? nil : plainMetadata
+    }
 }
 
 extension LogHandler {
@@ -229,6 +332,48 @@ extension LogHandler {
                 )
             }
             #endif
+        }
+    }
+
+    /// Default implementation for attributed metadata that converts from/to plain metadata.
+    ///
+    /// This default exists in order to facilitate the source-compatible introduction of the `attributedMetadata` protocol requirement.
+    ///
+    /// - On get: Returns plain metadata converted to attributed metadata with `.public` privacy level.
+    /// - On set: Converts attributed metadata to plain metadata, redacting `.private` values to `"<private>"`.
+    public var attributedMetadata: Logger.AttributedMetadata {
+        get {
+            // Convert plain metadata to attributed metadata with public privacy
+            self.metadata.mapValues(Self.plainToAttributed)
+        }
+        set {
+            // Convert attributed metadata to plain metadata, redacting private values
+            self.metadata = newValue.mapValues(Self.attributedToPlain)
+        }
+    }
+
+    /// Default implementation for attributed metadata subscript that converts from/to plain metadata.
+    ///
+    /// This default exists in order to facilitate the source-compatible introduction of the attributed metadata subscript.
+    ///
+    /// - On get: Returns plain metadata value converted to attributed metadata with `.public` privacy level.
+    /// - On set: Converts attributed metadata to plain metadata, redacting `.private` values to `"<private>"`.
+    public subscript(attributedMetadataKey key: String) -> Logger.AttributedMetadataValue? {
+        get {
+            // Convert plain metadata value to attributed with public privacy
+            guard let plainValue = self[metadataKey: key] else {
+                return nil
+            }
+            return Self.plainToAttributed(plainValue)
+        }
+        set {
+            if let attributedValue = newValue {
+                // Convert attributed metadata to plain, redacting private values
+                self[metadataKey: key] = Self.attributedToPlain(attributedValue)
+            } else {
+                // Remove the key if newValue is nil
+                self[metadataKey: key] = nil
+            }
         }
     }
 }
@@ -278,6 +423,53 @@ extension LogHandler {
             message: message,
             metadata: metadata,
             source: Logger.currentModule(filePath: file),
+            file: file,
+            function: function,
+            line: line
+        )
+    }
+}
+
+extension LogHandler {
+    /// Default implementation provides backward compatibility by redacting private metadata.
+    ///
+    /// LogHandlers that don't implement the attributed metadata method will receive all metadata,
+    /// with private values redacted to `"<private>"` (similar to os_log). This ensures privacy
+    /// protection while maintaining visibility that sensitive data was logged. Handlers wanting
+    /// full control over privacy must implement the attributed metadata method directly.
+    ///
+    /// This implementation processes attributed metadata by redacting private values and passes them
+    /// to the plain metadata log method, which handles merging with handler metadata and
+    /// metadata provider values as normal.
+    ///
+    /// - Parameters:
+    ///   - level: The log level of the message.
+    ///   - message: The message to log.
+    ///   - attributedMetadata: The attributed metadata associated to this log message.
+    ///   - source: The source where the log message originated.
+    ///   - file: The file this log message originates from.
+    ///   - function: The function this log message originates from.
+    ///   - line: The line this log message originates from.
+    public func log(
+        level: Logger.Level,
+        message: Logger.Message,
+        attributedMetadata: Logger.AttributedMetadata?,
+        source: String,
+        file: String,
+        function: String,
+        line: UInt
+    ) {
+        // For handlers that don't support privacy levels, redact private metadata
+        // Private metadata is redacted to "<private>" to prevent accidental exposure
+        // while still indicating that sensitive data was logged
+        let processedMetadata = attributedMetadata.flatMap(Self.attributedToPlain)
+
+        // Pass to plain log method which will merge with handler metadata and provider
+        self.log(
+            level: level,
+            message: message,
+            metadata: processedMetadata,
+            source: source,
             file: file,
             function: function,
             line: line
