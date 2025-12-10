@@ -35,7 +35,7 @@ jobs:
       windows_nightly_main_arguments_override: "--explicit-target-dependency-import-check error -Xswiftc -require-explicit-sendable"
 
   benchmarks:
-    name: Benchmarks (NoTraits)
+    name: Benchmarks
     uses: apple/swift-nio/.github/workflows/benchmarks.yml@main
     concurrency:
       group: benchmarks-NoTraits-${{ github.ref }}
