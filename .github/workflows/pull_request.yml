@@ -35,11 +35,8 @@ jobs:
       windows_nightly_main_arguments_override: "--explicit-target-dependency-import-check error -Xswiftc -require-explicit-sendable"
 
   benchmarks:
-    name: Benchmarks
+    name: Benchmarks (NoTraits)
     uses: apple/swift-nio/.github/workflows/benchmarks.yml@main
-    concurrency:
-      group: benchmarks-NoTraits-${{ github.ref }}
-      cancel-in-progress: true
     with:
       benchmark_package_path: "Benchmarks/NoTraits"
       macos_runner_pool: general
@@ -48,10 +45,9 @@ jobs:
 
   benchmarks-MaxLogLevelWarningBenchmarks-trait:
     name: Benchmarks (MaxLogLevelWarning)
+    # Workaround for reusing the same benchmarks.yml workflow
+    needs: benchmarks
     uses: apple/swift-nio/.github/workflows/benchmarks.yml@main
-    concurrency:
-      group: benchmarks-MaxLogLevelWarning-${{ github.ref }}
-      cancel-in-progress: true
     with:
       benchmark_package_path: "Benchmarks/MaxLogLevelWarning"
       macos_runner_pool: general
