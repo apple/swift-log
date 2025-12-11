@@ -1,4 +1,4 @@
-// swift-tools-version:6.1
+// swift-tools-version:6.0
 //===----------------------------------------------------------------------===//
 //
 // This source file is part of the Swift Logging API open source project
@@ -18,43 +18,16 @@ import PackageDescription
 let package = Package(
     name: "swift-log",
     products: [
-        .library(name: "Logging", targets: ["Logging"]),
-        .library(name: "InMemoryLogging", targets: ["InMemoryLogging"]),
-    ],
-    traits: [
-        .trait(name: "MaxLogLevelDebug", description: "Debug and above available (compiles out trace)"),
-        .trait(name: "MaxLogLevelInfo", description: "Info and above available (compiles out trace, debug)"),
-        .trait(name: "MaxLogLevelNotice", description: "Notice and above available (compiles out trace, debug, info)"),
-        .trait(
-            name: "MaxLogLevelWarning",
-            description: "Warning and above available (compiles out trace, debug, info, notice)"
-        ),
-        .trait(
-            name: "MaxLogLevelError",
-            description: "Error and above available (compiles out trace, debug, info, notice, warning)"
-        ),
-        .trait(name: "MaxLogLevelCritical", description: "Only critical available (compiles out all except critical)"),
-        .trait(name: "MaxLogLevelNone", description: "All logging compiled out (no log levels available)"),
-
-        // By default, no traits are enabled (all log levels available)
-        .default(enabledTraits: []),
+        .library(name: "Logging", targets: ["Logging"])
     ],
     targets: [
         .target(
             name: "Logging",
             dependencies: []
         ),
-        .target(
-            name: "InMemoryLogging",
-            dependencies: ["Logging"]
-        ),
         .testTarget(
             name: "LoggingTests",
             dependencies: ["Logging"]
-        ),
-        .testTarget(
-            name: "InMemoryLoggingTests",
-            dependencies: ["InMemoryLogging", "Logging"]
         ),
     ]
 )
