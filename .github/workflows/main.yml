@@ -35,12 +35,26 @@ jobs:
     uses: apple/swift-nio/.github/workflows/benchmarks.yml@main
     with:
       benchmark_package_path: "Benchmarks/NoTraits"
+
+  macos-benchmarks:
+    name: macOS benchmarks (NoTraits)
+    uses: apple/swift-nio/.github/workflows/macos_benchmarks.yml@main
+    with:
+      benchmark_package_path: "Benchmarks/NoTraits"
       macos_xcode_16_4_enabled: true
       macos_xcode_26_1_enabled: true
 
   benchmarks-MaxLogLevelWarningBenchmarks-trait:
     name: Benchmarks (MaxLogLevelWarning)
+    needs: benchmarks
     uses: apple/swift-nio/.github/workflows/benchmarks.yml@main
+    with:
+      benchmark_package_path: "Benchmarks/MaxLogLevelWarning"
+
+  macos-benchmarks-MaxLogLevelWarningBenchmarks-trait:
+    name: macOS benchmarks (MaxLogLevelWarning)
+    needs: macos-benchmarks
+    uses: apple/swift-nio/.github/workflows/macos_benchmarks.yml@main
     with:
       benchmark_package_path: "Benchmarks/MaxLogLevelWarning"
       macos_xcode_26_1_enabled: true
