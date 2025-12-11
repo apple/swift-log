@@ -18,7 +18,6 @@ import Testing
 
 struct InMemoryLogHandlerTests {
     @Test
-    @available(macOS 15.0, iOS 18.0, tvOS 18.0, watchOS 11.0, *)
     func collectsLogs() {
         let (logHandler, logger) = self.makeTestLogger()
         logger.info("hello", metadata: ["key1": "value1", "key2": ["a", "b", "c"]])
@@ -35,7 +34,6 @@ struct InMemoryLogHandlerTests {
     }
 
     @Test
-    @available(macOS 15.0, iOS 18.0, tvOS 18.0, watchOS 11.0, *)
     func metadataFromLoggerEndsUpInEntry() {
         var (logHandler, logger) = self.makeTestLogger()
         logger[metadataKey: "test"] = "value"
@@ -55,7 +53,6 @@ struct InMemoryLogHandlerTests {
     }
 
     @Test
-    @available(macOS 15.0, iOS 18.0, tvOS 18.0, watchOS 11.0, *)
     func moreSpecificMetadataOverridesGlobal() {
         let testProvider = Logger.MetadataProvider {
             ["a": "1", "b": "1", "c": "1"]
@@ -73,7 +70,6 @@ struct InMemoryLogHandlerTests {
     }
 
     @Test
-    @available(macOS 15.0, iOS 18.0, tvOS 18.0, watchOS 11.0, *)
     func clear() {
         let (logHandler, logger) = self.makeTestLogger()
         logger.info("hello", metadata: ["key1": "value1", "key2": ["a", "b", "c"]])
@@ -88,7 +84,6 @@ struct InMemoryLogHandlerTests {
         )
     }
 
-    @available(macOS 15.0, iOS 18.0, tvOS 18.0, watchOS 11.0, *)
     private func makeTestLogger(metadataProvider: Logger.MetadataProvider? = nil) -> (InMemoryLogHandler, Logger) {
         var logHandler = InMemoryLogHandler()
         logHandler.metadataProvider = metadataProvider

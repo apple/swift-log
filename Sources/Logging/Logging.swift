@@ -19,7 +19,7 @@ import CRT
 #elseif canImport(Glibc)
 @preconcurrency import Glibc
 #elseif canImport(Android)
-import Android
+@preconcurrency import Android
 #elseif canImport(Musl)
 import Musl
 #elseif canImport(WASILibc)
@@ -1023,6 +1023,19 @@ extension Logger.Level {
 extension Logger.Level: Comparable {
     public static func < (lhs: Logger.Level, rhs: Logger.Level) -> Bool {
         lhs.naturalIntegralValue < rhs.naturalIntegralValue
+    }
+}
+
+extension Logger.Level: CustomStringConvertible, LosslessStringConvertible {
+    /// A textual representation of the log level.
+    public var description: String {
+        self.rawValue
+    }
+
+    /// Creates a log level from its textual representation.
+    /// - Parameter description: A textual representation of the log level, case insensitive.
+    public init?(_ description: String) {
+        self.init(rawValue: description.lowercased())
     }
 }
 
