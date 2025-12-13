@@ -375,8 +375,10 @@ public class MDC {
         return Int(pthread_mach_thread_np(pthread_self()))
         #elseif os(Windows)
         return Int(GetCurrentThreadId())
-        #elseif os(FreeBSD) || os(OpenBSD)
+        #elseif os(FreeBSD)
         return Int(pthread_getthreadid_np())
+        #elseif os(OpenBSD)
+        return Int(bitPattern: pthread_self())
         #else
         return Int(pthread_self())
         #endif

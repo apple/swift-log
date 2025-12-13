@@ -1312,7 +1312,7 @@ public struct MultiplexLogHandler: LogHandler {
     }
 }
 
-#if canImport(WASILibc) || os(Android)
+#if canImport(WASILibc) || os(Android) || os(OpenBSD)
 internal typealias CFilePointer = OpaquePointer
 #else
 internal typealias CFilePointer = UnsafeMutablePointer<FILE>
