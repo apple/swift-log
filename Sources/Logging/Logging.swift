@@ -102,6 +102,8 @@ extension Logger {
     /// If the `logLevel` passed to this method is more severe than the `Logger`'s ``logLevel``, the library
     /// logs the message, otherwise nothing will happen.
     ///
+    /// NOTE: This method adds a constant overhead over calling level-specific methods.
+    ///
     /// - parameters:
     ///    - level: The severity level of the `message`.
     ///    - message: The message to be logged. The `message` parameter supports any string interpolation literal.
@@ -116,6 +118,66 @@ extension Logger {
     ///            defaults to `#line`.
     @inlinable
     public func log(
+        level: Logger.Level,
+        _ message: @autoclosure () -> Logger.Message,
+        metadata: @autoclosure () -> Logger.Metadata? = nil,
+        source: @autoclosure () -> String? = nil,
+        file: String = #fileID,
+        function: String = #function,
+        line: UInt = #line
+    ) {
+        #if MaxLogLevelDebug || MaxLogLevelInfo || MaxLogLevelNotice || MaxLogLevelWarning || MaxLogLevelError || MaxLogLevelCritical || MaxLogLevelNone
+        // A constant overhead is added for dynamic log level calls if one of the traits is enabled.
+        // This allows picking the necessary implementation with compiled out body in runtime.
+        switch level {
+        case .trace:
+            self.trace(message(), metadata: metadata(), source: source(), file: file, function: function, line: line)
+        case .debug:
+            self.debug(message(), metadata: metadata(), source: source(), file: file, function: function, line: line)
+        case .info:
+            self.info(message(), metadata: metadata(), source: source(), file: file, function: function, line: line)
+        case .notice:
+            self.notice(message(), metadata: metadata(), source: source(), file: file, function: function, line: line)
+        case .warning:
+            self.warning(message(), metadata: metadata(), source: source(), file: file, function: function, line: line)
+        case .error:
+            self.error(message(), metadata: metadata(), source: source(), file: file, function: function, line: line)
+        case .critical:
+            self.critical(message(), metadata: metadata(), source: source(), file: file, function: function, line: line)
+        }
+        #else
+        // If no logs are excluded in the compile time, we can avoid checking the log level that extra time and go log it.
+        self._log(
+            level: level,
+            message(),
+            metadata: metadata(),
+            source: source(),
+            file: file,
+            function: function,
+            line: line
+        )
+        #endif
+    }
+
+    /// Log a message using the log level and source that you provide.
+    ///
+    /// If the `logLevel` passed to this method is more severe than the `Logger`'s ``logLevel``, the library
+    /// logs the message, otherwise nothing will happen.
+    ///
+    /// - parameters:
+    ///    - level: The severity level of the `message`.
+    ///    - message: The message to be logged. The `message` parameter supports any string interpolation literal.
+    ///    - metadata: One-off metadata to attach to this log message.
+    ///    - source: The source this log message originates from. The value defaults
+    ///              to the module that emits the log message.
+    ///    - file: The file this log message originates from. There's usually no need to pass it explicitly, as it
+    ///            defaults to `#fileID`.
+    ///    - function: The function this log message originates from. There's usually no need to pass it explicitly, as
+    ///                it defaults to `#function`.
+    ///    - line: The line this log message originates from. There's usually no need to pass it explicitly, as it
+    ///            defaults to `#line`.
+    @inlinable
+    package func _log(
         level: Logger.Level,
         _ message: @autoclosure () -> Logger.Message,
         metadata: @autoclosure () -> Logger.Metadata? = nil,
@@ -220,7 +282,8 @@ extension Logger {
         function: String = #function,
         line: UInt = #line
     ) {
-        self.log(
+        #if !MaxLogLevelDebug && !MaxLogLevelInfo && !MaxLogLevelNotice && !MaxLogLevelWarning && !MaxLogLevelError && !MaxLogLevelCritical && !MaxLogLevelNone
+        self._log(
             level: .trace,
             message(),
             metadata: metadata(),
@@ -229,6 +292,7 @@ extension Logger {
             function: function,
             line: line
         )
+        #endif
     }
 
     /// Log a message at the 'trace' log level.
@@ -281,7 +345,8 @@ extension Logger {
         function: String = #function,
         line: UInt = #line
     ) {
-        self.log(
+        #if !MaxLogLevelInfo && !MaxLogLevelNotice && !MaxLogLevelWarning && !MaxLogLevelError && !MaxLogLevelCritical && !MaxLogLevelNone
+        self._log(
             level: .debug,
             message(),
             metadata: metadata(),
@@ -290,6 +355,7 @@ extension Logger {
             function: function,
             line: line
         )
+        #endif
     }
 
     /// Log a message at the 'debug' log level.
@@ -342,7 +408,8 @@ extension Logger {
         function: String = #function,
         line: UInt = #line
     ) {
-        self.log(
+        #if !MaxLogLevelNotice && !MaxLogLevelWarning && !MaxLogLevelError && !MaxLogLevelCritical && !MaxLogLevelNone
+        self._log(
             level: .info,
             message(),
             metadata: metadata(),
@@ -351,6 +418,7 @@ extension Logger {
             function: function,
             line: line
         )
+        #endif
     }
 
     /// Log a message at the 'info' log level.
@@ -403,7 +471,8 @@ extension Logger {
         function: String = #function,
         line: UInt = #line
     ) {
-        self.log(
+        #if !MaxLogLevelWarning && !MaxLogLevelError && !MaxLogLevelCritical && !MaxLogLevelNone
+        self._log(
             level: .notice,
             message(),
             metadata: metadata(),
@@ -412,6 +481,7 @@ extension Logger {
             function: function,
             line: line
         )
+        #endif
     }
 
     /// Log a message at the 'notice' log level.
@@ -464,7 +534,8 @@ extension Logger {
         function: String = #function,
         line: UInt = #line
     ) {
-        self.log(
+        #if !MaxLogLevelError && !MaxLogLevelCritical && !MaxLogLevelNone
+        self._log(
             level: .warning,
             message(),
             metadata: metadata(),
@@ -473,6 +544,7 @@ extension Logger {
             function: function,
             line: line
         )
+        #endif
     }
 
     /// Log a message at the 'warning' log level.
@@ -525,7 +597,8 @@ extension Logger {
         function: String = #function,
         line: UInt = #line
     ) {
-        self.log(
+        #if !MaxLogLevelCritical && !MaxLogLevelNone
+        self._log(
             level: .error,
             message(),
             metadata: metadata(),
@@ -534,6 +607,7 @@ extension Logger {
             function: function,
             line: line
         )
+        #endif
     }
 
     /// Log a message at the 'error' log level.
@@ -586,7 +660,8 @@ extension Logger {
         function: String = #function,
         line: UInt = #line
     ) {
-        self.log(
+        #if !MaxLogLevelNone
+        self._log(
             level: .critical,
             message(),
             metadata: metadata(),
@@ -595,6 +670,7 @@ extension Logger {
             function: function,
             line: line
         )
+        #endif
     }
 
     /// Log a message at the 'critical' log level.
