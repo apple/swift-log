@@ -1,4 +1,4 @@
-# Metadata Providers
+# SLG-0001: Metadata Providers
 
 While global metadata attributes may be manually set on a `LogHandler` level, there's currently no way of reliably providing contextual, automatically propagated, metadata when logging with swift-log.
 
