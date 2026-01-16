@@ -443,13 +443,13 @@ struct LoggingTest {
         private var makeValue: (() -> String)?
         private var _value: String?
 
-        public init(_ makeValue: @escaping () -> String) {
+        init(_ makeValue: @escaping () -> String) {
             self.makeValue = makeValue
         }
 
         /// This allows caching a value in case it is accessed via an by name subscript,
         // rather than as part of rendering all metadata that a LoggingContext was carrying
-        public var value: String {
+        var value: String {
             if let f = self.makeValue {
                 self._value = f()
                 self.makeValue = nil
@@ -459,7 +459,7 @@ struct LoggingTest {
             return self._value!
         }
 
-        public var description: String {
+        var description: String {
             "\(self.value)"
         }
     }
@@ -1292,7 +1292,7 @@ struct LoggingTest {
         LoggingSystem.bootstrap { (label: String) in StreamLogHandler.standardOutput(label: label) }
         LoggingSystem.bootstrap { (label: String) in StreamLogHandler.standardError(label: label) }
 
-        // with metadata handler, explicitly, public api
+        // with metadata handler, explicitly, api
         LoggingSystem.bootstrap(
             { label, metadataProvider in
                 StreamLogHandler.standardOutput(label: label, metadataProvider: metadataProvider)
@@ -1337,7 +1337,7 @@ struct LoggingTest {
 }
 
 extension Logger {
-    public func error(
+    func error(
         error: any Error,
         metadata: @autoclosure () -> Logger.Metadata? = nil,
         file: String = #fileID,

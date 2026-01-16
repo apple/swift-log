@@ -712,7 +712,7 @@ extension Logger {
 ///
 /// The default (``StreamLogHandler``) is intended to be a convenience.
 /// For production applications, implement the ``LogHandler`` protocol directly, or use a community-maintained backend.
-public enum LoggingSystem {
+public enum LoggingSystem: Sendable {
     private static let _factory = FactoryBox(
         { label, _ in StreamLogHandler.standardError(label: label) },
         violationErrorMesage: "logging system can only be initialized once per process."
