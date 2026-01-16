@@ -28,7 +28,7 @@ import WASILibc
 #error("Unsupported runtime")
 #endif
 
-@preconcurrency protocol _SwiftLogSendable: Sendable {}
+protocol _SwiftLogSendable: Sendable {}
 
 extension Logger {
     /// A MetadataProvider automatically injects runtime-generated metadata

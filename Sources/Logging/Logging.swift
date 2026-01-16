@@ -734,7 +734,6 @@ public enum LoggingSystem: Sendable {
     ///
     /// - parameters:
     ///     - factory: A closure that provides a ``Logger`` label identifier and produces an instance of the ``LogHandler``.
-    @preconcurrency
     public static func bootstrap(_ factory: @escaping @Sendable (String) -> any LogHandler) {
         self._factory.replace(
             { label, _ in
@@ -753,7 +752,6 @@ public enum LoggingSystem: Sendable {
     /// - parameters:
     ///     - metadataProvider: The `MetadataProvider` used to inject runtime-generated metadata from the execution context.
     ///     - factory: A closure that provides a ``Logger`` label identifier and produces an instance of the ``LogHandler``.
-    @preconcurrency
     public static func bootstrap(
         _ factory: @escaping @Sendable (String, Logger.MetadataProvider?) -> any LogHandler,
         metadataProvider: Logger.MetadataProvider?
