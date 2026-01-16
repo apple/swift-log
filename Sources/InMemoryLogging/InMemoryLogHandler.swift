@@ -12,7 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Logging
+public import Logging
 
 /// A custom log handler which just collects logs into memory.
 /// You can then retrieve an array of those log entries.
