@@ -712,7 +712,7 @@ extension Logger {
 ///
 /// The default (``StreamLogHandler``) is intended to be a convenience.
 /// For production applications, implement the ``LogHandler`` protocol directly, or use a community-maintained backend.
-public enum LoggingSystem {
+public enum LoggingSystem: Sendable {
     private static let _factory = FactoryBox(
         { label, _ in StreamLogHandler.standardError(label: label) },
         violationErrorMesage: "logging system can only be initialized once per process."
@@ -734,7 +734,6 @@ public enum LoggingSystem {
     ///
     /// - parameters:
     ///     - factory: A closure that provides a ``Logger`` label identifier and produces an instance of the ``LogHandler``.
-    @preconcurrency
     public static func bootstrap(_ factory: @escaping @Sendable (String) -> any LogHandler) {
         self._factory.replace(
             { label, _ in
@@ -753,7 +752,6 @@ public enum LoggingSystem {
     /// - parameters:
     ///     - metadataProvider: The `MetadataProvider` used to inject runtime-generated metadata from the execution context.
     ///     - factory: A closure that provides a ``Logger`` label identifier and produces an instance of the ``LogHandler``.
-    @preconcurrency
     public static func bootstrap(
         _ factory: @escaping @Sendable (String, Logger.MetadataProvider?) -> any LogHandler,
         metadataProvider: Logger.MetadataProvider?

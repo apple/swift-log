@@ -287,4 +287,4 @@ extension LogHandler {
 
 // MARK: - Sendable support helpers
 
-@preconcurrency public protocol _SwiftLogSendableLogHandler: Sendable {}
+public protocol _SwiftLogSendableLogHandler: Sendable {}
