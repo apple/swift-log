@@ -23,6 +23,7 @@ let package = Package(
     products: [
         .library(name: "Logging", targets: ["Logging"]),
         .library(name: "InMemoryLogging", targets: ["InMemoryLogging"]),
+        .library(name: "OSLogLogHandler", targets: ["OSLogLogHandler"]),
     ],
     traits: [
         .trait(name: "MaxLogLevelDebug", description: "Debug and above available (compiles out trace)"),
@@ -51,6 +52,10 @@ let package = Package(
             name: "InMemoryLogging",
             dependencies: ["Logging"]
         ),
+        .target(
+            name: "OSLogLogHandler",
+            dependencies: ["Logging"]
+        ),
         .testTarget(
             name: "LoggingTests",
             dependencies: ["Logging"]
@@ -58,6 +63,10 @@ let package = Package(
         .testTarget(
             name: "InMemoryLoggingTests",
             dependencies: ["InMemoryLogging", "Logging"]
+        ),
+        .testTarget(
+            name: "OSLogLogHandlerTests",
+            dependencies: ["OSLogLogHandler", "Logging"]
         ),
     ]
 )
