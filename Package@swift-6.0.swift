@@ -41,24 +41,24 @@ let package = Package(
     ]
 )
 
-for target in package.targets {
+for target in package.targets
+where [.executable, .test, .regular].contains(
+    target.type
+) {
     var settings = target.swiftSettings ?? []
-    settings.append(.enableExperimentalFeature("StrictConcurrency=complete"))
+
+    // https://github.com/apple/swift-evolution/blob/main/proposals/0335-existential-any.md
+    // Require `any` for existential types.
+    settings.append(.enableUpcomingFeature("ExistentialAny"))
+
+    // https://github.com/swiftlang/swift-evolution/blob/main/proposals/0444-member-import-visibility.md
+    settings.append(.enableUpcomingFeature("MemberImportVisibility"))
+
+    // https://github.com/swiftlang/swift-evolution/blob/main/proposals/0409-access-level-on-imports.md
+    settings.append(.enableUpcomingFeature("InternalImportsByDefault"))
+
+    // https://docs.swift.org/compiler/documentation/diagnostics/nonisolated-nonsending-by-default/
+    settings.append(.enableUpcomingFeature("NonisolatedNonsendingByDefault"))
+
     target.swiftSettings = settings
 }
-
-// ---    STANDARD CROSS-REPO SETTINGS DO NOT EDIT   --- //
-for target in package.targets {
-    switch target.type {
-    case .regular, .test, .executable:
-        var settings = target.swiftSettings ?? []
-        // https://github.com/swiftlang/swift-evolution/blob/main/proposals/0444-member-import-visibility.md
-        settings.append(.enableUpcomingFeature("MemberImportVisibility"))
-        target.swiftSettings = settings
-    case .macro, .plugin, .system, .binary:
-        ()  // not applicable
-    @unknown default:
-        ()  // we don't know what to do here, do nothing
-    }
-}
-// --- END: STANDARD CROSS-REPO SETTINGS DO NOT EDIT --- //
