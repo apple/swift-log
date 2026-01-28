@@ -51,6 +51,8 @@ logger.info("User action", attributedMetadata: [
 ])
 ```
 
+This allows `Logger` users to mark certain metadata values as "I only trust LogHandlers, who know how to handle sensitive data, to see this value".
+
 ### Detailed design
 
 #### Attributed Metadata
