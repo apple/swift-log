@@ -153,6 +153,7 @@ extension Logger {
             ///     "ip": "\(ipAddress, privacy: .private)"
             /// ])
             /// ```
+            @frozen
             public enum PrivacyLevel: String, CustomStringConvertible, Hashable, Sendable, CaseIterable, Codable {
                 /// Private data that should be redacted in non-secure contexts.
                 case `private` = "private"
