@@ -232,8 +232,8 @@ extension Logger {
             message(),
             metadata: {
                 var metadata = metadata() ?? Metadata()
-                metadata["error.message"] = "\(error)"
-                metadata["error.type"] = "\(String(reflecting: type(of: error)))"
+                metadata[WellKnownMetadataKey.errorMessage.rawValue] = "\(error)"
+                metadata[WellKnownMetadataKey.errorType.rawValue] = "\(String(reflecting: type(of: error)))"
                 return metadata
             }(),
             source: source(),
@@ -1203,6 +1203,14 @@ public enum LoggingSystem {
 }
 
 extension Logger {
+    /// Metadata keys with specific use-cases
+    public enum WellKnownMetadataKey: String {
+        /// If an `Error` is passed to ``Logger/log(level:_:error:metadata:source:file:function:line:)``, this metadata entry will contain its string representation
+        case errorMessage = "error.message"
+        /// If an `Error` is passed to ``Logger/log(level:_:error:metadata:source:file:function:line:)``, this metadata entry will contain its fully qualified type name
+        case errorType = "error.type"
+    }
+
     /// The type of the metadata storage.
     ///
     /// `Metadata` is a typealias for `[String: Logger.MetadataValue]` the type of the metadata storage.
