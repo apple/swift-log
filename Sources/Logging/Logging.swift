@@ -232,8 +232,8 @@ extension Logger {
             message(),
             metadata: {
                 var metadata = metadata() ?? Metadata()
-                metadata[WellKnownMetadataKey.errorMessage.rawValue] = "\(error)"
-                metadata[WellKnownMetadataKey.errorType.rawValue] = "\(String(reflecting: type(of: error)))"
+                metadata[WellKnownMetadataKey.errorMessage] = "\(error)"
+                metadata[WellKnownMetadataKey.errorType] = "\(String(reflecting: type(of: error)))"
                 return metadata
             }(),
             source: source(),
@@ -268,6 +268,15 @@ extension Logger {
         line: UInt = #line
     ) {
         self.log(level: level, message(), metadata: metadata(), source: nil, file: file, function: function, line: line)
+    }
+
+    /// Add an error as logging metadata.
+    ///
+    /// > Note: Changing the logging metadata only affects the instance of the `Logger` where you change it.
+    @inlinable
+    public mutating func recordError(_ error: any Error) {
+        self[metadataKey: "error.type"] = "\(String(reflecting: type(of: error)))"
+        self[metadataKey: "error.message"] = "\(error)"
     }
 
     /// Add, change, or remove a logging metadata item.
@@ -321,7 +330,7 @@ extension Logger {
     @inlinable
     public func trace(
         _ message: @autoclosure () -> Logger.Message,
-        error: Error,
+        error: any Error,
         metadata: @autoclosure () -> Logger.Metadata? = nil,
         source: @autoclosure () -> String? = nil,
         file: String = #fileID,
@@ -423,7 +432,7 @@ extension Logger {
     @inlinable
     public func debug(
         _ message: @autoclosure () -> Logger.Message,
-        error: Error,
+        error: any Error,
         metadata: @autoclosure () -> Logger.Metadata? = nil,
         source: @autoclosure () -> String? = nil,
         file: String = #fileID,
@@ -525,7 +534,7 @@ extension Logger {
     @inlinable
     public func info(
         _ message: @autoclosure () -> Logger.Message,
-        error: Error,
+        error: any Error,
         metadata: @autoclosure () -> Logger.Metadata? = nil,
         source: @autoclosure () -> String? = nil,
         file: String = #fileID,
@@ -627,7 +636,7 @@ extension Logger {
     @inlinable
     public func notice(
         _ message: @autoclosure () -> Logger.Message,
-        error: Error,
+        error: any Error,
         metadata: @autoclosure () -> Logger.Metadata? = nil,
         source: @autoclosure () -> String? = nil,
         file: String = #fileID,
@@ -729,7 +738,7 @@ extension Logger {
     @inlinable
     public func warning(
         _ message: @autoclosure () -> Logger.Message,
-        error: Error,
+        error: any Error,
         metadata: @autoclosure () -> Logger.Metadata? = nil,
         source: @autoclosure () -> String? = nil,
         file: String = #fileID,
@@ -831,7 +840,7 @@ extension Logger {
     @inlinable
     public func error(
         _ message: @autoclosure () -> Logger.Message,
-        error: Error,
+        error: any Error,
         metadata: @autoclosure () -> Logger.Metadata? = nil,
         source: @autoclosure () -> String? = nil,
         file: String = #fileID,
@@ -933,7 +942,7 @@ extension Logger {
     @inlinable
     public func critical(
         _ message: @autoclosure () -> Logger.Message,
-        error: Error,
+        error: any Error,
         metadata: @autoclosure () -> Logger.Metadata? = nil,
         source: @autoclosure () -> String? = nil,
         file: String = #fileID,
@@ -1204,11 +1213,13 @@ public enum LoggingSystem {
 
 extension Logger {
     /// Metadata keys with specific use-cases
-    public enum WellKnownMetadataKey: String {
-        /// If an `Error` is passed to ``Logger/log(level:_:error:metadata:source:file:function:line:)``, this metadata entry will contain its string representation
-        case errorMessage = "error.message"
-        /// If an `Error` is passed to ``Logger/log(level:_:error:metadata:source:file:function:line:)``, this metadata entry will contain its fully qualified type name
-        case errorType = "error.type"
+    public struct WellKnownMetadataKey {
+        /// If an `Error` is passed to ``Logger/log(level:_:error:metadata:source:file:function:line:)``,
+        /// this metadata entry will contain its string representation
+        public static let errorMessage = "error.message"
+        /// If an `Error` is passed to ``Logger/log(level:_:error:metadata:source:file:function:line:)``,
+        /// this metadata entry will contain its fully qualified type name
+        public static let errorType = "error.type"
     }
 
     /// The type of the metadata storage.
