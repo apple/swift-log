@@ -74,13 +74,13 @@ extension Logger.MetadataProvider {
     }
 }
 
-public struct LogHandlerThatDidNotImplementMetadataProviders: LogHandler {
+struct LogHandlerThatDidNotImplementMetadataProviders: LogHandler {
     let testLogging: TestLogging
     init(testLogging: TestLogging) {
         self.testLogging = testLogging
     }
 
-    public subscript(metadataKey _: String) -> Logging.Logger.Metadata.Value? {
+    subscript(metadataKey _: String) -> Logging.Logger.Metadata.Value? {
         get {
             nil
         }
@@ -89,11 +89,11 @@ public struct LogHandlerThatDidNotImplementMetadataProviders: LogHandler {
         }
     }
 
-    public var metadata: Logging.Logger.Metadata = [:]
+    var metadata: Logging.Logger.Metadata = [:]
 
-    public var logLevel: Logging.Logger.Level = .trace
+    var logLevel: Logging.Logger.Level = .trace
 
-    public func log(
+    func log(
         level: Logger.Level,
         message: Logger.Message,
         metadata: Logger.Metadata?,
@@ -114,13 +114,13 @@ public struct LogHandlerThatDidNotImplementMetadataProviders: LogHandler {
     }
 }
 
-public struct LogHandlerThatDidImplementMetadataProviders: LogHandler {
+struct LogHandlerThatDidImplementMetadataProviders: LogHandler {
     let testLogging: TestLogging
     init(testLogging: TestLogging) {
         self.testLogging = testLogging
     }
 
-    public subscript(metadataKey _: String) -> Logging.Logger.Metadata.Value? {
+    subscript(metadataKey _: String) -> Logging.Logger.Metadata.Value? {
         get {
             nil
         }
@@ -129,13 +129,13 @@ public struct LogHandlerThatDidImplementMetadataProviders: LogHandler {
         }
     }
 
-    public var metadata: Logging.Logger.Metadata = [:]
+    var metadata: Logging.Logger.Metadata = [:]
 
-    public var logLevel: Logging.Logger.Level = .trace
+    var logLevel: Logging.Logger.Level = .trace
 
-    public var metadataProvider: Logger.MetadataProvider?
+    var metadataProvider: Logger.MetadataProvider?
 
-    public func log(
+    func log(
         level: Logger.Level,
         message: Logger.Message,
         metadata: Logger.Metadata?,

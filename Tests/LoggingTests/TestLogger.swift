@@ -54,7 +54,7 @@ internal struct TestLogHandler: LogHandler {
     private var logger: Logger  // the actual logger
 
     let label: String
-    public var metadataProvider: Logger.MetadataProvider?
+    var metadataProvider: Logger.MetadataProvider?
 
     init(label: String, config: Config, recorder: Recorder, metadataProvider: Logger.MetadataProvider?) {
         self.label = label
@@ -125,7 +125,7 @@ internal struct TestLogHandler: LogHandler {
         }
     }
 
-    public var metadata: Logger.Metadata {
+    var metadata: Logger.Metadata {
         get {
             self._metadata
         }
@@ -303,15 +303,15 @@ extension History {
 }
 
 /// MDC stands for Mapped Diagnostic Context
-public class MDC {
+class MDC {
     private let lock = NSLock()
     private var storage = [Int: Logger.Metadata]()
 
-    public static let global = MDC()
+    static let global = MDC()
 
     private init() {}
 
-    public subscript(metadataKey: String) -> Logger.Metadata.Value? {
+    subscript(metadataKey: String) -> Logger.Metadata.Value? {
         get {
             self.lock.withLock {
                 self.storage[self.threadId]?[metadataKey]
@@ -327,19 +327,19 @@ public class MDC {
         }
     }
 
-    public var metadata: Logger.Metadata {
+    var metadata: Logger.Metadata {
         self.lock.withLock {
             self.storage[self.threadId] ?? [:]
         }
     }
 
-    public func clear() {
+    func clear() {
         self.lock.withLock {
             _ = self.storage.removeValue(forKey: self.threadId)
         }
     }
 
-    public func with(metadata: Logger.Metadata, _ body: () throws -> Void) rethrows {
+    func with(metadata: Logger.Metadata, _ body: () throws -> Void) rethrows {
         for (key, value) in metadata {
             self[key] = value
         }
@@ -351,7 +351,7 @@ public class MDC {
         try body()
     }
 
-    public func with<T>(metadata: Logger.Metadata, _ body: () throws -> T) rethrows -> T {
+    func with<T>(metadata: Logger.Metadata, _ body: () throws -> T) rethrows -> T {
         for (key, value) in metadata {
             self[key] = value
         }
@@ -389,13 +389,13 @@ internal struct TestLibrary: Sendable {
     private let logger = Logger(label: "TestLibrary")
     private let queue = DispatchQueue(label: "TestLibrary")
 
-    public init() {}
+    init() {}
 
-    public func doSomething() {
+    func doSomething() {
         self.logger.info("TestLibrary::doSomething")
     }
 
-    public func doSomethingAsync(completion: @escaping @Sendable () -> Void) {
+    func doSomethingAsync(completion: @escaping @Sendable () -> Void) {
         // libraries that use global loggers and async, need to make sure they propagate the
         // logging metadata when creating a new thread
         let metadata = MDC.global.metadata
