@@ -2,7 +2,7 @@
 //
 // This source file is part of the Swift Logging API open source project
 //
-// Copyright (c) 2018-2019 Apple Inc. and the Swift Logging API project authors
+// Copyright (c) 2018-2026 Apple Inc. and the Swift Logging API project authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
@@ -16,7 +16,7 @@
 //
 // This source file is part of the SwiftNIO open source project
 //
-// Copyright (c) 2017-2018 Apple Inc. and the SwiftNIO project authors
+// Copyright (c) 2017-2026 Apple Inc. and the SwiftNIO project authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
@@ -61,7 +61,7 @@ package final class Lock {
     #elseif os(FreeBSD) || os(OpenBSD)
     fileprivate let mutex: UnsafeMutablePointer<pthread_mutex_t?> =
         UnsafeMutablePointer.allocate(capacity: 1)
-    #else
+    #elseif (compiler(<6.1) && !os(WASI)) || (compiler(>=6.1) && _runtime(_multithreaded))
     fileprivate let mutex: UnsafeMutablePointer<pthread_mutex_t> =
         UnsafeMutablePointer.allocate(capacity: 1)
     #endif
@@ -76,7 +76,8 @@ package final class Lock {
         #else
         var attr = pthread_mutexattr_t()
         #endif
-        pthread_mutexattr_init(&attr)
+        var err = pthread_mutexattr_init(&attr)
+        precondition(err == 0, "\(#function) failed in pthread_mutexattr_init with error \(err)")
         debugOnly {
             #if os(FreeBSD) || os(OpenBSD)
             pthread_mutexattr_settype(&attr, .init(PTHREAD_MUTEX_ERRORCHECK.rawValue))
@@ -85,19 +86,25 @@ package final class Lock {
             #endif
         }
 
-        let err = pthread_mutex_init(self.mutex, &attr)
+        err = pthread_mutex_init(self.mutex, &attr)
         precondition(err == 0, "\(#function) failed in pthread_mutex with error \(err)")
+        // `pthread_mutexattr_t` only lives during init; destroy here instead of deinit.
+        let attrDestroyErr = pthread_mutexattr_destroy(&attr)
+        precondition(
+            attrDestroyErr == 0,
+            "\(#function) failed in pthread_mutexattr_destroy with error \(attrDestroyErr)"
+        )
         #endif
     }
 
     deinit {
         #if os(Windows)
-        // SRWLOCK does not need to be free'd
+        mutex.deallocate()
         #elseif (compiler(<6.1) && !os(WASI)) || (compiler(>=6.1) && _runtime(_multithreaded))
         let err = pthread_mutex_destroy(self.mutex)
         precondition(err == 0, "\(#function) failed in pthread_mutex with error \(err)")
-        #endif
         mutex.deallocate()
+        #endif
     }
 
     /// Acquire the lock.
@@ -200,7 +207,6 @@ internal final class ReadWriteLock: @unchecked Sendable {
 
     deinit {
         #if os(Windows)
-        // SRWLOCK does not need to be free'd
         self.rwlock.deallocate()
         #elseif (compiler(<6.1) && !os(WASI)) || (compiler(>=6.1) && _runtime(_multithreaded))
         let err = pthread_rwlock_destroy(self.rwlock)
