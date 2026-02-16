@@ -75,8 +75,5 @@ where [.executable, .test, .regular].contains(
     // https://github.com/swiftlang/swift-evolution/blob/main/proposals/0409-access-level-on-imports.md
     settings.append(.enableUpcomingFeature("InternalImportsByDefault"))
 
-    // https://docs.swift.org/compiler/documentation/diagnostics/nonisolated-nonsending-by-default/
-    settings.append(.enableUpcomingFeature("NonisolatedNonsendingByDefault"))
-
     target.swiftSettings = settings
 }
