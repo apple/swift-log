@@ -295,15 +295,6 @@ extension Logger {
 
 ```swift
 protocol LogHandler {
-    @available(
-        *,
-        deprecated,
-        message: "Use generalized log(level:message:attributedMetadata:source:file:function:line:) instead."
-    )
-    func log(level: Logger.Level, message: Logger.Message,
-            metadata: Logger.Metadata?, source: String,
-            file: String, function: String, line: UInt)
-
     func log(level: Logger.Level, message: Logger.Message,
             attributedMetadata: Logger.AttributedMetadata?, source: String,
             file: String, function: String, line: UInt)

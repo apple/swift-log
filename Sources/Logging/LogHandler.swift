@@ -150,11 +150,6 @@ public protocol LogHandler: _SwiftLogSendableLogHandler {
     ///   - file: The file this log message originates from.
     ///   - function: The function this log message originates from.
     ///   - line: The line this log message originates from.
-    @available(
-        *,
-        deprecated,
-        message: "Use generalized log(level:message:attributedMetadata:source:file:function:line:) instead."
-    )
     func log(
         level: Logger.Level,
         message: Logger.Message,
@@ -230,14 +225,12 @@ public protocol LogHandler: _SwiftLogSendableLogHandler {
     ///
     /// - parameters:
     ///    - metadataKey: The key for the metadata item
-    @available(*, deprecated, message: "Use generalized subscript(attributedMetadataKey:) instead.")
     subscript(metadataKey _: String) -> Logger.Metadata.Value? { get set }
 
     /// Get or set the entire metadata storage as a dictionary.
     ///
     /// - note: `LogHandler`s must treat logging metadata as a value type. This means that the change in metadata must
     ///         only affect this very `LogHandler`.
-    @available(*, deprecated, message: "Use generalized attributedMetadata instead.")
     var metadata: Logger.Metadata { get set }
 
     /// Add, remove, or change the attributed logging metadata.
