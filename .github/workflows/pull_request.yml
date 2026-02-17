@@ -34,12 +34,6 @@ jobs:
       windows_nightly_next_arguments_override: "--explicit-target-dependency-import-check error -Xswiftc -require-explicit-sendable"
       windows_nightly_main_arguments_override: "--explicit-target-dependency-import-check error -Xswiftc -require-explicit-sendable"
 
-  benchmarks:
-    name: Benchmarks (NoTraits)
-    uses: apple/swift-nio/.github/workflows/benchmarks.yml@main
-    with:
-      benchmark_package_path: "Benchmarks/NoTraits"
-
   macos-benchmarks:
     name: macOS benchmarks (NoTraits)
     uses: apple/swift-nio/.github/workflows/macos_benchmarks.yml@main
@@ -48,14 +42,6 @@ jobs:
       macos_runner_pool: general
       macos_xcode_16_4_enabled: true
       macos_xcode_26_1_enabled: true
-
-  benchmarks-MaxLogLevelWarningBenchmarks-trait:
-    name: Benchmarks (MaxLogLevelWarning)
-    # Workaround for reusing the same benchmarks.yml workflow
-    needs: benchmarks
-    uses: apple/swift-nio/.github/workflows/benchmarks.yml@main
-    with:
-      benchmark_package_path: "Benchmarks/MaxLogLevelWarning"
 
   macos-benchmarks-MaxLogLevelWarningBenchmarks-trait:
     name: macOS benchmarks (MaxLogLevelWarning)
