@@ -1067,7 +1067,7 @@ extension Logger {
 ///
 /// The default (``StreamLogHandler``) is intended to be a convenience.
 /// For production applications, implement the ``LogHandler`` protocol directly, or use a community-maintained backend.
-public enum LoggingSystem {
+public enum LoggingSystem: Sendable {
     private static let _factory = FactoryBox(
         { label, _ in StreamLogHandler.standardError(label: label) },
         violationErrorMesage: "logging system can only be initialized once per process."
@@ -1897,7 +1897,7 @@ public struct MultiplexLogHandler: LogHandler {
     }
 }
 
-#if canImport(WASILibc) || os(Android)
+#if canImport(WASILibc) || os(Android) || os(OpenBSD)
 internal typealias CFilePointer = OpaquePointer
 #else
 internal typealias CFilePointer = UnsafeMutablePointer<FILE>
@@ -1953,7 +1953,11 @@ internal struct StdioOutputStream: TextOutputStream, @unchecked Sendable {
         #elseif os(Windows)
         let systemStderr = CRT.stderr
         #elseif canImport(Glibc)
+        #if os(FreeBSD) || os(OpenBSD)
+        let systemStderr = Glibc.stderr
+        #else
         let systemStderr = Glibc.stderr!
+        #endif
         #elseif canImport(Android)
         let systemStderr = Android.stderr
         #elseif canImport(Musl)
@@ -1973,7 +1977,11 @@ internal struct StdioOutputStream: TextOutputStream, @unchecked Sendable {
         #elseif os(Windows)
         let systemStdout = CRT.stdout
         #elseif canImport(Glibc)
+        #if os(FreeBSD) || os(OpenBSD)
+        let systemStdout = Glibc.stdout
+        #else
         let systemStdout = Glibc.stdout!
+        #endif
         #elseif canImport(Android)
         let systemStdout = Android.stdout
         #elseif canImport(Musl)

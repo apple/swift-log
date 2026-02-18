@@ -1,4 +1,4 @@
-// swift-tools-version:6.2
+// swift-tools-version:6.1
 //===----------------------------------------------------------------------===//
 //
 // This source file is part of the Swift Logging API open source project
@@ -20,7 +20,6 @@ let package = Package(
     products: [
         .library(name: "Logging", targets: ["Logging"]),
         .library(name: "InMemoryLogging", targets: ["InMemoryLogging"]),
-        .library(name: "OSLogLogHandler", targets: ["OSLogLogHandler"]),
     ],
     traits: [
         .trait(name: "MaxLogLevelDebug", description: "Debug and above available (compiles out trace)"),
@@ -49,10 +48,6 @@ let package = Package(
             name: "InMemoryLogging",
             dependencies: ["Logging"]
         ),
-        .target(
-            name: "OSLogLogHandler",
-            dependencies: ["Logging"]
-        ),
         .testTarget(
             name: "LoggingTests",
             dependencies: ["Logging"]
@@ -60,10 +55,6 @@ let package = Package(
         .testTarget(
             name: "InMemoryLoggingTests",
             dependencies: ["InMemoryLogging", "Logging"]
-        ),
-        .testTarget(
-            name: "OSLogLogHandlerTests",
-            dependencies: ["OSLogLogHandler", "Logging"]
         ),
     ]
 )
@@ -83,12 +74,6 @@ where [.executable, .test, .regular].contains(
 
     // https://github.com/swiftlang/swift-evolution/blob/main/proposals/0409-access-level-on-imports.md
     settings.append(.enableUpcomingFeature("InternalImportsByDefault"))
-
-    // https://docs.swift.org/compiler/documentation/diagnostics/nonisolated-nonsending-by-default/
-    settings.append(.enableUpcomingFeature("NonisolatedNonsendingByDefault"))
-
-    // Ensure all public types are explicitly annotated as Sendable or not Sendable.
-    settings.append(.unsafeFlags(["-Xfrontend", "-require-explicit-sendable"]))
 
     target.swiftSettings = settings
 }
