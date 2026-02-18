@@ -226,6 +226,80 @@ extension Logger {
         self.log(level: level, message(), metadata: metadata(), source: nil, file: file, function: function, line: line)
     }
 
+    /// Log a message using the log level and attributed metadata that you provide.
+    ///
+    /// If the `logLevel` passed to this method is more severe than the `Logger`'s ``logLevel``, the library
+    /// logs the message, otherwise nothing will happen.
+    ///
+    /// - parameters:
+    ///    - level: The log level to log the `message`.
+    ///    - message: The message to be logged. The `message` parameter supports any string interpolation literal.
+    ///    - attributedMetadata: One-off attributed metadata to attach to this log message.
+    ///    - source: The source this log message originates from.
+    ///    - file: The file this log message originates from. There's usually no need to pass it explicitly, as it
+    ///            defaults to `#fileID`.
+    ///    - function: The function this log message originates from. There's usually no need to pass it explicitly, as
+    ///                it defaults to `#function`.
+    ///    - line: The line this log message originates from. There's usually no need to pass it explicitly, as it
+    ///            defaults to `#line`.
+    @inlinable
+    public func log(
+        level: Logger.Level,
+        _ message: @autoclosure () -> Logger.Message,
+        attributedMetadata: @autoclosure () -> Logger.AttributedMetadata?,
+        source: @autoclosure () -> String? = nil,
+        file: String = #fileID,
+        function: String = #function,
+        line: UInt = #line
+    ) {
+        if self.logLevel <= level {
+            self.handler.log(
+                level: level,
+                message: message(),
+                attributedMetadata: attributedMetadata(),
+                source: source() ?? Logger.currentModule(fileID: (file)),
+                file: file,
+                function: function,
+                line: line
+            )
+        }
+    }
+
+    /// Log a message using the log level and attributed metadata that you provide.
+    ///
+    /// If the `logLevel` passed to this method is more severe than the `Logger`'s ``logLevel``, the library
+    /// logs the message, otherwise nothing will happen.
+    ///
+    /// - parameters:
+    ///    - level: The log level to log the `message`.
+    ///    - message: The message to be logged. The `message` parameter supports any string interpolation literal.
+    ///    - attributedMetadata: One-off attributed metadata to attach to this log message.
+    ///    - file: The file this log message originates from. There's usually no need to pass it explicitly, as it
+    ///            defaults to `#fileID`.
+    ///    - function: The function this log message originates from. There's usually no need to pass it explicitly, as
+    ///                it defaults to `#function`.
+    ///    - line: The line this log message originates from. There's usually no need to pass it explicitly, as it
+    ///            defaults to `#line`.
+    @inlinable
+    public func log(
+        level: Logger.Level,
+        _ message: @autoclosure () -> Logger.Message,
+        attributedMetadata: @autoclosure () -> Logger.AttributedMetadata?,
+        file: String = #fileID,
+        function: String = #function,
+        line: UInt = #line
+    ) {
+        self.log(
+            level: level,
+            message(),
+            attributedMetadata: attributedMetadata(),
+            source: nil,
+            file: file,
+            function: function,
+            line: line
+        )
+    }
+
     /// Add, change, or remove a logging metadata item.
     ///
     /// > Note: Changing the logging metadata only affects the instance of the `Logger` where you change it.
@@ -236,6 +310,32 @@ extension Logger {
         }
         set {
             self.handler[metadataKey: metadataKey] = newValue
+        }
+    }
+
+    /// Add, change, or remove an attributed logging metadata item.
+    ///
+    /// > Note: Changing the attributed logging metadata only affects the instance of the `Logger` where you change it.
+    @inlinable
+    public subscript(attributedMetadataKey attributedMetadataKey: String) -> Logger.AttributedMetadataValue? {
+        get {
+            self.handler[attributedMetadataKey: attributedMetadataKey]
+        }
+        set {
+            self.handler[attributedMetadataKey: attributedMetadataKey] = newValue
+        }
+    }
+
+    /// Get or set the entire attributed metadata storage as a dictionary.
+    ///
+    /// > Note: Changing the attributed metadata only affects the instance of the `Logger` where you change it.
+    @inlinable
+    public var attributedMetadata: Logger.AttributedMetadata {
+        get {
+            self.handler.attributedMetadata
+        }
+        set {
+            self.handler.attributedMetadata = newValue
         }
     }
 
@@ -697,6 +797,261 @@ extension Logger {
     ) {
         self.critical(message(), metadata: metadata(), source: nil, file: file, function: function, line: line)
     }
+
+    // MARK: - Attributed Metadata Convenience Methods
+
+    /// Log a message at the 'trace' log level with attributed metadata and the source that you provide.
+    ///
+    /// If ``Level/trace`` is at least as severe as this logger's ``logLevel`` the system logs the message;
+    /// otherwise nothing will happen.
+    ///
+    /// - parameters:
+    ///    - message: The message to be logged. The `message` parameter supports any string interpolation literal.
+    ///    - attributedMetadata: One-off attributed metadata to attach to this log message.
+    ///    - source: The source this log message originates from. The value defaults
+    ///              to the module that emits the log message.
+    ///    - file: The file this log message originates from. There's usually no need to pass it explicitly, as it
+    ///            defaults to `#fileID`.
+    ///    - function: The function this log message originates from. There's usually no need to pass it explicitly, as
+    ///                it defaults to `#function`.
+    ///    - line: The line this log message originates from. There's usually no need to pass it explicitly, as it
+    ///            defaults to `#line`.
+    @inlinable
+    public func trace(
+        _ message: @autoclosure () -> Logger.Message,
+        attributedMetadata: @autoclosure () -> Logger.AttributedMetadata?,
+        source: @autoclosure () -> String? = nil,
+        file: String = #fileID,
+        function: String = #function,
+        line: UInt = #line
+    ) {
+        self.log(
+            level: .trace,
+            message(),
+            attributedMetadata: attributedMetadata(),
+            source: source(),
+            file: file,
+            function: function,
+            line: line
+        )
+    }
+
+    /// Log a message at the 'debug' log level with attributed metadata and the source that you provide.
+    ///
+    /// If ``Level/debug`` is at least as severe as this logger's ``logLevel`` the system logs the message;
+    /// otherwise nothing will happen.
+    ///
+    /// - parameters:
+    ///    - message: The message to be logged. The `message` parameter supports any string interpolation literal.
+    ///    - attributedMetadata: One-off attributed metadata to attach to this log message.
+    ///    - source: The source this log message originates from. The value defaults
+    ///              to the module that emits the log message.
+    ///    - file: The file this log message originates from. There's usually no need to pass it explicitly, as it
+    ///            defaults to `#fileID`.
+    ///    - function: The function this log message originates from. There's usually no need to pass it explicitly, as
+    ///                it defaults to `#function`.
+    ///    - line: The line this log message originates from. There's usually no need to pass it explicitly, as it
+    ///            defaults to `#line`.
+    @inlinable
+    public func debug(
+        _ message: @autoclosure () -> Logger.Message,
+        attributedMetadata: @autoclosure () -> Logger.AttributedMetadata?,
+        source: @autoclosure () -> String? = nil,
+        file: String = #fileID,
+        function: String = #function,
+        line: UInt = #line
+    ) {
+        self.log(
+            level: .debug,
+            message(),
+            attributedMetadata: attributedMetadata(),
+            source: source(),
+            file: file,
+            function: function,
+            line: line
+        )
+    }
+
+    /// Log a message at the 'info' log level with attributed metadata and the source that you provide.
+    ///
+    /// If ``Level/info`` is at least as severe as this logger's ``logLevel`` the system logs the message;
+    /// otherwise nothing will happen.
+    ///
+    /// - parameters:
+    ///    - message: The message to be logged. The `message` parameter supports any string interpolation literal.
+    ///    - attributedMetadata: One-off attributed metadata to attach to this log message.
+    ///    - source: The source this log message originates from. The value defaults
+    ///              to the module that emits the log message.
+    ///    - file: The file this log message originates from. There's usually no need to pass it explicitly, as it
+    ///            defaults to `#fileID`.
+    ///    - function: The function this log message originates from. There's usually no need to pass it explicitly, as
+    ///                it defaults to `#function`.
+    ///    - line: The line this log message originates from. There's usually no need to pass it explicitly, as it
+    ///            defaults to `#line`.
+    @inlinable
+    public func info(
+        _ message: @autoclosure () -> Logger.Message,
+        attributedMetadata: @autoclosure () -> Logger.AttributedMetadata?,
+        source: @autoclosure () -> String? = nil,
+        file: String = #fileID,
+        function: String = #function,
+        line: UInt = #line
+    ) {
+        self.log(
+            level: .info,
+            message(),
+            attributedMetadata: attributedMetadata(),
+            source: source(),
+            file: file,
+            function: function,
+            line: line
+        )
+    }
+
+    /// Log a message at the 'notice' log level with attributed metadata and the source that you provide.
+    ///
+    /// If ``Level/notice`` is at least as severe as this logger's ``logLevel`` the system logs the message;
+    /// otherwise nothing will happen.
+    ///
+    /// - parameters:
+    ///    - message: The message to be logged. The `message` parameter supports any string interpolation literal.
+    ///    - attributedMetadata: One-off attributed metadata to attach to this log message.
+    ///    - source: The source this log message originates from. The value defaults
+    ///              to the module that emits the log message.
+    ///    - file: The file this log message originates from. There's usually no need to pass it explicitly, as it
+    ///            defaults to `#fileID`.
+    ///    - function: The function this log message originates from. There's usually no need to pass it explicitly, as
+    ///                it defaults to `#function`.
+    ///    - line: The line this log message originates from. There's usually no need to pass it explicitly, as it
+    ///            defaults to `#line`.
+    @inlinable
+    public func notice(
+        _ message: @autoclosure () -> Logger.Message,
+        attributedMetadata: @autoclosure () -> Logger.AttributedMetadata?,
+        source: @autoclosure () -> String? = nil,
+        file: String = #fileID,
+        function: String = #function,
+        line: UInt = #line
+    ) {
+        self.log(
+            level: .notice,
+            message(),
+            attributedMetadata: attributedMetadata(),
+            source: source(),
+            file: file,
+            function: function,
+            line: line
+        )
+    }
+
+    /// Log a message at the 'warning' log level with attributed metadata and the source that you provide.
+    ///
+    /// If ``Level/warning`` is at least as severe as this logger's ``logLevel`` the system logs the message;
+    /// otherwise nothing will happen.
+    ///
+    /// - parameters:
+    ///    - message: The message to be logged. The `message` parameter supports any string interpolation literal.
+    ///    - attributedMetadata: One-off attributed metadata to attach to this log message.
+    ///    - source: The source this log message originates from. The value defaults
+    ///              to the module that emits the log message.
+    ///    - file: The file this log message originates from. There's usually no need to pass it explicitly, as it
+    ///            defaults to `#fileID`.
+    ///    - function: The function this log message originates from. There's usually no need to pass it explicitly, as
+    ///                it defaults to `#function`.
+    ///    - line: The line this log message originates from. There's usually no need to pass it explicitly, as it
+    ///            defaults to `#line`.
+    @inlinable
+    public func warning(
+        _ message: @autoclosure () -> Logger.Message,
+        attributedMetadata: @autoclosure () -> Logger.AttributedMetadata?,
+        source: @autoclosure () -> String? = nil,
+        file: String = #fileID,
+        function: String = #function,
+        line: UInt = #line
+    ) {
+        self.log(
+            level: .warning,
+            message(),
+            attributedMetadata: attributedMetadata(),
+            source: source(),
+            file: file,
+            function: function,
+            line: line
+        )
+    }
+
+    /// Log a message at the 'error' log level with attributed metadata and the source that you provide.
+    ///
+    /// If ``Level/error`` is at least as severe as this logger's ``logLevel`` the system logs the message;
+    /// otherwise nothing will happen.
+    ///
+    /// - parameters:
+    ///    - message: The message to be logged. The `message` parameter supports any string interpolation literal.
+    ///    - attributedMetadata: One-off attributed metadata to attach to this log message.
+    ///    - source: The source this log message originates from. The value defaults
+    ///              to the module that emits the log message.
+    ///    - file: The file this log message originates from. There's usually no need to pass it explicitly, as it
+    ///            defaults to `#fileID`.
+    ///    - function: The function this log message originates from. There's usually no need to pass it explicitly, as
+    ///                it defaults to `#function`.
+    ///    - line: The line this log message originates from. There's usually no need to pass it explicitly, as it
+    ///            defaults to `#line`.
+    @inlinable
+    public func error(
+        _ message: @autoclosure () -> Logger.Message,
+        attributedMetadata: @autoclosure () -> Logger.AttributedMetadata?,
+        source: @autoclosure () -> String? = nil,
+        file: String = #fileID,
+        function: String = #function,
+        line: UInt = #line
+    ) {
+        self.log(
+            level: .error,
+            message(),
+            attributedMetadata: attributedMetadata(),
+            source: source(),
+            file: file,
+            function: function,
+            line: line
+        )
+    }
+
+    /// Log a message at the 'critical' log level with attributed metadata and the source that you provide.
+    ///
+    /// If ``Level/critical`` is at least as severe as this logger's ``logLevel`` the system logs the message;
+    /// otherwise nothing will happen.
+    ///
+    /// - parameters:
+    ///    - message: The message to be logged. The `message` parameter supports any string interpolation literal.
+    ///    - attributedMetadata: One-off attributed metadata to attach to this log message.
+    ///    - source: The source this log message originates from. The value defaults
+    ///              to the module that emits the log message.
+    ///    - file: The file this log message originates from. There's usually no need to pass it explicitly, as it
+    ///            defaults to `#fileID`.
+    ///    - function: The function this log message originates from. There's usually no need to pass it explicitly, as
+    ///                it defaults to `#function`.
+    ///    - line: The line this log message originates from. There's usually no need to pass it explicitly, as it
+    ///            defaults to `#line`.
+    @inlinable
+    public func critical(
+        _ message: @autoclosure () -> Logger.Message,
+        attributedMetadata: @autoclosure () -> Logger.AttributedMetadata?,
+        source: @autoclosure () -> String? = nil,
+        file: String = #fileID,
+        function: String = #function,
+        line: UInt = #line
+    ) {
+        self.log(
+            level: .critical,
+            message(),
+            attributedMetadata: attributedMetadata(),
+            source: source(),
+            file: file,
+            function: function,
+            line: line
+        )
+    }
+
 }
 
 /// The logging system is a global facility where you can configure the default logging backend implementation.
@@ -980,6 +1335,160 @@ extension Logger {
         /// `.array([.string("foo"), .string("bar \(buz)")])`, instead use the more natural `["foo", "bar \(buz)"]`.
         case array([Metadata.Value])
     }
+
+    /// Privacy level for metadata values.
+    ///
+    /// Privacy levels allow you to mark metadata values as either private (sensitive data that should be
+    /// protected) or public (safe to log in any context).
+    ///
+    /// ## Usage
+    ///
+    /// Use string interpolation with the privacy parameter to create attributed metadata values:
+    ///
+    /// ```swift
+    /// let userId = "12345"
+    /// let action = "login"
+    /// logger.info("User action", attributedMetadata: [
+    ///     "user.id": "\(userId, privacy: .private)",
+    ///     "action": "\(action, privacy: .public)",
+    ///     "ip": "\(ipAddress, privacy: .private)"
+    /// ])
+    /// ```
+    @frozen
+    public enum PrivacyLevel: String, Sendable, CaseIterable, Equatable, Hashable, Codable, CustomStringConvertible {
+        /// Private data that should be redacted in non-secure contexts.
+        case `private` = "private"
+
+        /// Public data safe for general logging.
+        case `public` = "public"
+
+        /// A textual representation of the privacy level.
+        public var description: String {
+            self.rawValue
+        }
+    }
+
+    /// Attributes that can be associated with metadata values.
+    public struct MetadataValueAttributes: Sendable, Hashable, CustomStringConvertible {
+        /// The privacy level of this metadata value.
+        public var privacy: PrivacyLevel
+
+        /// A textual representation of the metadata attributes.
+        public var description: String {
+            "privacy: \(privacy)"
+        }
+
+        /// Create metadata value attributes with the specified privacy level.
+        ///
+        /// - Parameter privacy: The privacy level for this metadata. Defaults to `.public`.
+        public init(privacy: PrivacyLevel = .public) {
+            self.privacy = privacy
+        }
+    }
+
+    /// A metadata value with associated privacy attributes.
+    ///
+    /// `AttributedMetadataValue` wraps a standard `MetadataValue` with privacy attributes,
+    /// allowing you to mark metadata as private or public for privacy-aware logging.
+    ///
+    /// ## Privacy Redaction
+    ///
+    /// When private values are converted to strings or passed to handlers that don't support
+    /// attributed metadata, they are automatically redacted to `"<private>"` to prevent
+    /// accidental exposure of sensitive data.
+    ///
+    /// ## Creating Attributed Metadata
+    ///
+    /// Use string interpolation with privacy parameter:
+    ///
+    /// ```swift
+    /// // Preferred: String interpolation with privacy level specified
+    /// let userId = "12345"
+    /// let action = "login"
+    /// logger.info("User action", attributedMetadata: [
+    ///     "user.id": "\(userId, privacy: .private)",
+    ///     "action": "\(action, privacy: .public)"  // explicit .public for non-sensitive data
+    /// ])
+    ///
+    /// // Direct creation
+    /// let attributed = Logger.AttributedMetadataValue(
+    ///     .string("12345"),
+    ///     privacy: .private
+    /// )
+    /// ```
+    ///
+    /// ## Important Limitations
+    ///
+    /// - **No nested privacy**: When marking a dictionary or array as private, all contained
+    ///   values are treated with the same privacy level. Fine-grained privacy within nested
+    ///   structures is not currently supported.
+    ///
+    /// - **Metadata only**: Privacy levels apply only to metadata values, not to log messages.
+    ///   Avoid including sensitive data in log message string interpolation.
+    public struct AttributedMetadataValue: Sendable, CustomStringConvertible {
+        /// The redaction marker used for private values.
+        ///
+        /// Private metadata values are replaced with this string when converted to plain metadata
+        /// or string representations to prevent accidental exposure of sensitive data.
+        @usableFromInline
+        internal static let redactionMarker = "<private>"
+
+        /// The underlying metadata value without privacy attributes.
+        public let value: MetadataValue
+
+        /// The privacy attributes associated with this metadata value.
+        public let attributes: MetadataValueAttributes
+
+        /// A textual representation of this attributed metadata value.
+        ///
+        /// Private values are redacted to `"<private>"` to prevent accidental exposure
+        /// in logs, debug output, or string conversions.
+        public var description: String {
+            if attributes.privacy == .public {
+                return value.description
+            } else {
+                return Self.redactionMarker
+            }
+        }
+
+        /// Create an attributed metadata value with the specified attributes.
+        ///
+        /// - Parameters:
+        ///   - value: The metadata value to wrap.
+        ///   - attributes: The attributes for this value.
+        public init(_ value: MetadataValue, attributes: MetadataValueAttributes) {
+            self.value = value
+            self.attributes = attributes
+        }
+
+        /// Convenience initializer for creating attributed metadata with a privacy level.
+        ///
+        /// - Parameters:
+        ///   - value: The metadata value to wrap.
+        ///   - privacy: The privacy level for this value.
+        public init(_ value: MetadataValue, privacy: PrivacyLevel) {
+            self.init(value, attributes: MetadataValueAttributes(privacy: privacy))
+        }
+    }
+
+    /// Metadata dictionary with privacy attributes.
+    ///
+    /// A dictionary mapping string keys to ``AttributedMetadataValue`` instances, used with
+    /// the `attributedMetadata` parameter of logging methods.
+    ///
+    /// ## Example
+    ///
+    /// ```swift
+    /// let userId = "12345"
+    /// let requestId = "req-789"
+    /// let metadata: Logger.AttributedMetadata = [
+    ///     "user.id": "\(userId, privacy: .private)",
+    ///     "request.id": "\(requestId, privacy: .public)",
+    ///     "action": "purchase"  // String literal defaults to .public
+    /// ]
+    /// logger.info("User action", attributedMetadata: metadata)
+    /// ```
+    public typealias AttributedMetadata = [String: AttributedMetadataValue]
 
     /// The log level.
     ///
@@ -1871,6 +2380,68 @@ private final class WarnOnceBox: @unchecked Sendable {
 // MARK: - Sendable support helpers
 
 extension Logger.MetadataValue: Sendable {}
+
+// String interpolation support for AttributedMetadataValue
+extension Logger.AttributedMetadataValue: ExpressibleByStringLiteral, ExpressibleByStringInterpolation {
+    /// Custom string interpolation that captures privacy levels from interpolated values.
+    ///
+    /// This enables syntax like:
+    /// ```swift
+    /// logger.info("User action", attributedMetadata: [
+    ///     "user.id": "\(userId, privacy: .private)",
+    ///     "action": "\(action, privacy: .public)"
+    /// ])
+    /// ```
+    public struct StringInterpolation: StringInterpolationProtocol {
+        private var output: String = ""
+        private var privacy: Logger.PrivacyLevel = .public  // default to .public for ease of adoption
+
+        public init(literalCapacity: Int, interpolationCount: Int) {
+            self.output.reserveCapacity(literalCapacity)
+        }
+
+        public mutating func appendLiteral(_ literal: String) {
+            self.output.append(literal)
+        }
+
+        /// Interpolation with explicit privacy parameter.
+        ///
+        /// This allows specifying the privacy level inline:
+        /// ```swift
+        /// "\(userId, privacy: .private)"
+        /// ```
+        public mutating func appendInterpolation<T>(_ value: T, privacy: Logger.PrivacyLevel = .public)
+        where T: CustomStringConvertible {
+            self.output.append(value.description)
+
+            // The overall privacy level is the strictest across interpolated values
+            if self.privacy != .private {
+                // Once any interpolation is private, the whole thing is private
+                self.privacy = privacy
+            }
+        }
+
+        fileprivate var result: (string: String, privacy: Logger.PrivacyLevel) {
+            (self.output, self.privacy)
+        }
+    }
+
+    /// Creates an attributed metadata value from a string literal.
+    ///
+    /// Defaults to public privacy level for ease of adoption.
+    public init(stringLiteral value: String) {
+        self.init(.string(value), privacy: .public)
+    }
+
+    /// Creates an attributed metadata value from string interpolation.
+    ///
+    /// The privacy level is determined by the interpolation parameters.
+    public init(stringInterpolation: StringInterpolation) {
+        let result = stringInterpolation.result
+        self.init(.string(result.string), privacy: result.privacy)
+    }
+}
+
 extension Logger: Sendable {}
 extension Logger.Level: Sendable {}
 extension Logger.Message: Sendable {}
