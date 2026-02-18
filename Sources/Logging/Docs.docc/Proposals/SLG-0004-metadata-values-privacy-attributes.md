@@ -8,7 +8,8 @@ Introduce an attributed metadata system that allows attaching attributes to meta
 - Author(s): [Vladimir Kukushkin](https://github.com/kukushechkin)
 - Status: **Awaiting Review**
 - Issue: https://github.com/apple/swift-log/issues/204
-- Implementation: TBD
+- Implementation:
+    - [apple/swift-log#418](https://github.com/apple/swift-log/pull/418)
 - Related links:
     - [Lightweight proposals process description](https://github.com/apple/swift-log/blob/main/Sources/Logging/Docs.docc/Proposals/Proposals.md)
 
