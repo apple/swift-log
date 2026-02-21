@@ -437,6 +437,59 @@ struct LoggingTest {
         )
     }
 
+    func testMergeMetadata() {
+        let testLogging = TestLogging()
+        LoggingSystem.bootstrapInternal { testLogging.make(label: $0) }
+
+        var logger = Logger(label: "\(#function)")
+        let metadata: Logger.Metadata = [
+            "foo": ["bar", "buz"],
+            "empty-list": [],
+            "nested-list": ["l1str", ["l2str1", "l2str2"]],
+        ]
+        logger.mergeMetadata(metadata)
+        logger.info("first log")
+        testLogging.history.assertExist(level: .info,
+                                        message: "first log",
+                                        metadata: ["foo": ["bar", "buz"],
+                                                   "empty-list": [],
+                                                   "nested-list": ["l1str", ["l2str1", "l2str2"]]])
+
+        // Non-overlapping metadata key-value pairs should be added without affecting existing metadata,
+        // while overlapping metadata key-value pairs should update the existing key's value.
+        logger.mergeMetadata([
+            "foo": ["bar"], // drops "buz" for existing key value
+            "newkey": "newvalue1" // adds new key-value pair
+        ])
+        logger.info("second log")
+        testLogging.history.assertExist(level: .info,
+                                        message: "second log",
+                                        metadata: ["foo": ["bar"],
+                                                   "empty-list": [],
+                                                   "nested-list": ["l1str", ["l2str1", "l2str2"]],
+                                                   "newkey": "newvalue1"])
+
+        // Finally, if new metadata with overlapping keys is added more than once, the
+        // latest value should be the one set in the Logger metadata.
+        logger.mergeMetadata([
+            "foo": [],
+            "newkey": "newvalue2"
+        ])
+        logger.mergeMetadata([
+            "foo": "a new type for this value",
+            "newkey": "newvalue3"
+        ])
+        logger.info("third log")
+        testLogging.history.assertExist(level: .info,
+                                        message: "third log",
+                                        metadata: ["foo": "a new type for this value",
+                                                   "empty-list": [],
+                                                   "nested-list": ["l1str", ["l2str1", "l2str2"]],
+                                                   "newkey": "newvalue3"])
+
+
+    }
+
     // Example of custom "box" which may be used to implement "render at most once" semantics
     // Not thread-safe, thus should not be shared across threads.
     internal final class LazyMetadataBox: CustomStringConvertible {
