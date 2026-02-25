@@ -126,37 +126,16 @@ extension Logger {
         function: String = #function,
         line: UInt = #line
     ) {
-        #if MaxLogLevelDebug || MaxLogLevelInfo || MaxLogLevelNotice || MaxLogLevelWarning || MaxLogLevelError || MaxLogLevelCritical || MaxLogLevelNone
-        // A constant overhead is added for dynamic log level calls if one of the traits is enabled.
-        // This allows picking the necessary implementation with compiled out body in runtime.
-        switch level {
-        case .trace:
-            self.trace(message(), metadata: metadata(), source: source(), file: file, function: function, line: line)
-        case .debug:
-            self.debug(message(), metadata: metadata(), source: source(), file: file, function: function, line: line)
-        case .info:
-            self.info(message(), metadata: metadata(), source: source(), file: file, function: function, line: line)
-        case .notice:
-            self.notice(message(), metadata: metadata(), source: source(), file: file, function: function, line: line)
-        case .warning:
-            self.warning(message(), metadata: metadata(), source: source(), file: file, function: function, line: line)
-        case .error:
-            self.error(message(), metadata: metadata(), source: source(), file: file, function: function, line: line)
-        case .critical:
-            self.critical(message(), metadata: metadata(), source: source(), file: file, function: function, line: line)
-        }
-        #else
-        // If no logs are excluded in the compile time, we can avoid checking the log level that extra time and go log it.
-        self._log(
+        self.log(
             level: level,
             message(),
+            error: nil,
             metadata: metadata(),
             source: source(),
             file: file,
             function: function,
             line: line
         )
-        #endif
     }
 
     /// Log a message using the log level and source that you provide.
@@ -180,6 +159,7 @@ extension Logger {
     package func _log(
         level: Logger.Level,
         _ message: @autoclosure () -> Logger.Message,
+        error: (any Error)?,
         metadata: @autoclosure () -> Logger.Metadata? = nil,
         source: @autoclosure () -> String? = nil,
         file: String = #fileID,
@@ -190,6 +170,7 @@ extension Logger {
             self.handler.log(
                 level: level,
                 message: message(),
+                error: error,
                 metadata: metadata(),
                 source: source() ?? Logger.currentModule(fileID: (file)),
                 file: file,
@@ -220,27 +201,45 @@ extension Logger {
     public func log(
             level: Logger.Level,
             _ message: @autoclosure () -> Logger.Message,
-            error: any Error,
+            error: (any Error)?,
             metadata: @autoclosure () -> Logger.Metadata? = nil,
             source: @autoclosure () -> String? = nil,
             file: String = #fileID,
             function: String = #function,
             line: UInt = #line
     ) {
-        self.log(
+        #if MaxLogLevelDebug || MaxLogLevelInfo || MaxLogLevelNotice || MaxLogLevelWarning || MaxLogLevelError || MaxLogLevelCritical || MaxLogLevelNone
+        // A constant overhead is added for dynamic log level calls if one of the traits is enabled.
+        // This allows picking the necessary implementation with compiled out body in runtime.
+        switch level {
+        case .trace:
+            self.trace(message(), error: error, metadata: metadata(), source: source(), file: file, function: function, line: line)
+        case .debug:
+            self.debug(message(), error: error, metadata: metadata(), source: source(), file: file, function: function, line: line)
+        case .info:
+            self.info(message(), error: error, metadata: metadata(), source: source(), file: file, function: function, line: line)
+        case .notice:
+            self.notice(message(), error: error, metadata: metadata(), source: source(), file: file, function: function, line: line)
+        case .warning:
+            self.warning(message(), error: error, metadata: metadata(), source: source(), file: file, function: function, line: line)
+        case .error:
+            self.error(message(), error: error, metadata: metadata(), source: source(), file: file, function: function, line: line)
+        case .critical:
+            self.critical(message(), error: error, metadata: metadata(), source: source(), file: file, function: function, line: line)
+        }
+        #else
+        // If no logs are excluded in the compile time, we can avoid checking the log level that extra time and go log it.
+        self._log(
             level: level,
             message(),
-            metadata: {
-                var metadata = metadata() ?? Metadata()
-                metadata[WellKnownMetadataKey.errorMessage] = "\(error)"
-                metadata[WellKnownMetadataKey.errorType] = "\(String(reflecting: type(of: error)))"
-                return metadata
-            }(),
+            error: error,
+            metadata: metadata(),
             source: source(),
             file: file,
             function: function,
             line: line
         )
+        #endif
     }
 
     /// Log a message using the log level you provide.
@@ -268,15 +267,6 @@ extension Logger {
         line: UInt = #line
     ) {
         self.log(level: level, message(), metadata: metadata(), source: nil, file: file, function: function, line: line)
-    }
-
-    /// Add an error as logging metadata.
-    ///
-    /// > Note: Changing the logging metadata only affects the instance of the `Logger` where you change it.
-    @inlinable
-    public mutating func recordError(_ error: any Error) {
-        self[metadataKey: "error.type"] = "\(String(reflecting: type(of: error)))"
-        self[metadataKey: "error.message"] = "\(error)"
     }
 
     /// Add, change, or remove a logging metadata item.
@@ -330,14 +320,15 @@ extension Logger {
     @inlinable
     public func trace(
         _ message: @autoclosure () -> Logger.Message,
-        error: any Error,
+        error: (any Error)?,
         metadata: @autoclosure () -> Logger.Metadata? = nil,
         source: @autoclosure () -> String? = nil,
         file: String = #fileID,
         function: String = #function,
         line: UInt = #line
     ) {
-        self.log(
+        #if !MaxLogLevelDebug && !MaxLogLevelInfo && !MaxLogLevelNotice && !MaxLogLevelWarning && !MaxLogLevelError && !MaxLogLevelCritical && !MaxLogLevelNone
+        self._log(
             level: .trace,
             message(),
             error: error,
@@ -347,6 +338,7 @@ extension Logger {
             function: function,
             line: line
         )
+        #endif
     }
 
     /// Log a message at the 'trace' log level with the source that you provide.
@@ -374,17 +366,7 @@ extension Logger {
         function: String = #function,
         line: UInt = #line
     ) {
-        #if !MaxLogLevelDebug && !MaxLogLevelInfo && !MaxLogLevelNotice && !MaxLogLevelWarning && !MaxLogLevelError && !MaxLogLevelCritical && !MaxLogLevelNone
-        self._log(
-            level: .trace,
-            message(),
-            metadata: metadata(),
-            source: source(),
-            file: file,
-            function: function,
-            line: line
-        )
-        #endif
+        self.trace(message(), error: nil, metadata: metadata(), source: source(), file: file, function: function, line: line)
     }
 
     /// Log a message at the 'trace' log level.
@@ -432,14 +414,15 @@ extension Logger {
     @inlinable
     public func debug(
         _ message: @autoclosure () -> Logger.Message,
-        error: any Error,
+        error: (any Error)?,
         metadata: @autoclosure () -> Logger.Metadata? = nil,
         source: @autoclosure () -> String? = nil,
         file: String = #fileID,
         function: String = #function,
         line: UInt = #line
     ) {
-        self.log(
+        #if !MaxLogLevelInfo && !MaxLogLevelNotice && !MaxLogLevelWarning && !MaxLogLevelError && !MaxLogLevelCritical && !MaxLogLevelNone
+        self._log(
             level: .debug,
             message(),
             error: error,
@@ -449,6 +432,7 @@ extension Logger {
             function: function,
             line: line
         )
+        #endif
     }
 
     /// Log a message at the 'debug' log level with the source that you provide.
@@ -476,17 +460,7 @@ extension Logger {
         function: String = #function,
         line: UInt = #line
     ) {
-        #if !MaxLogLevelInfo && !MaxLogLevelNotice && !MaxLogLevelWarning && !MaxLogLevelError && !MaxLogLevelCritical && !MaxLogLevelNone
-        self._log(
-            level: .debug,
-            message(),
-            metadata: metadata(),
-            source: source(),
-            file: file,
-            function: function,
-            line: line
-        )
-        #endif
+        self.debug(message(), error: nil, metadata: metadata(), source: source(), file: file, function: function, line: line)
     }
 
     /// Log a message at the 'debug' log level.
@@ -534,14 +508,15 @@ extension Logger {
     @inlinable
     public func info(
         _ message: @autoclosure () -> Logger.Message,
-        error: any Error,
+        error: (any Error)?,
         metadata: @autoclosure () -> Logger.Metadata? = nil,
         source: @autoclosure () -> String? = nil,
         file: String = #fileID,
         function: String = #function,
         line: UInt = #line
     ) {
-        self.log(
+        #if !MaxLogLevelNotice && !MaxLogLevelWarning && !MaxLogLevelError && !MaxLogLevelCritical && !MaxLogLevelNone
+        self._log(
             level: .info,
             message(),
             error: error,
@@ -551,6 +526,7 @@ extension Logger {
             function: function,
             line: line
         )
+        #endif
     }
 
     /// Log a message at the 'info' log level with the source that you provide.
@@ -578,17 +554,7 @@ extension Logger {
         function: String = #function,
         line: UInt = #line
     ) {
-        #if !MaxLogLevelNotice && !MaxLogLevelWarning && !MaxLogLevelError && !MaxLogLevelCritical && !MaxLogLevelNone
-        self._log(
-            level: .info,
-            message(),
-            metadata: metadata(),
-            source: source(),
-            file: file,
-            function: function,
-            line: line
-        )
-        #endif
+        self.info(message(), error: nil, metadata: metadata(), source: source(), file: file, function: function, line: line)
     }
 
     /// Log a message at the 'info' log level.
@@ -636,14 +602,15 @@ extension Logger {
     @inlinable
     public func notice(
         _ message: @autoclosure () -> Logger.Message,
-        error: any Error,
+        error: (any Error)?,
         metadata: @autoclosure () -> Logger.Metadata? = nil,
         source: @autoclosure () -> String? = nil,
         file: String = #fileID,
         function: String = #function,
         line: UInt = #line
     ) {
-        self.log(
+        #if !MaxLogLevelWarning && !MaxLogLevelError && !MaxLogLevelCritical && !MaxLogLevelNone
+        self._log(
             level: .notice,
             message(),
             error: error,
@@ -653,6 +620,7 @@ extension Logger {
             function: function,
             line: line
         )
+        #endif
     }
 
     /// Log a message at the 'notice' log level with the source that you provide.
@@ -680,17 +648,7 @@ extension Logger {
         function: String = #function,
         line: UInt = #line
     ) {
-        #if !MaxLogLevelWarning && !MaxLogLevelError && !MaxLogLevelCritical && !MaxLogLevelNone
-        self._log(
-            level: .notice,
-            message(),
-            metadata: metadata(),
-            source: source(),
-            file: file,
-            function: function,
-            line: line
-        )
-        #endif
+        self.notice(message(), error: nil, metadata: metadata(), source: source(), file: file, function: function, line: line)
     }
 
     /// Log a message at the 'notice' log level.
@@ -738,14 +696,15 @@ extension Logger {
     @inlinable
     public func warning(
         _ message: @autoclosure () -> Logger.Message,
-        error: any Error,
+        error: (any Error)?,
         metadata: @autoclosure () -> Logger.Metadata? = nil,
         source: @autoclosure () -> String? = nil,
         file: String = #fileID,
         function: String = #function,
         line: UInt = #line
     ) {
-        self.log(
+        #if !MaxLogLevelError && !MaxLogLevelCritical && !MaxLogLevelNone
+        self._log(
             level: .warning,
             message(),
             error: error,
@@ -755,6 +714,7 @@ extension Logger {
             function: function,
             line: line
         )
+        #endif
     }
 
     /// Log a message at the 'warning' log level with the source that you provide.
@@ -782,17 +742,7 @@ extension Logger {
         function: String = #function,
         line: UInt = #line
     ) {
-        #if !MaxLogLevelError && !MaxLogLevelCritical && !MaxLogLevelNone
-        self._log(
-            level: .warning,
-            message(),
-            metadata: metadata(),
-            source: source(),
-            file: file,
-            function: function,
-            line: line
-        )
-        #endif
+        self.warning(message(), error: nil, metadata: metadata(), source: source(), file: file, function: function, line: line)
     }
 
     /// Log a message at the 'warning' log level.
@@ -840,14 +790,15 @@ extension Logger {
     @inlinable
     public func error(
         _ message: @autoclosure () -> Logger.Message,
-        error: any Error,
+        error: (any Error)?,
         metadata: @autoclosure () -> Logger.Metadata? = nil,
         source: @autoclosure () -> String? = nil,
         file: String = #fileID,
         function: String = #function,
         line: UInt = #line
     ) {
-        self.log(
+        #if !MaxLogLevelCritical && !MaxLogLevelNone
+        self._log(
             level: .error,
             message(),
             error: error,
@@ -857,6 +808,7 @@ extension Logger {
             function: function,
             line: line
         )
+        #endif
     }
 
     /// Log a message at the 'error' log level with the source that you provide.
@@ -884,17 +836,7 @@ extension Logger {
         function: String = #function,
         line: UInt = #line
     ) {
-        #if !MaxLogLevelCritical && !MaxLogLevelNone
-        self._log(
-            level: .error,
-            message(),
-            metadata: metadata(),
-            source: source(),
-            file: file,
-            function: function,
-            line: line
-        )
-        #endif
+        self.error(message(), error: nil, metadata: metadata(), source: source(), file: file, function: function, line: line)
     }
 
     /// Log a message at the 'error' log level.
@@ -942,14 +884,15 @@ extension Logger {
     @inlinable
     public func critical(
         _ message: @autoclosure () -> Logger.Message,
-        error: any Error,
+        error: (any Error)?,
         metadata: @autoclosure () -> Logger.Metadata? = nil,
         source: @autoclosure () -> String? = nil,
         file: String = #fileID,
         function: String = #function,
         line: UInt = #line
     ) {
-        self.log(
+        #if !MaxLogLevelNone
+        self._log(
             level: .critical,
             message(),
             error: error,
@@ -959,6 +902,7 @@ extension Logger {
             function: function,
             line: line
         )
+        #endif
     }
 
     /// Log a message at the 'critical' log level with the source that you provide.
@@ -986,17 +930,7 @@ extension Logger {
         function: String = #function,
         line: UInt = #line
     ) {
-        #if !MaxLogLevelNone
-        self._log(
-            level: .critical,
-            message(),
-            metadata: metadata(),
-            source: source(),
-            file: file,
-            function: function,
-            line: line
-        )
-        #endif
+        self.critical(message(), error: nil, metadata: metadata(), source: source(), file: file, function: function, line: line)
     }
 
     /// Log a message at the 'critical' log level.
@@ -1212,16 +1146,6 @@ public enum LoggingSystem {
 }
 
 extension Logger {
-    /// Metadata keys with specific use-cases
-    public struct WellKnownMetadataKey {
-        /// If an `Error` is passed to ``Logger/log(level:_:error:metadata:source:file:function:line:)``,
-        /// this metadata entry will contain its string representation
-        public static let errorMessage = "error.message"
-        /// If an `Error` is passed to ``Logger/log(level:_:error:metadata:source:file:function:line:)``,
-        /// this metadata entry will contain its fully qualified type name
-        public static let errorType = "error.type"
-    }
-
     /// The type of the metadata storage.
     ///
     /// `Metadata` is a typealias for `[String: Logger.MetadataValue]` the type of the metadata storage.
