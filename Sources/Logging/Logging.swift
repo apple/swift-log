@@ -1355,16 +1355,19 @@ extension Logger {
     /// ])
     /// ```
     @frozen
-    public enum PrivacyLevel: String, Sendable, CaseIterable, Equatable, Hashable, Codable, CustomStringConvertible {
+    public enum PrivacyLevel: Sendable, CaseIterable, Equatable, Hashable, CustomStringConvertible {
         /// Private data that should be redacted in non-secure contexts.
-        case `private` = "private"
+        case `private`
 
         /// Public data safe for general logging.
-        case `public` = "public"
+        case `public`
 
         /// A textual representation of the privacy level.
         public var description: String {
-            self.rawValue
+            switch self {
+            case .private: "private"
+            case .public: "public"
+            }
         }
     }
 

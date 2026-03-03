@@ -57,8 +57,8 @@ struct PrivacyLabelsTests {
 
     @Test("PrivacyLevel enum properties")
     func testPrivacyLevel() {
-        #expect(Logger.PrivacyLevel.private.rawValue == "private")
-        #expect(Logger.PrivacyLevel.public.rawValue == "public")
+        #expect("\(Logger.PrivacyLevel.private)" == "private")
+        #expect("\(Logger.PrivacyLevel.public)" == "public")
         #expect(Logger.PrivacyLevel.allCases.contains(.private))
         #expect(Logger.PrivacyLevel.allCases.contains(.public))
     }
@@ -762,34 +762,6 @@ struct PrivacyLabelsTests {
         #expect(Logger.PrivacyLevel.private.description == "private")
         #expect("\(Logger.PrivacyLevel.public)" == "public")
         #expect("\(Logger.PrivacyLevel.private)" == "private")
-    }
-
-    @Test("PrivacyLevel Codable conformance")
-    func testPrivacyLevelCodable() throws {
-        // Test encoding
-        let publicLevel = Logger.PrivacyLevel.public
-        let publicData = try JSONEncoder().encode(publicLevel)
-        let publicString = String(data: publicData, encoding: .utf8)
-        #expect(publicString == "\"public\"")
-
-        let privateLevel = Logger.PrivacyLevel.private
-        let privateData = try JSONEncoder().encode(privateLevel)
-        let privateString = String(data: privateData, encoding: .utf8)
-        #expect(privateString == "\"private\"")
-
-        // Test decoding
-        let decodedPublic = try JSONDecoder().decode(Logger.PrivacyLevel.self, from: publicData)
-        #expect(decodedPublic == .public)
-
-        let decodedPrivate = try JSONDecoder().decode(Logger.PrivacyLevel.self, from: privateData)
-        #expect(decodedPrivate == .private)
-    }
-
-    @Test("PrivacyLevel raw value initialization")
-    func testPrivacyLevelRawValue() {
-        #expect(Logger.PrivacyLevel(rawValue: "public") == .public)
-        #expect(Logger.PrivacyLevel(rawValue: "private") == .private)
-        #expect(Logger.PrivacyLevel(rawValue: "invalid") == nil)
     }
 
     @Test("MetadataValueAttributes CustomStringConvertible")

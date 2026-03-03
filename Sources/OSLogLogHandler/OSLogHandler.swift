@@ -14,7 +14,7 @@
 
 #if canImport(os)
 import Foundation
-import Logging
+public import Logging
 import os
 
 /// A privacy-aware log handler that uses Apple's unified logging system (os.Logger).
