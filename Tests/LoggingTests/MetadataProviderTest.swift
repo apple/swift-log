@@ -93,24 +93,8 @@ struct LogHandlerThatDidNotImplementMetadataProviders: LogHandler {
 
     var logLevel: Logging.Logger.Level = .trace
 
-    func log(
-        level: Logger.Level,
-        message: Logger.Message,
-        metadata: Logger.Metadata?,
-        source: String,
-        file: String,
-        function: String,
-        line: UInt
-    ) {
-        self.testLogging.make(label: "fake").log(
-            level: level,
-            message: message,
-            metadata: metadata,
-            source: source,
-            file: file,
-            function: function,
-            line: line
-        )
+    func log(event: LogEvent) {
+        self.testLogging.make(label: "fake").log(event: event)
     }
 }
 
@@ -135,23 +119,7 @@ struct LogHandlerThatDidImplementMetadataProviders: LogHandler {
 
     var metadataProvider: Logger.MetadataProvider?
 
-    func log(
-        level: Logger.Level,
-        message: Logger.Message,
-        metadata: Logger.Metadata?,
-        source: String,
-        file: String,
-        function: String,
-        line: UInt
-    ) {
-        self.testLogging.make(label: "fake").log(
-            level: level,
-            message: message,
-            metadata: metadata,
-            source: source,
-            file: file,
-            function: function,
-            line: line
-        )
+    func log(event: LogEvent) {
+        self.testLogging.make(label: "fake").log(event: event)
     }
 }
