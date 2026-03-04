@@ -543,15 +543,7 @@ struct LoggingTest {
 
     @Test func customFactory() {
         struct CustomHandler: LogHandler {
-            func log(
-                level: Logger.Level,
-                message: Logger.Message,
-                metadata: Logger.Metadata?,
-                source: String,
-                file: String,
-                function: String,
-                line: UInt
-            ) {}
+            func log(event: LogEvent) {}
 
             subscript(metadataKey _: String) -> Logger.Metadata.Value? {
                 get { nil }
@@ -869,16 +861,13 @@ struct LoggingTest {
                 }
             }
 
-            func log(
-                level: Logger.Level,
-                message: Logger.Message,
-                metadata: Logger.Metadata?,
-                source: String,
-                file: String,
-                function: String,
-                line: UInt
-            ) {
-                self.recorder.record(level: level, metadata: metadata, message: message, source: source)
+            func log(event: LogEvent) {
+                self.recorder.record(
+                    level: event.level,
+                    metadata: event.metadata,
+                    message: event.message,
+                    source: event.source
+                )
             }
 
             subscript(metadataKey metadataKey: String) -> Logger.Metadata.Value? {
