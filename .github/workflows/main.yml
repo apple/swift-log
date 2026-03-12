@@ -12,7 +12,7 @@ on:
 jobs:
   unit-tests:
     name: Unit tests
-    uses: apple/swift-nio/.github/workflows/unit_tests.yml@main
+    uses: apple/swift-nio/.github/workflows/unit_tests.yml@pass_inputs_through_env_vars
     with:
       linux_6_0_arguments_override: "-Xswiftc -warnings-as-errors --explicit-target-dependency-import-check error -Xswiftc -require-explicit-sendable"
       linux_6_1_arguments_override: "-Xswiftc -warnings-as-errors --explicit-target-dependency-import-check error -Xswiftc -require-explicit-sendable"
@@ -32,7 +32,7 @@ jobs:
 
   macos-benchmarks:
     name: macOS benchmarks (NoTraits)
-    uses: apple/swift-nio/.github/workflows/macos_benchmarks.yml@main
+    uses: apple/swift-nio/.github/workflows/macos_benchmarks.yml@pass_inputs_through_env_vars
     with:
       benchmark_package_path: "Benchmarks/NoTraits"
       macos_xcode_16_4_enabled: true
@@ -41,23 +41,23 @@ jobs:
   macos-benchmarks-MaxLogLevelWarningBenchmarks-trait:
     name: macOS benchmarks (MaxLogLevelWarning)
     needs: macos-benchmarks
-    uses: apple/swift-nio/.github/workflows/macos_benchmarks.yml@main
+    uses: apple/swift-nio/.github/workflows/macos_benchmarks.yml@pass_inputs_through_env_vars
     with:
       benchmark_package_path: "Benchmarks/MaxLogLevelWarning"
       macos_xcode_26_1_enabled: true
 
   cxx-interop:
     name: Cxx interop
-    uses: apple/swift-nio/.github/workflows/cxx_interop.yml@main
+    uses: apple/swift-nio/.github/workflows/cxx_interop.yml@pass_inputs_through_env_vars
 
   static-linux:
     name: Static Linux Swift SDK
     # Workaround https://github.com/nektos/act/issues/1875
-    uses: apple/swift-nio/.github/workflows/static_sdk.yml@main
+    uses: apple/swift-nio/.github/workflows/static_sdk.yml@pass_inputs_through_env_vars
 
   macos-tests:
     name: macOS tests
-    uses: apple/swift-nio/.github/workflows/macos_tests.yml@main
+    uses: apple/swift-nio/.github/workflows/macos_tests.yml@pass_inputs_through_env_vars
     with:
       runner_pool: nightly
       build_scheme: swift-log-Package
@@ -65,16 +65,16 @@ jobs:
 
   wasm:
     name: Wasm Swift SDK
-    uses: apple/swift-nio/.github/workflows/wasm_swift_sdk.yml@main
+    uses: apple/swift-nio/.github/workflows/wasm_swift_sdk.yml@pass_inputs_through_env_vars
 
   android:
     name: Android Swift SDK
     # Workaround https://github.com/nektos/act/issues/1875
-    uses: apple/swift-nio/.github/workflows/android_swift_sdk.yml@main
+    uses: apple/swift-nio/.github/workflows/android_swift_sdk.yml@pass_inputs_through_env_vars
 
   release-builds:
     name: Release builds
-    uses: apple/swift-nio/.github/workflows/release_builds.yml@main
+    uses: apple/swift-nio/.github/workflows/release_builds.yml@pass_inputs_through_env_vars
     with:
       windows_6_0_enabled: true
       windows_6_1_enabled: true
