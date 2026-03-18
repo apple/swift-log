@@ -66,7 +66,11 @@ A new top-level `struct` in the `Logging` module:
 public struct LogEvent: Sendable {
     public var level: Logger.Level
     public var message: Logger.Message
-    public var metadata: Logger.Metadata?
+    private var _metadata: Logger.Metadata?
+    public var metadata: Logger.Metadata? {
+        get { self._metadata }
+        set { self._metadata = newValue }
+    }
     public var source: String
     public var file: String
     public var function: String
