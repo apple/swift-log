@@ -27,7 +27,12 @@ public struct LogEvent: Sendable {
     public var message: Logger.Message
 
     /// The metadata associated with this event, if any.
-    public var metadata: Logger.Metadata?
+    public var metadata: Logger.Metadata? {
+        get { self._metadata }
+        set { self._metadata = newValue }
+    }
+
+    private var _metadata: Logger.Metadata?
 
     /// The source where this log event originated, for example the logging module.
     ///
@@ -73,7 +78,7 @@ public struct LogEvent: Sendable {
     ) {
         self.level = level
         self.message = message
-        self.metadata = metadata
+        self._metadata = metadata
         self._source = source
         self.file = file
         self.function = function
