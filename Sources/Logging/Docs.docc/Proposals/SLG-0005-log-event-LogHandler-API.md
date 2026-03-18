@@ -8,7 +8,7 @@ handler implementations.
 
 - Proposal: SLG-0005
 - Author(s): [Vladimir Kukushkin](https://github.com/kukushechkin)
-- Status: **In Review**
+- Status: **Ready for Implementation**
 - Issue: [apple/swift-log#421](https://github.com/apple/swift-log/issues/421)
 - Implementation:
     - [apple/swift-log#423](https://github.com/apple/swift-log/pull/423)
