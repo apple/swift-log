@@ -78,7 +78,7 @@ struct LogEventTest {
         _ = event.source
         #expect(event._source == nil)
     }
-    
+
     @Test func metadataSetterStoresThroughComputedProperty() {
         var event = LogEvent(
             level: .info,
@@ -111,7 +111,7 @@ struct LogEventTest {
         #expect(entries.count == 1)
         #expect(entries[0].source == "LoggingTests")
     }
-    
+
     // MARK: - Default log(event:) forwarding to deprecated flat-parameter method
 
     @available(*, deprecated, message: "Testing deprecated functionality")
