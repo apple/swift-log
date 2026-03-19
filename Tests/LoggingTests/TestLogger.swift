@@ -175,6 +175,30 @@ internal class Recorder: History {
         }
     }
 
+    func record(
+        level: Logger.Level,
+        metadata: Logger.Metadata?,
+        message: Logger.Message,
+        source: String,
+        file: String,
+        function: String,
+        line: UInt
+    ) {
+        self.lock.withLock {
+            self._entries.append(
+                LogEntry(
+                    level: level,
+                    metadata: metadata,
+                    message: message.description,
+                    source: source,
+                    file: file,
+                    function: function,
+                    line: line
+                )
+            )
+        }
+    }
+
     var entries: [LogEntry] {
         self.lock.withLock { self._entries }
     }
@@ -217,6 +241,27 @@ internal struct LogEntry {
     let metadata: Logger.Metadata?
     let message: String
     let source: String
+    let file: String
+    let function: String
+    let line: UInt
+
+    init(
+        level: Logger.Level,
+        metadata: Logger.Metadata?,
+        message: String,
+        source: String,
+        file: String = "",
+        function: String = "",
+        line: UInt = 0
+    ) {
+        self.level = level
+        self.metadata = metadata
+        self.message = message
+        self.source = source
+        self.file = file
+        self.function = function
+        self.line = line
+    }
 }
 
 extension History {
