@@ -128,10 +128,15 @@ public protocol LogHandler: _SwiftLogSendableLogHandler {
 #### Default implementation
 
 The default for `log(event:)` forwards all event fields to the old flat-parameter method,
-preserving the behavior of existing handlers with no source changes required:
+preserving the behavior of existing handlers with no source changes required.
+
+The default implementation is marked as deprecated to encourage handler authors to migrate to `log(event:)`.
+Handlers that still rely on the forwarding bridge will see a deprecation warning at compile time, signaling that
+they should adopt the new method directly.
 
 ```swift
 extension LogHandler {
+    @available(*, deprecated, message: "You should implement this method instead of using the default implementation")
     public func log(event: LogEvent) {
         self.log(
             level: event.level,
