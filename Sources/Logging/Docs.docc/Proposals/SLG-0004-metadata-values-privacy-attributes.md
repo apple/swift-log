@@ -379,7 +379,8 @@ extension Logger.MetadataProvider {
 
 ### Future directions
 
-Extended properties (e.g., retention policy, etc) and potential future unification of plain and attributed metadata APIs.
+- Add more attributes (e.g., value data type, etc) and potential future unification of plain and attributed metadata APIs.
+- Introduce "custom attributes", allowing applications to define application-specific attributes to work with application-specific log handlers.
 
 ### Alternatives considered
 
