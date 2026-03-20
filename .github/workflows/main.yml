@@ -61,7 +61,7 @@ jobs:
     uses: apple/swift-nio/.github/workflows/macos_tests.yml@main
     with:
       runner_pool: nightly
-      build_scheme: swift-nio-Package
+      build_scheme: swift-log-Package
       debug_output_enabled: true
       xcode_16_3_enabled: false
       xcode_16_4_enabled: false
