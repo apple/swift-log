@@ -37,7 +37,7 @@ public struct LogEvent: Sendable {
     /// The source where this log event originated, for example the logging module.
     ///
     /// When no explicit source was provided at the call site, this is derived lazily from ``file``
-    /// the first time this property is accessed. Handlers that never read this property pay no
+    /// every time this property is accessed. Handlers that never read this property pay no
     /// allocation cost for source computation.
     public var source: String {
         @inlinable get { self._source ?? Logger.currentModule(fileID: self.file) }

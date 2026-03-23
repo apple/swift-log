@@ -62,7 +62,7 @@ struct LogEventTest {
         #expect(event.source == "OverriddenSource")
     }
 
-    @Test func sourceLazyDerivationDoesNotStoreUntilAccessed() {
+    @Test func sourceLazyDerivationDoesNotStoreComputedValue() {
         let event = LogEvent(
             level: .info,
             message: "hello",
