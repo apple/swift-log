@@ -61,7 +61,20 @@ jobs:
     with:
       runner_pool: nightly
       build_scheme: swift-log-Package
-      swift_test_enabled: true
+      debug_output_enabled: true
+      xcode_16_3_enabled: false
+      xcode_16_4_enabled: false
+      xcode_26_0_enabled: false
+      xcode_26_1_enabled: false
+      xcode_26_2_enabled: false
+      swift_6_1_enabled: true
+      swift_6_2_enabled: true
+      swift_6_3_enabled: true
+      macos_xcode_test_enabled: true
+      ios_xcode_test_enabled: true
+      watchos_xcode_test_enabled: true
+      tvos_xcode_test_enabled: true
+      visionos_xcode_test_enabled: true
 
   wasm:
     name: Wasm Swift SDK
