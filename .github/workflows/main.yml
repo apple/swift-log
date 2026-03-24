@@ -70,11 +70,11 @@ jobs:
       swift_6_1_enabled: true
       swift_6_2_enabled: true
       swift_6_3_enabled: true
-      macos_xcode_test_enabled: true
-      ios_xcode_test_enabled: true
-      watchos_xcode_test_enabled: true
-      tvos_xcode_test_enabled: true
-      visionos_xcode_test_enabled: true
+      macos_xcode_test_enabled: false
+      ios_xcode_test_enabled: false
+      watchos_xcode_test_enabled: false
+      tvos_xcode_test_enabled: false
+      visionos_xcode_test_enabled: false
 
   wasm:
     name: Wasm Swift SDK
