@@ -24,4 +24,24 @@ public let benchmarks: @Sendable () -> Void = {
     makeBenchmark(loggerLevel: .error, logLevel: .debug, "_generic") { logger in
         logger.log(level: .debug, "hello, benchmarking world")
     }
+    makeBenchmark(loggerLevel: .error, logLevel: .error, "_attributed_generic") { logger in
+        logger.log(
+            level: .error,
+            "hello, benchmarking world",
+            attributedMetadata: [
+                "public-key": "\("public-value", privacy: .public)",
+                "private-key": "\("private-value", privacy: .private)",
+            ]
+        )
+    }
+    makeBenchmark(loggerLevel: .error, logLevel: .debug, "_attributed_generic") { logger in
+        logger.log(
+            level: .debug,
+            "hello, benchmarking world",
+            attributedMetadata: [
+                "public-key": "\("public-value", privacy: .public)",
+                "private-key": "\("private-value", privacy: .private)",
+            ]
+        )
+    }
 }
