@@ -1117,8 +1117,7 @@ struct LoggingTest {
     }
 
     @Test func stdioOutputStreamWrite() {
-        self.withWriteReadFDsAndReadBuffer { writeFD, readFD, readBuffer in
-            let logStream = StdioOutputStream(file: writeFD, flushMode: .always)
+        self.withWriteReadFDsAndReadBuffer(flushMode: .always) { logStream, readFD, readBuffer in
             let log = Logger(
                 label: "test",
                 factory: {
@@ -1145,8 +1144,7 @@ struct LoggingTest {
 
     @Test func stdioOutputStreamFlush() {
         // flush on every statement
-        self.withWriteReadFDsAndReadBuffer { writeFD, readFD, readBuffer in
-            let logStream = StdioOutputStream(file: writeFD, flushMode: .always)
+        self.withWriteReadFDsAndReadBuffer(flushMode: .always) { logStream, readFD, readBuffer in
             Logger(
                 label: "test",
                 factory: {
@@ -1171,8 +1169,7 @@ struct LoggingTest {
             #expect(size2 == -1, "expected no flush")
         }
         // default flushing
-        self.withWriteReadFDsAndReadBuffer { writeFD, readFD, readBuffer in
-            let logStream = StdioOutputStream(file: writeFD, flushMode: .undefined)
+        self.withWriteReadFDsAndReadBuffer(flushMode: .undefined) { logStream, readFD, readBuffer in
             Logger(
                 label: "test",
                 factory: {
@@ -1198,7 +1195,7 @@ struct LoggingTest {
         }
     }
 
-    func withWriteReadFDsAndReadBuffer(_ body: (CFilePointer, CInt, UnsafeMutablePointer<Int8>) -> Void) {
+    func withWriteReadFDsAndReadBuffer(flushMode: StdioOutputStream.FlushMode, _ body: (StdioOutputStream, CInt, UnsafeMutablePointer<Int8>) -> Void) {
         var fds: [Int32] = [-1, -1]
         #if os(Windows)
         fds.withUnsafeMutableBufferPointer {
@@ -1229,6 +1226,15 @@ struct LoggingTest {
         var err = setvbuf(writeFD, writeBuffer, _IOFBF, 256)
         #expect(err == 0, "setvbuf failed \(err)")
 
+        // Create the stream here while writeFD's concrete type is in scope.
+        // Type inference in the generic StdioOutputStream init picks the right
+        // C functions for whatever FILE representation this platform/API level uses.
+        #if os(Windows)
+        let stream = StdioOutputStream(file: writeFD, flushMode: flushMode, lock: _lock_file, unlock: _unlock_file, write: fwrite, flush: fflush)
+        #else
+        let stream = StdioOutputStream(file: writeFD, flushMode: flushMode, lock: flockfile, unlock: funlockfile, write: fwrite, flush: fflush)
+        #endif
+
         let readFD = fds[0]
         #if os(Windows)
         let hPipe: HANDLE = HANDLE(bitPattern: _get_osfhandle(readFD))!
@@ -1249,7 +1255,7 @@ struct LoggingTest {
         }
 
         // the actual test
-        body(writeFD, readFD, readBuffer)
+        body(stream, readFD, readBuffer)
 
         for fd in fds {
             #if os(Windows)

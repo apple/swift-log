@@ -1400,7 +1400,7 @@ internal struct StdioOutputStream: TextOutputStream, @unchecked Sendable {
     // at each call site from the values passed. This avoids a CFilePointer typealias
     // that cannot vary by Android API level (API 23 exposes FILE as
     // UnsafeMutablePointer<FILE>; API 24+ makes it OpaquePointer).
-    private init<F>(
+    internal init<F>(
         file: F,
         flushMode: FlushMode,
         lock: ((F) -> Void)?,
