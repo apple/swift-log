@@ -1195,7 +1195,10 @@ struct LoggingTest {
         }
     }
 
-    func withWriteReadFDsAndReadBuffer(flushMode: StdioOutputStream.FlushMode, _ body: (StdioOutputStream, CInt, UnsafeMutablePointer<Int8>) -> Void) {
+    func withWriteReadFDsAndReadBuffer(
+        flushMode: StdioOutputStream.FlushMode,
+        _ body: (StdioOutputStream, CInt, UnsafeMutablePointer<Int8>) -> Void
+    ) {
         var fds: [Int32] = [-1, -1]
         #if os(Windows)
         fds.withUnsafeMutableBufferPointer {
@@ -1230,9 +1233,23 @@ struct LoggingTest {
         // Type inference in the generic StdioOutputStream init picks the right
         // C functions for whatever FILE representation this platform/API level uses.
         #if os(Windows)
-        let stream = StdioOutputStream(file: writeFD, flushMode: flushMode, lock: _lock_file, unlock: _unlock_file, write: fwrite, flush: fflush)
+        let stream = StdioOutputStream(
+            file: writeFD,
+            flushMode: flushMode,
+            lock: _lock_file,
+            unlock: _unlock_file,
+            write: fwrite,
+            flush: fflush
+        )
         #else
-        let stream = StdioOutputStream(file: writeFD, flushMode: flushMode, lock: flockfile, unlock: funlockfile, write: fwrite, flush: fflush)
+        let stream = StdioOutputStream(
+            file: writeFD,
+            flushMode: flushMode,
+            lock: flockfile,
+            unlock: funlockfile,
+            write: fwrite,
+            flush: fflush
+        )
         #endif
 
         let readFD = fds[0]

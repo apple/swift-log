@@ -1441,22 +1441,71 @@ internal struct StdioOutputStream: TextOutputStream, @unchecked Sendable {
 
     internal static let stderr: StdioOutputStream = {
         #if canImport(Darwin)
-        return StdioOutputStream(file: Darwin.stderr, flushMode: .always, lock: flockfile, unlock: funlockfile, write: fwrite, flush: fflush)
+        return StdioOutputStream(
+            file: Darwin.stderr,
+            flushMode: .always,
+            lock: flockfile,
+            unlock: funlockfile,
+            write: fwrite,
+            flush: fflush
+        )
         #elseif os(Windows)
-        return StdioOutputStream(file: CRT.stderr, flushMode: .always, lock: _lock_file, unlock: _unlock_file, write: fwrite, flush: fflush)
+        return StdioOutputStream(
+            file: CRT.stderr,
+            flushMode: .always,
+            lock: _lock_file,
+            unlock: _unlock_file,
+            write: fwrite,
+            flush: fflush
+        )
         #elseif canImport(Glibc)
         #if os(FreeBSD) || os(OpenBSD)
-        return StdioOutputStream(file: Glibc.stderr, flushMode: .always, lock: flockfile, unlock: funlockfile, write: fwrite, flush: fflush)
+        return StdioOutputStream(
+            file: Glibc.stderr,
+            flushMode: .always,
+            lock: flockfile,
+            unlock: funlockfile,
+            write: fwrite,
+            flush: fflush
+        )
         #else
-        return StdioOutputStream(file: Glibc.stderr!, flushMode: .always, lock: flockfile, unlock: funlockfile, write: fwrite, flush: fflush)
+        return StdioOutputStream(
+            file: Glibc.stderr!,
+            flushMode: .always,
+            lock: flockfile,
+            unlock: funlockfile,
+            write: fwrite,
+            flush: fflush
+        )
         #endif
         #elseif canImport(Android)
-        return StdioOutputStream(file: Android.stderr, flushMode: .always, lock: flockfile, unlock: funlockfile, write: fwrite, flush: fflush)
+        return StdioOutputStream(
+            file: Android.stderr,
+            flushMode: .always,
+            lock: flockfile,
+            unlock: funlockfile,
+            write: fwrite,
+            flush: fflush
+        )
         #elseif canImport(Musl)
-        return StdioOutputStream(file: Musl.stderr!, flushMode: .always, lock: flockfile, unlock: funlockfile, write: fwrite, flush: fflush)
+        return StdioOutputStream(
+            file: Musl.stderr!,
+            flushMode: .always,
+            lock: flockfile,
+            unlock: funlockfile,
+            write: fwrite,
+            flush: fflush
+        )
         #elseif canImport(WASILibc)
         // no file locking on WASI
-        return StdioOutputStream(file: WASILibc.stderr!, flushMode: .always, lock: nil, unlock: nil, write: fwrite, flush: fflush)
+        return StdioOutputStream(
+            file: WASILibc.stderr!,
+            flushMode: .always,
+            lock: nil,
+            unlock: nil,
+            write: fwrite,
+            flush: fflush
+        )
         #else
         #error("Unsupported runtime")
         #endif
@@ -1464,22 +1513,71 @@ internal struct StdioOutputStream: TextOutputStream, @unchecked Sendable {
 
     internal static let stdout: StdioOutputStream = {
         #if canImport(Darwin)
-        return StdioOutputStream(file: Darwin.stdout, flushMode: .always, lock: flockfile, unlock: funlockfile, write: fwrite, flush: fflush)
+        return StdioOutputStream(
+            file: Darwin.stdout,
+            flushMode: .always,
+            lock: flockfile,
+            unlock: funlockfile,
+            write: fwrite,
+            flush: fflush
+        )
         #elseif os(Windows)
-        return StdioOutputStream(file: CRT.stdout, flushMode: .always, lock: _lock_file, unlock: _unlock_file, write: fwrite, flush: fflush)
+        return StdioOutputStream(
+            file: CRT.stdout,
+            flushMode: .always,
+            lock: _lock_file,
+            unlock: _unlock_file,
+            write: fwrite,
+            flush: fflush
+        )
         #elseif canImport(Glibc)
         #if os(FreeBSD) || os(OpenBSD)
-        return StdioOutputStream(file: Glibc.stdout, flushMode: .always, lock: flockfile, unlock: funlockfile, write: fwrite, flush: fflush)
+        return StdioOutputStream(
+            file: Glibc.stdout,
+            flushMode: .always,
+            lock: flockfile,
+            unlock: funlockfile,
+            write: fwrite,
+            flush: fflush
+        )
         #else
-        return StdioOutputStream(file: Glibc.stdout!, flushMode: .always, lock: flockfile, unlock: funlockfile, write: fwrite, flush: fflush)
+        return StdioOutputStream(
+            file: Glibc.stdout!,
+            flushMode: .always,
+            lock: flockfile,
+            unlock: funlockfile,
+            write: fwrite,
+            flush: fflush
+        )
         #endif
         #elseif canImport(Android)
-        return StdioOutputStream(file: Android.stdout, flushMode: .always, lock: flockfile, unlock: funlockfile, write: fwrite, flush: fflush)
+        return StdioOutputStream(
+            file: Android.stdout,
+            flushMode: .always,
+            lock: flockfile,
+            unlock: funlockfile,
+            write: fwrite,
+            flush: fflush
+        )
         #elseif canImport(Musl)
-        return StdioOutputStream(file: Musl.stdout!, flushMode: .always, lock: flockfile, unlock: funlockfile, write: fwrite, flush: fflush)
+        return StdioOutputStream(
+            file: Musl.stdout!,
+            flushMode: .always,
+            lock: flockfile,
+            unlock: funlockfile,
+            write: fwrite,
+            flush: fflush
+        )
         #elseif canImport(WASILibc)
         // no file locking on WASI
-        return StdioOutputStream(file: WASILibc.stdout!, flushMode: .always, lock: nil, unlock: nil, write: fwrite, flush: fflush)
+        return StdioOutputStream(
+            file: WASILibc.stdout!,
+            flushMode: .always,
+            lock: nil,
+            unlock: nil,
+            write: fwrite,
+            flush: fflush
+        )
         #else
         #error("Unsupported runtime")
         #endif
