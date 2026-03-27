@@ -53,25 +53,114 @@ extension Logger {
     /// }
     /// ```
     ///
+    /// ### Attributed Metadata Providers
+    ///
+    /// Metadata providers can also return attributed metadata with privacy levels:
+    ///
+    /// ```swift
+    /// let provider = Logger.MetadataProvider {
+    ///     [
+    ///         "trace-id": "\(Baggage.current?.traceID, privacy: .public)",
+    ///         "user-id": "\(RequestContext.current.userId, privacy: .private)"
+    ///     ]
+    /// }
+    /// ```
+    ///
+    /// When an attributed provider's ``get()`` method is called (for backward compatibility
+    /// with handlers that don't support attributed metadata), private values are redacted
+    /// to `"<private>"` to maintain privacy guarantees.
+    ///
     /// We recommend referring to [swift-distributed-tracing](https://github.com/apple/swift-distributed-tracing)
     /// for metadata providers which make use of its tracing and metadata propagation infrastructure. It is however
     /// possible to make use of metadata providers independently of tracing and instruments provided by that library,
     /// if necessary.
     public struct MetadataProvider: _SwiftLogSendable {
-        /// Provide ``Logger.Metadata`` from the current context.
         @usableFromInline
-        internal let _provideMetadata: @Sendable () -> Metadata
+        internal enum Storage: Sendable {
+            case plain(@Sendable () -> Metadata)
+            case attributed(@Sendable () -> AttributedMetadata)
+        }
 
-        /// Creates a new metadata provider.
+        @usableFromInline
+        internal let storage: Storage
+
+        /// Internal initializer for creating a metadata provider from storage.
+        @usableFromInline
+        internal init(storage: Storage) {
+            self.storage = storage
+        }
+
+        /// Creates a new metadata provider that returns plain metadata.
         ///
         /// - Parameter provideMetadata: A closure that extracts metadata from the current execution context.
         public init(_ provideMetadata: @escaping @Sendable () -> Metadata) {
-            self._provideMetadata = provideMetadata
+            self.storage = .plain(provideMetadata)
+        }
+
+        /// Creates a new metadata provider that returns attributed metadata.
+        ///
+        /// Attributed metadata providers allow you to specify privacy levels and other
+        /// attributes for each metadata value. When accessed through the plain ``get()``
+        /// method (for backward compatibility), private values are redacted to `"<private>"`.
+        ///
+        /// ### Example
+        ///
+        /// ```swift
+        /// let provider = Logger.MetadataProvider {
+        ///     [
+        ///         "request-id": "\(RequestContext.current.id, privacy: .public)",
+        ///         "user-id": "\(RequestContext.current.userId, privacy: .private)"
+        ///     ]
+        /// }
+        /// ```
+        ///
+        /// - Parameter provideAttributed: A closure that extracts attributed metadata from the current execution context.
+        /// - Returns: A metadata provider that returns attributed metadata.
+        @_disfavoredOverload
+        public init(_ provideMetadata: @escaping @Sendable () -> AttributedMetadata) {
+            self.storage = .attributed(provideMetadata)
         }
 
         /// Invokes the metadata provider and returns the generated contextual metadata.
+        ///
+        /// If this is an attributed provider, private metadata values are redacted to
+        /// `"<private>"` to maintain privacy guarantees when accessed through the plain
+        /// metadata API.
+        ///
+        /// - Returns: Plain metadata dictionary with private values redacted if applicable.
         public func get() -> Metadata {
-            self._provideMetadata()
+            switch self.storage {
+            case .plain(let provide):
+                return provide()
+            case .attributed(let provide):
+                // Redact private metadata values to "<private>"
+                var result: Metadata = [:]
+                for (key, attributed) in provide() {
+                    if attributed.attributes.privacy == .public {
+                        result[key] = attributed.value
+                    } else {
+                        result[key] = .string("<private>")
+                    }
+                }
+                return result
+            }
+        }
+
+        /// Returns attributed metadata if this is an attributed provider.
+        ///
+        /// This method returns the full attributed metadata including all privacy levels.
+        /// Handlers that support attributed metadata should call this method first,
+        /// falling back to ``get()`` if it returns nil.
+        ///
+        /// - Returns: Attributed metadata with all values and attributes if this is an
+        ///            attributed provider, or nil if this is a plain provider.
+        public func getAttributed() -> AttributedMetadata? {
+            switch self.storage {
+            case .plain:
+                return nil
+            case .attributed(let provide):
+                return provide()
+            }
         }
     }
 }
@@ -84,10 +173,18 @@ extension Logger.MetadataProvider {
     /// `MetadataProvider`s are invoked left to right in the order specified in the `providers` argument.
     /// In case multiple providers try to add a value for the same key, the last provider "wins" and its value is being used.
     ///
+    /// ### Attributed metadata support
+    ///
+    /// The multiplex provider checks at invocation time if any provider returns attributed metadata.
+    /// If so, all metadata is combined as attributed (plain metadata is converted to `.public`).
+    /// Otherwise, plain metadata is returned for backward compatibility.
+    ///
     /// - Parameter providers: An array of `MetadataProvider`s to delegate to. The array must not be empty.
     /// - Returns: A pseudo-`MetadataProvider` merging metadata from the given `MetadataProvider`s.
     public static func multiplex(_ providers: [Logger.MetadataProvider]) -> Logger.MetadataProvider? {
         assert(!providers.isEmpty, "providers MUST NOT be empty")
+
+        // Create a provider that checks at invocation time whether any provider is attributed
         return Logger.MetadataProvider {
             providers.reduce(into: [:]) { metadata, provider in
                 let providedMetadata = provider.get()
