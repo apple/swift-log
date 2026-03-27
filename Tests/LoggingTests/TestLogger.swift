@@ -74,15 +74,7 @@ internal struct TestLogHandler: LogHandler {
         self.metadataProvider = LoggingSystem.metadataProvider
     }
 
-    func log(
-        level: Logger.Level,
-        message: Logger.Message,
-        metadata explicitMetadata: Logger.Metadata?,
-        source: String,
-        file: String,
-        function: String,
-        line: UInt
-    ) {
+    func log(event: LogEvent) {
         // baseline metadata, that was set on handler:
         var metadata = self._metadataSet ? self.metadata : MDC.global.metadata
         // contextual metadata, e.g. from task-locals:
@@ -91,20 +83,20 @@ internal struct TestLogHandler: LogHandler {
             metadata.merge(contextualMetadata, uniquingKeysWith: { _, contextual in contextual })
         }
         // override using any explicit metadata passed for this log statement:
-        if let explicitMetadata = explicitMetadata {
+        if let explicitMetadata = event.metadata {
             metadata.merge(explicitMetadata, uniquingKeysWith: { _, explicit in explicit })
         }
 
         self.logger.log(
-            level: level,
-            message,
+            level: event.level,
+            event.message,
             metadata: metadata,
-            source: source,
-            file: file,
-            function: function,
-            line: line
+            source: event.source,
+            file: event.file,
+            function: event.function,
+            line: event.line
         )
-        self.recorder.record(level: level, metadata: metadata, message: message, source: source)
+        self.recorder.record(level: event.level, metadata: metadata, message: event.message, source: event.source)
     }
 
     private var _logLevel: Logger.Level?
@@ -183,6 +175,30 @@ internal class Recorder: History {
         }
     }
 
+    func record(
+        level: Logger.Level,
+        metadata: Logger.Metadata?,
+        message: Logger.Message,
+        source: String,
+        file: String,
+        function: String,
+        line: UInt
+    ) {
+        self.lock.withLock {
+            self._entries.append(
+                LogEntry(
+                    level: level,
+                    metadata: metadata,
+                    message: message.description,
+                    source: source,
+                    file: file,
+                    function: function,
+                    line: line
+                )
+            )
+        }
+    }
+
     var entries: [LogEntry] {
         self.lock.withLock { self._entries }
     }
@@ -225,6 +241,27 @@ internal struct LogEntry {
     let metadata: Logger.Metadata?
     let message: String
     let source: String
+    let file: String
+    let function: String
+    let line: UInt
+
+    init(
+        level: Logger.Level,
+        metadata: Logger.Metadata?,
+        message: String,
+        source: String,
+        file: String = "",
+        function: String = "",
+        line: UInt = 0
+    ) {
+        self.level = level
+        self.metadata = metadata
+        self.message = message
+        self.source = source
+        self.file = file
+        self.function = function
+        self.line = line
+    }
 }
 
 extension History {

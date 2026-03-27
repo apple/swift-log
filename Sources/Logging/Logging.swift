@@ -188,13 +188,15 @@ extension Logger {
     ) {
         if self.logLevel <= level {
             self.handler.log(
-                level: level,
-                message: message(),
-                metadata: metadata(),
-                source: source() ?? Logger.currentModule(fileID: (file)),
-                file: file,
-                function: function,
-                line: line
+                event: LogEvent(
+                    level: level,
+                    message: message(),
+                    metadata: metadata(),
+                    source: source(),
+                    file: file,
+                    function: function,
+                    line: line
+                )
             )
         }
     }
@@ -1305,17 +1307,14 @@ public struct MultiplexLogHandler: LogHandler {
     /// Log a message using the log level and source that you provide.
     ///
     /// - parameters:
-    ///    - level: The log level to log the `message`.
-    ///    - message: The message to be logged. The `message` parameter supports any string interpolation literal.
-    ///    - metadata: One-off metadata to attach to this log message.
-    ///    - source: The source this log message originates from. The value defaults
-    ///              to the module that emits the log message.
-    ///    - file: The file this log message originates from. There's usually no need to pass it explicitly, as it
-    ///            defaults to `#fileID`.
-    ///    - function: The function this log message originates from. There's usually no need to pass it explicitly, as
-    ///                it defaults to `#function`.
-    ///    - line: The line this log message originates from. There's usually no need to pass it explicitly, as it
-    ///            defaults to `#line`.
+    ///    - event: The log event containing the level, message, metadata, and source location.
+    public func log(event: LogEvent) {
+        for handler in self.handlers where handler.logLevel <= event.level {
+            handler.log(event: event)
+        }
+    }
+
+    @available(*, deprecated, renamed: "log(event:)")
     public func log(
         level: Logger.Level,
         message: Logger.Message,
@@ -1325,8 +1324,8 @@ public struct MultiplexLogHandler: LogHandler {
         function: String,
         line: UInt
     ) {
-        for handler in self.handlers where handler.logLevel <= level {
-            handler.log(
+        self.log(
+            event: LogEvent(
                 level: level,
                 message: message,
                 metadata: metadata,
@@ -1335,8 +1334,9 @@ public struct MultiplexLogHandler: LogHandler {
                 function: function,
                 line: line
             )
-        }
+        )
     }
+
     /// Get or set the entire metadata storage as a dictionary.
     public var metadata: Logger.Metadata {
         get {
@@ -1581,30 +1581,12 @@ public struct StreamLogHandler: LogHandler {
     /// Log a message using the log level and source that you provide.
     ///
     /// - parameters:
-    ///    - level: The log level to log the `message`.
-    ///    - message: The message to be logged. The `message` parameter supports any string interpolation literal.
-    ///    - explicitMetadata: One-off metadata to attach to this log message.
-    ///    - source: The source this log message originates from. The value defaults
-    ///              to the module that emits the log message.
-    ///    - file: The file this log message originates from. There's usually no need to pass it explicitly, as it
-    ///            defaults to `#fileID`.
-    ///    - function: The function this log message originates from. There's usually no need to pass it explicitly, as
-    ///                it defaults to `#function`.
-    ///    - line: The line this log message originates from. There's usually no need to pass it explicitly, as it
-    ///            defaults to `#line`.
-    public func log(
-        level: Logger.Level,
-        message: Logger.Message,
-        metadata explicitMetadata: Logger.Metadata?,
-        source: String,
-        file: String,
-        function: String,
-        line: UInt
-    ) {
+    ///    - event: The log event containing the level, message, metadata, and source location.
+    public func log(event: LogEvent) {
         let effectiveMetadata = StreamLogHandler.prepareMetadata(
             base: self.metadata,
             provider: self.metadataProvider,
-            explicit: explicitMetadata
+            explicit: event.metadata
         )
 
         let prettyMetadata: String?
@@ -1616,7 +1598,30 @@ public struct StreamLogHandler: LogHandler {
 
         var stream = self.stream
         stream.write(
-            "\(self.timestamp()) \(level)\(self.label.isEmpty ? "" : " ")\(self.label):\(prettyMetadata.map { " \($0)" } ?? "") [\(source)] \(message)\n"
+            "\(self.timestamp()) \(event.level)\(self.label.isEmpty ? "" : " ")\(self.label):\(prettyMetadata.map { " \($0)" } ?? "") [\(event.source)] \(event.message)\n"
+        )
+    }
+
+    @available(*, deprecated, renamed: "log(event:)")
+    public func log(
+        level: Logger.Level,
+        message: Logger.Message,
+        metadata: Logger.Metadata?,
+        source: String,
+        file: String,
+        function: String,
+        line: UInt
+    ) {
+        self.log(
+            event: LogEvent(
+                level: level,
+                message: message,
+                metadata: metadata,
+                source: source,
+                file: file,
+                function: function,
+                line: line
+            )
         )
     }
 
@@ -1686,46 +1691,28 @@ public struct SwiftLogNoOpLogHandler: LogHandler {
     /// Creates a no-op log handler.
     public init(_: String) {}
 
-    /// A proxy that discards every log message it receives.
+    /// A proxy that discards every log event it receives.
     ///
     /// - parameters:
-    ///    - level: The log level to log the `message`.
-    ///    - message: The message to be logged. The `message` parameter supports any string interpolation literal.
-    ///    - metadata: One-off metadata to attach to this log message.
-    ///    - file: The file this log message originates from. There's usually no need to pass it explicitly, as it
-    ///            defaults to `#fileID`.
-    ///    - function: The function this log message originates from. There's usually no need to pass it explicitly, as
-    ///                it defaults to `#function`.
-    ///    - line: The line this log message originates from. There's usually no need to pass it explicitly, as it
-    ///            defaults to `#line`.
+    ///    - event: The log event to discard.
+    @inlinable public func log(event: LogEvent) {}
+
+    @available(*, deprecated, renamed: "log(event:)")
     @inlinable public func log(
         level: Logger.Level,
         message: Logger.Message,
         metadata: Logger.Metadata?,
+        source: String,
         file: String,
         function: String,
         line: UInt
     ) {}
 
-    /// A proxy that discards every log message that you provide.
-    ///
-    /// - parameters:
-    ///    - level: The log level to log the `message`.
-    ///    - message: The message to be logged. The `message` parameter supports any string interpolation literal.
-    ///    - metadata: One-off metadata to attach to this log message.
-    ///    - source: The source this log message originates from. The value defaults
-    ///              to the module that emits the log message.
-    ///    - file: The file this log message originates from. There's usually no need to pass it explicitly, as it
-    ///            defaults to `#fileID`.
-    ///    - function: The function this log message originates from. There's usually no need to pass it explicitly, as
-    ///                it defaults to `#function`.
-    ///    - line: The line this log message originates from. There's usually no need to pass it explicitly, as it
-    ///            defaults to `#line`.
-    public func log(
-        level: Logger.Level,
-        message: Logger.Message,
-        metadata: Logger.Metadata?,
-        source: String,
+    @available(*, deprecated, renamed: "log(event:)")
+    @inlinable public func log(
+        level: Logging.Logger.Level,
+        message: Logging.Logger.Message,
+        metadata: Logging.Logger.Metadata?,
         file: String,
         function: String,
         line: UInt
