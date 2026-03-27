@@ -1388,38 +1388,40 @@ public struct MultiplexLogHandler: LogHandler {
     }
 }
 
-#if canImport(WASILibc) || os(Android) || os(OpenBSD)
-internal typealias CFilePointer = OpaquePointer
-#else
-internal typealias CFilePointer = UnsafeMutablePointer<FILE>
-#endif
-
 /// A wrapper to facilitate `print`-ing to stderr and stdio that
 /// ensures access to the underlying `FILE` is locked to prevent
 /// cross-thread interleaving of output.
 internal struct StdioOutputStream: TextOutputStream, @unchecked Sendable {
-    internal let file: CFilePointer
     internal let flushMode: FlushMode
+    private let _writeBytes: (UnsafeBufferPointer<UInt8>) -> Void
+    private let _flush: () -> Void
+
+    // Using a generic initializer lets Swift infer the concrete file-pointer type
+    // at each call site from the values passed. This avoids a CFilePointer typealias
+    // that cannot vary by Android API level (API 23 exposes FILE as
+    // UnsafeMutablePointer<FILE>; API 24+ makes it OpaquePointer).
+    internal init<F>(
+        file: F,
+        flushMode: FlushMode,
+        lock: ((F) -> Void)?,
+        unlock: ((F) -> Void)?,
+        write: @escaping (UnsafeRawPointer, Int, Int, F) -> Int,
+        flush: @escaping (F) -> Int32
+    ) {
+        self.flushMode = flushMode
+        self._writeBytes = { bytes in
+            lock?(file)
+            defer { unlock?(file) }
+            if let base = bytes.baseAddress, bytes.count > 0 {
+                _ = write(base, 1, bytes.count, file)
+            }
+        }
+        self._flush = { _ = flush(file) }
+    }
 
     internal func write(_ string: String) {
         self.contiguousUTF8(string).withContiguousStorageIfAvailable { utf8Bytes in
-            #if os(Windows)
-            _lock_file(self.file)
-            #elseif canImport(WASILibc)
-            // no file locking on WASI
-            #else
-            flockfile(self.file)
-            #endif
-            defer {
-                #if os(Windows)
-                _unlock_file(self.file)
-                #elseif canImport(WASILibc)
-                // no file locking on WASI
-                #else
-                funlockfile(self.file)
-                #endif
-            }
-            _ = fwrite(utf8Bytes.baseAddress!, 1, utf8Bytes.count, self.file)
+            self._writeBytes(utf8Bytes)
             if case .always = self.flushMode {
                 self.flush()
             }
@@ -1428,7 +1430,7 @@ internal struct StdioOutputStream: TextOutputStream, @unchecked Sendable {
 
     /// Flush the underlying stream.
     internal func flush() {
-        _ = fflush(self.file)
+        self._flush()
     }
 
     internal func contiguousUTF8(_ string: String) -> String.UTF8View {
@@ -1437,52 +1439,148 @@ internal struct StdioOutputStream: TextOutputStream, @unchecked Sendable {
         return contiguousString.utf8
     }
 
-    internal static let stderr = {
-        // Prevent name clashes
+    internal static let stderr: StdioOutputStream = {
         #if canImport(Darwin)
-        let systemStderr = Darwin.stderr
+        return StdioOutputStream(
+            file: Darwin.stderr,
+            flushMode: .always,
+            lock: flockfile,
+            unlock: funlockfile,
+            write: fwrite,
+            flush: fflush
+        )
         #elseif os(Windows)
-        let systemStderr = CRT.stderr
+        return StdioOutputStream(
+            file: CRT.stderr,
+            flushMode: .always,
+            lock: _lock_file,
+            unlock: _unlock_file,
+            write: fwrite,
+            flush: fflush
+        )
         #elseif canImport(Glibc)
         #if os(FreeBSD) || os(OpenBSD)
-        let systemStderr = Glibc.stderr
+        return StdioOutputStream(
+            file: Glibc.stderr,
+            flushMode: .always,
+            lock: flockfile,
+            unlock: funlockfile,
+            write: fwrite,
+            flush: fflush
+        )
         #else
-        let systemStderr = Glibc.stderr!
+        return StdioOutputStream(
+            file: Glibc.stderr!,
+            flushMode: .always,
+            lock: flockfile,
+            unlock: funlockfile,
+            write: fwrite,
+            flush: fflush
+        )
         #endif
         #elseif canImport(Android)
-        let systemStderr = Android.stderr
+        return StdioOutputStream(
+            file: Android.stderr,
+            flushMode: .always,
+            lock: flockfile,
+            unlock: funlockfile,
+            write: fwrite,
+            flush: fflush
+        )
         #elseif canImport(Musl)
-        let systemStderr = Musl.stderr!
+        return StdioOutputStream(
+            file: Musl.stderr!,
+            flushMode: .always,
+            lock: flockfile,
+            unlock: funlockfile,
+            write: fwrite,
+            flush: fflush
+        )
         #elseif canImport(WASILibc)
-        let systemStderr = WASILibc.stderr!
+        // no file locking on WASI
+        return StdioOutputStream(
+            file: WASILibc.stderr!,
+            flushMode: .always,
+            lock: nil,
+            unlock: nil,
+            write: fwrite,
+            flush: fflush
+        )
         #else
         #error("Unsupported runtime")
         #endif
-        return StdioOutputStream(file: systemStderr, flushMode: .always)
     }()
 
-    internal static let stdout = {
-        // Prevent name clashes
+    internal static let stdout: StdioOutputStream = {
         #if canImport(Darwin)
-        let systemStdout = Darwin.stdout
+        return StdioOutputStream(
+            file: Darwin.stdout,
+            flushMode: .always,
+            lock: flockfile,
+            unlock: funlockfile,
+            write: fwrite,
+            flush: fflush
+        )
         #elseif os(Windows)
-        let systemStdout = CRT.stdout
+        return StdioOutputStream(
+            file: CRT.stdout,
+            flushMode: .always,
+            lock: _lock_file,
+            unlock: _unlock_file,
+            write: fwrite,
+            flush: fflush
+        )
         #elseif canImport(Glibc)
         #if os(FreeBSD) || os(OpenBSD)
-        let systemStdout = Glibc.stdout
+        return StdioOutputStream(
+            file: Glibc.stdout,
+            flushMode: .always,
+            lock: flockfile,
+            unlock: funlockfile,
+            write: fwrite,
+            flush: fflush
+        )
         #else
-        let systemStdout = Glibc.stdout!
+        return StdioOutputStream(
+            file: Glibc.stdout!,
+            flushMode: .always,
+            lock: flockfile,
+            unlock: funlockfile,
+            write: fwrite,
+            flush: fflush
+        )
         #endif
         #elseif canImport(Android)
-        let systemStdout = Android.stdout
+        return StdioOutputStream(
+            file: Android.stdout,
+            flushMode: .always,
+            lock: flockfile,
+            unlock: funlockfile,
+            write: fwrite,
+            flush: fflush
+        )
         #elseif canImport(Musl)
-        let systemStdout = Musl.stdout!
+        return StdioOutputStream(
+            file: Musl.stdout!,
+            flushMode: .always,
+            lock: flockfile,
+            unlock: funlockfile,
+            write: fwrite,
+            flush: fflush
+        )
         #elseif canImport(WASILibc)
-        let systemStdout = WASILibc.stdout!
+        // no file locking on WASI
+        return StdioOutputStream(
+            file: WASILibc.stdout!,
+            flushMode: .always,
+            lock: nil,
+            unlock: nil,
+            write: fwrite,
+            flush: fflush
+        )
         #else
         #error("Unsupported runtime")
         #endif
-        return StdioOutputStream(file: systemStdout, flushMode: .always)
     }()
 
     /// Defines the flushing strategy for the underlying stream.
