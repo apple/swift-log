@@ -1849,6 +1849,34 @@ public struct MultiplexLogHandler: LogHandler {
             )
         }
     }
+
+    /// Log a message with attributed metadata, forwarding to each underlying handler.
+    ///
+    /// Each handler receives the attributed metadata directly, allowing privacy-aware handlers
+    /// to process privacy levels appropriately while non-privacy-aware handlers fall through
+    /// to their own default implementation that redacts private values.
+    public func log(
+        level: Logger.Level,
+        message: Logger.Message,
+        attributedMetadata: Logger.AttributedMetadata?,
+        source: String,
+        file: String,
+        function: String,
+        line: UInt
+    ) {
+        for handler in self.handlers where handler.logLevel <= level {
+            handler.log(
+                level: level,
+                message: message,
+                attributedMetadata: attributedMetadata,
+                source: source,
+                file: file,
+                function: function,
+                line: line
+            )
+        }
+    }
+
     /// Get or set the entire metadata storage as a dictionary.
     public var metadata: Logger.Metadata {
         get {
@@ -1890,6 +1918,59 @@ public struct MultiplexLogHandler: LogHandler {
         }
         set {
             self.mutatingForEachHandler { $0[metadataKey: metadataKey] = newValue }
+        }
+    }
+
+    /// Get or set the entire attributed metadata storage as a dictionary.
+    ///
+    /// On get, merges attributed metadata from all handlers and metadata providers.
+    /// Handlers' plain metadata and provider values are treated as `.public`.
+    public var attributedMetadata: Logger.AttributedMetadata {
+        get {
+            var effective: Logger.AttributedMetadata = [:]
+            effective.reserveCapacity(self.handlers.first!.attributedMetadata.count)
+
+            for handler in self.handlers {
+                effective.merge(handler.attributedMetadata, uniquingKeysWith: { _, handlerMetadata in handlerMetadata })
+                if let provider = handler.metadataProvider {
+                    if let attributed = provider.getAttributed() {
+                        effective.merge(attributed, uniquingKeysWith: { _, provided in provided })
+                    } else {
+                        let plainAsAttributed = provider.get().mapValues(Self.plainToAttributed)
+                        effective.merge(plainAsAttributed, uniquingKeysWith: { _, provided in provided })
+                    }
+                }
+            }
+            if let provider = self._metadataProvider {
+                if let attributed = provider.getAttributed() {
+                    effective.merge(attributed, uniquingKeysWith: { _, provided in provided })
+                } else {
+                    let plainAsAttributed = provider.get().mapValues(Self.plainToAttributed)
+                    effective.merge(plainAsAttributed, uniquingKeysWith: { _, provided in provided })
+                }
+            }
+
+            return effective
+        }
+        set {
+            self.mutatingForEachHandler { $0.attributedMetadata = newValue }
+        }
+    }
+
+    /// Add, change, or remove an attributed logging metadata item.
+    ///
+    /// > Note: Changing the logging metadata only affects the instance of the `Logger` where you change it.
+    public subscript(attributedMetadataKey key: String) -> Logger.AttributedMetadataValue? {
+        get {
+            for handler in self.handlers {
+                if let value = handler[attributedMetadataKey: key] {
+                    return value
+                }
+            }
+            return nil
+        }
+        set {
+            self.mutatingForEachHandler { $0[attributedMetadataKey: key] = newValue }
         }
     }
 

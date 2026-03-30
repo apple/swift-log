@@ -774,6 +774,194 @@ struct PrivacyLabelsTests {
         #expect(privateAttrs.description == "privacy: private")
         #expect("\(privateAttrs)" == "privacy: private")
     }
+    // MARK: - MultiplexLogHandler Attributed Metadata Tests
+
+    @Test("MultiplexLogHandler forwards attributed metadata to all handlers")
+    func testMultiplexForwardsAttributedMetadata() {
+        let recorder1 = PrivacyLogRecorder()
+        let recorder2 = PrivacyLogRecorder()
+
+        let handler1 = PrivacyTestLogHandler(recorder: recorder1)
+        let handler2 = PrivacyTestLogHandler(recorder: recorder2)
+
+        var logger = Logger(label: "test") { _ in
+            MultiplexLogHandler([handler1, handler2])
+        }
+        logger.logLevel = .trace
+
+        let attributedMetadata: Logger.AttributedMetadata = [
+            "user.id": "\(TestData.userId, privacy: .private)",
+            "action": "\(TestData.action, privacy: .public)",
+        ]
+
+        logger.info("hello", attributedMetadata: attributedMetadata)
+
+        // Both handlers should receive the attributed metadata with privacy preserved
+        #expect(recorder1.messages.count == 1)
+        #expect(recorder2.messages.count == 1)
+
+        let msg1 = recorder1.messages[0]
+        #expect(msg1.attributedMetadata?["user.id"]?.attributes.privacy == .private)
+        #expect(msg1.attributedMetadata?["action"]?.attributes.privacy == .public)
+
+        let msg2 = recorder2.messages[0]
+        #expect(msg2.attributedMetadata?["user.id"]?.attributes.privacy == .private)
+        #expect(msg2.attributedMetadata?["action"]?.attributes.privacy == .public)
+    }
+
+    @Test("MultiplexLogHandler respects per-handler log levels for attributed metadata")
+    func testMultiplexAttributedMetadataLogLevelFiltering() {
+        let recorder1 = PrivacyLogRecorder()
+        let recorder2 = PrivacyLogRecorder()
+
+        var handler1 = PrivacyTestLogHandler(recorder: recorder1)
+        handler1.logLevel = .warning
+        var handler2 = PrivacyTestLogHandler(recorder: recorder2)
+        handler2.logLevel = .trace
+
+        let logger = Logger(label: "test") { _ in
+            MultiplexLogHandler([handler1, handler2])
+        }
+
+        let attributedMetadata: Logger.AttributedMetadata = [
+            "key": "\("value", privacy: .private)"
+        ]
+
+        logger.info("info", attributedMetadata: attributedMetadata)
+
+        // handler1 has logLevel .warning, should NOT receive .info
+        #expect(recorder1.messages.count == 0)
+        // handler2 has logLevel .trace, should receive .info
+        #expect(recorder2.messages.count == 1)
+        #expect(recorder2.messages[0].attributedMetadata?["key"]?.attributes.privacy == .private)
+    }
+
+    @Test("MultiplexLogHandler forwards attributed metadata to mixed handler types")
+    func testMultiplexMixedHandlerTypes() {
+        // One privacy-aware handler that records attributed metadata
+        let privacyRecorder = PrivacyLogRecorder()
+        let privacyHandler = PrivacyTestLogHandler(recorder: privacyRecorder)
+
+        // One plain handler that relies on the default attributed->plain conversion
+        let plainRecorder = FilterLogRecorder()
+        let plainHandler = FilterTestLogHandler(recorder: plainRecorder)
+
+        var logger = Logger(label: "test") { _ in
+            MultiplexLogHandler([privacyHandler, plainHandler])
+        }
+        logger.logLevel = .trace
+
+        let attributedMetadata: Logger.AttributedMetadata = [
+            "secret": "\("password123", privacy: .private)",
+            "action": "\("login", privacy: .public)",
+        ]
+
+        logger.info("hello", attributedMetadata: attributedMetadata)
+
+        // Privacy-aware handler gets full attributed metadata
+        #expect(privacyRecorder.messages.count == 1)
+        #expect(privacyRecorder.messages[0].attributedMetadata?["secret"]?.attributes.privacy == .private)
+        #expect(privacyRecorder.messages[0].attributedMetadata?["action"]?.attributes.privacy == .public)
+
+        // Plain handler gets redacted metadata via its default log(attributedMetadata:) implementation
+        let plainMetadata = plainRecorder.receivedMetadata
+        #expect(plainMetadata?["secret"] == .string(Logger.AttributedMetadataValue.redactionMarker))
+        #expect(plainMetadata?["action"] == .string("login"))
+    }
+
+    @Test("MultiplexLogHandler attributed metadata property merges across handlers")
+    func testMultiplexAttributedMetadataProperty() {
+        let recorder1 = PrivacyLogRecorder()
+        let recorder2 = PrivacyLogRecorder()
+
+        var handler1 = PrivacyTestLogHandler(recorder: recorder1)
+        handler1.attributedMetadata["from-1"] = "\("value1", privacy: .private)"
+        var handler2 = PrivacyTestLogHandler(recorder: recorder2)
+        handler2.attributedMetadata["from-2"] = "\("value2", privacy: .public)"
+
+        let logger = Logger(label: "test") { _ in
+            MultiplexLogHandler([handler1, handler2])
+        }
+
+        let merged = logger.handler.attributedMetadata
+        #expect(merged["from-1"]?.attributes.privacy == .private)
+        #expect(merged["from-2"]?.attributes.privacy == .public)
+    }
+
+    @Test("MultiplexLogHandler attributed metadata subscript returns first match")
+    func testMultiplexAttributedMetadataSubscript() {
+        let recorder1 = PrivacyLogRecorder()
+        let recorder2 = PrivacyLogRecorder()
+
+        var handler1 = PrivacyTestLogHandler(recorder: recorder1)
+        handler1.attributedMetadata["shared"] = "\("from-handler-1", privacy: .private)"
+        var handler2 = PrivacyTestLogHandler(recorder: recorder2)
+        handler2.attributedMetadata["shared"] = "\("from-handler-2", privacy: .public)"
+
+        let logger = Logger(label: "test") { _ in
+            MultiplexLogHandler([handler1, handler2])
+        }
+
+        // First handler wins on get
+        let value = logger.handler[attributedMetadataKey: "shared"]
+        #expect(value?.attributes.privacy == .private)
+        #expect(value?.value.description == "from-handler-1")
+    }
+
+    @Test("MultiplexLogHandler attributed metadata subscript sets across all handlers")
+    func testMultiplexAttributedMetadataSubscriptSet() {
+        let recorder1 = PrivacyLogRecorder()
+        let recorder2 = PrivacyLogRecorder()
+
+        let handler1 = PrivacyTestLogHandler(recorder: recorder1)
+        let handler2 = PrivacyTestLogHandler(recorder: recorder2)
+
+        var multiplex: any LogHandler = MultiplexLogHandler([handler1, handler2])
+        multiplex[attributedMetadataKey: "key"] = "\("secret", privacy: .private)"
+
+        // Setting via subscript should propagate, so logging should include it
+        let merged = multiplex.attributedMetadata
+        #expect(merged["key"]?.attributes.privacy == .private)
+    }
+
+    @Test("MultiplexLogHandler attributed metadata property includes metadata provider values")
+    func testMultiplexAttributedMetadataWithProvider() {
+        let recorder1 = PrivacyLogRecorder()
+        let recorder2 = PrivacyLogRecorder()
+
+        var handler1 = PrivacyTestLogHandler(recorder: recorder1)
+        handler1.metadataProvider = .constant(["provider-key": "provider-value"])
+        let handler2 = PrivacyTestLogHandler(recorder: recorder2)
+
+        let logger = Logger(label: "test") { _ in
+            MultiplexLogHandler([handler1, handler2])
+        }
+
+        let merged = logger.handler.attributedMetadata
+        // Provider values should appear as .public
+        #expect(merged["provider-key"]?.attributes.privacy == .public)
+        #expect(merged["provider-key"]?.value.description == "provider-value")
+    }
+
+    @Test("MultiplexLogHandler attributed metadata with outer metadata provider")
+    func testMultiplexAttributedMetadataWithOuterProvider() {
+        let recorder1 = PrivacyLogRecorder()
+        let recorder2 = PrivacyLogRecorder()
+
+        let handler1 = PrivacyTestLogHandler(recorder: recorder1)
+        let handler2 = PrivacyTestLogHandler(recorder: recorder2)
+
+        let logger = Logger(label: "test") { _ in
+            MultiplexLogHandler(
+                [handler1, handler2],
+                metadataProvider: .constant(["outer": "outer-value"])
+            )
+        }
+
+        let merged = logger.handler.attributedMetadata
+        #expect(merged["outer"]?.attributes.privacy == .public)
+        #expect(merged["outer"]?.value.description == "outer-value")
+    }
 }
 
 // MARK: - Test Helpers
