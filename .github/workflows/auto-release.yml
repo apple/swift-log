@@ -1,0 +1,12 @@
+name: Auto Release
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: read
+
+jobs:
+  auto-release:
+    uses: apple/swift-temporal-sdk/.github/workflows/auto-release.yml@main
