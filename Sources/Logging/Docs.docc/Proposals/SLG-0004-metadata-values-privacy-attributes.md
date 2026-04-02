@@ -6,12 +6,13 @@ Introduce an attributed metadata system that allows attaching attributes to meta
 
 - Proposal: SLG-0004
 - Author(s): [Vladimir Kukushkin](https://github.com/kukushechkin)
-- Status: **Awaiting Review**
+- Status: **Deferred**
 - Issue: https://github.com/apple/swift-log/issues/204
 - Implementation:
     - [apple/swift-log#418](https://github.com/apple/swift-log/pull/418)
 - Related links:
     - [Lightweight proposals process description](https://github.com/apple/swift-log/blob/main/Sources/Logging/Docs.docc/Proposals/Proposals.md)
+    - [Review discussion](https://forums.swift.org/t/proposal-slg-0004-metadata-values-privacy-attribute/85249/16)
 
 ### Introduction
 
