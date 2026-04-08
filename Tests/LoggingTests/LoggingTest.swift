@@ -567,6 +567,19 @@ struct LoggingTest {
         #expect(logger2.handler is CustomHandler, "expected custom log handler")
     }
 
+    @Test func errorParameter() {
+        let testLogging = TestLogging()
+
+        let logger = Logger(
+            label: "\(#function)",
+            factory: {
+                testLogging.make(label: $0)
+            }
+        )
+        logger.log(level: .info, "hello world!", error: TestError.boom)
+        testLogging.history.assertExist(level: .info, message: "hello world!", error: TestError.boom)
+    }
+
     @Test func allLogLevelsExceptCriticalCanBeBlocked() {
         let testLogging = TestLogging()
 
@@ -623,7 +636,43 @@ struct LoggingTest {
         testLogging.history.assertExist(level: .critical, message: "yes: critical")
     }
 
-    @Test func allLogLevelByFunctionRefWithSource() {
+    @Test func allLogLevelByFunctionRefWithSourceAndError() {
+        let testLogging = TestLogging()
+
+        var logger = Logger(
+            label: "\(#function)",
+            factory: {
+                testLogging.make(label: $0)
+            }
+        )
+        logger.logLevel = .trace
+
+        let trace = logger.trace(_:error:metadata:source:file:function:line:)
+        let debug = logger.debug(_:error:metadata:source:file:function:line:)
+        let info = logger.info(_:error:metadata:source:file:function:line:)
+        let notice = logger.notice(_:error:metadata:source:file:function:line:)
+        let warning = logger.warning(_:error:metadata:source:file:function:line:)
+        let error = logger.error(_:error:metadata:source:file:function:line:)
+        let critical = logger.critical(_:error:metadata:source:file:function:line:)
+
+        trace("yes: trace", TestError.boom, [:], "foo", #file, #function, #line)
+        debug("yes: debug", TestError.boom, [:], "foo", #file, #function, #line)
+        info("yes: info", TestError.boom, [:], "foo", #file, #function, #line)
+        notice("yes: notice", TestError.boom, [:], "foo", #file, #function, #line)
+        warning("yes: warning", TestError.boom, [:], "foo", #file, #function, #line)
+        error("yes: error", TestError.boom, [:], "foo", #file, #function, #line)
+        critical("yes: critical", TestError.boom, [:], "foo", #file, #function, #line)
+
+        testLogging.history.assertExist(level: .trace, message: "yes: trace", error: TestError.boom, source: "foo")
+        testLogging.history.assertExist(level: .debug, message: "yes: debug", error: TestError.boom, source: "foo")
+        testLogging.history.assertExist(level: .info, message: "yes: info", error: TestError.boom, source: "foo")
+        testLogging.history.assertExist(level: .notice, message: "yes: notice", error: TestError.boom, source: "foo")
+        testLogging.history.assertExist(level: .warning, message: "yes: warning", error: TestError.boom, source: "foo")
+        testLogging.history.assertExist(level: .error, message: "yes: error", error: TestError.boom, source: "foo")
+        testLogging.history.assertExist(level: .critical, message: "yes: critical", error: TestError.boom, source: "foo")
+    }
+
+    @Test func allLogLevelByFunctionRefWithoWithSourceWithoutError() {
         let testLogging = TestLogging()
 
         var logger = Logger(
@@ -659,7 +708,7 @@ struct LoggingTest {
         testLogging.history.assertExist(level: .critical, message: "yes: critical", source: "foo")
     }
 
-    @Test func allLogLevelByFunctionRefWithoutSource() {
+    @Test func allLogLevelByFunctionRefWithoutSourceOrError() {
         let testLogging = TestLogging()
 
         var logger = Logger(

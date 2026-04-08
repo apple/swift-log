@@ -99,6 +99,11 @@ public struct InMemoryLogHandler: LogHandler {
         mergedMetadata = mergedMetadata.merging(self.metadata) { $1 }
         // ..merge in metadata from this log call, overwriting existing keys
         mergedMetadata = mergedMetadata.merging(event.metadata ?? [:]) { $1 }
+        // ..merge in error as metadata, overwriting existing keys
+        if let error = event.error {
+            mergedMetadata["error.message"] = "\(error)"
+            mergedMetadata["error.type"] = "\(String(describing: type(of: error)))"
+        }
 
         self.logStore.append(level: event.level, message: event.message, metadata: mergedMetadata)
     }

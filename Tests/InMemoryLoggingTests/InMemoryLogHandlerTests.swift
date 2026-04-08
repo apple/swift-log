@@ -70,6 +70,23 @@ struct InMemoryLogHandlerTests {
     }
 
     @Test
+    func errorFromLogEndsUpInEntryAsMetadata() {
+        let (logHandler, logger) = self.makeTestLogger()
+        let error = TestError.boom
+        logger.info("hello", error: error)
+
+        #expect(
+            logHandler.entries == [
+                InMemoryLogHandler.Entry(
+                    level: .info,
+                    message: "hello",
+                    metadata: ["error.message": "\(error)", "error.type": "\(String(describing: type(of: error)))"]
+                )
+            ]
+        )
+    }
+
+    @Test
     func clear() {
         let (logHandler, logger) = self.makeTestLogger()
         logger.info("hello", metadata: ["key1": "value1", "key2": ["a", "b", "c"]])
@@ -94,5 +111,9 @@ struct InMemoryLogHandlerTests {
             }
         )
         return (logHandler, logger)
+    }
+
+    enum TestError: Error {
+        case boom
     }
 }

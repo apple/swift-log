@@ -87,9 +87,15 @@ internal struct TestLogHandler: LogHandler {
             metadata.merge(explicitMetadata, uniquingKeysWith: { _, explicit in explicit })
         }
 
+        if let error = event.error {
+            metadata["error.message"] = "\(error)"
+            metadata["error.type"] = "\(String(describing: type(of: error)))"
+        }
+
         self.logger.log(
             level: event.level,
             event.message,
+            error: event.error,
             metadata: metadata,
             source: event.source,
             file: event.file,
@@ -268,6 +274,7 @@ extension History {
     func assertExist(
         level: Logger.Level,
         message: String,
+        error: (any Error)? = nil,
         metadata: Logger.Metadata? = nil,
         source: String? = nil,
         file: String = #filePath,
@@ -276,10 +283,10 @@ extension History {
         column: Int = #column
     ) {
         let source = source ?? Logger.currentModule(fileID: "\(fileID)")
-        let entry = self.find(level: level, message: message, metadata: metadata, source: source)
+        let entry = self.find(level: level, message: message, error: error, metadata: metadata, source: source)
         #expect(
             entry != nil,
-            "entry not found: \(level), \(source), \(String(describing: metadata)), \(message)",
+            "entry not found: \(level), \(source), \(String(describing: metadata)), \(message), \(error)",
             sourceLocation: SourceLocation(fileID: fileID, filePath: file, line: line, column: column)
         )
     }
@@ -287,6 +294,7 @@ extension History {
     func assertNotExist(
         level: Logger.Level,
         message: String,
+        error: (any Error)? = nil,
         metadata: Logger.Metadata? = nil,
         source: String? = nil,
         file: String = #filePath,
@@ -295,21 +303,29 @@ extension History {
         column: Int = #column
     ) {
         let source = source ?? Logger.currentModule(fileID: "\(fileID)")
-        let entry = self.find(level: level, message: message, metadata: metadata, source: source)
+        let entry = self.find(level: level, message: message, error: error, metadata: metadata, source: source)
         #expect(
             entry == nil,
-            "entry was found: \(level), \(source), \(String(describing: metadata)), \(message)",
+            "entry was found: \(level), \(source), \(String(describing: metadata)), \(message), \(error)",
             sourceLocation: SourceLocation(fileID: fileID, filePath: file, line: line, column: column)
         )
     }
 
-    func find(level: Logger.Level, message: String, metadata: Logger.Metadata? = nil, source: String) -> LogEntry? {
+    func find(level: Logger.Level, message: String, error: (any Error)? = nil, metadata: Logger.Metadata? = nil, source: String) -> LogEntry? {
         self.entries.first { entry in
             if entry.level != level {
                 return false
             }
             if entry.message != message {
                 return false
+            }
+            if let error {
+                guard case .string(let errorMessage) = entry.metadata?["error.message"], errorMessage == "\(error)" else {
+                    return false
+                }
+                guard case .string(let errorType) = entry.metadata?["error.type"], errorType == String(describing: type(of: error)) else {
+                    return false
+                }
             }
             if let lhs = entry.metadata, let rhs = metadata {
                 if lhs.count != rhs.count {
