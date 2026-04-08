@@ -1,467 +1,432 @@
-# SLG-0004: Metadata values privacy attribute
+# SLG-0004: Metadata value attributes
 
-Introduce an attributed metadata system that allows attaching attributes to metadata values, with privacy level as the first attribute enabling developers to mark metadata as `.private` or `.public`.
+Add an extensible per-value attribute mechanism for metadata, with sensitivity as the first attribute.
 
 ## Overview
 
 - Proposal: SLG-0004
 - Author(s): [Vladimir Kukushkin](https://github.com/kukushechkin)
-- Status: **Deferred**
-- Issue: https://github.com/apple/swift-log/issues/204
+- Status: **Awaiting Review**
+- Issue: [apple/swift-log#204](https://github.com/apple/swift-log/issues/204)
 - Implementation:
-    - [apple/swift-log#418](https://github.com/apple/swift-log/pull/418)
+    - [apple/swift-log#439](https://github.com/apple/swift-log/pull/439)
 - Related links:
     - [Lightweight proposals process description](https://github.com/apple/swift-log/blob/main/Sources/Logging/Docs.docc/Proposals/Proposals.md)
-    - [Review discussion](https://forums.swift.org/t/proposal-slg-0004-metadata-values-privacy-attribute/85249/16)
 
 ### Introduction
 
-This proposal introduces an **attributed metadata system** that allows attaching attributes to metadata values. Privacy level is the first concrete attribute, enabling developers to mark metadata values as `.private` or `.public` so `LogHandler` implementations can redact sensitive values before logging.
+Introduce an extensible mechanism for attaching per-value attributes to metadata. The core `Logging` module provides
+the protocol and storage. A companion `LoggingAttributes` target provides the first cross-cutting attribute:
+`Sensitivity` (`.sensitive` / `.public`).
 
 ### Motivation
 
-SwiftLog lacks a mechanism to attach attributes to metadata values. This prevents marking metadata as sensitive and limits future extensibility for other metadata attributes.
+Metadata values in `swift-log` are opaque strings by the time the `LogHandler` receives them. The call site often
+knows things about a value that the handler cannot infer — for example, whether the value should be redacted in
+different environments.
 
-Applications need privacy controls for:
-- Compliance with privacy regulations.
-- Backend integration with privacy-aware logging systems.
-- Systematic control over what data appears in logs.
+Today, there is no way to express this. A single log statement can contain values that need different treatment, and
+log levels cannot help because they are per-statement, not per-value:
 
-Beyond privacy, an attributed metadata system provides a foundation for future extensions such as retention policies, data classification, or other metadata attributes.
+```swift
+logger.info("Login", metadata: [
+    "action": "\(action)",        // safe to log
+    "user_email": "\(email)",     // should be redacted in production, but nothing tells the handler
+])
+```
+
+The workaround is handler-side key-based rules (`redact: ["email", "card-*", ...]`), but this is fragile:
+
+- Rules break when libraries rename keys.
+- Rules require coordination across all dependencies.
+- The rule mapping is invisible at the call site — the developer has no indication whether their handler will redact.
+
+The alternative is to apply redaction logic on the emission site, but this is verbose and also error-prone.
 
 ### Proposed solution
 
-Introduce new `AttributedMetadata` data type, enabling users to mark metadata values with `.private` and `.public` privacy label:
+A new `attributedMetadata` parameter on `Logger` log methods accepts metadata values wrapped with attributes. Libraries
+import the `LoggingAttributes` companion target to annotate values; handlers read the attributes and act on them:
 
 ```swift
-// Add privacy level to metadata values obtained through a metadata provider
-let serviceIp = "127.0.0.1"
-var logger = Logger(label: "my-app", metadataProvider: .init {[
-    "service.ip": "\(serviceIp, privacy: .private)",
-]})
+import Logging
+import LoggingAttributes
 
-// Add privacy level to metadata values attached to a `Loghandler` instance
-let requestId = UUID()
-logger[attributedMetadataKey: "request.id"] = "\(requestId, privacy: .private)"
-
-// Mark sensitive values as private and non-sensitive as public at logging call site
-let userId = UUID()
-let action = "login"
-logger.info("User action", attributedMetadata: [
-    "user.id": "\(userId, privacy: .private)",
-    "action": "\(action)"  // default is .public for ease of adoption
+logger.info("Request", attributedMetadata: [
+    "method": "\(req.method)",
+    "user_id": "\(req.userId, sensitivity: .sensitive)",
 ])
 ```
 
-This allows `Logger` users to mark certain metadata values as "I only trust LogHandlers, who know how to handle sensitive data, to see this value".
+Handlers that support redaction replace or mask the value. Handlers that do not support redaction simply read
+`event.metadata`, which strips attributes and returns raw values automatically.
+The existing `metadata:` parameter continues to work unchanged.
+
+Attributes are **classifications, not enforcement**. A sensitivity attribute does not guarantee redaction — the handler
+may not support it. Applications needing guaranteed PII protection must enforce it at the application level.
+
+The attribute mechanism is extensible: handler packages and middleware can define their own attribute types using the
+same `MetadataAttributeKey` protocol. A `LogHandler` middleware can read the attributes it cares about, act on them,
+and forward the rest to the next handler in the chain. This enables composable handler pipelines — for example,
+a sensitivity-aware middleware followed by a metrics-extraction middleware followed by the output handler.
+Handler-specific attributes couple the call site to that handler and should only be used by application code
+or by code that controls both the emission site and the `LogHandler`.
 
 ### Detailed design
 
-#### Attributed Metadata
-
-To support privacy labels and enable future extensibility, we introduce a generalized **attributed metadata** system. This provides a foundation for attaching arbitrary attributes to metadata values, with privacy labels being the first concrete use case:
-
-```swift
-// Plain metadata (existing)
-let metadataValue: MetadataValue = .string("value")
-logger.info("Message", metadata: ["key": metadataValue])
-
-// Attributed metadata (new) — a value with attributes
-logger.info("Message", attributedMetadata: [
-    "key": AttributedMetadataValue(value: metadataValue, attributes: ...)
-])
-```
-
-The attributed metadata system instroduces new public API:
-
-1. **`AttributedMetadataValue`**: Wraps a standard `MetadataValue` with associated attributes.
-2. **`MetadataValueAttributes`**: Container for attributes.
-3. **`AttributedMetadata`**: Dictionary type mapping `String` keys to attributed values.
-4. **Parallel logging API**: New log methods accepting `attributedMetadata` parameter.
-
-This design separates the transport mechanism (attributed metadata) from specific attribute semantics (privacy labels), allowing future extensions without breaking existing attributed metadata code.
-
-#### Privacy levels
-
-With attributed metadata as the foundation, privacy labels are implemented as the first concrete attribute:
+#### `MetadataAttributeKey` protocol
 
 ```swift
 extension Logger {
-    /// A metadata value with associated privacy attributes.
+    /// A protocol for defining custom metadata attribute keys.
     ///
-    /// `AttributedMetadataValue` wraps a standard `MetadataValue` with privacy attributes,
-    /// allowing you to mark metadata as private or public for privacy-aware logging.
+    /// This protocol is designed for **small, fixed-vocabulary attributes** represented as
+    /// enums. Each attribute value is stored as an `Int` raw value alongside an `ObjectIdentifier`
+    /// for the key type, so attributes occupy minimal space. Attributes that need to carry
+    /// associated data, strings, or richer payloads are outside the scope of this protocol.
     ///
-    /// ## Creating Attributed Metadata
-    ///
-    /// Use string interpolation with privacy parameter:
-    ///
-    /// ```swift
-    /// // Preferred: String interpolation with privacy level specified
-    /// let userId = "12345"
-    /// let action = "login"
-    /// logger.info("User action", attributedMetadata: [
-    ///     "user.id": "\(userId, privacy: .private)",
-    ///     "action": "\(action, privacy: .public)"  // explicit .public for non-sensitive data
-    /// ])
-    ///
-    /// // Direct creation
-    /// let attributed = Logger.AttributedMetadataValue(
-    ///     .string("12345"),
-    ///     privacy: .private
-    /// )
-    /// ```
-    ///
-    /// ## Important Limitations
-    ///
-    /// - **No nested privacy**: When marking a dictionary or array as private, all contained
-    ///   values are treated with the same privacy level. Fine-grained privacy within nested
-    ///   structures is not currently supported.
-    ///
-    /// - **Metadata only**: Privacy levels apply only to metadata values, not to log messages.
-    ///   Avoid including sensitive data in log message string interpolation.
-    public struct AttributedMetadataValue: CustomStringConvertible, Sendable {
-        /// The redaction marker used for private values.
-        internal static let redactionMarker = "<private>"
-
-        public let value: MetadataValue
-        public let attributes: MetadataValueAttributes
-
-        /// String representation redacts private values to the redaction marker.
-        public var description: String {
-            attributes.privacy == .public ? value.description : Self.redactionMarker
-        }
-
-        public init(_ value: MetadataValue, attributes: MetadataValueAttributes)
-        public init(_ value: MetadataValue, privacy: PrivacyLevel)
-    }
-
-    extension AttributedMetadataValue {
-        /// Attributes that can be associated with metadata values.
-        public struct MetadataValueAttributes: CustomStringConvertible, Hashable, Sendable {
-            /// Privacy level for metadata values.
-            ///
-            /// Privacy levels allow you to mark metadata values as either private (sensitive data that should be
-            /// protected) or public (safe to log in any context).
-            ///
-            /// ## Usage
-            ///
-            /// Use string interpolation with the privacy parameter to create attributed metadata values:
-            ///
-            /// ```swift
-            /// let userId = "12345"
-            /// let action = "login"
-            /// logger.info("User action", attributedMetadata: [
-            ///     "user.id": "\(userId, privacy: .private)",
-            ///     "action": "\(action, privacy: .public)",
-            ///     "ip": "\(ipAddress, privacy: .private)"
-            /// ])
-            /// ```
-            @frozen
-            public enum PrivacyLevel: Sendable, CaseIterable, Equatable, Hashable, CustomStringConvertible {
-                /// Private data that should be redacted in non-secure contexts.
-                case `private`
-
-                /// Public data safe for general logging.
-                case `public`
-            }
-
-            /// The privacy level of this metadata value.
-            public var privacy: PrivacyLevel
-
-            /// Create metadata value attributes with the specified privacy level.
-            ///
-            /// - Parameter privacy: The privacy level for this metadata. Defaults to `.public`.
-            public init(privacy: PrivacyLevel = .public)
-        }
-
-        /// The underlying metadata value without privacy attributes.
-        public var value: MetadataValue
-
-        /// The privacy attributes associated with this metadata value.
-        public var attributes: MetadataValueAttributes
-
-        /// Create an attributed metadata value with the specified attributes.
-        ///
-        /// - Parameters:
-        ///   - value: The metadata value to wrap.
-        ///   - attributes: The attributes for this value.
-        public init(_ value: MetadataValue, attributes: MetadataValueAttributes)
-
-        /// Convenience initializer for creating attributed metadata with a privacy level.
-        ///
-        /// - Parameters:
-        ///   - value: The metadata value to wrap.
-        ///   - privacy: The privacy level for this value.
-        public init(_ value: MetadataValue, privacy: PrivacyLevel)
-    }
-
-    /// Metadata dictionary with privacy attributes.
-    ///
-    /// A dictionary mapping string keys to ``AttributedMetadataValue`` instances, used with
-    /// the `attributedMetadata` parameter of logging methods.
+    /// The conforming type must be an enum with `Int` raw values. Each attribute occupies just
+    /// `(ObjectIdentifier, Int)` in the inline slot, avoiding heap allocation for the
+    /// common single-attribute case.
     ///
     /// ## Example
     ///
     /// ```swift
-    /// let userId = "12345"
-    /// let requestId = "req-789"
-    /// let metadata: Logger.AttributedMetadata = [
-    ///     "user.id": "\(userId, privacy: .private)",
-    ///     "request.id": "\(requestId, privacy: .public)",
-    ///     "action": "purchase"  // String literal defaults to .public
-    /// ]
-    /// logger.info("User action", attributedMetadata: metadata)
+    /// public enum Sensitivity: Int, Sendable, MetadataAttributeKey {
+    ///     case sensitive = 1
+    ///     case `public` = 2
+    /// }
     /// ```
+    public protocol MetadataAttributeKey: Sendable,
+        RawRepresentable where RawValue == Int {}
+}
+```
+
+Each conforming type serves as both the key and the value for an attribute. The metatype (`Key.Type`) identifies
+the attribute at runtime via `ObjectIdentifier` — no coordination between packages is needed.
+
+#### `MetadataValueAttributes`
+
+```swift
+extension Logger {
+    /// Attributes that can be associated with metadata values.
+    ///
+    /// `MetadataValueAttributes` stores one attribute inline without heap allocation. When more
+    /// than one attribute is needed, additional attributes spill over to a heap-allocated array.
+    /// Use the generic subscript to get/set attributes by their ``MetadataAttributeKey`` type.
+    public struct MetadataValueAttributes: Sendable, Equatable {
+        /// Create empty metadata value attributes.
+        public init()
+
+        /// Get or set a custom attribute by its key type.
+        ///
+        /// - Parameter key: The metatype of the attribute key to access.
+        /// - Returns: The attribute value, or `nil` if not set.
+        public subscript<Key: MetadataAttributeKey>(key: Key.Type) -> Key? { get set }
+    }
+}
+```
+
+The common case (0–1 attributes) avoids heap allocation. `Equatable` compares entries as an unordered set,
+which is O(n²) but n is typically 0 or close to 0.
+
+#### `AttributedMetadataValue` and `AttributedMetadata`
+
+```swift
+extension Logger {
+    /// A metadata value with associated attributes.
+    ///
+    /// `AttributedMetadataValue` wraps a standard `MetadataValue` with custom attributes,
+    /// allowing you to associate application-defined or handler-defined attributes
+    /// with metadata values.
+    public struct AttributedMetadataValue: Sendable, Equatable, CustomStringConvertible,
+        ExpressibleByStringLiteral, ExpressibleByStringInterpolation
+    {
+        /// The underlying metadata value without attributes.
+        public var value: Logger.MetadataValue
+
+        /// The attributes associated with this metadata value.
+        public var attributes: Logger.MetadataValueAttributes
+
+        /// Create an attributed metadata value with the specified attributes.
+        public init(_ value: Logger.MetadataValue, attributes: Logger.MetadataValueAttributes)
+    }
+
+    /// Metadata dictionary with attributes.
     public typealias AttributedMetadata = [String: AttributedMetadataValue]
 }
 ```
 
-#### String interpolation for attributed metadata
+`description` returns the value's string representation with no post-processing. Handlers that understand specific
+attributes perform post-processing in their `log(event:)` method.
+
+#### String interpolation
+
+The `Logging` module provides two base interpolation methods on `AttributedMetadataValue.StringInterpolation`:
 
 ```swift
-extension Logger.AttributedMetadataValue: ExpressibleByStringLiteral, ExpressibleByStringInterpolation {
-    /// Custom string interpolation that captures privacy levels from interpolated values.
-    ///
-    /// This enables syntax like:
-    /// ```swift
-    /// logger.info("User action", attributedMetadata: [
-    ///     "user.id": "\(userId, privacy: .private)",
-    ///     "action": "\(action, privacy: .public)"
-    /// ])
-    /// ```
-    public struct StringInterpolation: StringInterpolationProtocol {
-        public init(literalCapacity: Int, interpolationCount: Int)
-        public mutating func appendLiteral(_ literal: String)
+/// Plain interpolation without attributes.
+public mutating func appendInterpolation<T: CustomStringConvertible & Sendable>(_ value: T)
 
-        /// Interpolation with explicit privacy parameter.
-        public mutating func appendInterpolation<T>(_ value: T, privacy: Logger.PrivacyLevel = .public)
-            where T: CustomStringConvertible
-    }
-
-    /// Creates an attributed metadata value from a string literal (defaults to .public).
-    public init(stringLiteral value: String)
-
-    /// Creates an attributed metadata value from string interpolation.
-    public init(stringInterpolation: StringInterpolation)
-}
+/// Interpolation with a custom attributes closure.
+public mutating func appendInterpolation<T: CustomStringConvertible & Sendable>(
+    _ value: T,
+    attributes: @Sendable (inout Logger.MetadataValueAttributes) -> Void
+)
 ```
 
-#### New Logger methods
+Attribute packages add ergonomic overloads. The `LoggingAttributes` target adds:
+
+```swift
+/// Interpolation with explicit sensitivity parameter.
+public mutating func appendInterpolation<T: CustomStringConvertible & Sendable>(
+    _ value: T, sensitivity: Logger.Sensitivity
+)
+```
+
+When a single `AttributedMetadataValue` contains multiple interpolated segments with different attributes, the merging
+behavior is defined by each attribute's `appendInterpolation` implementation. For sensitivity, the strictest level
+wins — if any segment is `.sensitive`, the entire value is `.sensitive`.
+
+#### `Logger` API additions
+
+New attributed metadata properties and subscripts on `Logger`:
 
 ```swift
 extension Logger {
-    // Attributed metadata storage
-    var attributedMetadata: Logger.AttributedMetadata { get set }
-    subscript(attributedMetadataKey: String) -> Logger.AttributedMetadataValue? { get set }
+    /// Get or set an attributed metadata value by key.
+    public subscript(attributedMetadataKey attributedMetadataKey: String)
+        -> Logger.AttributedMetadataValue? { get set }
 
-    // Log family of methods
-    public func log(level: Level, _ message: @autoclosure () -> Message,
-                   attributedMetadata: @autoclosure () -> AttributedMetadata?,
-                   source: @autoclosure () -> String? = nil,
-                   file: String = #fileID, function: String = #function, line: UInt = #line)
-    public func trace(_ message: @autoclosure () -> Message,
-                     attributedMetadata: @autoclosure () -> AttributedMetadata?,
-                     source: @autoclosure () -> String? = nil,
-                     file: String = #fileID, function: String = #function, line: UInt = #line)
-    public func debug(_ message: @autoclosure () -> Message,
-                     attributedMetadata: @autoclosure () -> AttributedMetadata?,
-                     source: @autoclosure () -> String? = nil,
-                     file: String = #fileID, function: String = #function, line: UInt = #line)
-    public func info(_ message: @autoclosure () -> Message,
-                    attributedMetadata: @autoclosure () -> AttributedMetadata?,
-                    source: @autoclosure () -> String? = nil,
-                    file: String = #fileID, function: String = #function, line: UInt = #line)
-    public func notice(_ message: @autoclosure () -> Message,
-                      attributedMetadata: @autoclosure () -> AttributedMetadata?,
-                      source: @autoclosure () -> String? = nil,
-                      file: String = #fileID, function: String = #function, line: UInt = #line)
-    public func warning(_ message: @autoclosure () -> Message,
-                       attributedMetadata: @autoclosure () -> AttributedMetadata?,
-                       source: @autoclosure () -> String? = nil,
-                       file: String = #fileID, function: String = #function, line: UInt = #line)
-    public func error(_ message: @autoclosure () -> Message,
-                     attributedMetadata: @autoclosure () -> AttributedMetadata?,
-                     source: @autoclosure () -> String? = nil,
-                     file: String = #fileID, function: String = #function, line: UInt = #line)
-    public func critical(_ message: @autoclosure () -> Message,
-                        attributedMetadata: @autoclosure () -> AttributedMetadata?,
-                        source: @autoclosure () -> String? = nil,
-                        file: String = #fileID, function: String = #function, line: UInt = #line)
+    /// Get or set the entire attributed metadata storage.
+    public var attributedMetadata: Logger.AttributedMetadata { get set }
 }
 ```
 
-#### AttributedMetadata support in LogHandler protocol
+New log method overloads accepting `attributedMetadata`:
 
 ```swift
-protocol LogHandler {
-    func log(level: Logger.Level, message: Logger.Message,
-            attributedMetadata: Logger.AttributedMetadata?, source: String,
-            file: String, function: String, line: UInt)
+extension Logger {
+    /// Log a message with attributed metadata at the specified level.
+    public func log(
+        level: Logger.Level,
+        _ message: @autoclosure () -> Logger.Message,
+        attributedMetadata: @autoclosure () -> Logger.AttributedMetadata?,
+        source: @autoclosure () -> String? = nil,
+        file: String = #fileID, function: String = #function, line: UInt = #line
+    )
 
-    var attributedMetadata: Logger.AttributedMetadata { get set }
-    subscript(attributedMetadataKey: String) -> Logger.AttributedMetadataValue? { get set }
-}
-
-// Default implementations provided for backward compatibility
-extension LogHandler {
-    // Default attributed metadata log method - redacts private values using helper
-    public func log(level: Logger.Level, message: Logger.Message,
-                   attributedMetadata: Logger.AttributedMetadata?,
-                   source: String, file: String, function: String, line: UInt) {
-        let processedMetadata = attributedMetadata.flatMap(Self.attributedToPlain)
-        self.log(level: level, message: message, metadata: processedMetadata,
-                source: source, file: file, function: function, line: line)
-    }
-
-    // Default attributed metadata storage - uses helpers for conversion
-    public var attributedMetadata: Logger.AttributedMetadata {
-        get { self.metadata.mapValues(Self.plainToAttributed) }
-        set { self.metadata = newValue.mapValues(Self.attributedToPlain) }
-    }
-
-    public subscript(attributedMetadataKey key: String) -> Logger.AttributedMetadataValue? {
-        get {
-            guard let plainValue = self[metadataKey: key] else { return nil }
-            return Self.plainToAttributed(plainValue)
-        }
-        set {
-            if let attributedValue = newValue {
-                self[metadataKey: key] = Self.attributedToPlain(attributedValue)
-            } else {
-                self[metadataKey: key] = nil
-            }
-        }
-    }
+    /// Convenience methods for each log level (trace, debug, info, notice, warning, error, critical).
+    /// Each follows the same signature pattern with the level fixed.
 }
 ```
 
-#### AttributedMetadata support in MetadataProvider
+#### `LogEvent` attributed metadata support
+
+`LogEvent` carries both plain and attributed metadata through a single internal storage enum. Handlers access whichever
+representation they need via computed properties:
+
+```swift
+public struct LogEvent: Sendable {
+    // ... existing properties (level, message, source, file, function, line) ...
+
+    /// The metadata associated with this event, if any.
+    ///
+    /// When the event was created with attributed metadata, accessing this property
+    /// strips attributes and returns raw values.
+    public var metadata: Logger.Metadata? { get set }
+
+    /// The attributed metadata associated with this event, if any.
+    ///
+    /// When the event was created with plain metadata, accessing this property wraps
+    /// values with empty attributes.
+    public var attributedMetadata: Logger.AttributedMetadata? { get set }
+
+    /// Creates a new log event with attributed metadata.
+    public init(
+        level: Logger.Level, message: Logger.Message,
+        attributedMetadata: Logger.AttributedMetadata?,
+        source: String?, file: String, function: String, line: UInt
+    )
+}
+```
+
+Both properties perform lazy conversion — accessing `attributedMetadata` on a plain-metadata event wraps values with
+empty attributes; accessing `metadata` on an attributed-metadata event strips attributes. Neither direction allocates
+until accessed. Setting either property replaces the stored value.
+
+The conversion allocates a new dictionary, but each `LogEvent` is created once at the emission site and consumed by
+a single `handler.log(event:)` call, so this cost is paid at most once per log statement. Handlers that want to
+avoid this cost should read the representation matching how the event was created — `event.attributedMetadata` for
+events created with `attributedMetadata:`, and `event.metadata` for events created with `metadata:`.
+
+`Logger.log(level:_:attributedMetadata:...)` creates a `LogEvent` with `attributedMetadata` and calls
+`handler.log(event:)` — the same entry point used for plain metadata. Handlers that want to inspect attributes read
+`event.attributedMetadata`; handlers that only care about raw values read `event.metadata`.
+
+#### `LogHandler` protocol additions
+
+```swift
+public protocol LogHandler {
+    // Existing requirements unchanged...
+    // log(event:) is the single entry point for all log messages.
+
+    /// Add, remove, or change the attributed logging metadata.
+    ///
+    /// - note: `LogHandler`s must treat logging metadata as a value type.
+    subscript(attributedMetadataKey _: String) -> Logger.AttributedMetadataValue? { get set }
+
+    /// Get or set the entire attributed metadata storage as a dictionary.
+    ///
+    /// - note: `LogHandler`s must treat logging metadata as a value type.
+    var attributedMetadata: Logger.AttributedMetadata { get set }
+}
+```
+
+All new requirements have default implementations. The default `attributedMetadata` property delegates to `metadata`.
+Existing `LogHandler` implementations continue to work without changes.
+
+The `metadata` and `attributedMetadata` properties are two views of the same logical storage. A handler may implement
+either as its canonical store and derive the other. Setting a value through `metadata` is visible through
+`attributedMetadata` (with empty attributes), and setting a value through `attributedMetadata` is visible through
+`metadata` (with attributes stripped). The default implementations achieve this by delegating `attributedMetadata` to
+`metadata`.
+
+`MultiplexLogHandler` forwards the `LogEvent` to each child handler via `log(event:)`, preserving attributed metadata
+for handlers that support them.
+
+Middleware that processes attributed metadata should read `event.attributedMetadata`, mutate the event, and forward
+via `wrappedHandler.log(event:)` to preserve attributes for downstream handlers in the chain.
+
+#### `MetadataProvider` extensions
+
+`MetadataProvider` gains an attributed variant so providers can attach attributes to contextual metadata:
 
 ```swift
 extension Logger.MetadataProvider {
     /// Creates a new metadata provider that returns attributed metadata.
     ///
-    /// Attributed metadata providers allow you to specify privacy levels and other
-    /// attributes for each metadata value. When accessed through the plain ``get()``
-    /// method (for backward compatibility), private values are redacted to `"<private>"`.
-    ///
-    /// ### Example
-    ///
-    /// ```swift
-    /// let provider = Logger.MetadataProvider {
-    ///     [
-    ///         "request-id": "\(RequestContext.current.id, privacy: .public)",
-    ///         "user-id": "\(RequestContext.current.userId, privacy: .private)"
-    ///     ]
-    /// }
-    /// ```
-    ///
-    /// - Parameter provideAttributed: A closure that extracts attributed metadata from the current execution context.
-    /// - Returns: A metadata provider that returns attributed metadata.
+    /// When accessed through the plain `get()` method (for backward compatibility),
+    /// attributes are stripped and raw values are returned.
     @_disfavoredOverload
-    public static func init(_ provideAttributed: @escaping @Sendable () -> AttributedMetadata) -> MetadataProvider
+    public init(_ provideMetadata: @escaping @Sendable () -> Logger.AttributedMetadata)
 
-    /// Returns attributed metadata if this is an attributed provider.
+    /// Returns attributed metadata from this provider.
     ///
-    /// Handlers supporting attributed metadata should call this first,
-    /// falling back to `get()` if it returns nil.
-    public func getAttributed() -> AttributedMetadata?
+    /// For attributed providers, returns the full attributed metadata including all attributes.
+    /// For plain providers, wraps each value with empty attributes so handlers always get a
+    /// uniform `AttributedMetadata` dictionary without branching on provider kind.
+    public func getAttributed() -> Logger.AttributedMetadata
 }
 ```
+
+The existing `get()` method continues to return plain `Metadata`. When called on an attributed provider, it strips
+attributes and returns raw values. `getAttributed()` always returns `AttributedMetadata` — for plain providers,
+values are wrapped with empty attributes. This eliminates the need for handlers to branch on provider kind.
+
+The `multiplex(_:)` factory checks whether any sub-provider is attributed. If so, the multiplex provider itself
+becomes attributed, combining all providers' metadata with attributes preserved (plain providers' values are wrapped
+with empty attributes). If all providers are plain, a plain provider is returned for backward compatibility.
+
+#### `LoggingAttributes` companion target
+
+```swift
+extension Logger {
+    /// Sensitivity classification for metadata values.
+    ///
+    /// Classifies whether a metadata value contains sensitive data. This is a classification
+    /// hint — the handler decides what action to take (redact, encrypt, log as-is, etc.).
+    @frozen
+    public enum Sensitivity: Int, MetadataAttributeKey, Sendable, CaseIterable,
+        Equatable, Hashable, CustomStringConvertible
+    {
+        /// This value contains sensitive data that handlers may choose to redact.
+        case sensitive = 1
+
+        /// This value is safe to emit as-is.
+        case `public` = 2
+    }
+}
+
+extension Logger.MetadataValueAttributes {
+    /// The sensitivity classification for this metadata value, if set.
+    public var sensitivity: Logger.Sensitivity? { get set }
+}
+
+extension Logger.AttributedMetadataValue.StringInterpolation {
+    /// Interpolation with explicit sensitivity parameter.
+    public mutating func appendInterpolation<T: CustomStringConvertible & Sendable>(
+        _ value: T, sensitivity: Logger.Sensitivity
+    )
+}
+```
+
+### Benchmarks
+
+The `NoTraits` and `MaxLogLevelWarning` benchmark suites include `_attributed_generic` variants that measure the
+attributed metadata code path alongside the existing plain metadata path. These benchmarks cover both the
+above-threshold case (message emitted) and below-threshold case (message skipped via `@autoclosure`).
 
 ### API stability
 
-- All existing APIs unchanged.
-- Plain and attributed metadata APIs coexist.
-- No deprecation planned.
-- Adoption is optional and incremental on both application and Log Handler sides.
-- Default implementation ensures existing handlers work; logging private metadata is an application concern requiring a compatible `LogHandler`.
+- **Existing `Logger` users.** No changes to existing plain metadata API. The `metadata:` parameter continues to work
+  as before.
+- **Existing `LogHandler` implementations.** Attributed metadata flows through `LogEvent`, which handlers already
+  receive via `log(event:)`. Handlers that only read `event.metadata` continue to work — plain values are returned
+  with attributes stripped. Handlers that want to interpret attributes read `event.attributedMetadata` instead.
+  Existing handlers work without changes.
 
 ### Future directions
 
-- Add more attributes (e.g., value data type, etc) and potential future unification of plain and attributed metadata APIs.
-- Introduce "custom attributes", allowing applications to define application-specific attributes to work with application-specific log handlers.
+- **Metrics extraction middleware.** A `LogHandler` middleware that reads a metric attribute and dual-writes to
+  swift-metrics. The call site annotates a value as a counter or histogram, and the middleware updates the metric then
+  forwards the attributed metadata to the next handler.
+- **Cardinality hints.** An attribute indicating whether a field is safe to index as a label/dimension in observability
+  backends. Only the call site knows a field's cardinality ahead of time.
+- **Typed metadata values.** Adding typed variants to `MetadataValue` (`.int64`, `.double`, `.bool`) would reduce the
+  need for attributes that compensate for stringly-typed metadata.
+- **More stored slots.** If real-world usage shows growth in the number of attributes per value, it would make sense
+  to increase the number of inline slots to avoid dynamic allocation in most use cases.
 
 ### Alternatives considered
 
-1. **Key-based redaction:** Configure which keys should be treated as private rather than marking each value:
+#### Sensitivity in the core `Logging` module
 
-```swift
-logger.privateKeys = ["user.id", "password", "email"]
-logger.info("User action", metadata: [
-    "user.id": "12345",  // Automatically private
-    "action": "login"     // Automatically public
-])
-```
+Define `Sensitivity` directly in `Logging`. Simpler for users (no extra import), but accumulates domain-specific
+attributes in the core module. The companion target approach keeps `Logging` focused on the API and mechanism.
 
-Advantages:
-- Simpler API (no new types).
-- Centralized configuration.
-- Safer at scale (new sensitive fields update all logs automatically).
-- Easier migration.
+#### Concrete stored property instead of extensible mechanism
 
-**Not chosen because:**
+Add `var sensitivity: Sensitivity?` as a stored property on `MetadataValueAttributes`. Smaller and simpler, but
+closed — middleware handlers cannot define their own attributes using the same mechanism. The extensible mechanism
+enables composable `LogHandler` middleware where each middleware defines its own attribute type, reads only the
+attributes it cares about, and forwards the rest intact. A stored property would require all middleware attributes to
+be fields in a single struct, coordinated upfront. The extensible mechanism also keeps the core `Logging` module free
+of domain-specific attributes.
 
-- **Privacy belongs to data, not identifiers:** The same private data might be logged under different keys ("email", "user.email", "contact"), and the same key might contain different data with different privacy requirements in different contexts. Key-based redaction creates a synchronization problem—developers must maintain a separate list of "private keys" that stays in sync with actual logging code across the codebase, with no compile-time or review-time verification.
+#### Bitmask storage
 
-- **Code review visibility:** With value-based privacy, reviewers see privacy decisions at the call site: `"email": user.email.private()` makes it immediately clear that data is sensitive. With key-based redaction, reviewers must cross-reference a separate configuration file, making security review significantly harder.
+Pack attribute values into an inline `UInt64` using declared bit offsets. Smaller struct and O(1) access, but requires
+authors to coordinate bit layout and risks collisions between independent packages.
 
-- **No synchronization needed:** Value-based privacy is self-contained—privacy travels with the data at the point of use. No separate configuration to maintain, no risk of configuration drift, no runtime surprises when a key is missing from the private keys list.
+#### Pure dynamic array storage
 
-- **Pattern complexity:** Supporting patterns/regex adds complexity and potential performance concerns.
+Use `[(ObjectIdentifier, Int)]` for all attributes with no inline slot. Simpler, but requires heap allocation even
+for the first attribute.
 
-The current design prioritizes **explicitness and data-centric privacy** over **configuration-based simplicity**. Privacy decisions are made where data is logged, making them visible during code review and keeping privacy attributes coupled to the data they protect.
+#### No per-value attributes
 
-2. **Convenience methods (`.private()` and `.public()`):** Add extension methods to `String` and `MetadataValue` for creating attributed metadata:
+Rely on handler-side configuration (key-name-based rules). Simpler, but key-based rules are fragile — they break when
+keys are renamed, require coordination across all dependencies, and are invisible at the call site.
 
-```swift
-extension String {
-    public func `private`() -> Logger.AttributedMetadataValue
-    public func `public`() -> Logger.AttributedMetadataValue
-}
+#### Naming: `.private` / `.public` instead of `.sensitive` / `.public`
 
-logger.info("User action", attributedMetadata: [
-    "user.id": "12345".private(),
-    "action": "login".public()
-])
-```
+Matches Apple's `OSLogPrivacy` convention, but `.private` implies a security guarantee that this API explicitly
+disclaims. `Sensitivity` classifies the data without prescribing handler behavior — the handler decides whether to
+redact, encrypt, or log as-is.
 
-**Not chosen because:**
+#### Naming: `.redact` / `.public`
 
-- **Consistency with existing patterns:** `Logger.Message` and `Logger.MetadataValue` already use string interpolation extensively.
-- **Natural syntax:** `"\(value, privacy: .private)"` reads clearly and fits Swift's interpolation conventions.
-- **Less API surface:** No need for multiple extension methods across different types.
-
-Metadata values already support string interpolation in SwiftLog. Rather than inventing additional API surface area with new methods, we leverage the existing string interpolation infrastructure with a custom `StringInterpolation` type. This provides:
-
-3. **Default privacy level to `.private`:** Make attributed metadata values default to `.private` privacy level when no explicit privacy parameter is provided:
-
-```swift
-logger.info("User action", attributedMetadata: [
-    "user.id": "\(userId, privacy: .private)",  // Explicit private (redundant with default)
-    "action": "\(action, privacy: .public)"  // Must explicitly mark as public
-])
-```
-
-Advantages:
-- Security-by-default: requires explicit opt-out for logging non-sensitive data.
-- Safer for accidental inclusion of sensitive data.
-
-**Not chosen because:**
-
-Privacy should be an explicit opt-in action from the user. The current design (defaulting to `.public`) prioritizes **ease of adoption** over **security-by-default**:
-- Easier adoption - less boilerplate for common non-sensitive metadata.
-- Matches the mental model that "most data is safe to log".
-- Lower friction for migration from plain metadata.
-- Forces developers to think about privacy only for sensitive data, rather than requiring `.public` annotations everywhere.
-
-4. **Pass all metadata to non-privacy-aware handlers:** Security risk; current design filters private data by default.
-
-5. **Message-level privacy:** Less granular than metadata-level privacy and requires message handling changes.
-
-6. **Privacy level handling configuration** to be an attribute of the `Logger` instead of LogHandler configuration. This would centralize the configuration across various `LogHandler` implementations. However, existing `LogHandler` already have configurations and they might want to customize the behavior even further.
-
-7. **Handler metadata merging:** LogHandlers are responsible for merging their own `metadata` property, `metadataProvider` output, and the explicit `attributedMetadata` parameter. This is consistent with how plain metadata works - handlers control merging. Plain handler metadata and provider values should be treated as public (`.public` privacy level). Attributed metadata from the log call takes precedence.
-
-8. **Add a third `.auto`/`.default` privacy attribute value:** Libraries and applications can mark a metadata value as `privacy: .default` and rely on the `LogHandler` to configure what the default is. While this might've been a solution to overcome default `.public` values for all the attributed metadata, in reality it is confusing from the semantic point of view. If someone wants to mark something as `.default`, because this _might_ be sensitive, then it should be marked as `.private` or not logged at all. If something does not need to be marked as `.private`, then it is `.public`. A custom `LogHandler` with an allow list of metadata keys/messages/modules can be used as an escape hatch in case the application does not trust its dependencies.
+Uses a verb (`.redact`) as an instruction to the handler. However, the asymmetry between a verb and an adjective
+is unintuitive, and the attribute is a data classification, not an action directive. `.sensitive` / `.public` are
+both adjectives that classify the data symmetrically.
