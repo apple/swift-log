@@ -92,6 +92,18 @@ public struct InMemoryLogHandler: LogHandler {
         self.init(logStore: .init())
     }
 
+    public func log(event: LogEvent) {
+        // Start with the metadata provider..
+        var mergedMetadata: Logger.Metadata = self.metadataProvider?.get() ?? [:]
+        // ..merge in self.metadata, overwriting existing keys
+        mergedMetadata = mergedMetadata.merging(self.metadata) { $1 }
+        // ..merge in metadata from this log call, overwriting existing keys
+        mergedMetadata = mergedMetadata.merging(event.metadata ?? [:]) { $1 }
+
+        self.logStore.append(level: event.level, message: event.message, metadata: mergedMetadata)
+    }
+
+    @available(*, deprecated, renamed: "log(event:)")
     public func log(
         level: Logger.Level,
         message: Logger.Message,
@@ -101,14 +113,17 @@ public struct InMemoryLogHandler: LogHandler {
         function: String,
         line: UInt
     ) {
-        // Start with the metadata provider..
-        var mergedMetadata: Logger.Metadata = self.metadataProvider?.get() ?? [:]
-        // ..merge in self.metadata, overwriting existing keys
-        mergedMetadata = mergedMetadata.merging(self.metadata) { $1 }
-        // ..merge in metadata from this log call, overwriting existing keys
-        mergedMetadata = mergedMetadata.merging(metadata ?? [:]) { $1 }
-
-        self.logStore.append(level: level, message: message, metadata: mergedMetadata)
+        self.log(
+            event: LogEvent(
+                level: level,
+                message: message,
+                metadata: metadata,
+                source: source,
+                file: file,
+                function: function,
+                line: line
+            )
+        )
     }
 
     public subscript(metadataKey key: String) -> Logger.Metadata.Value? {

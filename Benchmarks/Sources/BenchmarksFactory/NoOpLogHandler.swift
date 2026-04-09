@@ -29,6 +29,12 @@ struct NoOpLogHandler: LogHandler {
     }
 
     func log(
+        event: LogEvent
+    ) {
+        // Do nothing
+    }
+
+    func log(
         level: Logger.Level,
         message: Logger.Message,
         metadata explicitMetadata: Logger.Metadata?,
