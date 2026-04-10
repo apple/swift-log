@@ -669,7 +669,12 @@ struct LoggingTest {
         testLogging.history.assertExist(level: .notice, message: "yes: notice", error: TestError.boom, source: "foo")
         testLogging.history.assertExist(level: .warning, message: "yes: warning", error: TestError.boom, source: "foo")
         testLogging.history.assertExist(level: .error, message: "yes: error", error: TestError.boom, source: "foo")
-        testLogging.history.assertExist(level: .critical, message: "yes: critical", error: TestError.boom, source: "foo")
+        testLogging.history.assertExist(
+            level: .critical,
+            message: "yes: critical",
+            error: TestError.boom,
+            source: "foo"
+        )
     }
 
     @Test func allLogLevelByFunctionRefWithoWithSourceWithoutError() {

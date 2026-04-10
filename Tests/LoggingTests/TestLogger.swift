@@ -97,7 +97,13 @@ internal struct TestLogHandler: LogHandler {
             function: event.function,
             line: event.line
         )
-        self.recorder.record(level: event.level, metadata: metadata, message: event.message, error: event.error, source: event.source)
+        self.recorder.record(
+            level: event.level,
+            metadata: metadata,
+            message: event.message,
+            error: event.error,
+            source: event.source
+        )
     }
 
     private var _logLevel: Logger.Level?
@@ -168,7 +174,13 @@ internal class Recorder: History {
     private let lock = NSLock()
     private var _entries = [LogEntry]()
 
-    func record(level: Logger.Level, metadata: Logger.Metadata?, message: Logger.Message, error: (any Error)? = nil, source: String) {
+    func record(
+        level: Logger.Level,
+        metadata: Logger.Metadata?,
+        message: Logger.Message,
+        error: (any Error)? = nil,
+        source: String
+    ) {
         self.lock.withLock {
             self._entries.append(
                 LogEntry(level: level, metadata: metadata, message: message.description, error: error, source: source)
@@ -311,7 +323,13 @@ extension History {
         )
     }
 
-    func find(level: Logger.Level, message: String, error: (any Error)? = nil, metadata: Logger.Metadata? = nil, source: String) -> LogEntry? {
+    func find(
+        level: Logger.Level,
+        message: String,
+        error: (any Error)? = nil,
+        metadata: Logger.Metadata? = nil,
+        source: String
+    ) -> LogEntry? {
         self.entries.first { entry in
             if entry.level != level {
                 return false

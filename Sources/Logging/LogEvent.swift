@@ -79,7 +79,16 @@ public struct LogEvent: Sendable {
         function: String,
         line: UInt
     ) {
-        self.init(level: level, message: message, error: nil, metadata: metadata, source: source, file: file, function: function, line: line)
+        self.init(
+            level: level,
+            message: message,
+            error: nil,
+            metadata: metadata,
+            source: source,
+            file: file,
+            function: function,
+            line: line
+        )
     }
 
     /// Creates a new log event.

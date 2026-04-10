@@ -133,19 +133,75 @@ extension Logger {
         // This allows picking the necessary implementation with compiled out body in runtime.
         switch level {
         case .trace:
-            self.trace(message(), error: error, metadata: metadata(), source: source(), file: file, function: function, line: line)
+            self.trace(
+                message(),
+                error: error,
+                metadata: metadata(),
+                source: source(),
+                file: file,
+                function: function,
+                line: line
+            )
         case .debug:
-            self.debug(message(), error: error, metadata: metadata(), source: source(), file: file, function: function, line: line)
+            self.debug(
+                message(),
+                error: error,
+                metadata: metadata(),
+                source: source(),
+                file: file,
+                function: function,
+                line: line
+            )
         case .info:
-            self.info(message(), error: error, metadata: metadata(), source: source(), file: file, function: function, line: line)
+            self.info(
+                message(),
+                error: error,
+                metadata: metadata(),
+                source: source(),
+                file: file,
+                function: function,
+                line: line
+            )
         case .notice:
-            self.notice(message(), error: error, metadata: metadata(), source: source(), file: file, function: function, line: line)
+            self.notice(
+                message(),
+                error: error,
+                metadata: metadata(),
+                source: source(),
+                file: file,
+                function: function,
+                line: line
+            )
         case .warning:
-            self.warning(message(), error: error, metadata: metadata(), source: source(), file: file, function: function, line: line)
+            self.warning(
+                message(),
+                error: error,
+                metadata: metadata(),
+                source: source(),
+                file: file,
+                function: function,
+                line: line
+            )
         case .error:
-            self.error(message(), error: error, metadata: metadata(), source: source(), file: file, function: function, line: line)
+            self.error(
+                message(),
+                error: error,
+                metadata: metadata(),
+                source: source(),
+                file: file,
+                function: function,
+                line: line
+            )
         case .critical:
-            self.critical(message(), error: error, metadata: metadata(), source: source(), file: file, function: function, line: line)
+            self.critical(
+                message(),
+                error: error,
+                metadata: metadata(),
+                source: source(),
+                file: file,
+                function: function,
+                line: line
+            )
         }
         #else
         // If no logs are excluded in the compile time, we can avoid checking the log level that extra time and go log it.
@@ -191,7 +247,16 @@ extension Logger {
         function: String = #function,
         line: UInt = #line
     ) {
-        self.log(level: level, message(), error: nil, metadata: metadata(), source: source(), file: file, function: function, line: line)
+        self.log(
+            level: level,
+            message(),
+            error: nil,
+            metadata: metadata(),
+            source: source(),
+            file: file,
+            function: function,
+            line: line
+        )
     }
 
     /// Log a message using the log level and source that you provide.
@@ -364,7 +429,15 @@ extension Logger {
         function: String = #function,
         line: UInt = #line
     ) {
-        self.trace(message(), error: nil, metadata: metadata(), source: source(), file: file, function: function, line: line)
+        self.trace(
+            message(),
+            error: nil,
+            metadata: metadata(),
+            source: source(),
+            file: file,
+            function: function,
+            line: line
+        )
     }
 
     /// Log a message at the 'trace' log level.
@@ -458,7 +531,15 @@ extension Logger {
         function: String = #function,
         line: UInt = #line
     ) {
-        self.debug(message(), error: nil, metadata: metadata(), source: source(), file: file, function: function, line: line)
+        self.debug(
+            message(),
+            error: nil,
+            metadata: metadata(),
+            source: source(),
+            file: file,
+            function: function,
+            line: line
+        )
     }
 
     /// Log a message at the 'debug' log level.
@@ -552,7 +633,15 @@ extension Logger {
         function: String = #function,
         line: UInt = #line
     ) {
-        self.info(message(), error: nil, metadata: metadata(), source: source(), file: file, function: function, line: line)
+        self.info(
+            message(),
+            error: nil,
+            metadata: metadata(),
+            source: source(),
+            file: file,
+            function: function,
+            line: line
+        )
     }
 
     /// Log a message at the 'info' log level.
@@ -646,7 +735,15 @@ extension Logger {
         function: String = #function,
         line: UInt = #line
     ) {
-        self.notice(message(), error: nil, metadata: metadata(), source: source(), file: file, function: function, line: line)
+        self.notice(
+            message(),
+            error: nil,
+            metadata: metadata(),
+            source: source(),
+            file: file,
+            function: function,
+            line: line
+        )
     }
 
     /// Log a message at the 'notice' log level.
@@ -740,7 +837,15 @@ extension Logger {
         function: String = #function,
         line: UInt = #line
     ) {
-        self.warning(message(), error: nil, metadata: metadata(), source: source(), file: file, function: function, line: line)
+        self.warning(
+            message(),
+            error: nil,
+            metadata: metadata(),
+            source: source(),
+            file: file,
+            function: function,
+            line: line
+        )
     }
 
     /// Log a message at the 'warning' log level.
@@ -834,7 +939,15 @@ extension Logger {
         function: String = #function,
         line: UInt = #line
     ) {
-        self.error(message(), error: nil, metadata: metadata(), source: source(), file: file, function: function, line: line)
+        self.error(
+            message(),
+            error: nil,
+            metadata: metadata(),
+            source: source(),
+            file: file,
+            function: function,
+            line: line
+        )
     }
 
     /// Log a message at the 'error' log level.
@@ -928,7 +1041,15 @@ extension Logger {
         function: String = #function,
         line: UInt = #line
     ) {
-        self.critical(message(), error: nil, metadata: metadata(), source: source(), file: file, function: function, line: line)
+        self.critical(
+            message(),
+            error: nil,
+            metadata: metadata(),
+            source: source(),
+            file: file,
+            function: function,
+            line: line
+        )
     }
 
     /// Log a message at the 'critical' log level.

@@ -65,7 +65,7 @@ public struct InMemoryLogHandler: LogHandler {
         }
 
         public static func == (lhs: InMemoryLogHandler.Entry, rhs: InMemoryLogHandler.Entry) -> Bool {
-            return lhs.level == rhs.level
+            lhs.level == rhs.level
                 && lhs.message == rhs.message
                 && errorsEqual(lhs.error, rhs.error)
                 && lhs.metadata == rhs.metadata
@@ -87,7 +87,12 @@ public struct InMemoryLogHandler: LogHandler {
         private var _entries: [Entry] = []
         private let lock = Lock()
 
-        fileprivate func append(level: Logger.Level, message: Logger.Message, error: (any Error)?, metadata: Logger.Metadata) {
+        fileprivate func append(
+            level: Logger.Level,
+            message: Logger.Message,
+            error: (any Error)?,
+            metadata: Logger.Metadata
+        ) {
             self.lock.withLockVoid {
                 self._entries.append(
                     Entry(
