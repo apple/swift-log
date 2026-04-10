@@ -2126,7 +2126,7 @@ public struct StreamLogHandler: LogHandler {
 
         if let error {
             metadata["error.message"] = "\(error)"
-            metadata["error.type"] = "\(String(describing: type(of: error)))"
+            metadata["error.type"] = "\(String(reflecting: type(of: error)))"
         }
 
         return metadata
