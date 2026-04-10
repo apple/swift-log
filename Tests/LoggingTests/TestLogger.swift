@@ -298,7 +298,7 @@ extension History {
         let entry = self.find(level: level, message: message, error: error, metadata: metadata, source: source)
         #expect(
             entry != nil,
-            "entry not found: \(level), \(source), \(String(describing: metadata)), \(message), \(error)",
+            "entry not found: \(level), \(source), \(String(describing: metadata)), \(message), \(String(describing: error))",
             sourceLocation: SourceLocation(fileID: fileID, filePath: file, line: line, column: column)
         )
     }
@@ -318,7 +318,7 @@ extension History {
         let entry = self.find(level: level, message: message, error: error, metadata: metadata, source: source)
         #expect(
             entry == nil,
-            "entry was found: \(level), \(source), \(String(describing: metadata)), \(message), \(error)",
+            "entry was found: \(level), \(source), \(String(describing: metadata)), \(message), \(String(describing: error))",
             sourceLocation: SourceLocation(fileID: fileID, filePath: file, line: line, column: column)
         )
     }
