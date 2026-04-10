@@ -677,7 +677,7 @@ struct LoggingTest {
         )
     }
 
-    @Test func allLogLevelByFunctionRefWithoWithSourceWithoutError() {
+    @Test func allLogLevelByFunctionRefWithSourceWithoutError() {
         let testLogging = TestLogging()
 
         var logger = Logger(
