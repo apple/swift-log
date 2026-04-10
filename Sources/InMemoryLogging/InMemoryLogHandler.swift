@@ -132,7 +132,6 @@ public struct InMemoryLogHandler: LogHandler {
         mergedMetadata = mergedMetadata.merging(self.metadata) { $1 }
         // ..merge in metadata from this log call, overwriting existing keys
         mergedMetadata = mergedMetadata.merging(event.metadata ?? [:]) { $1 }
-        // ..merge in error as metadata, overwriting existing keys
 
         self.logStore.append(level: event.level, message: event.message, error: event.error, metadata: mergedMetadata)
     }
