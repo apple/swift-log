@@ -2111,7 +2111,7 @@ public struct StreamLogHandler: LogHandler {
 
         let provided = provider?.get() ?? [:]
 
-        guard !provided.isEmpty || !((explicit ?? [:]).isEmpty) else {
+        guard !provided.isEmpty || !((explicit ?? [:]).isEmpty) || error != nil else {
             // all per-log-statement values are empty
             return nil
         }
