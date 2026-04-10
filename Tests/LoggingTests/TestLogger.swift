@@ -87,11 +87,6 @@ internal struct TestLogHandler: LogHandler {
             metadata.merge(explicitMetadata, uniquingKeysWith: { _, explicit in explicit })
         }
 
-        if let error = event.error {
-            metadata["error.message"] = "\(error)"
-            metadata["error.type"] = "\(String(describing: type(of: error)))"
-        }
-
         self.logger.log(
             level: event.level,
             event.message,
@@ -102,7 +97,7 @@ internal struct TestLogHandler: LogHandler {
             function: event.function,
             line: event.line
         )
-        self.recorder.record(level: event.level, metadata: metadata, message: event.message, source: event.source)
+        self.recorder.record(level: event.level, metadata: metadata, message: event.message, error: event.error, source: event.source)
     }
 
     private var _logLevel: Logger.Level?
@@ -173,10 +168,10 @@ internal class Recorder: History {
     private let lock = NSLock()
     private var _entries = [LogEntry]()
 
-    func record(level: Logger.Level, metadata: Logger.Metadata?, message: Logger.Message, source: String) {
+    func record(level: Logger.Level, metadata: Logger.Metadata?, message: Logger.Message, error: (any Error)? = nil, source: String) {
         self.lock.withLock {
             self._entries.append(
-                LogEntry(level: level, metadata: metadata, message: message.description, source: source)
+                LogEntry(level: level, metadata: metadata, message: message.description, error: error, source: source)
             )
         }
     }
@@ -185,6 +180,7 @@ internal class Recorder: History {
         level: Logger.Level,
         metadata: Logger.Metadata?,
         message: Logger.Message,
+        error: (any Error)? = nil,
         source: String,
         file: String,
         function: String,
@@ -196,6 +192,7 @@ internal class Recorder: History {
                     level: level,
                     metadata: metadata,
                     message: message.description,
+                    error: error,
                     source: source,
                     file: file,
                     function: function,
@@ -246,6 +243,7 @@ internal struct LogEntry {
     let level: Logger.Level
     let metadata: Logger.Metadata?
     let message: String
+    let error: (any Error)?
     let source: String
     let file: String
     let function: String
@@ -255,6 +253,7 @@ internal struct LogEntry {
         level: Logger.Level,
         metadata: Logger.Metadata?,
         message: String,
+        error: (any Error)?,
         source: String,
         file: String = "",
         function: String = "",
@@ -263,6 +262,7 @@ internal struct LogEntry {
         self.level = level
         self.metadata = metadata
         self.message = message
+        self.error = error
         self.source = source
         self.file = file
         self.function = function
@@ -319,13 +319,8 @@ extension History {
             if entry.message != message {
                 return false
             }
-            if let error {
-                guard case .string(let errorMessage) = entry.metadata?["error.message"], errorMessage == "\(error)" else {
-                    return false
-                }
-                guard case .string(let errorType) = entry.metadata?["error.type"], errorType == String(describing: type(of: error)) else {
-                    return false
-                }
+            if !errorsEqual(error, entry.error) {
+                return false
             }
             if let lhs = entry.metadata, let rhs = metadata {
                 if lhs.count != rhs.count {
@@ -351,6 +346,17 @@ extension History {
             }
 
             return true
+        }
+    }
+
+    private func errorsEqual(_ lhs: (any Error)?, _ rhs: (any Error)?) -> Bool {
+        switch (lhs, rhs) {
+        case (nil, nil):
+            return true
+        case let (l?, r?):
+            return "\(l)" == "\(r)" && String(reflecting: type(of: l)) == String(reflecting: type(of: r))
+        default:
+            return false
         }
     }
 }
