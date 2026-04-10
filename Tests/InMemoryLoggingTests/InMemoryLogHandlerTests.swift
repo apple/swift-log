@@ -70,19 +70,49 @@ struct InMemoryLogHandlerTests {
     }
 
     @Test
-    func errorFromLogEndsUpInEntryAsMetadata() {
+    func errorEquality() throws {
         let (logHandler, logger) = self.makeTestLogger()
-        let error = TestError.boom
-        logger.info("hello", error: error)
+        logger.info("hello", error: TestError.first)
+        let entry = try #require(logHandler.entries.first)
 
         #expect(
-            logHandler.entries == [
-                InMemoryLogHandler.Entry(
+            entry
+                == InMemoryLogHandler.Entry(
                     level: .info,
                     message: "hello",
-                    metadata: ["error.message": "\(error)", "error.type": "\(String(describing: type(of: error)))"]
+                    error: TestError.first,
+                    metadata: [:],
                 )
-            ]
+        )
+
+        #expect(
+            entry
+                != InMemoryLogHandler.Entry(
+                    level: .info,
+                    message: "hello",
+                    error: nil,
+                    metadata: [:],
+                )
+        )
+
+        #expect(
+            entry
+                != InMemoryLogHandler.Entry(
+                    level: .info,
+                    message: "hello",
+                    error: TestError.second,
+                    metadata: [:]
+                )
+        )
+
+        #expect(
+            entry
+                != InMemoryLogHandler.Entry(
+                    level: .info,
+                    message: "hello",
+                    error: Nested.TestError.first,
+                    metadata: [:]
+                )
         )
     }
 
@@ -114,6 +144,13 @@ struct InMemoryLogHandlerTests {
     }
 
     enum TestError: Error {
-        case boom
+        case first
+        case second
+    }
+
+    struct Nested {
+        enum TestError: Error {
+            case first
+        }
     }
 }
