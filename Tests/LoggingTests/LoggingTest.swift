@@ -387,6 +387,7 @@ struct LoggingTest {
 
     enum TestError: Error {
         case boom
+        case withMessage(String)
     }
 
     @Test func dictionaryMetadata() {
@@ -515,6 +516,7 @@ struct LoggingTest {
         logger.debug(self.dontEvaluateThisString())
         logger.info(self.dontEvaluateThisString())
         logger.warning(self.dontEvaluateThisString())
+        logger.warning(self.dontEvaluateThisString(), error: TestError.withMessage("\(self.dontEvaluateThisString())"))
         logger.log(level: .warning, self.dontEvaluateThisString())
     }
 

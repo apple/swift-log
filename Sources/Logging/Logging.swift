@@ -121,7 +121,7 @@ extension Logger {
     public func log(
         level: Logger.Level,
         _ message: @autoclosure () -> Logger.Message,
-        error: (any Error)? = nil,
+        error: @autoclosure () -> (any Error)? = nil,
         metadata: @autoclosure () -> Logger.Metadata? = nil,
         source: @autoclosure () -> String? = nil,
         file: String = #fileID,
@@ -135,7 +135,7 @@ extension Logger {
         case .trace:
             self.trace(
                 message(),
-                error: error,
+                error: error(),
                 metadata: metadata(),
                 source: source(),
                 file: file,
@@ -145,7 +145,7 @@ extension Logger {
         case .debug:
             self.debug(
                 message(),
-                error: error,
+                error: error(),
                 metadata: metadata(),
                 source: source(),
                 file: file,
@@ -155,7 +155,7 @@ extension Logger {
         case .info:
             self.info(
                 message(),
-                error: error,
+                error: error(),
                 metadata: metadata(),
                 source: source(),
                 file: file,
@@ -165,7 +165,7 @@ extension Logger {
         case .notice:
             self.notice(
                 message(),
-                error: error,
+                error: error(),
                 metadata: metadata(),
                 source: source(),
                 file: file,
@@ -175,7 +175,7 @@ extension Logger {
         case .warning:
             self.warning(
                 message(),
-                error: error,
+                error: error(),
                 metadata: metadata(),
                 source: source(),
                 file: file,
@@ -185,7 +185,7 @@ extension Logger {
         case .error:
             self.error(
                 message(),
-                error: error,
+                error: error(),
                 metadata: metadata(),
                 source: source(),
                 file: file,
@@ -195,7 +195,7 @@ extension Logger {
         case .critical:
             self.critical(
                 message(),
-                error: error,
+                error: error(),
                 metadata: metadata(),
                 source: source(),
                 file: file,
@@ -208,7 +208,7 @@ extension Logger {
         self._log(
             level: level,
             message(),
-            error: error,
+            error: error(),
             metadata: metadata(),
             source: source(),
             file: file,
@@ -280,7 +280,7 @@ extension Logger {
     package func _log(
         level: Logger.Level,
         _ message: @autoclosure () -> Logger.Message,
-        error: (any Error)? = nil,
+        error: @autoclosure () -> (any Error)? = nil,
         metadata: @autoclosure () -> Logger.Metadata? = nil,
         source: @autoclosure () -> String? = nil,
         file: String = #fileID,
@@ -292,7 +292,7 @@ extension Logger {
                 event: LogEvent(
                     level: level,
                     message: message(),
-                    error: error,
+                    error: error(),
                     metadata: metadata(),
                     source: source(),
                     file: file,
@@ -383,7 +383,7 @@ extension Logger {
     @inlinable
     public func trace(
         _ message: @autoclosure () -> Logger.Message,
-        error: (any Error)? = nil,
+        error: @autoclosure () -> (any Error)? = nil,
         metadata: @autoclosure () -> Logger.Metadata? = nil,
         source: @autoclosure () -> String? = nil,
         file: String = #fileID,
@@ -394,7 +394,7 @@ extension Logger {
         self._log(
             level: .trace,
             message(),
-            error: error,
+            error: error(),
             metadata: metadata(),
             source: source(),
             file: file,
@@ -485,7 +485,7 @@ extension Logger {
     @inlinable
     public func debug(
         _ message: @autoclosure () -> Logger.Message,
-        error: (any Error)? = nil,
+        error: @autoclosure () -> (any Error)? = nil,
         metadata: @autoclosure () -> Logger.Metadata? = nil,
         source: @autoclosure () -> String? = nil,
         file: String = #fileID,
@@ -496,7 +496,7 @@ extension Logger {
         self._log(
             level: .debug,
             message(),
-            error: error,
+            error: error(),
             metadata: metadata(),
             source: source(),
             file: file,
@@ -587,7 +587,7 @@ extension Logger {
     @inlinable
     public func info(
         _ message: @autoclosure () -> Logger.Message,
-        error: (any Error)? = nil,
+        error: @autoclosure () -> (any Error)? = nil,
         metadata: @autoclosure () -> Logger.Metadata? = nil,
         source: @autoclosure () -> String? = nil,
         file: String = #fileID,
@@ -598,7 +598,7 @@ extension Logger {
         self._log(
             level: .info,
             message(),
-            error: error,
+            error: error(),
             metadata: metadata(),
             source: source(),
             file: file,
@@ -689,7 +689,7 @@ extension Logger {
     @inlinable
     public func notice(
         _ message: @autoclosure () -> Logger.Message,
-        error: (any Error)? = nil,
+        error: @autoclosure () -> (any Error)? = nil,
         metadata: @autoclosure () -> Logger.Metadata? = nil,
         source: @autoclosure () -> String? = nil,
         file: String = #fileID,
@@ -700,7 +700,7 @@ extension Logger {
         self._log(
             level: .notice,
             message(),
-            error: error,
+            error: error(),
             metadata: metadata(),
             source: source(),
             file: file,
@@ -791,7 +791,7 @@ extension Logger {
     @inlinable
     public func warning(
         _ message: @autoclosure () -> Logger.Message,
-        error: (any Error)? = nil,
+        error: @autoclosure () -> (any Error)? = nil,
         metadata: @autoclosure () -> Logger.Metadata? = nil,
         source: @autoclosure () -> String? = nil,
         file: String = #fileID,
@@ -802,7 +802,7 @@ extension Logger {
         self._log(
             level: .warning,
             message(),
-            error: error,
+            error: error(),
             metadata: metadata(),
             source: source(),
             file: file,
@@ -893,7 +893,7 @@ extension Logger {
     @inlinable
     public func error(
         _ message: @autoclosure () -> Logger.Message,
-        error: (any Error)? = nil,
+        error: @autoclosure () -> (any Error)? = nil,
         metadata: @autoclosure () -> Logger.Metadata? = nil,
         source: @autoclosure () -> String? = nil,
         file: String = #fileID,
@@ -904,7 +904,7 @@ extension Logger {
         self._log(
             level: .error,
             message(),
-            error: error,
+            error: error(),
             metadata: metadata(),
             source: source(),
             file: file,
@@ -995,7 +995,7 @@ extension Logger {
     @inlinable
     public func critical(
         _ message: @autoclosure () -> Logger.Message,
-        error: (any Error)? = nil,
+        error: @autoclosure () -> (any Error)? = nil,
         metadata: @autoclosure () -> Logger.Metadata? = nil,
         source: @autoclosure () -> String? = nil,
         file: String = #fileID,
@@ -1006,7 +1006,7 @@ extension Logger {
         self._log(
             level: .critical,
             message(),
-            error: error,
+            error: error(),
             metadata: metadata(),
             source: source(),
             file: file,
