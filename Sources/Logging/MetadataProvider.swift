@@ -86,7 +86,7 @@ extension Logger.MetadataProvider {
     ///
     /// - Parameter providers: An array of `MetadataProvider`s to delegate to. The array must not be empty.
     /// - Returns: A pseudo-`MetadataProvider` merging metadata from the given `MetadataProvider`s.
-    public static func multiplex(_ providers: [Logger.MetadataProvider]) -> Logger.MetadataProvider? {
+    public static func multiplex(_ providers: [Logger.MetadataProvider]) -> Logger.MetadataProvider {
         assert(!providers.isEmpty, "providers MUST NOT be empty")
         return Logger.MetadataProvider {
             providers.reduce(into: [:]) { metadata, provider in
