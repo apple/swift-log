@@ -70,6 +70,53 @@ struct InMemoryLogHandlerTests {
     }
 
     @Test
+    func errorEquality() throws {
+        let (logHandler, logger) = self.makeTestLogger()
+        logger.info("hello", error: TestError.first)
+        let entry = try #require(logHandler.entries.first)
+
+        #expect(
+            entry
+                == InMemoryLogHandler.Entry(
+                    level: .info,
+                    message: "hello",
+                    error: TestError.first,
+                    metadata: [:],
+                )
+        )
+
+        #expect(
+            entry
+                != InMemoryLogHandler.Entry(
+                    level: .info,
+                    message: "hello",
+                    error: nil,
+                    metadata: [:],
+                )
+        )
+
+        #expect(
+            entry
+                != InMemoryLogHandler.Entry(
+                    level: .info,
+                    message: "hello",
+                    error: TestError.second,
+                    metadata: [:]
+                )
+        )
+
+        #expect(
+            entry
+                != InMemoryLogHandler.Entry(
+                    level: .info,
+                    message: "hello",
+                    error: Nested.TestError.first,
+                    metadata: [:]
+                )
+        )
+    }
+
+    @Test
     func clear() {
         let (logHandler, logger) = self.makeTestLogger()
         logger.info("hello", metadata: ["key1": "value1", "key2": ["a", "b", "c"]])
@@ -94,5 +141,16 @@ struct InMemoryLogHandlerTests {
             }
         )
         return (logHandler, logger)
+    }
+
+    enum TestError: Error {
+        case first
+        case second
+    }
+
+    struct Nested {
+        enum TestError: Error {
+            case first
+        }
     }
 }

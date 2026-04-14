@@ -90,13 +90,20 @@ internal struct TestLogHandler: LogHandler {
         self.logger.log(
             level: event.level,
             event.message,
+            error: event.error,
             metadata: metadata,
             source: event.source,
             file: event.file,
             function: event.function,
             line: event.line
         )
-        self.recorder.record(level: event.level, metadata: metadata, message: event.message, source: event.source)
+        self.recorder.record(
+            level: event.level,
+            metadata: metadata,
+            message: event.message,
+            error: event.error,
+            source: event.source
+        )
     }
 
     private var _logLevel: Logger.Level?
@@ -167,10 +174,16 @@ internal class Recorder: History {
     private let lock = NSLock()
     private var _entries = [LogEntry]()
 
-    func record(level: Logger.Level, metadata: Logger.Metadata?, message: Logger.Message, source: String) {
+    func record(
+        level: Logger.Level,
+        metadata: Logger.Metadata?,
+        message: Logger.Message,
+        error: (any Error)? = nil,
+        source: String
+    ) {
         self.lock.withLock {
             self._entries.append(
-                LogEntry(level: level, metadata: metadata, message: message.description, source: source)
+                LogEntry(level: level, metadata: metadata, message: message.description, error: error, source: source)
             )
         }
     }
@@ -179,6 +192,7 @@ internal class Recorder: History {
         level: Logger.Level,
         metadata: Logger.Metadata?,
         message: Logger.Message,
+        error: (any Error)? = nil,
         source: String,
         file: String,
         function: String,
@@ -190,6 +204,7 @@ internal class Recorder: History {
                     level: level,
                     metadata: metadata,
                     message: message.description,
+                    error: error,
                     source: source,
                     file: file,
                     function: function,
@@ -240,6 +255,7 @@ internal struct LogEntry {
     let level: Logger.Level
     let metadata: Logger.Metadata?
     let message: String
+    let error: (any Error)?
     let source: String
     let file: String
     let function: String
@@ -249,6 +265,7 @@ internal struct LogEntry {
         level: Logger.Level,
         metadata: Logger.Metadata?,
         message: String,
+        error: (any Error)?,
         source: String,
         file: String = "",
         function: String = "",
@@ -257,6 +274,7 @@ internal struct LogEntry {
         self.level = level
         self.metadata = metadata
         self.message = message
+        self.error = error
         self.source = source
         self.file = file
         self.function = function
@@ -268,6 +286,7 @@ extension History {
     func assertExist(
         level: Logger.Level,
         message: String,
+        error: (any Error)? = nil,
         metadata: Logger.Metadata? = nil,
         source: String? = nil,
         file: String = #filePath,
@@ -276,10 +295,10 @@ extension History {
         column: Int = #column
     ) {
         let source = source ?? Logger.currentModule(fileID: "\(fileID)")
-        let entry = self.find(level: level, message: message, metadata: metadata, source: source)
+        let entry = self.find(level: level, message: message, error: error, metadata: metadata, source: source)
         #expect(
             entry != nil,
-            "entry not found: \(level), \(source), \(String(describing: metadata)), \(message)",
+            "entry not found: \(level), \(source), \(String(describing: metadata)), \(message), \(String(describing: error))",
             sourceLocation: SourceLocation(fileID: fileID, filePath: file, line: line, column: column)
         )
     }
@@ -287,6 +306,7 @@ extension History {
     func assertNotExist(
         level: Logger.Level,
         message: String,
+        error: (any Error)? = nil,
         metadata: Logger.Metadata? = nil,
         source: String? = nil,
         file: String = #filePath,
@@ -295,20 +315,29 @@ extension History {
         column: Int = #column
     ) {
         let source = source ?? Logger.currentModule(fileID: "\(fileID)")
-        let entry = self.find(level: level, message: message, metadata: metadata, source: source)
+        let entry = self.find(level: level, message: message, error: error, metadata: metadata, source: source)
         #expect(
             entry == nil,
-            "entry was found: \(level), \(source), \(String(describing: metadata)), \(message)",
+            "entry was found: \(level), \(source), \(String(describing: metadata)), \(message), \(String(describing: error))",
             sourceLocation: SourceLocation(fileID: fileID, filePath: file, line: line, column: column)
         )
     }
 
-    func find(level: Logger.Level, message: String, metadata: Logger.Metadata? = nil, source: String) -> LogEntry? {
+    func find(
+        level: Logger.Level,
+        message: String,
+        error: (any Error)? = nil,
+        metadata: Logger.Metadata? = nil,
+        source: String
+    ) -> LogEntry? {
         self.entries.first { entry in
             if entry.level != level {
                 return false
             }
             if entry.message != message {
+                return false
+            }
+            if !errorsEqual(error, entry.error) {
                 return false
             }
             if let lhs = entry.metadata, let rhs = metadata {
@@ -335,6 +364,17 @@ extension History {
             }
 
             return true
+        }
+    }
+
+    private func errorsEqual(_ lhs: (any Error)?, _ rhs: (any Error)?) -> Bool {
+        switch (lhs, rhs) {
+        case (nil, nil):
+            return true
+        case let (l?, r?):
+            return "\(l)" == "\(r)" && String(reflecting: type(of: l)) == String(reflecting: type(of: r))
+        default:
+            return false
         }
     }
 }
