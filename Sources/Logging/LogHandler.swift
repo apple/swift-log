@@ -203,6 +203,21 @@ public protocol LogHandler: _SwiftLogSendableLogHandler {
     ///         only affect this very `LogHandler`.
     var metadata: Logger.Metadata { get set }
 
+    /// Add, remove, or change the attributed logging metadata.
+    ///
+    /// - note: `LogHandler`s must treat logging metadata as a value type. This means that the change in metadata must
+    ///         only affect this very `LogHandler`.
+    ///
+    /// - parameters:
+    ///    - attributedMetadataKey: The key for the attributed metadata item
+    subscript(attributedMetadataKey _: String) -> Logger.AttributedMetadataValue? { get set }
+
+    /// Get or set the entire attributed metadata storage as a dictionary.
+    ///
+    /// - note: `LogHandler`s must treat logging metadata as a value type. This means that the change in metadata must
+    ///         only affect this very `LogHandler`.
+    var attributedMetadata: Logger.AttributedMetadata { get set }
+
     /// Get or set the configured log level.
     ///
     /// - note: `LogHandler`s must treat the log level as a value type. This means that the change in metadata must
@@ -237,6 +252,36 @@ extension LogHandler {
                 )
             }
             #endif
+        }
+    }
+
+    /// Default implementation for attributed metadata that converts from/to plain metadata.
+    ///
+    /// This default exists in order to facilitate the source-compatible introduction of the `attributedMetadata` protocol requirement.
+    ///
+    /// - On get: Returns plain metadata converted to attributed metadata with empty attributes.
+    /// - On set: Strips attributes and stores raw values in plain metadata.
+    public var attributedMetadata: Logger.AttributedMetadata {
+        get {
+            self.metadata.mapValues { .init($0, attributes: .init()) }
+        }
+        set {
+            self.metadata = newValue.mapValues(\.value)
+        }
+    }
+
+    /// Default implementation for attributed metadata subscript that converts from/to plain metadata.
+    ///
+    /// This default exists in order to facilitate the source-compatible introduction of the attributed metadata subscript.
+    ///
+    /// - On get: Returns plain metadata value converted to attributed metadata with empty attributes.
+    /// - On set: Strips attributes and stores the raw value in plain metadata.
+    public subscript(attributedMetadataKey key: String) -> Logger.AttributedMetadataValue? {
+        get {
+            self[metadataKey: key].map { .init($0, attributes: .init()) }
+        }
+        set {
+            self[metadataKey: key] = newValue?.value
         }
     }
 }

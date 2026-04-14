@@ -19,7 +19,9 @@ let package = Package(
     name: "swift-log",
     products: [
         .library(name: "Logging", targets: ["Logging"]),
+        .library(name: "LoggingAttributes", targets: ["LoggingAttributes"]),
         .library(name: "InMemoryLogging", targets: ["InMemoryLogging"]),
+        .library(name: "OSLogHandler", targets: ["OSLogHandler"]),
     ],
     traits: [
         .trait(name: "MaxLogLevelDebug", description: "Debug and above available (compiles out trace)"),
@@ -45,16 +47,32 @@ let package = Package(
             dependencies: []
         ),
         .target(
+            name: "LoggingAttributes",
+            dependencies: ["Logging"]
+        ),
+        .target(
             name: "InMemoryLogging",
             dependencies: ["Logging"]
+        ),
+        .target(
+            name: "OSLogHandler",
+            dependencies: ["Logging", "LoggingAttributes"]
         ),
         .testTarget(
             name: "LoggingTests",
             dependencies: ["Logging"]
         ),
         .testTarget(
+            name: "LoggingAttributesTests",
+            dependencies: ["LoggingAttributes", "Logging"]
+        ),
+        .testTarget(
             name: "InMemoryLoggingTests",
             dependencies: ["InMemoryLogging", "Logging"]
+        ),
+        .testTarget(
+            name: "OSLogHandlerTests",
+            dependencies: ["OSLogHandler", "Logging", "LoggingAttributes"]
         ),
     ]
 )

@@ -21,6 +21,7 @@ let package = Package(
             dependencies: [
                 .product(name: "Benchmark", package: "package-benchmark"),
                 .product(name: "Logging", package: "swift-log"),
+                .product(name: "LoggingAttributes", package: "swift-log"),
             ]
         )
     ]

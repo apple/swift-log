@@ -16,6 +16,7 @@ import Benchmark
 import BenchmarksFactory
 import Foundation
 import Logging
+import LoggingAttributes
 
 public let benchmarks: @Sendable () -> Void = {
     makeBenchmark(loggerLevel: .notice, logLevel: .notice) { logger in
@@ -29,5 +30,15 @@ public let benchmarks: @Sendable () -> Void = {
     }
     makeBenchmark(loggerLevel: .warning, logLevel: .warning, "_generic") { logger in
         logger.log(level: .warning, "hello, benchmarking world")
+    }
+    makeBenchmark(loggerLevel: .notice, logLevel: .notice, "_attributed_generic") { logger in
+        logger.log(
+            level: .notice,
+            "hello, benchmarking world",
+            attributedMetadata: [
+                "public-key": "\("public-value", sensitivity: .public)",
+                "private-key": "\("private-value", sensitivity: .sensitive)",
+            ]
+        )
     }
 }
