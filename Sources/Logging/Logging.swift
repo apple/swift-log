@@ -2337,6 +2337,115 @@ private final class WarnOnceBox: @unchecked Sendable {
 }
 #endif
 
+// MARK: - Task-local logger storage
+
+@available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
+extension Logger {
+    /// Task-local storage for implicit logger context propagation.
+    ///
+    /// This storage enables ``Logger/current`` and the ``withLogger(_:_:)-6n3m5`` free functions to work
+    /// without requiring explicit logger parameters throughout the call stack.
+    ///
+    /// > Warning: This property is implementation detail and should not be accessed directly.
+    /// > Use ``Logger/current`` or ``withLogger(_:_:)-6n3m5`` to access or modify the task-local logger.
+    ///
+    /// > Important: Task-local values are **not** inherited by detached tasks created with `Task.detached`.
+    /// > If you need logger context in a detached task, capture the logger explicitly or use structured
+    /// > concurrency (`async let`, `withTaskGroup`, etc.) instead.
+    ///
+    /// This property provides access to the logger stored in task-local storage. It initializes to nil,
+    /// and when accessed without prior setup, returns a no-op logger that discards all log messages.
+    /// Users should explicitly set up a logger with an appropriate handler at application entry points
+    /// using ``withLogger(_:_:)-6n3m5`` to enable actual logging.
+    @usableFromInline
+    @TaskLocal
+    static var taskLocalLogger: Logger?
+
+    /// Internal state for warning about task-local fallback usage.
+    private static let taskLocalFallbackWarningLock = Lock()
+    private nonisolated(unsafe) static var hasWarnedAboutTaskLocalFallback = false
+
+    private static func warnOnceAboutTaskLocalFallback(logger: Logger) {
+        let shouldWarn = taskLocalFallbackWarningLock.withLock {
+            guard !hasWarnedAboutTaskLocalFallback else { return false }
+            hasWarnedAboutTaskLocalFallback = true
+            return true
+        }
+        if shouldWarn {
+            logger.warning(
+                """
+                Logger.current accessed without task-local context. \
+                Using globally bootstrapped logger as fallback. \
+                For proper task-local logging, use withLogger() to set up the logging context.
+                """
+            )
+        }
+    }
+
+    /// Creates a fallback logger using the globally bootstrapped handler.
+    ///
+    /// This intentionally does not cache the logger so that changes to `LoggingSystem.bootstrap()`
+    /// are always reflected.
+    @usableFromInline
+    static func makeFallbackLogger() -> Logger {
+        let logger = Logger(
+            label: "task-local-fallback",
+            LoggingSystem.factory("task-local-fallback", LoggingSystem.metadataProvider)
+        )
+        warnOnceAboutTaskLocalFallback(logger: logger)
+        return logger
+    }
+
+    @usableFromInline
+    nonisolated(nonsending)
+        static func withTaskLocalLogger<Return, Failure: Error>(
+            _ value: Logger,
+            operation: nonisolated(nonsending) () async throws(Failure) -> Return
+        ) async rethrows -> Return
+    {
+        try await Self.$taskLocalLogger.withValue(value, operation: operation)
+    }
+
+    @usableFromInline
+    static func withTaskLocalLogger<Return, Failure: Error>(
+        _ value: Logger,
+        operation: () throws(Failure) -> Return
+    ) rethrows -> Return {
+        try Self.$taskLocalLogger.withValue(value, operation: operation)
+    }
+
+    /// The current task-local logger.
+    ///
+    /// This property provides direct access to the logger stored in task-local storage.
+    /// Use this when you need quick access to the logger without a closure.
+    ///
+    /// If no task-local logger has been set up, this returns the globally bootstrapped logger
+    /// with the label "task-local-fallback" and emits a warning (once per process) to help with adoption.
+    /// Use ``withLogger(_:_:)-6n3m5`` to properly initialize the task-local logger.
+    ///
+    /// > Tip: For performance-critical code with many log calls, consider extracting the logger once
+    /// > instead of accessing ``Logger/current`` repeatedly:
+    /// > ```swift
+    /// > // Instead of this (multiple task-local lookups):
+    /// > for item in items {
+    /// >     Logger.current.debug("Processing", metadata: ["id": "\(item.id)"])
+    /// > }
+    /// >
+    /// > // Do this (single lookup, then use extracted logger):
+    /// > let logger = Logger.current
+    /// > for item in items {
+    /// >     logger.debug("Processing", metadata: ["id": "\(item.id)"])
+    /// > }
+    /// > ```
+    ///
+    /// > Important: Task-local values are **not** inherited by detached tasks created with `Task.detached`.
+    /// > If you need logger context in a detached task, capture the logger explicitly.
+    @inlinable
+    public static var current: Logger {
+        Self.taskLocalLogger ?? Self.makeFallbackLogger()
+    }
+}
+
 // MARK: - Sendable support helpers
 
 extension Logger.MetadataValue: Sendable {}
