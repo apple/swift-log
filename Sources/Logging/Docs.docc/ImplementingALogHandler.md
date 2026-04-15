@@ -23,11 +23,11 @@ func logHandlerValueSemantics() {
     var logger1 = Logger(label: "first logger")
     logger1.logLevel = .debug
     logger1[metadataKey: "only-on"] = "first"
-    
+
     var logger2 = logger1
     logger2.logLevel = .error                  // Must not affect logger1
     logger2[metadataKey: "only-on"] = "second" // Must not affect logger1
-    
+
     // These expectations must pass
     #expect(logger1.logLevel == .debug)
     #expect(logger2.logLevel == .error)
@@ -51,37 +51,29 @@ public struct PrintLogHandler: LogHandler {
     private let label: String
     public var logLevel: Logger.Level = .info
     public var metadata: Logger.Metadata = [:]
-    
+
     public init(label: String) {
         self.label = label
     }
-    
-    public func log(
-        level: Logger.Level,
-        message: Logger.Message,
-        metadata: Logger.Metadata?,
-        source: String,
-        file: String,
-        function: String,
-        line: UInt
-    ) {
+
+    public func log(event: LogEvent) {
         let timestamp = ISO8601DateFormatter().string(from: Date())
-        let levelString = level.rawValue.uppercased()
-        
+        let levelString = event.level.rawValue.uppercased()
+
         // Merge handler metadata with message metadata
         let combinedMetadata = Self.prepareMetadata(
             base: self.metadata
-            explicit: metadata
+            explicit: event.metadata
         )
-        
+
         // Format metadata
         let metadataString = combinedMetadata.map { "\($0.key)=\($0.value)" }.joined(separator: ",")
-        
+
         // Create log line and print to console
-        let logLine = "\(label) \(timestamp) \(levelString) [\(metadataString)]: \(message)"
+        let logLine = "\(label) \(timestamp) \(levelString) [\(metadataString)]: \(event.message)"
         print(logLine)
     }
-    
+
     public subscript(metadataKey key: String) -> Logger.Metadata.Value? {
         get {
             return self.metadata[key]
@@ -128,23 +120,15 @@ public struct PrintLogHandler: LogHandler {
     public var logLevel: Logger.Level = .info
     public var metadata: Logger.Metadata = [:]
     public var metadataProvider: Logger.MetadataProvider?
-    
+
     public init(label: String) {
         self.label = label
     }
-    
-    public func log(
-        level: Logger.Level,
-        message: Logger.Message,
-        metadata: Logger.Metadata?,
-        source: String,
-        file: String,
-        function: String,
-        line: UInt
-    ) {
+
+    public func log(event: LogEvent) {
         let timestamp = ISO8601DateFormatter().string(from: Date())
-        let levelString = level.rawValue.uppercased()
-        
+        let levelString = event.level.rawValue.uppercased()
+
         // Get provider metadata
         let providerMetadata = metadataProvider?.get() ?? [:]
 
@@ -152,17 +136,17 @@ public struct PrintLogHandler: LogHandler {
         let combinedMetadata = Self.prepareMetadata(
             base: self.metadata,
             provider: self.metadataProvider,
-            explicit: metadata
+            explicit: event.metadata
         )
-        
+
         // Format metadata
         let metadataString = combinedMetadata.map { "\($0.key)=\($0.value)" }.joined(separator: ",")
-        
+
         // Create log line and print to console
-        let logLine = "\(label) \(timestamp) \(levelString) [\(metadataString)]: \(message)"
+        let logLine = "\(label) \(timestamp) \(levelString) [\(metadataString)]: \(event.message)"
         print(logLine)
     }
-    
+
     public subscript(metadataKey key: String) -> Logger.Metadata.Value? {
         get {
             return self.metadata[key]
