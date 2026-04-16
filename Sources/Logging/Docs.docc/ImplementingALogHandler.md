@@ -62,7 +62,7 @@ public struct PrintLogHandler: LogHandler {
 
         // Merge handler metadata with message metadata
         let combinedMetadata = Self.prepareMetadata(
-            base: self.metadata
+            base: self.metadata,
             explicit: event.metadata
         )
 
