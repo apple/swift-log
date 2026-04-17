@@ -96,14 +96,7 @@
 ///         }
 ///     }
 ///
-///     public func log(
-///         level: Logger.Level,
-///         message: Logger.Message,
-///         metadata: Logger.Metadata?,
-///         source: String,
-///         file: String,
-///         function: String,
-///         line: UInt) {
+///     public func log(event: LogEvent) {
 ///         // [...]
 ///     }
 ///

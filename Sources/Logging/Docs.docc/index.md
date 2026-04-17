@@ -84,6 +84,7 @@ backend.
 ### Log Handlers
 
 - ``LogHandler``
+- ``LogEvent``
 - ``MultiplexLogHandler``
 - ``StreamLogHandler``
 - ``SwiftLogNoOpLogHandler``
