@@ -485,7 +485,7 @@ internal struct TestLibrary: Sendable {
     }
 }
 
-// Sendable
+// MARK: - Sendable
 
 extension TestLogHandler: @unchecked Sendable {}
 extension Recorder: @unchecked Sendable {}
