@@ -11,6 +11,7 @@
 
 ### Sending log messages
 
+- ``log(event:)``
 - ``log(level:message:metadata:source:file:function:line:)``
 
 ### Updating metadata
