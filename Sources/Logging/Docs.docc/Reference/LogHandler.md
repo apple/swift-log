@@ -4,6 +4,8 @@
 
 ### Sending log messages
 
+- ``log(event:)-7x67``
+- ``log(event:)-17f2r``
 - ``log(level:message:metadata:source:file:function:line:)-8kgt7``
 - ``log(level:message:metadata:source:file:function:line:)-69pez``
 - ``log(level:message:metadata:file:function:line:)-89rya``
