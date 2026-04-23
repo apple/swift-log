@@ -17,6 +17,11 @@ import Testing
 
 @testable import Logging
 
+private enum TestAttr: Int64, Logger.MetadataAttributeKey {
+    case x = 1
+    case y = 2
+}
+
 extension LogHandler {
     fileprivate func with(logLevel: Logger.Level) -> any LogHandler {
         var result = self
@@ -850,6 +855,142 @@ struct LoggingTest {
         #expect("first" == logger1[metadataKey: "only-on"])
         #expect("second" == logger2[metadataKey: "only-on"])
         logger1.error("hey")
+    }
+
+    @Test func multiplexLogHandlerAttributedMetadata_settingAndReading() {
+        let logging1 = TestLogging()
+        let logging2 = TestLogging()
+
+        let logger1 = logging1.make(label: "1")
+        let logger2 = logging2.make(label: "2")
+
+        var multiplexLogger = Logger(
+            label: "test",
+            factory: { _ in
+                MultiplexLogHandler([logger1, logger2])
+            }
+        )
+
+        // Set attributed metadata on the multiplex logger.
+        // Child TestLogHandlers use default implementations that strip attributes,
+        // so values are preserved but attributes are lost through the round-trip.
+        var attrs = Logger.MetadataValueAttributes()
+        attrs[TestAttr.self] = .x
+        multiplexLogger[attributedMetadataKey: "key1"] = .init(.string("value1"), attributes: attrs)
+
+        // The value survives the round-trip through default implementations
+        let retrieved = multiplexLogger[attributedMetadataKey: "key1"]
+        #expect(retrieved != nil)
+        #expect(retrieved?.value == .string("value1"))
+
+        // Attributes are stripped by default LogHandler implementations (expected)
+        #expect(retrieved?.attributes[TestAttr.self] == nil)
+
+        // The value is also accessible through plain metadata
+        #expect(multiplexLogger[metadataKey: "key1"] == .string("value1"))
+    }
+
+    @Test func multiplexLogHandlerAttributedMetadata_preservesAttributesWithAwareHandler() {
+        // A minimal handler that natively stores attributed metadata
+        struct AttributedAwareHandler: LogHandler {
+            var logLevel: Logger.Level = .debug
+            var metadataProvider: Logger.MetadataProvider?
+
+            var _attributedMetadata: Logger.AttributedMetadata = [:]
+
+            var metadata: Logger.Metadata {
+                get { self._attributedMetadata.mapValues(\.value) }
+                set { self._attributedMetadata = newValue.mapValues { .init($0, attributes: .init()) } }
+            }
+
+            subscript(metadataKey metadataKey: String) -> Logger.Metadata.Value? {
+                get { self._attributedMetadata[metadataKey]?.value }
+                set {
+                    if let newValue {
+                        self._attributedMetadata[metadataKey] = .init(newValue, attributes: .init())
+                    } else {
+                        self._attributedMetadata[metadataKey] = nil
+                    }
+                }
+            }
+
+            var attributedMetadata: Logger.AttributedMetadata {
+                get { self._attributedMetadata }
+                set { self._attributedMetadata = newValue }
+            }
+
+            subscript(attributedMetadataKey key: String) -> Logger.AttributedMetadataValue? {
+                get { self._attributedMetadata[key] }
+                set { self._attributedMetadata[key] = newValue }
+            }
+
+            func log(event: LogEvent) {}
+        }
+
+        var multiplexLogger = Logger(
+            label: "test",
+            factory: { _ in
+                MultiplexLogHandler([AttributedAwareHandler(), AttributedAwareHandler()])
+            }
+        )
+
+        // Set attributed metadata with a custom attribute
+        var attrs = Logger.MetadataValueAttributes()
+        attrs[TestAttr.self] = .x
+        multiplexLogger[attributedMetadataKey: "key1"] = .init(.string("value1"), attributes: attrs)
+
+        // With attributed-aware handlers, attributes survive the round-trip
+        let retrieved = multiplexLogger[attributedMetadataKey: "key1"]
+        #expect(retrieved != nil)
+        #expect(retrieved?.value == .string("value1"))
+        #expect(retrieved?.attributes[TestAttr.self] == .x)
+
+        // Full attributed metadata also preserves attributes
+        let allAttributed = multiplexLogger.attributedMetadata
+        #expect(allAttributed["key1"]?.attributes[TestAttr.self] == .x)
+    }
+
+    @Test func multiplexLogHandlerAttributedMetadata_forwardsEventWithAttributes() {
+        let logging1 = TestLogging()
+        let logging2 = TestLogging()
+
+        var logger = Logger(
+            label: "test",
+            factory: {
+                MultiplexLogHandler([logging1.make(label: $0), logging2.make(label: $0)])
+            }
+        )
+        logger.logLevel = .debug
+
+        // Log with attributed metadata
+        logger.info("hello", attributedMetadata: ["request-id": "\("abc123")"])
+
+        // Both handlers should receive the message
+        logging1.history.assertExist(level: .info, message: "hello")
+        logging2.history.assertExist(level: .info, message: "hello")
+    }
+
+    @Test func backwardCompatibility_oldHandlerReceivesAttributedEvents() {
+        // TestLogHandler does NOT implement attributedMetadata — it relies on default implementations.
+        // This test verifies that logging with attributedMetadata still works with such handlers.
+        let logging = TestLogging()
+
+        var logger = Logger(
+            label: "test",
+            factory: { logging.make(label: $0) }
+        )
+        logger.logLevel = .debug
+
+        // Log with attributed metadata on a handler that only understands plain metadata
+        logger.info(
+            "attributed event",
+            attributedMetadata: [
+                "user-id": .init(.string("12345"), attributes: .init())
+            ]
+        )
+
+        // The handler should still receive the message via LogEvent
+        logging.history.assertExist(level: .info, message: "attributed event")
     }
 
     /// Protects an object such that it can only be accessed while holding a lock.

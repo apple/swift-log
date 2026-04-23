@@ -29,13 +29,68 @@ public struct LogEvent: Sendable {
     /// The error associated with this event, if any.
     public var error: (any Error)?
 
-    /// The metadata associated with this event, if any.
-    public var metadata: Logger.Metadata? {
-        get { self._metadata }
-        set { self._metadata = newValue }
+    /// Internal storage that tracks whether metadata was provided as plain or attributed.
+    @usableFromInline
+    internal enum MetadataStorage: Sendable {
+        case none
+        case plain(Logger.Metadata)
+        case attributed(Logger.AttributedMetadata)
     }
 
-    private var _metadata: Logger.Metadata?
+    @usableFromInline
+    internal var _metadataStorage: MetadataStorage
+
+    /// The metadata associated with this event, if any.
+    ///
+    /// When the event was created with attributed metadata, accessing this property strips
+    /// attributes and returns raw values. When created with plain metadata, returns it directly.
+    ///
+    /// - Important: Setting this property replaces any attributed metadata with plain metadata,
+    ///   discarding all attributes. Handler wrappers that need to preserve attributes should
+    ///   read and write ``attributedMetadata`` instead.
+    public var metadata: Logger.Metadata? {
+        @inlinable get {
+            switch self._metadataStorage {
+            case .none:
+                return nil
+            case .plain(let metadata):
+                return metadata
+            case .attributed(let attributed):
+                return attributed.mapValues(\.value)
+            }
+        }
+        @inlinable set {
+            if let newValue {
+                self._metadataStorage = .plain(newValue)
+            } else {
+                self._metadataStorage = .none
+            }
+        }
+    }
+
+    /// The attributed metadata associated with this event, if any.
+    ///
+    /// When the event was created with plain metadata, accessing this property wraps values
+    /// with empty attributes. When created with attributed metadata, returns it directly.
+    public var attributedMetadata: Logger.AttributedMetadata? {
+        @inlinable get {
+            switch self._metadataStorage {
+            case .none:
+                return nil
+            case .plain(let metadata):
+                return metadata.mapValues { .init($0, attributes: .init()) }
+            case .attributed(let attributed):
+                return attributed
+            }
+        }
+        @inlinable set {
+            if let newValue {
+                self._metadataStorage = .attributed(newValue)
+            } else {
+                self._metadataStorage = .none
+            }
+        }
+    }
 
     /// The source where this log event originated, for example the logging module.
     ///
@@ -116,7 +171,47 @@ public struct LogEvent: Sendable {
         self.level = level
         self.message = message
         self.error = error
-        self._metadata = metadata
+        if let metadata {
+            self._metadataStorage = .plain(metadata)
+        } else {
+            self._metadataStorage = .none
+        }
+        self._source = source
+        self.file = file
+        self.function = function
+        self.line = line
+    }
+
+    /// Creates a new log event with attributed metadata.
+    ///
+    /// - Parameters:
+    ///   - level: The log level of this event.
+    ///   - message: The message of this event.
+    ///   - error: The error associated with this event, if any.
+    ///   - attributedMetadata: The attributed metadata associated with this event, if any.
+    ///   - source: The source where this log event originated. When `nil`, ``source`` is derived lazily
+    ///     from ``file`` on first access so handlers that never read it pay no allocation cost.
+    ///   - file: The file this log event originates from.
+    ///   - function: The function this log event originates from.
+    ///   - line: The line this log event originates from.
+    public init(
+        level: Logger.Level,
+        message: Logger.Message,
+        error: (any Error)?,
+        attributedMetadata: Logger.AttributedMetadata?,
+        source: String?,
+        file: String,
+        function: String,
+        line: UInt
+    ) {
+        self.level = level
+        self.message = message
+        self.error = error
+        if let attributedMetadata {
+            self._metadataStorage = .attributed(attributedMetadata)
+        } else {
+            self._metadataStorage = .none
+        }
         self._source = source
         self.file = file
         self.function = function

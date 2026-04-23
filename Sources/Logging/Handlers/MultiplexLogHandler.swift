@@ -219,6 +219,47 @@ public struct MultiplexLogHandler: LogHandler {
         }
     }
 
+    /// Get or set the entire attributed metadata storage as a dictionary.
+    public var attributedMetadata: Logger.AttributedMetadata {
+        get {
+            var effective: Logger.AttributedMetadata = [:]
+            // !-safe, we always have at least one handler
+            effective.reserveCapacity(self.handlers.first!.attributedMetadata.count)
+
+            for handler in self.handlers {
+                effective.merge(handler.attributedMetadata, uniquingKeysWith: { _, handlerMetadata in handlerMetadata })
+                if let provider = handler.metadataProvider {
+                    effective.merge(provider.getAttributedMetadata(), uniquingKeysWith: { _, provided in provided })
+                }
+            }
+            if let provider = self._metadataProvider {
+                effective.merge(provider.getAttributedMetadata(), uniquingKeysWith: { _, provided in provided })
+            }
+
+            return effective
+        }
+        set {
+            self.mutatingForEachHandler { $0.attributedMetadata = newValue }
+        }
+    }
+
+    /// Add, change, or remove an attributed logging metadata item.
+    ///
+    /// > Note: Changing the logging metadata only affects the instance of the `Logger` where you change it.
+    public subscript(attributedMetadataKey key: String) -> Logger.AttributedMetadataValue? {
+        get {
+            for handler in self.handlers {
+                if let value = handler[attributedMetadataKey: key] {
+                    return value
+                }
+            }
+            return nil
+        }
+        set {
+            self.mutatingForEachHandler { $0[attributedMetadataKey: key] = newValue }
+        }
+    }
+
     private mutating func mutatingForEachHandler(_ mutator: (inout any LogHandler) -> Void) {
         for index in self.handlers.indices {
             mutator(&self.handlers[index])
