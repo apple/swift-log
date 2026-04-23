@@ -35,7 +35,23 @@ public import Logging
 /// ```
 ///
 public struct InMemoryLogHandler: LogHandler {
-    public var metadata: Logger.Metadata = [:]
+    /// The canonical metadata store — attributed metadata is the source of truth.
+    /// Plain `metadata` is a derived view over this store.
+    public var attributedMetadata: Logger.AttributedMetadata = [:]
+
+    /// Get or set plain metadata as a view over attributed metadata.
+    ///
+    /// - On get: strips attributes and returns raw values.
+    /// - On set: stores values with empty attributes.
+    public var metadata: Logger.Metadata {
+        get {
+            self.attributedMetadata.mapValues(\.value)
+        }
+        set {
+            self.attributedMetadata = newValue.mapValues { .init($0, attributes: .init()) }
+        }
+    }
+
     public var metadataProvider: Logger.MetadataProvider?
     public var logLevel: Logger.Level = .info
     private let logStore: LogStore
@@ -48,27 +64,56 @@ public struct InMemoryLogHandler: LogHandler {
         public var message: Logger.Message
         /// The error which was logged.
         public var error: (any Error)?
-        /// The metadata which was logged.
-        public var metadata: Logger.Metadata
+
+        private var _attributedMetadata: Logger.AttributedMetadata
+
+        /// The plain metadata which was logged (attributes stripped).
+        public var metadata: Logger.Metadata {
+            get { self._attributedMetadata.mapValues(\.value) }
+            set { self._attributedMetadata = newValue.mapValues { .init($0, attributes: .init()) } }
+        }
+
+        /// The attributed metadata which was logged.
+        public var attributedMetadata: Logger.AttributedMetadata {
+            get { self._attributedMetadata }
+            set { self._attributedMetadata = newValue }
+        }
 
         public init(level: Logger.Level, message: Logger.Message, metadata: Logger.Metadata) {
             self.level = level
             self.message = message
-            self.metadata = metadata
+            self._attributedMetadata = metadata.mapValues { .init($0, attributes: .init()) }
         }
 
-        public init(level: Logger.Level, message: Logger.Message, error: (any Error)?, metadata: Logger.Metadata) {
+        public init(
+            level: Logger.Level,
+            message: Logger.Message,
+            error: (any Error)?,
+            metadata: Logger.Metadata
+        ) {
             self.level = level
             self.message = message
             self.error = error
-            self.metadata = metadata
+            self._attributedMetadata = metadata.mapValues { .init($0, attributes: .init()) }
         }
 
-        public static func == (lhs: InMemoryLogHandler.Entry, rhs: InMemoryLogHandler.Entry) -> Bool {
+        public init(
+            level: Logger.Level,
+            message: Logger.Message,
+            error: (any Error)?,
+            attributedMetadata: Logger.AttributedMetadata
+        ) {
+            self.level = level
+            self.message = message
+            self.error = error
+            self._attributedMetadata = attributedMetadata
+        }
+
+        public static func == (lhs: Entry, rhs: Entry) -> Bool {
             lhs.level == rhs.level
                 && lhs.message == rhs.message
+                && lhs._attributedMetadata == rhs._attributedMetadata
                 && errorsEqual(lhs.error, rhs.error)
-                && lhs.metadata == rhs.metadata
         }
 
         private static func errorsEqual(_ lhs: (any Error)?, _ rhs: (any Error)?) -> Bool {
@@ -91,7 +136,7 @@ public struct InMemoryLogHandler: LogHandler {
             level: Logger.Level,
             message: Logger.Message,
             error: (any Error)?,
-            metadata: Logger.Metadata
+            attributedMetadata: Logger.AttributedMetadata
         ) {
             self.lock.withLockVoid {
                 self._entries.append(
@@ -99,7 +144,7 @@ public struct InMemoryLogHandler: LogHandler {
                         level: level,
                         message: message,
                         error: error,
-                        metadata: metadata
+                        attributedMetadata: attributedMetadata
                     )
                 )
             }
@@ -126,14 +171,37 @@ public struct InMemoryLogHandler: LogHandler {
     }
 
     public func log(event: LogEvent) {
-        // Start with the metadata provider..
-        var mergedMetadata: Logger.Metadata = self.metadataProvider?.get() ?? [:]
-        // ..merge in self.metadata, overwriting existing keys
-        mergedMetadata = mergedMetadata.merging(self.metadata) { $1 }
-        // ..merge in metadata from this log call, overwriting existing keys
-        mergedMetadata = mergedMetadata.merging(event.metadata ?? [:]) { $1 }
+        // Merge metadata in order of precedence:
+        // 1. Handler's attributed metadata (lowest precedence)
+        // 2. Metadata provider values
+        // 3. Event's attributed metadata (highest precedence)
+        var merged = Logger.AttributedMetadata()
 
-        self.logStore.append(level: event.level, message: event.message, error: event.error, metadata: mergedMetadata)
+        // 1. Handler's attributed metadata (lowest precedence)
+        for (key, value) in self.attributedMetadata {
+            merged[key] = value
+        }
+
+        // 2. Metadata provider values
+        if let provider = self.metadataProvider {
+            for (key, value) in provider.getAttributedMetadata() {
+                merged[key] = value
+            }
+        }
+
+        // 3. Event's attributed metadata (highest precedence)
+        if let eventAttributed = event.attributedMetadata {
+            for (key, value) in eventAttributed {
+                merged[key] = value
+            }
+        }
+
+        self.logStore.append(
+            level: event.level,
+            message: event.message,
+            error: event.error,
+            attributedMetadata: merged
+        )
     }
 
     @available(*, deprecated, renamed: "log(event:)")
@@ -161,10 +229,23 @@ public struct InMemoryLogHandler: LogHandler {
 
     public subscript(metadataKey key: String) -> Logger.Metadata.Value? {
         get {
-            self.metadata[key]
+            self.attributedMetadata[key]?.value
         }
         set {
-            self.metadata[key] = newValue
+            if let newValue {
+                self.attributedMetadata[key] = .init(newValue, attributes: .init())
+            } else {
+                self.attributedMetadata[key] = nil
+            }
+        }
+    }
+
+    public subscript(attributedMetadataKey key: String) -> Logger.AttributedMetadataValue? {
+        get {
+            self.attributedMetadata[key]
+        }
+        set {
+            self.attributedMetadata[key] = newValue
         }
     }
 
