@@ -129,9 +129,6 @@ public struct PrintLogHandler: LogHandler {
         let timestamp = ISO8601DateFormatter().string(from: Date())
         let levelString = event.level.rawValue.uppercased()
 
-        // Get provider metadata
-        let providerMetadata = metadataProvider?.get() ?? [:]
-
         // Merge handler metadata with message metadata
         let combinedMetadata = Self.prepareMetadata(
             base: self.metadata,
@@ -182,6 +179,76 @@ public struct PrintLogHandler: LogHandler {
     }
 }
 ```
+
+#### Adopting attributed metadata in LogHandlers
+
+Attributed metadata extends the standard metadata system by allowing metadata values to carry additional attributes beyond just the value itself.
+This enables features like metadata annotations your logging system needs.
+
+To adopt attributed metadata in your log handler:
+
+**1. Implement the attributed metadata log method**:
+
+```swift
+public func log(event: LogEvent) {
+    // Merge handler metadata, provider metadata, and explicit attributed metadata
+    var merged = Logger.AttributedMetadata()
+
+    // Add handler metadata with default attributes
+    for (key, value) in self.metadata {
+        merged[key] = Logger.AttributedMetadataValue(value, attributes: .init())
+    }
+
+    // Add metadata provider values (attributed providers preserve attributes)
+    if let provider = self.metadataProvider {
+        let providerMetadata = provider.getAttributedMetadata()
+        for (key, value) in providerMetadata {
+            merged[key] = value
+        }
+    }
+
+    // Merge with event's attributed metadata (takes precedence)
+    if let eventAttributed = event.attributedMetadata {
+        for (key, value) in eventAttributed {
+            merged[key] = value
+        }
+    }
+
+    // Access attributes and values:
+    for (key, attributedValue) in merged {
+        let value = attributedValue.value              // The actual metadata value
+        let attributes = attributedValue.attributes    // The attributes
+
+        // Process based on your handler's needs
+        // See attribute-specific sections below for examples
+    }
+}
+```
+
+**2. Provide attributed metadata storage** (optional but recommended):
+
+```swift
+public struct MyLogHandler: LogHandler {
+    public var attributedMetadata = Logger.AttributedMetadata()
+
+    public subscript(attributedMetadataKey key: String) -> Logger.AttributedMetadataValue? {
+        get { self.attributedMetadata[key] }
+        set { self.attributedMetadata[key] = newValue }
+    }
+}
+```
+
+**Key considerations:**
+
+- **Handler metadata merging**: Your handler is responsible for merging its own `metadata` property, `metadataProvider` output, and the explicit `attributedMetadata` parameter. This is consistent with how plain metadata logging works. Explicit attributed metadata should take precedence.
+
+- **Default attributes**: When converting plain metadata (from `self.metadata` or `metadataProvider`) to attributed metadata, assign default attribute values appropriate for your handler. For example, treat handler metadata as public for privacy purposes.
+
+- **Default implementation**: If you don't implement the attributed metadata method, the default implementation strips attributes and passes the result to the plain `log(level:message:metadata:...)` method.
+
+- **Backward compatibility**: Implementing attributed metadata support is optional. Your handler can continue working with plain metadata only if attributed metadata features aren't needed.
+
+- **Performance**: Handlers that support attributed metadata should store `attributedMetadata` as their canonical metadata representation (as shown above) rather than relying on the default `LogHandler` extension that bridges between `metadata` and `attributedMetadata` via `mapValues`. The default bridge allocates a new dictionary on every property access. Similarly, reading `event.attributedMetadata` is zero-cost when the event was created with `attributedMetadata:`, while reading `event.metadata` on an attributed event incurs one dictionary allocation for the conversion.
 
 ### Performance considerations
 

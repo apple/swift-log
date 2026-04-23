@@ -4,11 +4,13 @@
 
 ### Creating a metadata provider
 
-- ``init(_:)``
+- ``init(_:)-(()->Logger.Metadata)``
+- ``attributed(_:)``
 
 ### Invoking the provider
 
 - ``get()``
+- ``getAttributedMetadata()``
 
 ### Merging metadata
 

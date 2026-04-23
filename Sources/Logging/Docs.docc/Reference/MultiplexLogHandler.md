@@ -15,6 +15,8 @@
 ### Updating metadata
 
 - ``subscript(metadataKey:)``
+- ``subscript(attributedMetadataKey:)``
+- ``attributedMetadata``
 
 ### Inspecting a log handler
 
