@@ -57,18 +57,23 @@ public struct InMemoryLogHandler: LogHandler {
             self.metadata = metadata
         }
 
-        public init(level: Logger.Level, message: Logger.Message, error: (any Error)?, metadata: Logger.Metadata) {
+        public init(
+            level: Logger.Level,
+            message: Logger.Message,
+            error: (any Error)?,
+            metadata: Logger.Metadata
+        ) {
             self.level = level
             self.message = message
             self.error = error
             self.metadata = metadata
         }
 
-        public static func == (lhs: InMemoryLogHandler.Entry, rhs: InMemoryLogHandler.Entry) -> Bool {
+        public static func == (lhs: Entry, rhs: Entry) -> Bool {
             lhs.level == rhs.level
                 && lhs.message == rhs.message
-                && errorsEqual(lhs.error, rhs.error)
                 && lhs.metadata == rhs.metadata
+                && errorsEqual(lhs.error, rhs.error)
         }
 
         private static func errorsEqual(_ lhs: (any Error)?, _ rhs: (any Error)?) -> Bool {
@@ -126,14 +131,23 @@ public struct InMemoryLogHandler: LogHandler {
     }
 
     public func log(event: LogEvent) {
-        // Start with the metadata provider..
-        var mergedMetadata: Logger.Metadata = self.metadataProvider?.get() ?? [:]
-        // ..merge in self.metadata, overwriting existing keys
-        mergedMetadata = mergedMetadata.merging(self.metadata) { $1 }
-        // ..merge in metadata from this log call, overwriting existing keys
-        mergedMetadata = mergedMetadata.merging(event.metadata ?? [:]) { $1 }
+        var merged = self.metadata
 
-        self.logStore.append(level: event.level, message: event.message, error: event.error, metadata: mergedMetadata)
+        if let provider = self.metadataProvider {
+            let provided = provider.get()
+            merged.merge(provided, uniquingKeysWith: { _, rhs in rhs })
+        }
+
+        if let eventMetadata = event.metadata {
+            merged.merge(eventMetadata, uniquingKeysWith: { _, rhs in rhs })
+        }
+
+        self.logStore.append(
+            level: event.level,
+            message: event.message,
+            error: event.error,
+            metadata: merged
+        )
     }
 
     @available(*, deprecated, renamed: "log(event:)")
