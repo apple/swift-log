@@ -48,11 +48,11 @@ struct SwiftLogNoOpLogHandlerTest {
         #expect(handler[metadataKey: "key"] == nil)
     }
 
-    @Test func logEventIsDiscarded() {
+    @Test func logEventDoesNotCrash() {
         let handler = SwiftLogNoOpLogHandler()
         let event = LogEvent(
             level: .critical,
-            message: "should be discarded",
+            message: "message",
             metadata: ["key": "value"],
             source: "test",
             file: #file,
@@ -62,7 +62,7 @@ struct SwiftLogNoOpLogHandlerTest {
         handler.log(event: event)
     }
 
-    @Test func loggerUsingNoOpHandlerSilentlyDiscards() {
+    @Test func allLogLevelsDoNotCrash() {
         var logger = Logger(label: "noop.test", factory: { _ in SwiftLogNoOpLogHandler() })
         logger[metadataKey: "key"] = "value"
         logger.trace("trace message")
