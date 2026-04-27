@@ -212,6 +212,14 @@ extension GlobalLoggerTest {
             metadata: ["provider": "42", "one-off": "42"]
         )
     }
+
+    @Test func taskLocalFallbackUsesBootstrappedHandler() {
+        let logging = TestLogging()
+        LoggingSystem.bootstrapInternal(logging.make)
+
+        Logger.current.warning("from fallback")
+        logging.history.assertExist(level: .warning, message: "from fallback")
+    }
 }
 
 private struct Struct1 {
