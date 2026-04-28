@@ -1,5 +1,10 @@
 # SwiftLog
 
+[![](https://img.shields.io/badge/docc-read_documentation-blue)](https://swiftpackageindex.com/apple/swift-log/documentation)
+[![](https://img.shields.io/github/v/release/apple/swift-log)](https://github.com/apple/swift-log/releases)
+[![](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Fapple%2Fswift-log%2Fbadge%3Ftype%3Dswift-versions)](https://swiftpackageindex.com/apple/swift-log)
+[![](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Fapple%2Fswift-log%2Fbadge%3Ftype%3Dplatforms)](https://swiftpackageindex.com/apple/swift-log)
+
 This repository contains a logging API implementation for Swift.
 SwiftLog provides a unified, performant, and ergonomic logging API that can be
 adopted by libraries and applications across the Swift ecosystem.
@@ -7,7 +12,7 @@ adopted by libraries and applications across the Swift ecosystem.
 - 📚 **Documentation** and **tutorials** are available on the [Swift Package Index](https://swiftpackageindex.com/apple/swift-log)
 - 🚀 **Contributions** are welcome, please see [CONTRIBUTING.md](CONTRIBUTING.md)
 - 🪪 **License** is Apache 2.0, repeated in [LICENSE.txt](LICENSE.txt)
-- 🔒 **Security** issues should be reported via the process in [SECURITY.md](SECURITY.md)
+- 🔒 **Security** issues should be reported via the process in [Security](https://github.com/apple/swift-log?tab=security-ov-file)
 - 🔀 **Available Logging Backends**: SwiftLog is an API package - you'll want to
 choose from the many
 [community-maintained logging backends](#available-log-handler-backends) for production use
