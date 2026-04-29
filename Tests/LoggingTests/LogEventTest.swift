@@ -98,6 +98,65 @@ struct LogEventTest {
         #expect(event.metadata == nil)
     }
 
+    // MARK: - Attributes on metadata values
+
+    @Test func metadataValueCarriesAttributesThroughStringInterpolation() {
+        enum TestAttr: Int64, Logger.MetadataValueAttributes.Attribute {
+            case flagged = 1
+        }
+
+        let value: Logger.MetadataValue = "\("secret", attributes: { $0[TestAttr.self] = .flagged })"
+        #expect(value.attributes[TestAttr.self] == .flagged)
+        #expect(value.description == "secret")
+    }
+
+    @Test func metadataValueWithoutAttributesProducesString() {
+        let value: Logger.MetadataValue = "\("plain")"
+        #expect(value.attributes == Logger.MetadataValueAttributes())
+
+        if case .string(let s) = value {
+            #expect(s == "plain")
+        } else {
+            Issue.record("Expected .string case for non-attributed interpolation")
+        }
+    }
+
+    @Test func metadataValueAttributesAreEmptyForPlainValues() {
+        let values: [Logger.MetadataValue] = [
+            .string("test"),
+            .stringConvertible(42),
+            .array(["a", "b"]),
+            .dictionary(["k": "v"]),
+        ]
+        for value in values {
+            #expect(value.attributes == Logger.MetadataValueAttributes())
+        }
+    }
+
+    @Test func metadataValuesWithAttributesFlowThroughLogEvent() {
+        enum TestAttr: Int64, Logger.MetadataValueAttributes.Attribute {
+            case flagged = 1
+        }
+
+        let event = LogEvent(
+            level: .info,
+            message: "test",
+            error: nil,
+            metadata: [
+                "secret": "\("value", attributes: { $0[TestAttr.self] = .flagged })",
+                "plain": "no-attrs",
+            ],
+            source: nil,
+            file: "M/F.swift",
+            function: "f()",
+            line: 1
+        )
+
+        #expect(event.metadata?["secret"]?.attributes[TestAttr.self] == .flagged)
+        #expect(event.metadata?["secret"]?.description == "value")
+        #expect(event.metadata?["plain"]?.attributes[TestAttr.self] == nil)
+    }
+
     @Test func loggerDerivedSourceMatchesModuleName() {
         let recorder = Recorder()
         let handler = LogEventHandler(recorder: recorder)
