@@ -325,10 +325,6 @@ Unlike earlier iterations of this proposal, the piggyback approach requires **no
   `.description`, ignoring attributes. Two values with the same text but different attributes compare as equal. A
   future proposal could refine equality to include attributes when both sides carry them, but this
   requires careful consideration of backward compatibility since existing code may rely on description-only equality.
-- **Recursive attribute inspection.** The `.attributes` property only inspects top-level values. Metadata values nested
-  inside `.dictionary` or `.array` cases carry their own attributes on leaf values, but handler-level iteration (for
-  example, redaction) operates on top-level entries only. A future proposal could introduce recursive attribute
-  traversal utilities for handlers that need deep inspection.
 - **Typed metadata values.** A separate ecosystem package could add typed variants to `MetadataValue` (`.int64`,
   `.double`, `.bool`), reducing the need for attributes that compensate for stringly-typed metadata.
 
