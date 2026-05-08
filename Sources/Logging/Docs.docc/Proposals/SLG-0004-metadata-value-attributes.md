@@ -17,7 +17,8 @@ Add an extensible per-value attribute mechanism for metadata.
 ### Introduction
 
 Introduce an extensible mechanism for attaching per-value attributes to metadata. The core `Logging` module provides
-the protocol and storage. Attribute packages define concrete attributes using the `MetadataAttributeKey` protocol.
+the protocol and storage. Attribute packages define concrete attributes using the
+`Logger.MetadataValueAttributes.Attribute` protocol.
 
 ### Motivation
 
@@ -45,13 +46,13 @@ The workaround is handler-side key-based rules (`redact: ["email", "card-*", ...
 
 Attributes are embedded directly in `MetadataValue` via the existing `.stringConvertible` case. A custom
 `MetadataValue.StringInterpolation` type produces attributed values when any interpolation segment specifies
-attributes. Libraries define attribute types conforming to `MetadataAttributeKey` and provide ergonomic string
-interpolation overloads. Handlers read the attributes via `value.attributes` and act on them:
+attributes. Libraries define attribute types conforming to `Logger.MetadataValueAttributes.Attribute` and provide
+ergonomic string interpolation overloads. Handlers read the attributes via `value.attributes` and act on them:
 
 ```swift
 import Logging
 
-public enum Sensitivity: Int64, Logger.MetadataAttributeKey, Sendable {
+public enum Sensitivity: Int64, Logger.MetadataValueAttributes.Attribute, Sendable {
     case sensitive = 1
     case `public` = 2
 }
@@ -104,7 +105,8 @@ func log(event: LogEvent) {
 Attributes are **classifications, not enforcement**. An attribute does not guarantee any particular handler behavior —
 the handler may not support it. Applications needing guaranteed behavior must enforce it at a different abstraction.
 
-The attribute mechanism is extensible: packages define their own attribute types using `MetadataAttributeKey`. A
+The attribute mechanism is extensible: packages define their own attribute types using
+`Logger.MetadataValueAttributes.Attribute`. A
 chained `LogHandler` can read the attributes it cares about, act on them, and forward the rest to the next handler in
 the chain — enabling composable handler pipelines (e.g., redaction handler -> metrics-extraction handler -> output
 handler). Common attributes should be defined in separate packages so that the core `Logging` module remains free of
@@ -113,11 +115,11 @@ can reference attribute packages that are common across the whole ecosystem.
 
 ### Detailed design
 
-#### `MetadataAttributeKey` protocol
+#### `Attribute` protocol
 
 ```swift
-extension Logger {
-    /// A protocol for defining custom metadata attribute keys.
+extension Logger.MetadataValueAttributes {
+    /// A protocol for defining custom metadata attributes.
     ///
     /// Conform to this protocol to define a custom attribute that can be stored in
     /// ``MetadataValueAttributes``. Each conforming type acts as both the key (identified
@@ -132,12 +134,12 @@ extension Logger {
     /// ## Example
     ///
     /// ```swift
-    /// public enum Priority: Int64, Sendable, MetadataAttributeKey {
+    /// public enum Priority: Int64, Sendable, Logger.MetadataValueAttributes.Attribute {
     ///     case low = 1
     ///     case high = 2
     /// }
     /// ```
-    public protocol MetadataAttributeKey: Sendable,
+    public protocol Attribute: Sendable,
         RawRepresentable where RawValue == Int64 {}
 }
 ```
@@ -153,8 +155,11 @@ extension Logger {
     ///
     /// `MetadataValueAttributes` stores one attribute inline without heap allocation. When more than one attribute
     /// is needed, additional attributes spill over to a heap-allocated array.
-    /// Use the generic subscript to get/set attributes by their ``MetadataAttributeKey`` type.
+    /// Use the generic subscript to get/set attributes by their ``Attribute`` type.
     public struct MetadataValueAttributes: Sendable, Equatable, ExpressibleByArrayLiteral {
+        /// Nested ``Attribute`` protocol (see above).
+        public protocol Attribute: Sendable, RawRepresentable where RawValue == Int64 {}
+
         /// Create empty metadata value attributes.
         public init()
 
@@ -163,13 +168,13 @@ extension Logger {
         /// ```swift
         /// let attrs: MetadataValueAttributes = [Sensitivity.sensitive, ValueType.int64]
         /// ```
-        public init(arrayLiteral elements: any MetadataAttributeKey...)
+        public init(arrayLiteral elements: any Attribute...)
 
-        /// Get or set a custom attribute by its key type.
+        /// Get or set a custom attribute by its type.
         ///
-        /// - Parameter key: The metatype of the attribute key to access.
+        /// - Parameter attribute: The metatype of the attribute to access.
         /// - Returns: The attribute value, or `nil` if not set.
-        public subscript<Key: MetadataAttributeKey>(key: Key.Type) -> Key? { get set }
+        public subscript<Attr: Attribute>(attribute: Attr.Type) -> Attr? { get set }
     }
 }
 ```
@@ -383,15 +388,15 @@ require coordination across all dependencies, and are invisible at the call site
 
 ### Example attributes
 
-The following examples illustrate how ecosystem packages could define attributes using the `MetadataAttributeKey`
-protocol. These are not part of this proposal.
+The following examples illustrate how ecosystem packages could define attributes using the
+`Logger.MetadataValueAttributes.Attribute` protocol. These are not part of this proposal.
 
 #### Sensitivity
 
 A sensitivity attribute for marking metadata values that contain private or personally identifiable information:
 
 ```swift
-public enum Sensitivity: Int64, Logger.MetadataAttributeKey, Sendable {
+public enum Sensitivity: Int64, Logger.MetadataValueAttributes.Attribute, Sendable {
     case sensitive = 1
     case `public` = 2
 }
@@ -425,7 +430,7 @@ for (key, value) in mergedMetadata {
 A type hint for structured logging backends that benefit from native types:
 
 ```swift
-public enum ValueType: Int64, Logger.MetadataAttributeKey, Sendable {
+public enum ValueType: Int64, Logger.MetadataValueAttributes.Attribute, Sendable {
     case string = 1
     case int64 = 2
     case double = 3
@@ -451,7 +456,7 @@ logger.info("Metrics", metadata: [
 A metric attribute for a chained `LogHandler` that dual-writes to swift-metrics:
 
 ```swift
-public enum MetricKind: Int64, Logger.MetadataAttributeKey, Sendable {
+public enum MetricKind: Int64, Logger.MetadataValueAttributes.Attribute, Sendable {
     case counter = 1
     case gauge = 2
     case histogram = 3
