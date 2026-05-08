@@ -107,8 +107,9 @@ the handler may not support it. Applications needing guaranteed behavior must en
 The attribute mechanism is extensible: packages define their own attribute types using `MetadataAttributeKey`. A
 chained `LogHandler` can read the attributes it cares about, act on them, and forward the rest to the next handler in
 the chain — enabling composable handler pipelines (e.g., redaction handler -> metrics-extraction handler -> output
-handler). Two common attributes — sensitivity and value type hints — will be defined in separate packages so that
-the core `Logging` module remains free of domain-specific attributes while providing shared vocabulary across libraries.
+handler). Common attributes should be defined in separate packages so that the core `Logging` module remains free of
+domain-specific attributes while providing shared vocabulary across libraries. To improve discoverability, `swift-log`
+can reference attribute packages that are common across the whole ecosystem.
 
 ### Detailed design
 
