@@ -6,7 +6,7 @@ Add an extensible per-value attribute mechanism for metadata.
 
 - Proposal: SLG-0004
 - Author(s): [Vladimir Kukushkin](https://github.com/kukushechkin)
-- Status: **Awaiting Review**
+- Status: **Ready for Implementation**
 - Issue: [apple/swift-log#204](https://github.com/apple/swift-log/issues/204)
 - Implementation:
     - [apple/swift-log#453](https://github.com/apple/swift-log/pull/453)
