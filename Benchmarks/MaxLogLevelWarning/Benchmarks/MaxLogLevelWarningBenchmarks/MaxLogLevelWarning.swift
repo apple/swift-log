@@ -18,6 +18,7 @@ import Foundation
 import Logging
 
 public let benchmarks: @Sendable () -> Void = {
+    printSwiftToolchainInfo()
     makeBenchmark(loggerLevel: .notice, logLevel: .notice) { logger in
         logger.notice("hello, benchmarking world")
     }
