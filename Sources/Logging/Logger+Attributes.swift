@@ -16,10 +16,6 @@
 
 extension Logger {
     /// Attributes that can be associated with metadata values.
-    ///
-    /// `MetadataValueAttributes` stores one attribute inline without heap allocation. When more than one attribute
-    /// is needed, additional attributes spill over to a heap-allocated array.
-    /// Use the generic subscript to get/set attributes by their ``Attribute`` type.
     public struct MetadataValueAttributes: Sendable {
         /// A protocol for defining custom metadata attributes.
         ///
@@ -27,13 +23,11 @@ extension Logger {
         /// ``MetadataValueAttributes``. Each conforming type acts as both the key (identified
         /// by its metatype) and the value.
         ///
-        /// This protocol is designed for **small, fixed-vocabulary attributes** represented as
-        /// enums. Each attribute value is stored as an `Int64` raw value, so attributes occupy minimal
+        /// This protocol is designed for **small, fixed-vocabulary attributes**.
+        /// Each attribute value is stored as an `Int64` raw value, so attributes occupy minimal
         /// space (one inline slot without heap allocation for the common single-attribute case).
-        /// Attributes that need to carry associated data, strings, or richer payloads are outside
-        /// the scope of this protocol.
         ///
-        /// ## Example
+        /// ## Examples
         ///
         /// ```swift
         /// public enum Priority: Int64, Sendable, Logger.MetadataValueAttributes.Attribute {
@@ -41,6 +35,18 @@ extension Logger {
         ///     case high = 2
         /// }
         /// ```
+        ///
+        /// ```swift
+        /// public struct Priority: Sendable, Hashable, Logger.MetadataValueAttributes.Attribute {
+        ///     public let rawValue: Int64
+        ///     public init(rawValue: Int64) {
+        ///         self.rawValue = rawValue
+        ///     }
+        ///     public static let low = Priority(rawValue: 1)
+        ///     public static let high = Priority(rawValue: 2)
+        /// }
+        /// ```
+
         public protocol Attribute: Sendable, RawRepresentable where RawValue == Int64 {}
 
         /// An entry in the metadata attributes storage.
@@ -68,20 +74,6 @@ extension Logger {
         /// Create empty metadata value attributes.
         @inlinable
         public init() {}
-
-        /// Create metadata value attributes using a builder closure.
-        ///
-        /// ```swift
-        /// let attrs = Logger.MetadataValueAttributes {
-        ///     $0[Sensitivity.self] = .sensitive
-        ///     $0[Priority.self] = .high
-        /// }
-        /// ```
-        @inlinable
-        public init(_ build: (inout Self) -> Void) {
-            self.init()
-            build(&self)
-        }
 
         /// Get or set a custom attribute by its type.
         ///

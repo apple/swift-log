@@ -237,16 +237,6 @@ struct MetadataAttributesTests {
         #expect(attrs[AttrC.self] == .c1)
     }
 
-    @Test("Array literal equals builder closure")
-    func testArrayLiteralEqualsBuilder() {
-        let fromLiteral: Logger.MetadataValueAttributes = [AttrA.a1, AttrB.b2]
-        let fromBuilder = Logger.MetadataValueAttributes {
-            $0[AttrA.self] = .a1
-            $0[AttrB.self] = .b2
-        }
-        #expect(fromLiteral == fromBuilder)
-    }
-
     @Test("Array literal with duplicate key uses last value")
     func testArrayLiteralDuplicateKey() {
         let attrs: Logger.MetadataValueAttributes = [AttrA.a1, AttrA.a2]
