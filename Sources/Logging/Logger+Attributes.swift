@@ -234,7 +234,7 @@ extension Logger {
     /// `MetadataValue` checks for it with a concrete type comparison rather than a
     /// protocol conformance lookup.
     @usableFromInline
-    internal final class AttributedStringCarrier: CustomStringConvertible, Sendable {
+    internal struct AttributedStringCarrier: CustomStringConvertible, Sendable {
         @usableFromInline
         internal let string: String
 
