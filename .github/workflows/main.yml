@@ -35,8 +35,8 @@ jobs:
     uses: apple/swift-nio/.github/workflows/macos_benchmarks.yml@main
     with:
       benchmark_package_path: "Benchmarks/NoTraits"
-      macos_swift_6_1_enabled: true
       macos_swift_6_2_enabled: true
+      macos_swift_6_3_enabled: true
 
   macos-benchmarks-MaxLogLevelWarningBenchmarks-trait:
     name: macOS benchmarks (MaxLogLevelWarning)
@@ -44,7 +44,7 @@ jobs:
     uses: apple/swift-nio/.github/workflows/macos_benchmarks.yml@main
     with:
       benchmark_package_path: "Benchmarks/MaxLogLevelWarning"
-      macos_swift_6_2_enabled: true
+      macos_swift_6_3_enabled: true
 
   cxx-interop:
     name: Cxx interop
