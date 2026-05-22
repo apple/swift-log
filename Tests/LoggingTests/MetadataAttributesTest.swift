@@ -14,7 +14,7 @@
 
 import Testing
 
-@testable import Logging
+import Logging
 
 // MARK: - Test Attribute Keys
 
