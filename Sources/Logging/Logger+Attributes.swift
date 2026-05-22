@@ -46,7 +46,6 @@ extension Logger {
         ///     public static let high = Priority(rawValue: 2)
         /// }
         /// ```
-
         public protocol Attribute: Sendable, RawRepresentable where RawValue == Int64 {}
 
         /// An entry in the metadata attributes storage.
