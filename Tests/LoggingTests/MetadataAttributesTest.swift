@@ -12,9 +12,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Testing
-
 import Logging
+import Testing
 
 // MARK: - Test Attribute Keys
 
