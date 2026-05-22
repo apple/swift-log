@@ -66,6 +66,10 @@
 - ``subscript(metadataKey:)``
 - ``MetadataValue``
 
+### Metadata attribute types
+
+- ``MetadataValueAttributes``
+
 ### Inspecting a logger
 
 - ``label``
