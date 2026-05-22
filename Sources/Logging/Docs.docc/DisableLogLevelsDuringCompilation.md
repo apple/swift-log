@@ -73,3 +73,12 @@ logger.error("This still works")
 logger.critical("This still works")
 logger.log(level: .error, "This still works")
 ```
+
+When `MaxLogLevelNone` is enabled no log statement can ever fire, so
+mutations that only configure the underlying ``LogHandler`` for future log
+statements are also compiled out. Specifically, the body of the
+``Logger/subscript(metadataKey:)`` setter and the body of the
+``Logger/logLevel`` setter become empty, so calls like
+`logger[metadataKey: "user-id"] = "\(id)"` and `logger.logLevel = .info`
+do not reach the handler. Reads continue to work and return whatever the
+handler reports.

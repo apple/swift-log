@@ -340,7 +340,9 @@ extension Logger {
             self.handler[metadataKey: metadataKey]
         }
         set {
+            #if !MaxLogLevelNone
             self.handler[metadataKey: metadataKey] = newValue
+            #endif
         }
     }
 
@@ -356,7 +358,9 @@ extension Logger {
             self.handler.logLevel
         }
         set {
+            #if !MaxLogLevelNone
             self.handler.logLevel = newValue
+            #endif
         }
     }
 }

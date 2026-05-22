@@ -4,18 +4,18 @@
 import PackageDescription
 
 let package = Package(
-    name: "MaxLogLevelWarning",
+    name: "MaxLogLevelNone",
     platforms: [
         .macOS(.v13)
     ],
     products: [
-        .executable(name: "MaxLogLevelWarning", targets: ["MaxLogLevelWarning"])
+        .executable(name: "MaxLogLevelNone", targets: ["MaxLogLevelNone"])
     ],
     dependencies: [
         // swift-log
         .package(
             path: "../../",
-            traits: ["MaxLogLevelWarning"]
+            traits: ["MaxLogLevelNone"]
         ),
         // Parent Benchmarks
         .package(name: "Benchmarks", path: "../"),
@@ -23,13 +23,13 @@ let package = Package(
     ],
     targets: [
         .executableTarget(
-            name: "MaxLogLevelWarning",
+            name: "MaxLogLevelNone",
             dependencies: [
                 .product(name: "BenchmarksFactory", package: "Benchmarks"),
                 .product(name: "Benchmark", package: "package-benchmark"),
                 .product(name: "Logging", package: "swift-log"),
             ],
-            path: "Benchmarks/MaxLogLevelWarningBenchmarks",
+            path: "Benchmarks/MaxLogLevelNoneBenchmarks",
             plugins: [
                 .plugin(name: "BenchmarkPlugin", package: "package-benchmark")
             ]
