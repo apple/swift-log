@@ -129,9 +129,6 @@ public struct PrintLogHandler: LogHandler {
         let timestamp = ISO8601DateFormatter().string(from: Date())
         let levelString = event.level.rawValue.uppercased()
 
-        // Get provider metadata
-        let providerMetadata = metadataProvider?.get() ?? [:]
-
         // Merge handler metadata with message metadata
         let combinedMetadata = Self.prepareMetadata(
             base: self.metadata,
@@ -182,6 +179,49 @@ public struct PrintLogHandler: LogHandler {
     }
 }
 ```
+
+#### Reading metadata attributes in LogHandlers
+
+Metadata values can carry attributes alongside their string representation. Attributes are embedded inside
+`MetadataValue` via the `.stringConvertible` case and are accessible through the `value.attributes` property. This
+enables features like sensitivity annotations without any changes to your handler's protocol conformance.
+
+To read attributes in your log handler:
+
+```swift
+public func log(event: LogEvent) {
+    // Merge handler metadata, provider metadata, and event metadata as usual
+    var merged = self.metadata
+
+    if let provider = self.metadataProvider {
+        merged.merge(provider.get(), uniquingKeysWith: { _, rhs in rhs })
+    }
+
+    if let eventMetadata = event.metadata {
+        merged.merge(eventMetadata, uniquingKeysWith: { _, rhs in rhs })
+    }
+
+    // Read attributes from individual values:
+    for (key, value) in merged {
+        let attributes = value.attributes    // Empty if the value carries no attributes
+
+        // Process based on your handler's needs
+        // For example, check for a custom attribute:
+        // if attributes[MyAttribute.self] == .flagged { ... }
+    }
+}
+```
+
+**Key considerations:**
+
+- **Opt-in inspection**: Attributes are invisible unless you call `value.attributes`. Handlers that do not care about
+  attributes work without any changes.
+
+- **No new protocol requirements**: Reading attributes does not require implementing any new `LogHandler` properties
+  or subscripts. The `metadata` property and `metadataKey` subscript work exactly as before.
+
+- **Attributes flow through metadata**: Attributed values flow naturally through metadata merging, `MetadataProvider`,
+  and `MultiplexLogHandler` — no special handling needed.
 
 ### Performance considerations
 

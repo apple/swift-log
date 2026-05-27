@@ -14,6 +14,40 @@
 
 import Logging
 
+// MARK: - Benchmark attributes
+
+public enum BenchmarkSensitivity: Int64, Logger.MetadataValueAttributes.Attribute, Sendable {
+    case sensitive = 1
+    case `public` = 2
+}
+
+extension Logger.MetadataValue.StringInterpolation {
+    @inlinable
+    public mutating func appendInterpolation<T: CustomStringConvertible & Sendable>(
+        _ value: T,
+        sensitivity: BenchmarkSensitivity
+    ) {
+        self.appendInterpolation(value, attributes: { $0[BenchmarkSensitivity.self] = sensitivity })
+    }
+}
+
+public enum BenchmarkColor: Int64, Logger.MetadataValueAttributes.Attribute, Sendable {
+    case red = 1
+    case blue = 2
+}
+
+extension Logger.MetadataValue.StringInterpolation {
+    @inlinable
+    public mutating func appendInterpolation<T: CustomStringConvertible & Sendable>(
+        _ value: T,
+        color: BenchmarkColor
+    ) {
+        self.appendInterpolation(value, attributes: { $0[BenchmarkColor.self] = color })
+    }
+}
+
+// MARK: - NoOpLogHandler
+
 struct NoOpLogHandler: LogHandler {
     let label: String
     public var metadataProvider: Logger.MetadataProvider?
@@ -31,6 +65,13 @@ struct NoOpLogHandler: LogHandler {
     func log(
         event: LogEvent
     ) {
+        // Access metadata attributes
+        if let metadata = event.metadata {
+            for (_, value) in metadata {
+                let _ = value.attributes
+            }
+        }
+
         // Do nothing
     }
 
@@ -43,6 +84,13 @@ struct NoOpLogHandler: LogHandler {
         function: String,
         line: UInt
     ) {
+        // Access metadata attributes
+        if let metadata = explicitMetadata {
+            for (_, value) in metadata {
+                let _ = value.attributes
+            }
+        }
+
         // Do nothing
     }
 

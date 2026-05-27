@@ -31,20 +31,11 @@ jobs:
       windows_nightly_main_arguments_override: "--explicit-target-dependency-import-check error -Xswiftc -require-explicit-sendable"
 
   macos-benchmarks:
-    name: macOS benchmarks (NoTraits)
+    name: macOS benchmarks
     uses: apple/swift-nio/.github/workflows/macos_benchmarks.yml@main
     with:
-      benchmark_package_path: "Benchmarks/NoTraits"
-      macos_xcode_16_4_enabled: true
-      macos_xcode_26_1_enabled: true
-
-  macos-benchmarks-MaxLogLevelWarningBenchmarks-trait:
-    name: macOS benchmarks (MaxLogLevelWarning)
-    needs: macos-benchmarks
-    uses: apple/swift-nio/.github/workflows/macos_benchmarks.yml@main
-    with:
-      benchmark_package_path: "Benchmarks/MaxLogLevelWarning"
-      macos_xcode_26_1_enabled: true
+      benchmark_package_paths: '["Benchmarks/NoTraits", "Benchmarks/MaxLogLevelWarning", "Benchmarks/MaxLogLevelNone"]'
+      macos_swift_6_3_enabled: true
 
   cxx-interop:
     name: Cxx interop
@@ -62,14 +53,6 @@ jobs:
       runner_pool: nightly
       build_scheme: swift-log-Package
       debug_output_enabled: true
-      xcode_16_3_enabled: false
-      xcode_16_4_enabled: false
-      xcode_26_0_enabled: false
-      xcode_26_1_enabled: false
-      xcode_26_2_enabled: false
-      swift_6_1_enabled: true
-      swift_6_2_enabled: true
-      swift_6_3_enabled: true
       macos_xcode_test_enabled: false
       ios_xcode_test_enabled: false
       watchos_xcode_test_enabled: false

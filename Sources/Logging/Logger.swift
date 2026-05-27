@@ -251,6 +251,7 @@ extension Logger {
     /// - parameters:
     ///    - level: The severity level of the `message`.
     ///    - message: The message to be logged. The `message` parameter supports any string interpolation literal.
+    ///    - error: An `Error` related to the event.
     ///    - metadata: One-off metadata to attach to this log message.
     ///    - source: The source this log message originates from. The value defaults
     ///              to the module that emits the log message.
@@ -313,9 +314,23 @@ extension Logger {
         function: String = #function,
         line: UInt = #line
     ) {
-        self.log(level: level, message(), metadata: metadata(), source: nil, file: file, function: function, line: line)
+        self.log(
+            level: level,
+            message(),
+            error: nil,
+            metadata: metadata(),
+            source: nil,
+            file: file,
+            function: function,
+            line: line
+        )
     }
 
+    /// Log a message using the log level and attributed metadata that you provide.
+    ///
+    /// If the `logLevel` passed to this method is more severe than the `Logger`'s ``logLevel``, the library
+    /// logs the message, otherwise nothing will happen.
+    ///
     /// Add, change, or remove a logging metadata item.
     ///
     /// > Note: Changing the logging metadata only affects the instance of the `Logger` where you change it.
@@ -325,7 +340,9 @@ extension Logger {
             self.handler[metadataKey: metadataKey]
         }
         set {
+            #if !MaxLogLevelNone
             self.handler[metadataKey: metadataKey] = newValue
+            #endif
         }
     }
 
@@ -341,7 +358,9 @@ extension Logger {
             self.handler.logLevel
         }
         set {
+            #if !MaxLogLevelNone
             self.handler.logLevel = newValue
+            #endif
         }
     }
 }
@@ -1157,6 +1176,9 @@ extension Logger {
         /// `.array([.string("foo"), .string("bar \(buz)")])`, instead use the more natural `["foo", "bar \(buz)"]`.
         case array([Metadata.Value])
     }
+}
+
+extension Logger {
 
     /// The log level.
     ///
@@ -1405,10 +1427,6 @@ extension Logger.MetadataValue: CustomStringConvertible {
 }
 
 // Extension has to be done on explicit type rather than Logger.Metadata.Value as workaround for
-// https://bugs.swift.org/browse/SR-9687
-extension Logger.MetadataValue: ExpressibleByStringInterpolation {}
-
-// Extension has to be done on explicit type rather than Logger.Metadata.Value as workaround for
 // https://bugs.swift.org/browse/SR-9686
 extension Logger.MetadataValue: ExpressibleByDictionaryLiteral {
     /// The type of a metadata value key.
@@ -1439,6 +1457,7 @@ extension Logger.MetadataValue: ExpressibleByArrayLiteral {
 // MARK: - Sendable support helpers
 
 extension Logger.MetadataValue: Sendable {}
+
 extension Logger: Sendable {}
 extension Logger.Level: Sendable {}
 extension Logger.Message: Sendable {}

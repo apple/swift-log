@@ -53,12 +53,24 @@ extension Logger {
     /// }
     /// ```
     ///
+    /// ### Metadata with Attributes
+    ///
+    /// Metadata providers can return values that carry attributes via string interpolation:
+    ///
+    /// ```swift
+    /// let provider = Logger.MetadataProvider {
+    ///     [
+    ///         "trace-id": "\(Baggage.current?.traceID, sensitivity: .public)",
+    ///         "user-id": "\(RequestContext.current.userId, sensitivity: .sensitive)"
+    ///     ]
+    /// }
+    /// ```
+    ///
     /// We recommend referring to [swift-distributed-tracing](https://github.com/apple/swift-distributed-tracing)
     /// for metadata providers which make use of its tracing and metadata propagation infrastructure. It is however
     /// possible to make use of metadata providers independently of tracing and instruments provided by that library,
     /// if necessary.
     public struct MetadataProvider: _SwiftLogSendable {
-        /// Provide ``Logger.Metadata`` from the current context.
         @usableFromInline
         internal let _provideMetadata: @Sendable () -> Metadata
 
@@ -70,6 +82,8 @@ extension Logger {
         }
 
         /// Invokes the metadata provider and returns the generated contextual metadata.
+        ///
+        /// - Returns: Metadata dictionary, where values may carry attributes.
         public func get() -> Metadata {
             self._provideMetadata()
         }
@@ -88,13 +102,12 @@ extension Logger.MetadataProvider {
     /// - Returns: A pseudo-`MetadataProvider` merging metadata from the given `MetadataProvider`s.
     public static func multiplex(_ providers: [Logger.MetadataProvider]) -> Logger.MetadataProvider? {
         assert(!providers.isEmpty, "providers MUST NOT be empty")
+
         return Logger.MetadataProvider {
-            providers.reduce(into: [:]) { metadata, provider in
-                let providedMetadata = provider.get()
-                guard !providedMetadata.isEmpty else {
-                    return
-                }
-                metadata.merge(providedMetadata, uniquingKeysWith: { _, rhs in rhs })
+            providers.reduce(into: Logger.Metadata()) { merged, provider in
+                let provided = provider.get()
+                guard !provided.isEmpty else { return }
+                merged.merge(provided, uniquingKeysWith: { _, rhs in rhs })
             }
         }
     }
