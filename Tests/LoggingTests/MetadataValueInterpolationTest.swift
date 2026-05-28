@@ -16,8 +16,6 @@ import Foundation
 import Logging
 import Testing
 
-// Reuses AttrA / AttrB / AttrC declared at file scope in MetadataAttributesTest.swift.
-
 // MARK: - Helper types covering each overload
 
 /// `TextOutputStreamable & CustomStringConvertible` — exercises the most-specific overload.
@@ -62,71 +60,71 @@ struct MetadataValueInterpolationTests {
 
     @Test("String interpolates via TOS & CSC overload")
     func plainString() {
-        let v: Logger.MetadataValue = "hello \("world")"
-        #expect(v.description == "hello world")
+        let value: Logger.MetadataValue = "hello \("world")"
+        #expect(value.description == "hello world")
     }
 
     @Test("Int interpolates via TOS & CSC overload")
     func plainInt() {
-        let v: Logger.MetadataValue = "n=\(42)"
-        #expect(v.description == "n=42")
+        let value: Logger.MetadataValue = "n=\(42)"
+        #expect(value.description == "n=42")
     }
 
     @Test("Double interpolates via TOS & CSC overload")
     func plainDouble() {
-        let v: Logger.MetadataValue = "x=\(1.5)"
-        #expect(v.description == "x=1.5")
+        let value: Logger.MetadataValue = "x=\(1.5)"
+        #expect(value.description == "x=1.5")
     }
 
     @Test("Substring interpolates via TOS & CSC overload")
     func plainSubstring() {
         let s = "hello world"
-        let v: Logger.MetadataValue = "\(s.dropFirst(6))"
-        #expect(v.description == "world")
+        let value: Logger.MetadataValue = "\(s.dropFirst(6))"
+        #expect(value.description == "world")
     }
 
     @Test("Custom TOS & CSC type uses the most-specific overload")
     func plainStreamingAndDescribing() {
-        let v: Logger.MetadataValue = "\(StreamingAndDescribing(value: 7))"
-        #expect(v.description == "SD(7)")
+        let value: Logger.MetadataValue = "\(StreamingAndDescribing(value: 7))"
+        #expect(value.description == "SD(7)")
     }
 
     @Test("TOS-only type interpolates via the TOS overload")
     func plainStreamingOnly() {
-        let v: Logger.MetadataValue = "\(StreamingOnly(value: 9))"
-        #expect(v.description == "SO(9)")
+        let value: Logger.MetadataValue = "\(StreamingOnly(value: 9))"
+        #expect(value.description == "SO(9)")
     }
 
     @Test("CSC-only type interpolates via .description")
     func plainDescribingOnly() {
-        let v: Logger.MetadataValue = "\(DescribingOnly(value: 3))"
-        #expect(v.description == "DO(3)")
+        let value: Logger.MetadataValue = "\(DescribingOnly(value: 3))"
+        #expect(value.description == "DO(3)")
     }
 
     @Test("Array (CSC, not TOS) interpolates via .description")
     func plainArray() {
-        let v: Logger.MetadataValue = "\([1, 2, 3])"
-        #expect(v.description == "[1, 2, 3]")
+        let value: Logger.MetadataValue = "\([1, 2, 3])"
+        #expect(value.description == "[1, 2, 3]")
     }
 
     @Test("Foundation.Data (CSC) interpolates via .description")
     func plainData() {
         let data = Data([0x41, 0x42])
-        let v: Logger.MetadataValue = "\(data)"
-        #expect(v.description == data.description)
+        let value: Logger.MetadataValue = "\(data)"
+        #expect(value.description == data.description)
     }
 
     @Test("Plain struct (no CSC, no TOS) falls through to String(describing:)")
     func plainPlainStruct() {
-        let v: Logger.MetadataValue = "\(PlainStruct(value: 5))"
-        #expect(v.description == String(describing: PlainStruct(value: 5)))
+        let value: Logger.MetadataValue = "\(PlainStruct(value: 5))"
+        #expect(value.description == String(describing: PlainStruct(value: 5)))
     }
 
     @Test("Non-Sendable class falls through to String(describing:) and compiles")
     func plainNonSendable() {
         let box = NonSendableBox(11)
-        let v: Logger.MetadataValue = "\(box)"
-        #expect(v.description == String(describing: box))
+        let value: Logger.MetadataValue = "\(box)"
+        #expect(value.description == String(describing: box))
     }
 
     // MARK: - Overloaded return types
@@ -139,150 +137,150 @@ struct MetadataValueInterpolationTests {
 
         // Without the TOS & CSC overload this would fail with "ambiguous use of 'someFunc()'".
         // String wins because it's TOS & CSC; Data and [UInt8] are CSC-only.
-        let v: Logger.MetadataValue = "\(someFunc())"
-        #expect(v.description == "from-string")
+        let value: Logger.MetadataValue = "\(someFunc())"
+        #expect(value.description == "from-string")
     }
 
     // MARK: - Closure-attribute interpolation
 
     @Test("Closure attributes attach to a TOS & CSC value")
     func closureAttrsTOSAndCSC() {
-        let v: Logger.MetadataValue = "\(42, attributes: { $0[AttrA.self] = .a1 })"
-        #expect(v.description == "42")
-        #expect(v.attributes[AttrA.self] == .a1)
+        let value: Logger.MetadataValue = "\(42, attributes: { $0[AttrA.self] = .a1 })"
+        #expect(value.description == "42")
+        #expect(value.attributes[AttrA.self] == .a1)
     }
 
     @Test("Closure attributes attach to a CSC-only value")
     func closureAttrsCSC() {
-        let v: Logger.MetadataValue = "\(DescribingOnly(value: 1), attributes: { $0[AttrA.self] = .a1 })"
-        #expect(v.description == "DO(1)")
-        #expect(v.attributes[AttrA.self] == .a1)
+        let value: Logger.MetadataValue = "\(DescribingOnly(value: 1), attributes: { $0[AttrA.self] = .a1 })"
+        #expect(value.description == "DO(1)")
+        #expect(value.attributes[AttrA.self] == .a1)
     }
 
     @Test("Closure attributes attach to a TOS-only value")
     func closureAttrsTOS() {
-        let v: Logger.MetadataValue = "\(StreamingOnly(value: 2), attributes: { $0[AttrA.self] = .a1 })"
-        #expect(v.description == "SO(2)")
-        #expect(v.attributes[AttrA.self] == .a1)
+        let value: Logger.MetadataValue = "\(StreamingOnly(value: 2), attributes: { $0[AttrA.self] = .a1 })"
+        #expect(value.description == "SO(2)")
+        #expect(value.attributes[AttrA.self] == .a1)
     }
 
     @Test("Closure attributes attach to a non-CSC, non-TOS value")
     func closureAttrsUnconstrained() {
         let s = PlainStruct(value: 4)
-        let v: Logger.MetadataValue = "\(s, attributes: { $0[AttrA.self] = .a1 })"
-        #expect(v.description == String(describing: s))
-        #expect(v.attributes[AttrA.self] == .a1)
+        let value: Logger.MetadataValue = "\(s, attributes: { $0[AttrA.self] = .a1 })"
+        #expect(value.description == String(describing: s))
+        #expect(value.attributes[AttrA.self] == .a1)
     }
 
     @Test("Closure attributes accept a non-Sendable value")
     func closureAttrsNonSendable() {
         let box = NonSendableBox(13)
-        let v: Logger.MetadataValue = "\(box, attributes: { $0[AttrA.self] = .a1 })"
-        #expect(v.description == String(describing: box))
-        #expect(v.attributes[AttrA.self] == .a1)
+        let value: Logger.MetadataValue = "\(box, attributes: { $0[AttrA.self] = .a1 })"
+        #expect(value.description == String(describing: box))
+        #expect(value.attributes[AttrA.self] == .a1)
     }
 
     // MARK: - Pre-built attribute interpolation
 
     @Test("Pre-built attributes attach to a TOS & CSC value")
     func valueAttrsTOSAndCSC() {
-        let v: Logger.MetadataValue = "\(42, attributes: [AttrA.a1, AttrB.b2])"
-        #expect(v.description == "42")
-        #expect(v.attributes[AttrA.self] == .a1)
-        #expect(v.attributes[AttrB.self] == .b2)
+        let value: Logger.MetadataValue = "\(42, attributes: [AttrA.a1, AttrB.b2])"
+        #expect(value.description == "42")
+        #expect(value.attributes[AttrA.self] == .a1)
+        #expect(value.attributes[AttrB.self] == .b2)
     }
 
     @Test("Pre-built attributes attach to a CSC-only value")
     func valueAttrsCSC() {
-        let v: Logger.MetadataValue = "\(DescribingOnly(value: 8), attributes: [AttrA.a1])"
-        #expect(v.description == "DO(8)")
-        #expect(v.attributes[AttrA.self] == .a1)
+        let value: Logger.MetadataValue = "\(DescribingOnly(value: 8), attributes: [AttrA.a1])"
+        #expect(value.description == "DO(8)")
+        #expect(value.attributes[AttrA.self] == .a1)
     }
 
     @Test("Pre-built attributes attach to a non-CSC value")
     func valueAttrsUnconstrained() {
         let s = PlainStruct(value: 6)
-        let v: Logger.MetadataValue = "\(s, attributes: [AttrA.a1])"
-        #expect(v.description == String(describing: s))
-        #expect(v.attributes[AttrA.self] == .a1)
+        let value: Logger.MetadataValue = "\(s, attributes: [AttrA.a1])"
+        #expect(value.description == String(describing: s))
+        #expect(value.attributes[AttrA.self] == .a1)
     }
 
     @Test("Pre-built attributes accept a non-Sendable value")
     func valueAttrsNonSendable() {
         let box = NonSendableBox(17)
-        let v: Logger.MetadataValue = "\(box, attributes: [AttrA.a1])"
-        #expect(v.description == String(describing: box))
-        #expect(v.attributes[AttrA.self] == .a1)
+        let value: Logger.MetadataValue = "\(box, attributes: [AttrA.a1])"
+        #expect(value.description == String(describing: box))
+        #expect(value.attributes[AttrA.self] == .a1)
     }
 
     @Test("Empty attributes still produce an attributed result")
     func valueAttrsEmpty() {
-        let v: Logger.MetadataValue = "\(42, attributes: Logger.MetadataValueAttributes())"
-        #expect(v.description == "42")
+        let value: Logger.MetadataValue = "\(42, attributes: Logger.MetadataValueAttributes())"
+        #expect(value.description == "42")
         // No attribute keys are set, but the carrier exists.
-        #expect(v.attributes[AttrA.self] == nil)
+        #expect(value.attributes[AttrA.self] == nil)
     }
 
     // MARK: - Multi-segment interpolation
 
     @Test("Plain + plain segments concatenate without attributes")
     func multiPlain() {
-        let v: Logger.MetadataValue = "user=\("alice") id=\(42)"
-        #expect(v.description == "user=alice id=42")
-        #expect(v.attributes[AttrA.self] == nil)
+        let value: Logger.MetadataValue = "user=\("alice") id=\(42)"
+        #expect(value.description == "user=alice id=42")
+        #expect(value.attributes[AttrA.self] == nil)
     }
 
     @Test("Plain + attributed segments produce attributed result")
     func multiPlainAndAttributed() {
-        let v: Logger.MetadataValue = "user=\("alice") action=\("login", attributes: [AttrA.a1])"
-        #expect(v.description == "user=alice action=login")
-        #expect(v.attributes[AttrA.self] == .a1)
+        let value: Logger.MetadataValue = "user=\("alice") action=\("login", attributes: [AttrA.a1])"
+        #expect(value.description == "user=alice action=login")
+        #expect(value.attributes[AttrA.self] == .a1)
     }
 
     @Test("Two attributed segments merge their attributes")
     func multiAttributedMerge() {
-        let v: Logger.MetadataValue = "\("a", attributes: [AttrA.a1])-\("b", attributes: [AttrB.b2])"
-        #expect(v.description == "a-b")
-        #expect(v.attributes[AttrA.self] == .a1)
-        #expect(v.attributes[AttrB.self] == .b2)
+        let value: Logger.MetadataValue = "\("a", attributes: [AttrA.a1])-\("b", attributes: [AttrB.b2])"
+        #expect(value.description == "a-b")
+        #expect(value.attributes[AttrA.self] == .a1)
+        #expect(value.attributes[AttrB.self] == .b2)
     }
 
     @Test("Closure-attributes and value-attributes segments merge")
     func multiAttributedMixed() {
-        let v: Logger.MetadataValue =
+        let value: Logger.MetadataValue =
             "\("x", attributes: { $0[AttrA.self] = .a1 })-\("y", attributes: [AttrB.b2])"
-        #expect(v.description == "x-y")
-        #expect(v.attributes[AttrA.self] == .a1)
-        #expect(v.attributes[AttrB.self] == .b2)
+        #expect(value.description == "x-y")
+        #expect(value.attributes[AttrA.self] == .a1)
+        #expect(value.attributes[AttrB.self] == .b2)
     }
 
     @Test("Conflicting attribute keys: later segment wins")
     func multiAttributedConflict() {
-        let v: Logger.MetadataValue =
+        let value: Logger.MetadataValue =
             "\("a", attributes: [AttrA.a1])-\("b", attributes: [AttrA.a2])"
-        #expect(v.description == "a-b")
-        #expect(v.attributes[AttrA.self] == .a2)
+        #expect(value.description == "a-b")
+        #expect(value.attributes[AttrA.self] == .a2)
     }
 
     // MARK: - Result-case discrimination
 
     @Test("Plain interpolation yields .string case")
     func plainYieldsStringCase() {
-        let v: Logger.MetadataValue = "\(42)"
-        if case .string(let s) = v {
+        let value: Logger.MetadataValue = "\(42)"
+        if case .string(let s) = value {
             #expect(s == "42")
         } else {
-            Issue.record("Expected .string case, got \(v)")
+            Issue.record("Expected .string case, got \(value)")
         }
     }
 
     @Test("Attributed interpolation yields .stringConvertible case")
     func attributedYieldsStringConvertibleCase() {
-        let v: Logger.MetadataValue = "\(42, attributes: [AttrA.a1])"
-        if case .stringConvertible = v {
+        let value: Logger.MetadataValue = "\(42, attributes: [AttrA.a1])"
+        if case .stringConvertible = value {
             // ok
         } else {
-            Issue.record("Expected .stringConvertible case, got \(v)")
+            Issue.record("Expected .stringConvertible case, got \(value)")
         }
     }
 }
