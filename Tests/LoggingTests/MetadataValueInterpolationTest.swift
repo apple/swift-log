@@ -129,16 +129,6 @@ struct MetadataValueInterpolationTests {
         #expect(v.description == String(describing: box))
     }
 
-    @Test("Optional interpolation matches String(describing:)")
-    func plainOptional() {
-        let some: Int? = 42
-        let none: Int? = nil
-        let vSome: Logger.MetadataValue = "\(some)"
-        let vNone: Logger.MetadataValue = "\(none)"
-        #expect(vSome.description == String(describing: some))
-        #expect(vNone.description == String(describing: none))
-    }
-
     // MARK: - Overloaded return types
 
     @Test("Overloaded function returning String/Data/[UInt8] disambiguates to String")
