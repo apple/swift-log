@@ -232,9 +232,10 @@ public func withLogger<Result>(
 /// }
 /// ```
 ///
-/// When no `withLogger` scope has been set up and no `LoggingSystem` bootstrap has
-/// happened, `Logger.current` (and therefore this function) returns a silent no-op
-/// fallback — a one-time warning is emitted on stderr the first time this occurs.
+/// When no `withLogger` scope has been set up, ``Logger/current`` (and therefore this
+/// function) returns the process-wide unbound default — a `Logger(label: "")` cached
+/// from the first time the task-local is touched. Bootstrap before reading
+/// ``Logger/current`` for predictable backend selection.
 ///
 /// - Parameters:
 ///   - logLevel: When non-nil, replaces the current log level for the scope. When `nil`,
@@ -290,9 +291,10 @@ public func withLogger<Result>(
 /// }
 /// ```
 ///
-/// When no `withLogger` scope has been set up and no `LoggingSystem` bootstrap has
-/// happened, `Logger.current` (and therefore this function) returns a silent no-op
-/// fallback — a one-time warning is emitted on stderr the first time this occurs.
+/// When no `withLogger` scope has been set up, ``Logger/current`` (and therefore this
+/// function) returns the process-wide unbound default — a `Logger(label: "")` cached
+/// from the first time the task-local is touched. Bootstrap before reading
+/// ``Logger/current`` for predictable backend selection.
 ///
 /// - Parameters:
 ///   - logLevel: When non-nil, replaces the current log level for the scope. When `nil`,

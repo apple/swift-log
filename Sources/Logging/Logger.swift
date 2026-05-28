@@ -1443,28 +1443,14 @@ extension Logger {
     /// Task-local storage for implicit logger context propagation.
     ///
     /// Implementation detail. Use ``Logger/current`` or the `withLogger` free functions instead.
-    @TaskLocal
-    static var taskLocalLogger: Logger?
-
-    /// Fallback logger used when ``current`` is read outside of any `withLogger` scope.
     ///
-    /// If ``LoggingSystem`` has been bootstrapped, builds a logger from that factory on
-    /// every call — callers in hot paths should wrap their entry point in
-    /// ``withLogger(_:_:)-(_,(Logger)->Result)`` rather than reading ``current``
-    /// directly. Otherwise returns the
-    /// cached silent ``SwiftLogNoOpLogHandler``-backed logger and emits a one-time warning
-    /// on stderr so the silent drop can be diagnosed. `StreamLogHandler.standardError` is
-    /// intentionally avoided here — it would emit per-call noise.
-    internal static func makeFallbackLogger() -> Logger {
-        if LoggingSystem.isBootstrapped {
-            return Logger(
-                label: "",
-                LoggingSystem.factory("", LoggingSystem.metadataProvider)
-            )
-        }
-        _noOpFallbackWarnOnce.warnOnce()
-        return _taskLocalNoOpFallback
-    }
+    /// The default value is a `Logger(label: "")` constructed via `LoggingSystem.factory`
+    /// the first time the task-local is touched (read or bound) anywhere in the process.
+    /// That means whichever backend is configured at first access becomes the unbound
+    /// default for the rest of the process — bootstrap before any logging for predictable
+    /// behavior.
+    @TaskLocal
+    static var taskLocalLogger: Logger = Logger(label: "")
 
     /// Thin wrapper over `TaskLocal.withValue` so call sites don't need to reach into
     /// the task-local storage directly.
@@ -1496,59 +1482,22 @@ extension Logger {
     /// The current task-local logger.
     ///
     /// Returns the logger bound by the nearest enclosing
-    /// ``withLogger(_:_:)-(_,(Logger)->Result)`` scope.
-    /// If none has been set up, returns a fallback logger: the globally bootstrapped
-    /// handler if ``LoggingSystem/bootstrap(_:)`` has been called, otherwise a silent
-    /// ``SwiftLogNoOpLogHandler``. The unbootstrapped case emits a one-time warning on
-    /// stderr so silent dropped logs can be diagnosed.
+    /// ``withLogger(_:_:)-(_,(Logger)->Result)`` scope. If none is active, returns the
+    /// process-wide unbound default — a `Logger(label: "")` constructed via
+    /// `LoggingSystem.factory` the first time the task-local is touched, then reused for
+    /// the lifetime of the process. The empty label is the deliberate diagnostic signal
+    /// that no `withLogger` scope was set up before the read.
     ///
-    /// The bootstrapped fallback invokes `LoggingSystem.factory` on every access — for
-    /// hot paths, wrap your entry point in ``withLogger(_:_:)-(_,(Logger)->Result)``
-    /// and use the closure's
-    /// `logger` parameter (or extract into a local `let`) instead of reading ``current``
-    /// on every call.
+    /// Because the unbound default is captured at first access, ``LoggingSystem/bootstrap(_:)``
+    /// must be called before any task-local logger API is exercised; otherwise the
+    /// unbound default uses the swift-log default ``StreamLogHandler`` and a later
+    /// bootstrap is not visible to ``current`` outside of a `withLogger` scope.
     ///
     /// Task-local values propagate through structured concurrency (`async let`,
     /// `withTaskGroup`, child `Task {}`) but are **not** inherited by `Task.detached`.
     /// Capture the logger explicitly across detached boundaries.
     public static var current: Logger {
-        Self.taskLocalLogger ?? Self.makeFallbackLogger()
-    }
-}
-
-/// Module-private cached fallback used by ``Logger/current`` when no `LoggingSystem`
-/// bootstrap has been performed. Reused across every access to avoid allocating a fresh
-/// `Logger` and `SwiftLogNoOpLogHandler` on each unbootstrapped read.
-@available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
-private let _taskLocalNoOpFallback = Logger(label: "", SwiftLogNoOpLogHandler())
-
-/// Emits a one-time stderr warning the first time the NoOp fallback is returned so a user
-/// who forgot to bootstrap or wrap their entry point in `withLogger` doesn't see silently
-/// dropped logs with no diagnostic.
-private let _noOpFallbackWarnOnce = _NoOpFallbackWarnOnce()
-
-private final class _NoOpFallbackWarnOnce: @unchecked Sendable {
-    private let lock = Lock()
-    private var warned = false
-
-    func warnOnce() {
-        let shouldWarn = self.lock.withLock { () -> Bool in
-            if self.warned { return false }
-            self.warned = true
-            return true
-        }
-        if shouldWarn {
-            var stream = StdioOutputStream.stderr
-            print(
-                """
-                [swift-log] warning: Logger.current accessed without a LoggingSystem \
-                bootstrap; logs will be discarded by the no-op fallback handler. \
-                Call LoggingSystem.bootstrap(_:) at application startup, or bind a logger \
-                with withLogger(_:).
-                """,
-                to: &stream
-            )
-        }
+        Self.taskLocalLogger
     }
 }
 

@@ -243,7 +243,8 @@ struct TaskLocalLoggerTest {
         }
 
         logging.history.assertExist(level: .info, message: "child", metadata: ["parent": "value"])
-        // Detached task uses the NoOp fallback and does not reach our TestLogging.
+        // Detached task starts without a task-local logger and falls back to a freshly
+        // constructed `Logger(label: "")`, which doesn't reach our per-test TestLogging.
         logging.history.assertNotExist(level: .info, message: "detached")
     }
 
@@ -319,11 +320,11 @@ struct TaskLocalLoggerTest {
 
     // MARK: - Fallback behavior
 
-    @Test func fallbackIsNoOpWithoutBootstrap() {
-        // The fallback logger carries the empty label whether it's bootstrapped or NoOp.
-        // The empty label is the deliberate diagnostic signal that no `withLogger` scope
-        // was active before the read. (Metadata behavior under NoOp is not directly
-        // observable and depends on whether any earlier test bootstrapped the LoggingSystem.)
+    @Test func fallbackUsesEmptyLabel() {
+        // Without an active `withLogger` scope, `Logger.current` returns the process-wide
+        // unbound default — a `Logger(label: "")` cached from the first time the
+        // task-local is touched. The empty label is the diagnostic signal that no
+        // `withLogger` scope was set up before the read.
         withLogger(mergingMetadata: ["key": "value"]) { logger in
             #expect(logger.label == "")
         }
