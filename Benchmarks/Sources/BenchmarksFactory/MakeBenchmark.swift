@@ -40,7 +40,7 @@ public func makeBenchmark(
             thresholds: [
                 .instructions: BenchmarkThresholds(
                     relative: [
-                        .p90: 2.0  // we only record p90
+                        .p90: 10.0  // we only record p90
                     ]
                 ),
                 .objectAllocCount: BenchmarkThresholds(

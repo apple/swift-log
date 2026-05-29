@@ -1,5 +1,7 @@
 # ``Logging/SwiftLogNoOpLogHandler``
 
+A log handler that silently discards all log messages.
+
 ## Topics
 
 ### Creating a Swift Log no-op log handler

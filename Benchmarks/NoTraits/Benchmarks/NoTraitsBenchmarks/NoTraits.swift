@@ -47,5 +47,40 @@ public let benchmarks: @Sendable () -> Void = {
         withLogger(handler: logger.handler) { inner in
             blackHole(inner)
         }
+    makeBenchmark(loggerLevel: .error, logLevel: .error, "_1_attribute") { logger in
+        logger.log(
+            level: .error,
+            "hello, benchmarking world",
+            metadata: [
+                "public-key": "\("public-value", sensitivity: .public)"
+            ]
+        )
+    }
+    makeBenchmark(loggerLevel: .error, logLevel: .debug, "_1_attribute") { logger in
+        logger.log(
+            level: .debug,
+            "hello, benchmarking world",
+            metadata: [
+                "public-key": "\("public-value", sensitivity: .public)"
+            ]
+        )
+    }
+    makeBenchmark(loggerLevel: .error, logLevel: .error, "_2_attributes") { logger in
+        logger.log(
+            level: .error,
+            "hello, benchmarking world",
+            metadata: [
+                "public-key": "\("public-value", attributes: [BenchmarkSensitivity.public, BenchmarkColor.red])"
+            ]
+        )
+    }
+    makeBenchmark(loggerLevel: .error, logLevel: .debug, "_2_attributes") { logger in
+        logger.log(
+            level: .debug,
+            "hello, benchmarking world",
+            metadata: [
+                "public-key": "\("public-value", attributes: [BenchmarkSensitivity.public, BenchmarkColor.red])"
+            ]
+        )
     }
 }
