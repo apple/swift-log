@@ -18,6 +18,7 @@ import Foundation
 import Logging
 
 public let benchmarks: @Sendable () -> Void = {
+
     makeBenchmark(loggerLevel: .error, logLevel: .error, "_generic") { logger in
         logger.log(level: .error, "hello, benchmarking world")
     }
@@ -47,6 +48,8 @@ public let benchmarks: @Sendable () -> Void = {
         withLogger(handler: logger.handler) { inner in
             blackHole(inner)
         }
+    }
+
     makeBenchmark(loggerLevel: .error, logLevel: .error, "_1_attribute") { logger in
         logger.log(
             level: .error,
