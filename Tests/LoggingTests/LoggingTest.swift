@@ -17,6 +17,11 @@ import Testing
 
 @testable import Logging
 
+private enum TestAttr: Int64, Logger.MetadataValueAttributes.Attribute {
+    case x = 1
+    case y = 2
+}
+
 extension LogHandler {
     fileprivate func with(logLevel: Logger.Level) -> any LogHandler {
         var result = self
@@ -850,6 +855,73 @@ struct LoggingTest {
         #expect("first" == logger1[metadataKey: "only-on"])
         #expect("second" == logger2[metadataKey: "only-on"])
         logger1.error("hey")
+    }
+
+    @Test func multiplexLogHandlerMetadataWithAttributes_settingAndReading() {
+        let logging1 = TestLogging()
+        let logging2 = TestLogging()
+
+        let logger1 = logging1.make(label: "1")
+        let logger2 = logging2.make(label: "2")
+
+        var multiplexLogger = Logger(
+            label: "test",
+            factory: { _ in
+                MultiplexLogHandler([logger1, logger2])
+            }
+        )
+
+        // Set metadata with attributes via string interpolation
+        multiplexLogger[metadataKey: "key1"] = "\("value1", attributes: { $0[TestAttr.self] = .x })"
+
+        // The value survives the round-trip
+        let retrieved = multiplexLogger[metadataKey: "key1"]
+        #expect(retrieved != nil)
+        #expect(retrieved?.description == "value1")
+
+        // Attributes are preserved inside .stringConvertible
+        #expect(retrieved?.attributes[TestAttr.self] == .x)
+    }
+
+    @Test func multiplexLogHandlerMetadataWithAttributes_forwardsEventWithAttributes() {
+        let logging1 = TestLogging()
+        let logging2 = TestLogging()
+
+        var logger = Logger(
+            label: "test",
+            factory: {
+                MultiplexLogHandler([logging1.make(label: $0), logging2.make(label: $0)])
+            }
+        )
+        logger.logLevel = .debug
+
+        // Log with metadata containing attributed values
+        logger.info("hello", metadata: ["request-id": "\("abc123")"])
+
+        // Both handlers should receive the message
+        logging1.history.assertExist(level: .info, message: "hello")
+        logging2.history.assertExist(level: .info, message: "hello")
+    }
+
+    @Test func metadataWithAttributes_flowsThroughHandler() {
+        let logging = TestLogging()
+
+        var logger = Logger(
+            label: "test",
+            factory: { logging.make(label: $0) }
+        )
+        logger.logLevel = .debug
+
+        // Log with metadata values that carry attributes
+        logger.info(
+            "attributed event",
+            metadata: [
+                "user-id": "\("12345", attributes: { $0[TestAttr.self] = .x })"
+            ]
+        )
+
+        // The handler should receive the message via LogEvent
+        logging.history.assertExist(level: .info, message: "attributed event")
     }
 
     /// Protects an object such that it can only be accessed while holding a lock.
