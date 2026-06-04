@@ -1473,12 +1473,10 @@ extension Logger {
     /// Thin wrapper over `TaskLocal.withValue` so call sites don't need to reach into
     /// the task-local storage directly.
     #if compiler(>=6.2)
-    nonisolated(nonsending)
-        static func withTaskLocalLogger<Return, Failure: Error>(
-            _ value: Logger,
-            operation: nonisolated(nonsending) () async throws(Failure) -> Return
-        ) async throws(Failure) -> Return
-    {
+    nonisolated(nonsending) static func withTaskLocalLogger<Return, Failure: Error>(
+        _ value: Logger,
+        operation: nonisolated(nonsending) () async throws(Failure) -> Return
+    ) async throws(Failure) -> Return {
         do {
             return try await Self.$taskLocalLogger.withValue(value, operation: operation)
         } catch {

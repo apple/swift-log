@@ -94,12 +94,10 @@ public func withLogger<Result, Failure: Error>(
 /// - Returns: The value returned by `operation`.
 #if compiler(>=6.2)
 @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
-nonisolated(nonsending)
-    public func withLogger<Result, Failure: Error>(
-        _ logger: Logger,
-        _ operation: nonisolated(nonsending) (Logger) async throws(Failure) -> Result
-    ) async throws(Failure) -> Result
-{
+public nonisolated(nonsending) func withLogger<Result, Failure: Error>(
+    _ logger: Logger,
+    _ operation: nonisolated(nonsending) (Logger) async throws(Failure) -> Result
+) async throws(Failure) -> Result {
     do {
         return try await Logger.withTaskLocalLogger(logger) {
             try await operation(logger)
@@ -194,12 +192,10 @@ public func withLogger<Result, Failure: Error>(
 /// - Returns: The value returned by `operation`.
 #if compiler(>=6.2)
 @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
-nonisolated(nonsending)
-    public func withLogger<Result, Failure: Error>(
-        mergingMetadata metadata: @autoclosure () -> Logger.Metadata,
-        _ operation: nonisolated(nonsending) (Logger) async throws(Failure) -> Result
-    ) async throws(Failure) -> Result
-{
+public nonisolated(nonsending) func withLogger<Result, Failure: Error>(
+    mergingMetadata metadata: @autoclosure () -> Logger.Metadata,
+    _ operation: nonisolated(nonsending) (Logger) async throws(Failure) -> Result
+) async throws(Failure) -> Result {
     var logger = Logger.current
     for (key, value) in metadata() {
         logger[metadataKey: key] = value
@@ -334,14 +330,12 @@ public func withLogger<Result, Failure: Error>(
 /// - Returns: The value returned by `operation`.
 #if compiler(>=6.2)
 @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
-nonisolated(nonsending)
-    public func withLogger<Result, Failure: Error>(
-        logLevel: Logger.Level? = nil,
-        handler: (any LogHandler)? = nil,
-        metadata: @autoclosure () -> Logger.Metadata? = nil,
-        _ operation: nonisolated(nonsending) (Logger) async throws(Failure) -> Result
-    ) async throws(Failure) -> Result
-{
+public nonisolated(nonsending) func withLogger<Result, Failure: Error>(
+    logLevel: Logger.Level? = nil,
+    handler: (any LogHandler)? = nil,
+    metadata: @autoclosure () -> Logger.Metadata? = nil,
+    _ operation: nonisolated(nonsending) (Logger) async throws(Failure) -> Result
+) async throws(Failure) -> Result {
     var logger = Logger.current
     if let logLevel {
         logger.logLevel = logLevel
