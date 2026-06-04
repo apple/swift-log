@@ -163,10 +163,10 @@ as a parameter to avoid repeated task-local lookups inside the closure body.
 ///     parameter so the body does not need to re-read ``Logger/current``.
 /// - Returns: The value returned by `operation`.
 @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
-public func withLogger<Result>(
+public func withLogger<Result, Failure: Error>(
     _ logger: Logger,
-    _ operation: (Logger) throws -> Result
-) rethrows -> Result
+    _ operation: (Logger) throws(Failure) -> Result
+) throws(Failure) -> Result
 
 /// Runs `operation` with `logger` bound to the task-local context. Async variant of
 /// ``withLogger(_:_:)``; see that function for full semantics.
@@ -178,10 +178,10 @@ public func withLogger<Result>(
 /// - Returns: The value returned by `operation`.
 @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
 nonisolated(nonsending)
-public func withLogger<Result>(
+public func withLogger<Result, Failure: Error>(
     _ logger: Logger,
-    _ operation: nonisolated(nonsending) (Logger) async throws -> Result
-) async rethrows -> Result
+    _ operation: nonisolated(nonsending) (Logger) async throws(Failure) -> Result
+) async throws(Failure) -> Result
 ```
 
 **Append metadata for a scope:**
@@ -210,10 +210,10 @@ public func withLogger<Result>(
 ///     merged logger as a parameter.
 /// - Returns: The value returned by `operation`.
 @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
-public func withLogger<Result>(
-    mergingMetadata metadata: Logger.Metadata,
-    _ operation: (Logger) throws -> Result
-) rethrows -> Result
+public func withLogger<Result, Failure: Error>(
+    mergingMetadata metadata: @autoclosure () -> Logger.Metadata,
+    _ operation: (Logger) throws(Failure) -> Result
+) throws(Failure) -> Result
 
 /// Runs `operation` with a copy of ``Logger/current`` that has `metadata` layered on
 /// top of the inherited base metadata. Async variant of ``withLogger(mergingMetadata:_:)``;
@@ -227,10 +227,10 @@ public func withLogger<Result>(
 /// - Returns: The value returned by `operation`.
 @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
 nonisolated(nonsending)
-public func withLogger<Result>(
-    mergingMetadata metadata: Logger.Metadata,
-    _ operation: nonisolated(nonsending) (Logger) async throws -> Result
-) async rethrows -> Result
+public func withLogger<Result, Failure: Error>(
+    mergingMetadata metadata: @autoclosure () -> Logger.Metadata,
+    _ operation: nonisolated(nonsending) (Logger) async throws(Failure) -> Result
+) async throws(Failure) -> Result
 ```
 
 **Replace aspects of the current logger:**
@@ -267,12 +267,12 @@ public func withLogger<Result>(
 ///     modified logger as a parameter.
 /// - Returns: The value returned by `operation`.
 @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
-public func withLogger<Result>(
+public func withLogger<Result, Failure: Error>(
     logLevel: Logger.Level? = nil,
     handler: (any LogHandler)? = nil,
-    metadata: Logger.Metadata? = nil,
-    _ operation: (Logger) throws -> Result
-) rethrows -> Result
+    metadata: @autoclosure () -> Logger.Metadata? = nil,
+    _ operation: (Logger) throws(Failure) -> Result
+) throws(Failure) -> Result
 
 /// Runs `operation` with a copy of ``Logger/current`` whose aspects are replaced by
 /// the provided arguments. Async variant of
@@ -293,20 +293,18 @@ public func withLogger<Result>(
 /// - Returns: The value returned by `operation`.
 @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
 nonisolated(nonsending)
-public func withLogger<Result>(
+public func withLogger<Result, Failure: Error>(
     logLevel: Logger.Level? = nil,
     handler: (any LogHandler)? = nil,
-    metadata: Logger.Metadata? = nil,
-    _ operation: nonisolated(nonsending) (Logger) async throws -> Result
-) async rethrows -> Result
+    metadata: @autoclosure () -> Logger.Metadata? = nil,
+    _ operation: nonisolated(nonsending) (Logger) async throws(Failure) -> Result
+) async throws(Failure) -> Result
 ```
 
 Calling `withLogger { logger in ... }` with no arguments is the single-lookup idiom for
 extracting `Logger.current` into a local variable for repeated use inside the closure —
 analogous to `withSpan { span in ... }` in `swift-distributed-tracing`.
 
-> Note: `rethrows` (not `throws(Failure)`) and the absence of a `Sendable` constraint on
-> `Result` mirror the shape of `TaskLocal.withValue` in the current standard library.
 
 #### Relationship to `MetadataProvider`
 
