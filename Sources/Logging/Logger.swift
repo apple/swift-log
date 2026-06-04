@@ -1477,24 +1477,36 @@ extension Logger {
         static func withTaskLocalLogger<Return, Failure: Error>(
             _ value: Logger,
             operation: nonisolated(nonsending) () async throws(Failure) -> Return
-        ) async rethrows -> Return
+        ) async throws(Failure) -> Return
     {
-        try await Self.$taskLocalLogger.withValue(value, operation: operation)
+        do {
+            return try await Self.$taskLocalLogger.withValue(value, operation: operation)
+        } catch {
+            throw error as! Failure
+        }
     }
     #else
     static func withTaskLocalLogger<Return, Failure: Error>(
         _ value: Logger,
         operation: () async throws(Failure) -> Return
-    ) async rethrows -> Return {
-        try await Self.$taskLocalLogger.withValue(value, operation: operation)
+    ) async throws(Failure) -> Return {
+        do {
+            return try await Self.$taskLocalLogger.withValue(value, operation: operation)
+        } catch {
+            throw error as! Failure
+        }
     }
     #endif
 
     static func withTaskLocalLogger<Return, Failure: Error>(
         _ value: Logger,
         operation: () throws(Failure) -> Return
-    ) rethrows -> Return {
-        try Self.$taskLocalLogger.withValue(value, operation: operation)
+    ) throws(Failure) -> Return {
+        do {
+            return try Self.$taskLocalLogger.withValue(value, operation: operation)
+        } catch {
+            throw error as! Failure
+        }
     }
 
     /// The current task-local logger.
