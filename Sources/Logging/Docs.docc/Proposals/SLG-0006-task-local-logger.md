@@ -177,8 +177,7 @@ public func withLogger<Result, Failure: Error>(
 ///     a parameter so the body does not need to re-read ``Logger/current``.
 /// - Returns: The value returned by `operation`.
 @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
-nonisolated(nonsending)
-public func withLogger<Result, Failure: Error>(
+public nonisolated(nonsending) func withLogger<Result, Failure: Error>(
     _ logger: Logger,
     _ operation: nonisolated(nonsending) (Logger) async throws(Failure) -> Result
 ) async throws(Failure) -> Result
@@ -226,8 +225,7 @@ public func withLogger<Result, Failure: Error>(
 ///     merged logger as a parameter.
 /// - Returns: The value returned by `operation`.
 @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
-nonisolated(nonsending)
-public func withLogger<Result, Failure: Error>(
+public nonisolated(nonsending) func withLogger<Result, Failure: Error>(
     mergingMetadata metadata: @autoclosure () -> Logger.Metadata,
     _ operation: nonisolated(nonsending) (Logger) async throws(Failure) -> Result
 ) async throws(Failure) -> Result
@@ -292,8 +290,7 @@ public func withLogger<Result, Failure: Error>(
 ///     the modified logger as a parameter.
 /// - Returns: The value returned by `operation`.
 @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
-nonisolated(nonsending)
-public func withLogger<Result, Failure: Error>(
+public nonisolated(nonsending) func withLogger<Result, Failure: Error>(
     logLevel: Logger.Level? = nil,
     handler: (any LogHandler)? = nil,
     metadata: @autoclosure () -> Logger.Metadata? = nil,
