@@ -101,18 +101,7 @@ inherit context — capture the logger explicitly if needed.
 
 Returns the logger bound by the nearest enclosing `withLogger` scope. If none is active,
 returns the process-wide unbound default: a `Logger(label: "")` constructed via
-`LoggingSystem.factory` the first time the task-local is touched, then cached for the
-lifetime of the process. The handler comes from whatever `LoggingSystem` was configured
-at first access — the bootstrapped factory if `LoggingSystem.bootstrap` was called
-beforehand, otherwise the swift-log default `StreamLogHandler`. The empty label is the
-deliberate diagnostic signal that no `withLogger` scope was set up before the read,
-rather than a named-but-misleading placeholder.
-
-Because the unbound default is captured once, applications must call
-`LoggingSystem.bootstrap` before any task-local logger API is exercised. A later bootstrap
-is not visible to `Logger.current` reads outside of a `withLogger` scope. This matches
-the way ordinary `Logger(label:)`-constructed loggers capture their handler at
-construction time.
+`LoggingSystem.factory` the first time the task-local is touched.
 
 ```swift
 extension Logger {
