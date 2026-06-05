@@ -413,3 +413,20 @@ task-local to another) — which is the propagation we most want by default.
 
 If structural isolation turns out to matter for specific use cases, the public
 `TaskLocal<Logger>` extension surface can be added as a non-breaking follow-up.
+
+#### Use another third-party dependency management package
+
+Swift packages ecosystem has packages for managing dependencies, one of those can
+be used to handle a task-local `Logger` instance. Rejected because if a library
+wants to benefit from a common logger without adding it to its API surface,
+it would have to depend on that extra package, effectively imposing that choice on
+the application. But the dependency mechanism is an application-level decision,
+an app may prefer a different approach, which leads to fragmentation or extra solutions
+to bridge them.
+
+#### Let applications create their own task-local logger objects
+
+Applications can declare their own task-local `Logger` instance and API explicitly,
+or via another dependency mechanism package. Rejected because it leaves library
+dependencies out of the picture and hurts discoverability and composability
+of the solution.
