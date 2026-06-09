@@ -391,6 +391,59 @@ extension Logger.MetadataValue: ExpressibleByStringInterpolation {
             self.output.append(String(describing: value))
         }
 
+        // MARK: Optional interpolation with a default
+        // The four overloads below mirror `DefaultStringInterpolation`'s `default:`
+        // shape so that `"\(optional, default: "none")"` keeps working when the
+        // literal is inferred as a `Logger.MetadataValue`.
+
+        @inlinable
+        public mutating func appendInterpolation<T: TextOutputStreamable & CustomStringConvertible>(
+            _ value: T?,
+            default defaultValue: @autoclosure () -> some StringProtocol
+        ) {
+            if let value {
+                self.appendInterpolation(value)
+            } else {
+                self.output.append(String(defaultValue()))
+            }
+        }
+
+        @inlinable
+        public mutating func appendInterpolation<T: TextOutputStreamable>(
+            _ value: T?,
+            default defaultValue: @autoclosure () -> some StringProtocol
+        ) {
+            if let value {
+                self.appendInterpolation(value)
+            } else {
+                self.output.append(String(defaultValue()))
+            }
+        }
+
+        @inlinable
+        public mutating func appendInterpolation<T: CustomStringConvertible>(
+            _ value: T?,
+            default defaultValue: @autoclosure () -> some StringProtocol
+        ) {
+            if let value {
+                self.appendInterpolation(value)
+            } else {
+                self.output.append(String(defaultValue()))
+            }
+        }
+
+        @inlinable
+        public mutating func appendInterpolation<T>(
+            _ value: T?,
+            default defaultValue: @autoclosure () -> some StringProtocol
+        ) {
+            if let value {
+                self.appendInterpolation(value)
+            } else {
+                self.output.append(String(defaultValue()))
+            }
+        }
+
         // MARK: Interpolation with a custom attributes closure
         //
         // ```swift
