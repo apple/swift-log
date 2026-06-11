@@ -1473,6 +1473,7 @@ extension Logger {
     /// Thin wrapper over `TaskLocal.withValue` so call sites don't need to reach into
     /// the task-local storage directly.
     #if compiler(>=6.2)
+    @usableFromInline
     nonisolated(nonsending) static func withTaskLocalLogger<Return, Failure: Error>(
         _ value: Logger,
         operation: nonisolated(nonsending) () async throws(Failure) -> Return
@@ -1484,6 +1485,7 @@ extension Logger {
         }
     }
     #else
+    @usableFromInline
     static func withTaskLocalLogger<Return, Failure: Error>(
         _ value: Logger,
         operation: () async throws(Failure) -> Return
@@ -1496,6 +1498,7 @@ extension Logger {
     }
     #endif
 
+    @usableFromInline
     static func withTaskLocalLogger<Return, Failure: Error>(
         _ value: Logger,
         operation: () throws(Failure) -> Return

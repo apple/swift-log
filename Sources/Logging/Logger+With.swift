@@ -2,7 +2,7 @@
 //
 // This source file is part of the Swift Logging API open source project
 //
-// Copyright (c) 2025 Apple Inc. and the Swift Logging API project authors
+// Copyright (c) 2026 Apple Inc. and the Swift Logging API project authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
@@ -47,6 +47,7 @@
 ///     parameter so the body does not need to re-read ``Logger/current``.
 /// - Returns: The value returned by `operation`.
 @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
+@inlinable
 public func withLogger<Result, Failure: Error>(
     _ logger: Logger,
     _ operation: (Logger) throws(Failure) -> Result
@@ -94,6 +95,7 @@ public func withLogger<Result, Failure: Error>(
 /// - Returns: The value returned by `operation`.
 #if compiler(>=6.2)
 @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
+@inlinable
 public nonisolated(nonsending) func withLogger<Result, Failure: Error>(
     _ logger: Logger,
     _ operation: nonisolated(nonsending) (Logger) async throws(Failure) -> Result
@@ -108,6 +110,7 @@ public nonisolated(nonsending) func withLogger<Result, Failure: Error>(
 }
 #else
 @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
+@inlinable
 public func withLogger<Result, Failure: Error>(
     _ logger: Logger,
     _ operation: (Logger) async throws(Failure) -> Result
@@ -148,6 +151,7 @@ public func withLogger<Result, Failure: Error>(
 ///     merged logger as a parameter.
 /// - Returns: The value returned by `operation`.
 @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
+@inlinable
 public func withLogger<Result, Failure: Error>(
     mergingMetadata metadata: @autoclosure () -> Logger.Metadata,
     _ operation: (Logger) throws(Failure) -> Result
@@ -192,6 +196,7 @@ public func withLogger<Result, Failure: Error>(
 /// - Returns: The value returned by `operation`.
 #if compiler(>=6.2)
 @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
+@inlinable
 public nonisolated(nonsending) func withLogger<Result, Failure: Error>(
     mergingMetadata metadata: @autoclosure () -> Logger.Metadata,
     _ operation: nonisolated(nonsending) (Logger) async throws(Failure) -> Result
@@ -210,6 +215,7 @@ public nonisolated(nonsending) func withLogger<Result, Failure: Error>(
 }
 #else
 @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
+@inlinable
 public func withLogger<Result, Failure: Error>(
     mergingMetadata metadata: @autoclosure () -> Logger.Metadata,
     _ operation: (Logger) async throws(Failure) -> Result
@@ -266,6 +272,7 @@ public func withLogger<Result, Failure: Error>(
 ///     modified logger as a parameter.
 /// - Returns: The value returned by `operation`.
 @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
+@inlinable
 public func withLogger<Result, Failure: Error>(
     logLevel: Logger.Level? = nil,
     handler: (any LogHandler)? = nil,
@@ -330,6 +337,7 @@ public func withLogger<Result, Failure: Error>(
 /// - Returns: The value returned by `operation`.
 #if compiler(>=6.2)
 @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
+@inlinable
 public nonisolated(nonsending) func withLogger<Result, Failure: Error>(
     logLevel: Logger.Level? = nil,
     handler: (any LogHandler)? = nil,
@@ -356,6 +364,7 @@ public nonisolated(nonsending) func withLogger<Result, Failure: Error>(
 }
 #else
 @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
+@inlinable
 public func withLogger<Result, Failure: Error>(
     logLevel: Logger.Level? = nil,
     handler: (any LogHandler)? = nil,
