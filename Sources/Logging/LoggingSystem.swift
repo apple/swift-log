@@ -101,6 +101,12 @@ public enum LoggingSystem: Sendable {
         }
     }
 
+    /// `true` once a user has explicitly called ``bootstrap(_:)`` or the metadata-provider
+    /// overload; `false` while the system is still using the default `StreamLogHandler`.
+    internal static var isBootstrapped: Bool {
+        self._factory.isInitialized
+    }
+
     /// System wide ``Logger/MetadataProvider`` that was configured during the logging system's `bootstrap`.
     ///
     /// When creating a ``Logger`` using the plain ``Logger/init(label:)`` initializer, this metadata provider
@@ -151,7 +157,7 @@ public enum LoggingSystem: Sendable {
     /// and can only be updated once from the initial value given.
     private struct ReplaceOnceBox<BoxedType: Sendable> {
         private struct ReplaceOnce: Sendable {
-            private var initialized = false
+            private(set) var initialized = false
             private var _underlying: BoxedType
             private let violationErrorMessage: String
 
@@ -188,6 +194,10 @@ public enum LoggingSystem: Sendable {
 
         var underlying: BoxedType {
             self.storage.withReadLock { $0.underlying }
+        }
+
+        var isInitialized: Bool {
+            self.storage.withReadLock { $0.initialized }
         }
     }
 
