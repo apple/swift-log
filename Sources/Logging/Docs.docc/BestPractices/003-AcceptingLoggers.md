@@ -144,9 +144,12 @@ final class MyLibrary {
 }
 ```
 
-``Logger/init(label:)`` is for the application — typically at `@main`, paired with
-``LoggingSystem/bootstrap(_:)``. Library code, including internal application modules,
-should not construct loggers.
+``Logger/init(label:)`` is for the application — typically at `@main` paired with `.withLogger()`.
+Library code, including internal application modules, should not construct loggers.
+If they do, setting up the global factory with ``LoggingSystem/bootstrap(_:)`` allows
+enforcing a specific factory on all the loggers constructed in the process. This
+does not necessary need to be the same factory as was used to create the task-local
+logger.
 
 #### Avoid: Relying on ``Logger/current`` across non-Task boundaries
 
