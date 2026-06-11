@@ -127,6 +127,69 @@ struct MetadataValueInterpolationTests {
         #expect(value.description == String(describing: box))
     }
 
+    // MARK: - Optional interpolation with a default
+
+    @Test("nil optional uses the default string")
+    func defaultNil() {
+        let value: Int? = nil
+        let result: Logger.MetadataValue = "\(value, default: "none")"
+        #expect(result.description == "none")
+    }
+
+    @Test("non-nil optional interpolates the wrapped value")
+    func defaultSome() {
+        let value: Int? = 42
+        let result: Logger.MetadataValue = "\(value, default: "none")"
+        #expect(result.description == "42")
+    }
+
+    @Test("nil optional of a TOS-only type uses the default")
+    func defaultNilStreamingOnly() {
+        let value: StreamingOnly? = nil
+        let result: Logger.MetadataValue = "\(value, default: "missing")"
+        #expect(result.description == "missing")
+    }
+
+    @Test("non-nil optional of a CSC-only type interpolates via .description")
+    func defaultSomeDescribingOnly() {
+        let value: DescribingOnly? = DescribingOnly(value: 3)
+        let result: Logger.MetadataValue = "\(value, default: "missing")"
+        #expect(result.description == "DO(3)")
+    }
+
+    @Test("nil optional of a non-CSC, non-TOS type uses the default")
+    func defaultNilUnconstrained() {
+        let value: PlainStruct? = nil
+        let result: Logger.MetadataValue = "\(value, default: "absent")"
+        #expect(result.description == "absent")
+    }
+
+    @Test("default accepts a Substring (some StringProtocol)")
+    func defaultSubstring() {
+        let value: Int? = nil
+        let fallback = "n/a value".dropFirst(4)
+        let result: Logger.MetadataValue = "\(value, default: fallback)"
+        #expect(result.description == "value")
+    }
+
+    @Test("default segment mixed with plain segments")
+    func defaultMultiSegment() {
+        let name: String? = nil
+        let result: Logger.MetadataValue = "user=\(name, default: "anon") id=\(42)"
+        #expect(result.description == "user=anon id=42")
+    }
+
+    @Test("default interpolation yields .string case")
+    func defaultYieldsStringCase() {
+        let value: Int? = nil
+        let result: Logger.MetadataValue = "\(value, default: "none")"
+        if case .string(let s) = result {
+            #expect(s == "none")
+        } else {
+            Issue.record("Expected .string case, got \(result)")
+        }
+    }
+
     // MARK: - Overloaded return types
 
     @Test("Overloaded function returning String/Data/[UInt8] disambiguates to String")
