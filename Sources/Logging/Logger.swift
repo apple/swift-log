@@ -1510,7 +1510,7 @@ extension Logger {
     /// The current task-local logger.
     ///
     /// Returns the logger bound by the nearest enclosing
-    /// ``withLogger(_:_:)-(_,(Logger)->Result)`` scope. If none is active, returns the
+    /// ``withLogger(_:_:)-(_,(Logger)(Failure)->Result)`` scope. If none is active, returns the
     /// process-wide unbound default — a `Logger(label: "")` constructed via
     /// `LoggingSystem.factory` the first time the task-local is touched, then reused for
     /// the lifetime of the process. The empty label is the deliberate diagnostic signal

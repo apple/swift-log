@@ -19,8 +19,8 @@
 /// Code called within `operation` can read the logger via ``Logger/current`` without an
 /// explicit parameter. Binding a different logger with this overload **replaces** the
 /// current task-local logger; any metadata accumulated by an outer
-/// ``withLogger(mergingMetadata:_:)-(_,(Logger)->Result)`` or
-/// ``withLogger(logLevel:handler:metadata:_:)-(_,_,_,(Logger)->Result)``
+/// ``withLogger(mergingMetadata:_:)-(_,(Logger)(Failure)->Result)`` or
+/// ``withLogger(logLevel:handler:metadata:_:)-(_,_,_,(Logger)(Failure)->Result)``
 /// scope is not carried over. Use the modifying overloads to layer or replace aspects
 /// of the current logger instead.
 ///
@@ -29,7 +29,7 @@
 /// ``Logger/init(label:)`` consults `LoggingSystem.factory`, the constructed `Logger`
 /// only carries a useful handler once ``LoggingSystem/bootstrap(_:)`` has been called.
 /// For mid-call-tree backend swaps that should work without bootstrap (tests, scoped
-/// routing), use ``withLogger(logLevel:handler:metadata:_:)-(_,_,_,(Logger)->Result)``
+/// routing), use ``withLogger(logLevel:handler:metadata:_:)-(_,_,_,(Logger)(Failure)->Result)``
 /// instead — it modifies
 /// the current logger's handler in place without constructing a new one.
 ///
@@ -65,8 +65,8 @@ public func withLogger<Result, Failure: Error>(
 /// Code called within `operation` can read the logger via ``Logger/current`` without an
 /// explicit parameter. Binding a different logger with this overload **replaces** the
 /// current task-local logger; any metadata accumulated by an outer
-/// ``withLogger(mergingMetadata:_:)-(_,(Logger)->Result)`` or
-/// ``withLogger(logLevel:handler:metadata:_:)-(_,_,_,(Logger)->Result)``
+/// ``withLogger(mergingMetadata:_:)-(_,(Logger)(Failure)->Result)`` or
+/// ``withLogger(logLevel:handler:metadata:_:)-(_,_,_,(Logger)(Failure)->Result)``
 /// scope is not carried over. Use the modifying overloads to layer or replace aspects
 /// of the current logger instead.
 ///
@@ -75,7 +75,7 @@ public func withLogger<Result, Failure: Error>(
 /// ``Logger/init(label:)`` consults `LoggingSystem.factory`, the constructed `Logger`
 /// only carries a useful handler once ``LoggingSystem/bootstrap(_:)`` has been called.
 /// For mid-call-tree backend swaps that should work without bootstrap (tests, scoped
-/// routing), use ``withLogger(logLevel:handler:metadata:_:)-(_,_,_,(Logger)->Result)``
+/// routing), use ``withLogger(logLevel:handler:metadata:_:)-(_,_,_,(Logger)(Failure)->Result)``
 /// instead — it modifies
 /// the current logger's handler in place without constructing a new one.
 ///
@@ -128,7 +128,7 @@ public func withLogger<Result, Failure: Error>(
 /// `metadata`) are preserved.
 ///
 /// Use this overload at request boundaries and any point where context should
-/// accumulate. Nested ``withLogger(mergingMetadata:_:)-(_,(Logger)->Result)`` scopes
+/// accumulate. Nested ``withLogger(mergingMetadata:_:)-(_,(Logger)(Failure)->Result)`` scopes
 /// layer on top of each
 /// other.
 ///
@@ -171,7 +171,7 @@ public func withLogger<Result, Failure: Error>(
 /// `metadata`) are preserved.
 ///
 /// Use this overload at request boundaries and any point where context should
-/// accumulate. Nested ``withLogger(mergingMetadata:_:)-(_,(Logger)->Result)`` scopes
+/// accumulate. Nested ``withLogger(mergingMetadata:_:)-(_,(Logger)(Failure)->Result)`` scopes
 /// layer on top of each
 /// other.
 ///
@@ -231,7 +231,7 @@ public func withLogger<Result, Failure: Error>(
 /// Runs `operation` with a copy of ``Logger/current`` whose aspects are **replaced** by
 /// the provided arguments. `nil` parameters leave the corresponding aspect unchanged.
 ///
-/// Unlike ``withLogger(mergingMetadata:_:)-(_,(Logger)->Result)``, which layers
+/// Unlike ``withLogger(mergingMetadata:_:)-(_,(Logger)(Failure)->Result)``, which layers
 /// metadata on top of the
 /// inherited base, this overload **replaces** the base metadata when `metadata` is
 /// non-nil. Pass `metadata: [:]` to wipe the inherited metadata entirely for the scope.
@@ -294,7 +294,7 @@ public func withLogger<Result, Failure: Error>(
 /// Runs `operation` with a copy of ``Logger/current`` whose aspects are **replaced** by
 /// the provided arguments. `nil` parameters leave the corresponding aspect unchanged.
 ///
-/// Unlike ``withLogger(mergingMetadata:_:)-(_,(Logger)->Result)``, which layers
+/// Unlike ``withLogger(mergingMetadata:_:)-(_,(Logger)(Failure)->Result)``, which layers
 /// metadata on top of the
 /// inherited base, this overload **replaces** the base metadata when `metadata` is
 /// non-nil. Pass `metadata: [:]` to wipe the inherited metadata entirely for the scope.
