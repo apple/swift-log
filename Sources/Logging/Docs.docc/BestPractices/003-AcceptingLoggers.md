@@ -64,7 +64,7 @@ struct RequestProcessor {
 }
 ```
 
-#### Recommended: Accept logger through initializer for long-lived components
+#### Alternative: Accept logger through initializer for long-lived components
 
 ```swift
 // ✅ Acceptable: Logger through initializer for long-lived components
@@ -76,14 +76,16 @@ final class BackgroundJobProcessor {
     }
 
     func run() async {
+        // Execute some long running work
         logger.debug("Update about long running work")
+        // Execute some more long running work
     }
 }
 ```
 
 #### Recommended: Read ``Logger/current`` from the task-local
 
-When a `logger:` parameter would clutter an otherwise logger-unrelated API, read the
+When there is no `logger:` parameter in the API, read the
 task-local. The application's accumulated metadata (`request.id`, etc.) flows in
 automatically without an explicit hand-off.
 
@@ -113,8 +115,7 @@ func handleRequest(_ req: HTTPRequest) async throws {
 }
 ```
 
-For per-statement metadata, pass it via the `metadata:` parameter on the log call —
-it does not propagate and does not leak into other code:
+For per-statement metadata, pass it via the `metadata:` parameter on the log call:
 
 ```swift
 Logger.current.info("step", metadata: ["step.name": "validate"])
