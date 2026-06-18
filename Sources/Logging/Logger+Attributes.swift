@@ -350,35 +350,8 @@ extension Logger.MetadataValue: ExpressibleByStringInterpolation {
             self.output.append(literal)
         }
 
-        /// Interpolation with a custom attributes closure.
-        ///
-        /// When called, the result will be `.stringConvertible(AttributedStringCarrier(...))`
-        /// instead of `.string(...)`.
-        ///
-        /// ```swift
-        /// "\(userId, attributes: { $0[MyAttribute.self] = .flagged })"
-        /// ```
         @inlinable
-        public mutating func appendInterpolation<T>(
-            _ value: T,
-            attributes: @Sendable (inout Logger.MetadataValueAttributes) -> Void
-        ) where T: CustomStringConvertible & Sendable {
-            self.output.append(value.description)
-            attributes(&self.attributes)
-            self.hasAttributes = true
-        }
-
-        /// Interpolation with pre-built attributes.
-        ///
-        /// ```swift
-        /// "\(userId, attributes: [Sensitivity.sensitive])"
-        /// ```
-        @inlinable
-        public mutating func appendInterpolation<T>(
-            _ value: T,
-            attributes: Logger.MetadataValueAttributes
-        ) where T: CustomStringConvertible & Sendable {
-            self.output.append(value.description)
+        internal mutating func _mergeAttributes(_ attributes: Logger.MetadataValueAttributes) {
             if self.hasAttributes {
                 self.attributes._merge(from: attributes)
             } else {
@@ -387,28 +360,176 @@ extension Logger.MetadataValue: ExpressibleByStringInterpolation {
             self.hasAttributes = true
         }
 
-        /// Plain interpolation without attributes.
+        // MARK: Plain interpolation
+        // The four overloads below mirror `DefaultStringInterpolation`'s shape.
+
         @inlinable
-        public mutating func appendInterpolation<T>(
+        public mutating func appendInterpolation<T: TextOutputStreamable & CustomStringConvertible>(
             _ value: T
-        ) where T: CustomStringConvertible & Sendable {
+        ) {
+            value.write(to: &self.output)
+        }
+
+        @inlinable
+        public mutating func appendInterpolation<T: TextOutputStreamable>(
+            _ value: T
+        ) {
+            value.write(to: &self.output)
+        }
+
+        @inlinable
+        public mutating func appendInterpolation<T: CustomStringConvertible>(
+            _ value: T
+        ) {
             self.output.append(value.description)
         }
 
-        /// Fallback interpolation for types that are not `CustomStringConvertible`.
-        @inlinable
-        public mutating func appendInterpolation<T>(
-            _ value: T
-        ) where T: Sendable {
-            self.output.append(String(describing: value))
-        }
-
-        /// Unconstrained fallback for non-`Sendable` types.
         @inlinable
         public mutating func appendInterpolation<T>(
             _ value: T
         ) {
             self.output.append(String(describing: value))
+        }
+
+        // MARK: Optional interpolation with a default
+        // The four overloads below mirror `DefaultStringInterpolation`'s `default:`
+        // shape so that `"\(optional, default: "none")"` keeps working when the
+        // literal is inferred as a `Logger.MetadataValue`.
+
+        @inlinable
+        public mutating func appendInterpolation<T: TextOutputStreamable & CustomStringConvertible>(
+            _ value: T?,
+            default defaultValue: @autoclosure () -> some StringProtocol
+        ) {
+            if let value {
+                self.appendInterpolation(value)
+            } else {
+                self.output.append(String(defaultValue()))
+            }
+        }
+
+        @inlinable
+        public mutating func appendInterpolation<T: TextOutputStreamable>(
+            _ value: T?,
+            default defaultValue: @autoclosure () -> some StringProtocol
+        ) {
+            if let value {
+                self.appendInterpolation(value)
+            } else {
+                self.output.append(String(defaultValue()))
+            }
+        }
+
+        @inlinable
+        public mutating func appendInterpolation<T: CustomStringConvertible>(
+            _ value: T?,
+            default defaultValue: @autoclosure () -> some StringProtocol
+        ) {
+            if let value {
+                self.appendInterpolation(value)
+            } else {
+                self.output.append(String(defaultValue()))
+            }
+        }
+
+        @inlinable
+        public mutating func appendInterpolation<T>(
+            _ value: T?,
+            default defaultValue: @autoclosure () -> some StringProtocol
+        ) {
+            if let value {
+                self.appendInterpolation(value)
+            } else {
+                self.output.append(String(defaultValue()))
+            }
+        }
+
+        // MARK: Interpolation with a custom attributes closure
+        //
+        // ```swift
+        // "\(userId, attributes: { $0[MyAttribute.self] = .flagged })"
+        // ```
+
+        @inlinable
+        public mutating func appendInterpolation<T: TextOutputStreamable & CustomStringConvertible>(
+            _ value: T,
+            attributes: @Sendable (inout Logger.MetadataValueAttributes) -> Void
+        ) {
+            value.write(to: &self.output)
+            attributes(&self.attributes)
+            self.hasAttributes = true
+        }
+
+        @inlinable
+        public mutating func appendInterpolation<T: TextOutputStreamable>(
+            _ value: T,
+            attributes: @Sendable (inout Logger.MetadataValueAttributes) -> Void
+        ) {
+            value.write(to: &self.output)
+            attributes(&self.attributes)
+            self.hasAttributes = true
+        }
+
+        @inlinable
+        public mutating func appendInterpolation<T: CustomStringConvertible>(
+            _ value: T,
+            attributes: @Sendable (inout Logger.MetadataValueAttributes) -> Void
+        ) {
+            self.output.append(value.description)
+            attributes(&self.attributes)
+            self.hasAttributes = true
+        }
+
+        @inlinable
+        public mutating func appendInterpolation<T>(
+            _ value: T,
+            attributes: @Sendable (inout Logger.MetadataValueAttributes) -> Void
+        ) {
+            self.output.append(String(describing: value))
+            attributes(&self.attributes)
+            self.hasAttributes = true
+        }
+
+        // MARK: Interpolation with pre-built attributes
+        //
+        // ```swift
+        // "\(userId, attributes: [Sensitivity.sensitive])"
+        // ```
+
+        @inlinable
+        public mutating func appendInterpolation<T: TextOutputStreamable & CustomStringConvertible>(
+            _ value: T,
+            attributes: Logger.MetadataValueAttributes
+        ) {
+            value.write(to: &self.output)
+            self._mergeAttributes(attributes)
+        }
+
+        @inlinable
+        public mutating func appendInterpolation<T: TextOutputStreamable>(
+            _ value: T,
+            attributes: Logger.MetadataValueAttributes
+        ) {
+            value.write(to: &self.output)
+            self._mergeAttributes(attributes)
+        }
+
+        @inlinable
+        public mutating func appendInterpolation<T: CustomStringConvertible>(
+            _ value: T,
+            attributes: Logger.MetadataValueAttributes
+        ) {
+            self.output.append(value.description)
+            self._mergeAttributes(attributes)
+        }
+
+        @inlinable
+        public mutating func appendInterpolation<T>(
+            _ value: T,
+            attributes: Logger.MetadataValueAttributes
+        ) {
+            self.output.append(String(describing: value))
+            self._mergeAttributes(attributes)
         }
     }
 
