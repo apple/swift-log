@@ -64,25 +64,6 @@ struct RequestProcessor {
 }
 ```
 
-#### Alternative: Accept logger through initializer for long-lived components
-
-```swift
-// ✅ Acceptable: Logger through initializer for long-lived components
-final class BackgroundJobProcessor {
-    private let logger: Logger
-
-    init(logger: Logger) {
-        self.logger = logger
-    }
-
-    func run() async {
-        // Execute some long running work
-        logger.debug("Update about long running work")
-        // Execute some more long running work
-    }
-}
-```
-
 #### Recommended: Read ``Logger/current`` from the task-local
 
 When there is no `logger:` parameter in the API, read the
@@ -129,6 +110,25 @@ var local = Logger.current
 local[metadataKey: "step.name"] = "validate"
 local.info("entering")
 local.info("done")
+```
+
+#### Alternative: Accept logger through initializer for long-lived components
+
+```swift
+// ⚠️ Acceptable: Logger through initializer for long-lived components
+final class BackgroundJobProcessor {
+    private let logger: Logger
+
+    init(logger: Logger) {
+        self.logger = logger
+    }
+
+    func run() async {
+        // Execute some long running work
+        logger.debug("Update about long running work")
+        // Execute some more long running work
+    }
+}
 ```
 
 #### Avoid: Libraries creating their own loggers
