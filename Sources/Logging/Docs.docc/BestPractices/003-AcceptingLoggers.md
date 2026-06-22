@@ -165,7 +165,7 @@ callbacks.
 // ❌ Bad: completion handler runs without the Task context; Logger.current is the fallback.
 try await withLogger(mergingMetadata: ["request.id": "r1"]) { _ in
     URLSession.shared.dataTask(with: req) { data, _, _ in
-        Logger.current.info("response")    // empty-label fallback, no request.id
+        Logger.current.info("response")  // empty-label fallback, no request.id
     }.resume()
 }
 ```
@@ -175,11 +175,10 @@ If capturing and rebinding across the boundary is the only option:
 
 ```swift
 // ✅ Good: capture before the boundary, rebind on the other side.
-try await withLogger(mergingMetadata: ["request.id": "r1"]) { _ in
-    let captured = Logger.current
+try await withLogger(mergingMetadata: ["request.id": "r1"]) { captured in
     URLSession.shared.dataTask(with: req) { data, _, _ in
-        withLogger(captured) { logger in
-            logger.info("response")    // request.id preserved
+        withLogger(captured) { _ in          // Bind Logger.current inside the callback
+            Logger.current.info("response")  // Logger.current now has request.id
         }
     }.resume()
 }
