@@ -28,42 +28,6 @@ library code reads it.
 
 ### Example
 
-#### Recommended: Accept logger through method parameters
-
-```swift
-// ✅ Good: Pass the logger through method parameters.
-struct RequestProcessor {
-    func processRequest(_ request: HTTPRequest, logger: Logger) async throws -> HTTPResponse {
-        // Add structured metadata that every log statement should contain.
-        var logger = logger
-        logger[metadataKey: "request.method"] = "\(request.method)"
-        logger[metadataKey: "request.path"] = "\(request.path)"
-        logger[metadataKey: "request.id"] = "\(request.id)"
-
-        logger.debug("Processing request")
-
-        // Pass the logger down to maintain metadata context.
-        let validatedData = try validateRequest(request, logger: logger)
-        let result = try await executeBusinessLogic(validatedData, logger: logger)
-
-        logger.debug("Request processed successfully")
-        return result
-    }
-
-    private func validateRequest(_ request: HTTPRequest, logger: Logger) throws -> ValidatedRequest {
-        logger.debug("Validating request parameters")
-        return ValidatedRequest(request)
-    }
-
-    private func executeBusinessLogic(_ data: ValidatedRequest, logger: Logger) async throws -> HTTPResponse {
-        logger.debug("Executing business logic")
-        let dbResult = try await databaseService.query(data.query, logger: logger)
-        logger.debug("Business logic completed")
-        return HTTPResponse(data: dbResult)
-    }
-}
-```
-
 #### Recommended: Read ``Logger/current`` from the task-local
 
 When there is no `logger:` parameter in the API, read the
@@ -110,6 +74,43 @@ var local = Logger.current
 local[metadataKey: "step.name"] = "validate"
 local.info("entering")
 local.info("done")
+```
+
+#### Alternative: Accept logger through method parameters
+
+```swift
+// ✅ Good: Pass the logger through method parameters,
+//          default to Logger.current in the public API.
+struct RequestProcessor {
+    func processRequest(_ request: HTTPRequest, logger: Logger = Logger.current) async throws -> HTTPResponse {
+        // Add structured metadata that every log statement should contain.
+        var logger = logger
+        logger[metadataKey: "request.method"] = "\(request.method)"
+        logger[metadataKey: "request.path"] = "\(request.path)"
+        logger[metadataKey: "request.id"] = "\(request.id)"
+
+        logger.debug("Processing request")
+
+        // Pass the logger down to maintain metadata context.
+        let validatedData = try validateRequest(request, logger: logger)
+        let result = try await executeBusinessLogic(validatedData, logger: logger)
+
+        logger.debug("Request processed successfully")
+        return result
+    }
+
+    private func validateRequest(_ request: HTTPRequest, logger: Logger) throws -> ValidatedRequest {
+        logger.debug("Validating request parameters")
+        return ValidatedRequest(request)
+    }
+
+    private func executeBusinessLogic(_ data: ValidatedRequest, logger: Logger) async throws -> HTTPResponse {
+        logger.debug("Executing business logic")
+        let dbResult = try await databaseService.query(data.query, logger: logger)
+        logger.debug("Business logic completed")
+        return HTTPResponse(data: dbResult)
+    }
+}
 ```
 
 #### Alternative: Accept logger through initializer for long-lived components
