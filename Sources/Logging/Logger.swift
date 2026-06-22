@@ -1467,45 +1467,45 @@ extension Logger {
     /// That means whichever backend is configured at first access becomes the unbound
     /// default for the rest of the process — bootstrap before any logging for predictable
     /// behavior.
-    @TaskLocal
-    static var taskLocalLogger: Logger = Logger(label: "")
+    @usableFromInline
+    static let taskLocalLogger: TaskLocal<Logger> = TaskLocal(wrappedValue: Logger(label: ""))
 
     /// Thin wrapper over `TaskLocal.withValue` so call sites don't need to reach into
     /// the task-local storage directly.
     #if compiler(>=6.2)
-    @usableFromInline
+    @inlinable
     nonisolated(nonsending) static func withTaskLocalLogger<Return, Failure: Error>(
         _ value: Logger,
         operation: nonisolated(nonsending) () async throws(Failure) -> Return
     ) async throws(Failure) -> Return {
         do {
-            return try await Self.$taskLocalLogger.withValue(value, operation: operation)
+            return try await Self.taskLocalLogger.withValue(value, operation: operation)
         } catch {
             throw error as! Failure
         }
     }
     #else
-    @usableFromInline
+    @inlinable
     static func withTaskLocalLogger<Return, Failure: Error>(
         _ value: Logger,
         isolation: isolated (any Actor)? = #isolation,
         operation: () async throws(Failure) -> Return
     ) async throws(Failure) -> Return {
         do {
-            return try await Self.$taskLocalLogger.withValue(value, operation: operation, isolation: isolation)
+            return try await Self.taskLocalLogger.withValue(value, operation: operation, isolation: isolation)
         } catch {
             throw error as! Failure
         }
     }
     #endif
 
-    @usableFromInline
+    @inlinable
     static func withTaskLocalLogger<Return, Failure: Error>(
         _ value: Logger,
         operation: () throws(Failure) -> Return
     ) throws(Failure) -> Return {
         do {
-            return try Self.$taskLocalLogger.withValue(value, operation: operation)
+            return try Self.taskLocalLogger.withValue(value, operation: operation)
         } catch {
             throw error as! Failure
         }
@@ -1528,8 +1528,9 @@ extension Logger {
     /// Task-local values propagate through structured concurrency (`async let`,
     /// `withTaskGroup`, child `Task {}`) but are **not** inherited by `Task.detached`.
     /// Capture the logger explicitly across detached boundaries.
+    @inlinable
     public static var current: Logger {
-        Self.taskLocalLogger
+        Self.taskLocalLogger.get()
     }
 }
 
