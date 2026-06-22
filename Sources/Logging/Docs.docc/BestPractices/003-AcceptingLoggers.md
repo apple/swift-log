@@ -5,8 +5,8 @@ Propagate caller context by accepting a `Logger` parameter or reading the task-l
 
 ## Overview
 
-Libraries should obtain a `Logger` in one of two ways: accept one through a method or
-initializer parameter, or read ``Logger/current`` from the task-local. Both approaches
+Libraries should obtain a `Logger` in one of two ways: accept one through a method
+parameter or read ``Logger/current`` from the task-local. Both approaches
 preserve the caller's metadata, log level, and handler choice. Constructing a logger
 inside a library — via ``Logger/init(label:)`` — takes those choices away from the
 application and breaks metadata propagation.
