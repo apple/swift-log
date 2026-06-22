@@ -23,8 +23,8 @@ Two propagation mechanisms are available, and they coexist. Choose the explicit
 parameter when the library's API already accepts a `Logger` (or it's natural to add
 one) — the call site stays declarative about what gets logged where. Choose the
 task-local when adding a `logger:` parameter would pollute an API that otherwise has
-no logging concern in its signature. Application code drives the task-local binding;
-library code reads it.
+no logging concern in its signature. Application code binds the initial task-local;
+library code reads it and updates the metadata.
 
 ### Example
 
