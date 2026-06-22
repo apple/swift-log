@@ -1488,10 +1488,11 @@ extension Logger {
     @usableFromInline
     static func withTaskLocalLogger<Return, Failure: Error>(
         _ value: Logger,
+        isolation: isolated (any Actor)? = #isolation,
         operation: () async throws(Failure) -> Return
     ) async throws(Failure) -> Return {
         do {
-            return try await Self.$taskLocalLogger.withValue(value, operation: operation)
+            return try await Self.$taskLocalLogger.withValue(value, operation: operation, isolation: isolation)
         } catch {
             throw error as! Failure
         }

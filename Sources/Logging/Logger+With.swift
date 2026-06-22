@@ -113,10 +113,11 @@ public nonisolated(nonsending) func withLogger<Result, Failure: Error>(
 @inlinable
 public func withLogger<Result, Failure: Error>(
     _ logger: Logger,
-    _ operation: (Logger) async throws(Failure) -> Result
+    isolation: isolated (any Actor)? = #isolation,
+    _ operation: (Logger) async throws(Failure) -> Result,
 ) async throws(Failure) -> Result {
     do {
-        return try await Logger.withTaskLocalLogger(logger) {
+        return try await Logger.withTaskLocalLogger(logger, isolation: isolation) {
             try await operation(logger)
         }
     } catch {
@@ -218,14 +219,15 @@ public nonisolated(nonsending) func withLogger<Result, Failure: Error>(
 @inlinable
 public func withLogger<Result, Failure: Error>(
     mergingMetadata metadata: @autoclosure () -> Logger.Metadata,
-    _ operation: (Logger) async throws(Failure) -> Result
+    isolation: isolated (any Actor)? = #isolation,
+    _ operation: (Logger) async throws(Failure) -> Result,
 ) async throws(Failure) -> Result {
     var logger = Logger.current
     for (key, value) in metadata() {
         logger[metadataKey: key] = value
     }
     do {
-        return try await Logger.withTaskLocalLogger(logger) {
+        return try await Logger.withTaskLocalLogger(logger, isolation: isolation) {
             try await operation(logger)
         }
     } catch {
@@ -369,6 +371,7 @@ public func withLogger<Result, Failure: Error>(
     logLevel: Logger.Level? = nil,
     handler: (any LogHandler)? = nil,
     metadata: @autoclosure () -> Logger.Metadata? = nil,
+    isolation: isolated (any Actor)? = #isolation,
     _ operation: (Logger) async throws(Failure) -> Result
 ) async throws(Failure) -> Result {
     var logger = Logger.current
@@ -382,7 +385,7 @@ public func withLogger<Result, Failure: Error>(
         logger.handler.metadata = metadata
     }
     do {
-        return try await Logger.withTaskLocalLogger(logger) {
+        return try await Logger.withTaskLocalLogger(logger, isolation: isolation) {
             try await operation(logger)
         }
     } catch {
