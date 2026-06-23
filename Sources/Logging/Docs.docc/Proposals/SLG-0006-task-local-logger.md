@@ -163,6 +163,7 @@ as a parameter to avoid repeated task-local lookups inside the closure body.
 ///     parameter so the body does not need to re-read ``Logger/current``.
 /// - Returns: The value returned by `operation`.
 @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
+@inlinable
 public func withLogger<Result, Failure: Error>(
     _ logger: Logger,
     _ operation: (Logger) throws(Failure) -> Result
@@ -177,6 +178,7 @@ public func withLogger<Result, Failure: Error>(
 ///     a parameter so the body does not need to re-read ``Logger/current``.
 /// - Returns: The value returned by `operation`.
 @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
+@inlinable
 public nonisolated(nonsending) func withLogger<Result, Failure: Error>(
     _ logger: Logger,
     _ operation: nonisolated(nonsending) (Logger) async throws(Failure) -> Result
@@ -209,6 +211,7 @@ public nonisolated(nonsending) func withLogger<Result, Failure: Error>(
 ///     merged logger as a parameter.
 /// - Returns: The value returned by `operation`.
 @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
+@inlinable
 public func withLogger<Result, Failure: Error>(
     mergingMetadata metadata: @autoclosure () -> Logger.Metadata,
     _ operation: (Logger) throws(Failure) -> Result
@@ -225,6 +228,7 @@ public func withLogger<Result, Failure: Error>(
 ///     merged logger as a parameter.
 /// - Returns: The value returned by `operation`.
 @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
+@inlinable
 public nonisolated(nonsending) func withLogger<Result, Failure: Error>(
     mergingMetadata metadata: @autoclosure () -> Logger.Metadata,
     _ operation: nonisolated(nonsending) (Logger) async throws(Failure) -> Result
@@ -265,6 +269,7 @@ public nonisolated(nonsending) func withLogger<Result, Failure: Error>(
 ///     modified logger as a parameter.
 /// - Returns: The value returned by `operation`.
 @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
+@inlinable
 public func withLogger<Result, Failure: Error>(
     logLevel: Logger.Level? = nil,
     handler: (any LogHandler)? = nil,
@@ -290,6 +295,7 @@ public func withLogger<Result, Failure: Error>(
 ///     the modified logger as a parameter.
 /// - Returns: The value returned by `operation`.
 @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
+@inlinable
 public nonisolated(nonsending) func withLogger<Result, Failure: Error>(
     logLevel: Logger.Level? = nil,
     handler: (any LogHandler)? = nil,
@@ -328,15 +334,16 @@ clause. Each new symbol carries `@available(macOS 10.15, iOS 13.0, tvOS 13.0, wa
 to match `@TaskLocal`'s runtime availability. Callers targeting older deployment versions
 keep working; they just can't call the task-local API.
 
-**ABI and resilience.** The `withLogger` overloads, `Logger.current`, and the task-local
-storage are intentionally **not** `@inlinable` / `@usableFromInline` in this proposal.
-The bodies are still evolving — future iterations are expected to factor parts of the
-implementation through value-level `Logger.withMetadata(...)` methods (see Future
-directions) — and committing to `@inlinable` now would freeze the current shape into
-ABI. The trade-off is one non-inlined function call per `withLogger` scope entry, which
-is negligible relative to the structured-concurrency machinery already involved.
-`@inlinable` annotations can be added in a non-breaking follow-up once the shape is
-settled and benchmarks justify the ABI commitment.
+**ABI and resilience.** The `withLogger` overloads are `@inlinable`: their bodies are thin
+glue — read `Logger.current`, copy-and-modify the logger, then bind it for the scope — so
+inlining them removes a cross-module call at each scope entry. The internal
+`withTaskLocalLogger` bridge over `TaskLocal.withValue` is `@usableFromInline` (not
+`@inlinable`), letting the inlinable bodies reach it without exposing the `@TaskLocal`
+storage. That storage, the bridge, and `Logger.current` all stay non-`@inlinable`, so the
+genuinely evolvable state — how the task-local is stored and how the unbound default is
+resolved — remains behind a resilient boundary and can change without breaking
+already-compiled clients. Only the small, settled control flow of the wrappers is committed
+to ABI.
 
 **Source compatibility caveat.** The name `withLogger` is added at the top-level namespace.
 Codebases that previously defined their own free `withLogger` function may need to

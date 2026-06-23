@@ -34,7 +34,7 @@ public struct Logger {
         @usableFromInline
         var handler: any LogHandler
 
-        @inlinable
+        @usableFromInline
         init(label: String, handler: any LogHandler) {
             self.label = label
             self.handler = handler
@@ -1451,6 +1451,86 @@ extension Logger.MetadataValue: ExpressibleByArrayLiteral {
     /// - Parameter elements: A array literal of metadata values.
     public init(arrayLiteral elements: Logger.Metadata.Value...) {
         self = .array(elements)
+    }
+}
+
+// MARK: - Task-local logger storage
+
+@available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
+extension Logger {
+    /// Task-local storage for implicit logger context propagation.
+    ///
+    /// Implementation detail. Use ``Logger/current`` or the `withLogger` free functions instead.
+    ///
+    /// The default value is a `Logger(label: "")` constructed via `LoggingSystem.factory`
+    /// the first time the task-local is touched (read or bound) anywhere in the process.
+    /// That means whichever backend is configured at first access becomes the unbound
+    /// default for the rest of the process — bootstrap before any logging for predictable
+    /// behavior.
+    @usableFromInline
+    static let taskLocalLogger: TaskLocal<Logger> = TaskLocal(wrappedValue: Logger(label: ""))
+
+    /// Thin wrapper over `TaskLocal.withValue` so call sites don't need to reach into
+    /// the task-local storage directly.
+    #if compiler(>=6.2)
+    @inlinable
+    nonisolated(nonsending) static func withTaskLocalLogger<Return, Failure: Error>(
+        _ value: Logger,
+        operation: nonisolated(nonsending) () async throws(Failure) -> Return
+    ) async throws(Failure) -> Return {
+        do {
+            return try await Self.taskLocalLogger.withValue(value, operation: operation)
+        } catch {
+            throw error as! Failure
+        }
+    }
+    #else
+    @inlinable
+    static func withTaskLocalLogger<Return, Failure: Error>(
+        _ value: Logger,
+        isolation: isolated (any Actor)? = #isolation,
+        operation: () async throws(Failure) -> Return
+    ) async throws(Failure) -> Return {
+        do {
+            return try await Self.taskLocalLogger.withValue(value, operation: operation, isolation: isolation)
+        } catch {
+            throw error as! Failure
+        }
+    }
+    #endif
+
+    @inlinable
+    static func withTaskLocalLogger<Return, Failure: Error>(
+        _ value: Logger,
+        operation: () throws(Failure) -> Return
+    ) throws(Failure) -> Return {
+        do {
+            return try Self.taskLocalLogger.withValue(value, operation: operation)
+        } catch {
+            throw error as! Failure
+        }
+    }
+
+    /// The current task-local logger.
+    ///
+    /// Returns the logger bound by the nearest enclosing
+    /// ``withLogger(_:_:)-(_,(Logger)(Failure)->Result)`` scope. If none is active, returns the
+    /// process-wide unbound default — a `Logger(label: "")` constructed via
+    /// `LoggingSystem.factory` the first time the task-local is touched, then reused for
+    /// the lifetime of the process. The empty label is the deliberate diagnostic signal
+    /// that no `withLogger` scope was set up before the read.
+    ///
+    /// Because the unbound default is captured at first access, ``LoggingSystem/bootstrap(_:)``
+    /// must be called before any task-local logger API is exercised; otherwise the
+    /// unbound default uses the swift-log default ``StreamLogHandler`` and a later
+    /// bootstrap is not visible to ``current`` outside of a `withLogger` scope.
+    ///
+    /// Task-local values propagate through structured concurrency (`async let`,
+    /// `withTaskGroup`, child `Task {}`) but are **not** inherited by `Task.detached`.
+    /// Capture the logger explicitly across detached boundaries.
+    @inlinable
+    public static var current: Logger {
+        Self.taskLocalLogger.get()
     }
 }
 
