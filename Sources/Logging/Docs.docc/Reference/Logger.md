@@ -10,6 +10,13 @@
 - ``init(label:factory:)-6iktu``
 - ``MetadataProvider``
 
+### Task-local logger
+
+- ``current``
+- ``withLogger(_:_:)``
+- ``withLogger(mergingMetadata:_:)``
+- ``withLogger(logLevel:handler:metadata:_:)``
+
 ### Sending trace log messages
 
 - ``trace(_:metadata:file:function:line:)``

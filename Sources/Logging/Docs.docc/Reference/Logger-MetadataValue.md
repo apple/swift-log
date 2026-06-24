@@ -9,3 +9,8 @@
 - ``array(_:)``
 - ``dictionary(_:)``
 
+### Working with attributes
+
+- ``attributed(_:attributes:)``
+- ``attributes``
+
