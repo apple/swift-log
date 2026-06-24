@@ -41,3 +41,4 @@ practice includes:
 - <doc:001-ChoosingLogLevels>
 - <doc:002-StructuredLogging>
 - <doc:003-AcceptingLoggers>
+- <doc:004-TestingLogging>
