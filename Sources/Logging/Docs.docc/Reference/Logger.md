@@ -15,7 +15,7 @@
 - ``current``
 - ``withLogger(_:_:)``
 - ``withLogger(mergingMetadata:_:)``
-- ``withLogger(logLevel:handler:metadata:_:)``
+- ``withLogger(logLevel:handler:metadata:_:)-(_,_,_,(Logger)(Failure)->Result)``
 
 ### Sending trace log messages
 
