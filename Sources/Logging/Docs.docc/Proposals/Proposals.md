@@ -36,3 +36,9 @@ If you have any questions, ask in an issue on GitHub.
 ## Topics
 
 - <doc:SLG-NNNN>
+- <doc:SLG-0001-metadata-providers>
+- <doc:SLG-0002>
+- <doc:SLG-0003>
+- <doc:SLG-0004-metadata-value-attributes>
+- <doc:SLG-0005-log-event-LogHandler-API>
+- <doc:SLG-0006-task-local-logger>
