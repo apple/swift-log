@@ -8,6 +8,8 @@
 - ``standardOutput(label:metadataProvider:)``
 - ``standardError(label:)``
 - ``standardError(label:metadataProvider:)``
+- ``init(label:stream:)``
+- ``init(label:stream:metadataProvider:)``
 
 ### Sending log messages
 
