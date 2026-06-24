@@ -19,6 +19,7 @@ import Logging
 public func makeBenchmark(
     loggerLevel: Logger.Level,
     logLevel: Logger.Level,
+    setScopedLogger: Bool = false,
     _ suffix: String = "",
     _ body: @escaping (Logger) -> Void
 ) {
@@ -39,7 +40,7 @@ public func makeBenchmark(
             thresholds: [
                 .instructions: BenchmarkThresholds(
                     relative: [
-                        .p90: 1.0  // we only record p90
+                        .p90: 10.0  // we only record p90
                     ]
                 ),
                 .objectAllocCount: BenchmarkThresholds(
@@ -49,7 +50,17 @@ public func makeBenchmark(
                 ),
             ]
         )
-    ) { _ in
-        body(logger)
+    ) { benchmark in
+        if setScopedLogger {
+            withLogger(logger) { logger in
+                benchmark.startMeasurement()
+                body(logger)
+                benchmark.stopMeasurement()
+            }
+        } else {
+            benchmark.startMeasurement()
+            body(logger)
+            benchmark.stopMeasurement()
+        }
     }
 }

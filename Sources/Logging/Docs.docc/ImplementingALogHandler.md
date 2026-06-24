@@ -23,11 +23,11 @@ func logHandlerValueSemantics() {
     var logger1 = Logger(label: "first logger")
     logger1.logLevel = .debug
     logger1[metadataKey: "only-on"] = "first"
-    
+
     var logger2 = logger1
     logger2.logLevel = .error                  // Must not affect logger1
     logger2[metadataKey: "only-on"] = "second" // Must not affect logger1
-    
+
     // These expectations must pass
     #expect(logger1.logLevel == .debug)
     #expect(logger2.logLevel == .error)
@@ -51,37 +51,29 @@ public struct PrintLogHandler: LogHandler {
     private let label: String
     public var logLevel: Logger.Level = .info
     public var metadata: Logger.Metadata = [:]
-    
+
     public init(label: String) {
         self.label = label
     }
-    
-    public func log(
-        level: Logger.Level,
-        message: Logger.Message,
-        metadata: Logger.Metadata?,
-        source: String,
-        file: String,
-        function: String,
-        line: UInt
-    ) {
+
+    public func log(event: LogEvent) {
         let timestamp = ISO8601DateFormatter().string(from: Date())
-        let levelString = level.rawValue.uppercased()
-        
+        let levelString = event.level.rawValue.uppercased()
+
         // Merge handler metadata with message metadata
         let combinedMetadata = Self.prepareMetadata(
-            base: self.metadata
-            explicit: metadata
+            base: self.metadata,
+            explicit: event.metadata
         )
-        
+
         // Format metadata
         let metadataString = combinedMetadata.map { "\($0.key)=\($0.value)" }.joined(separator: ",")
-        
+
         // Create log line and print to console
-        let logLine = "\(label) \(timestamp) \(levelString) [\(metadataString)]: \(message)"
+        let logLine = "\(label) \(timestamp) \(levelString) [\(metadataString)]: \(event.message)"
         print(logLine)
     }
-    
+
     public subscript(metadataKey key: String) -> Logger.Metadata.Value? {
         get {
             return self.metadata[key]
@@ -128,41 +120,30 @@ public struct PrintLogHandler: LogHandler {
     public var logLevel: Logger.Level = .info
     public var metadata: Logger.Metadata = [:]
     public var metadataProvider: Logger.MetadataProvider?
-    
+
     public init(label: String) {
         self.label = label
     }
-    
-    public func log(
-        level: Logger.Level,
-        message: Logger.Message,
-        metadata: Logger.Metadata?,
-        source: String,
-        file: String,
-        function: String,
-        line: UInt
-    ) {
+
+    public func log(event: LogEvent) {
         let timestamp = ISO8601DateFormatter().string(from: Date())
-        let levelString = level.rawValue.uppercased()
-        
-        // Get provider metadata
-        let providerMetadata = metadataProvider?.get() ?? [:]
+        let levelString = event.level.rawValue.uppercased()
 
         // Merge handler metadata with message metadata
         let combinedMetadata = Self.prepareMetadata(
             base: self.metadata,
             provider: self.metadataProvider,
-            explicit: metadata
+            explicit: event.metadata
         )
-        
+
         // Format metadata
         let metadataString = combinedMetadata.map { "\($0.key)=\($0.value)" }.joined(separator: ",")
-        
+
         // Create log line and print to console
-        let logLine = "\(label) \(timestamp) \(levelString) [\(metadataString)]: \(message)"
+        let logLine = "\(label) \(timestamp) \(levelString) [\(metadataString)]: \(event.message)"
         print(logLine)
     }
-    
+
     public subscript(metadataKey key: String) -> Logger.Metadata.Value? {
         get {
             return self.metadata[key]
@@ -198,6 +179,49 @@ public struct PrintLogHandler: LogHandler {
     }
 }
 ```
+
+#### Reading metadata attributes in LogHandlers
+
+Metadata values can carry attributes alongside their string representation. Attributes are embedded inside
+`MetadataValue` via the `.stringConvertible` case and are accessible through the `value.attributes` property. This
+enables features like sensitivity annotations without any changes to your handler's protocol conformance.
+
+To read attributes in your log handler:
+
+```swift
+public func log(event: LogEvent) {
+    // Merge handler metadata, provider metadata, and event metadata as usual
+    var merged = self.metadata
+
+    if let provider = self.metadataProvider {
+        merged.merge(provider.get(), uniquingKeysWith: { _, rhs in rhs })
+    }
+
+    if let eventMetadata = event.metadata {
+        merged.merge(eventMetadata, uniquingKeysWith: { _, rhs in rhs })
+    }
+
+    // Read attributes from individual values:
+    for (key, value) in merged {
+        let attributes = value.attributes    // Empty if the value carries no attributes
+
+        // Process based on your handler's needs
+        // For example, check for a custom attribute:
+        // if attributes[MyAttribute.self] == .flagged { ... }
+    }
+}
+```
+
+**Key considerations:**
+
+- **Opt-in inspection**: Attributes are invisible unless you call `value.attributes`. Handlers that do not care about
+  attributes work without any changes.
+
+- **No new protocol requirements**: Reading attributes does not require implementing any new `LogHandler` properties
+  or subscripts. The `metadata` property and `metadataKey` subscript work exactly as before.
+
+- **Attributes flow through metadata**: Attributed values flow naturally through metadata merging, `MetadataProvider`,
+  and `MultiplexLogHandler` — no special handling needed.
 
 ### Performance considerations
 

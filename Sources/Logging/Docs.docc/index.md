@@ -17,7 +17,7 @@ This separation allows libraries to adopt the API while applications choose any
 compatible logging backend implementation without requiring changes from
 libraries.
 
-## Getting Started
+### Getting Started
 
 Use this package if you're writing a cross-platform application (for example, Linux and
 macOS) or library, and want to target this logging API.
@@ -84,6 +84,7 @@ backend.
 ### Log Handlers
 
 - ``LogHandler``
+- ``LogEvent``
 - ``MultiplexLogHandler``
 - ``StreamLogHandler``
 - ``SwiftLogNoOpLogHandler``

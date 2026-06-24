@@ -1,5 +1,7 @@
 # ``Logging/SwiftLogNoOpLogHandler``
 
+A log handler that silently discards all log messages.
+
 ## Topics
 
 ### Creating a Swift Log no-op log handler
@@ -9,7 +11,9 @@
 
 ### Sending log messages
 
+- ``log(event:)``
 - ``log(level:message:metadata:source:file:function:line:)``
+- ``log(level:message:metadata:file:function:line:)``
 
 ### Updating metadata
 

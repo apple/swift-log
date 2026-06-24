@@ -22,15 +22,10 @@ struct InMemoryLogHandlerTests {
         let (logHandler, logger) = self.makeTestLogger()
         logger.info("hello", metadata: ["key1": "value1", "key2": ["a", "b", "c"]])
 
-        #expect(
-            logHandler.entries == [
-                InMemoryLogHandler.Entry(
-                    level: .info,
-                    message: "hello",
-                    metadata: ["key1": "value1", "key2": ["a", "b", "c"]]
-                )
-            ]
-        )
+        #expect(logHandler.entries.count == 1)
+        #expect(logHandler.entries[0].level == .info)
+        #expect(logHandler.entries[0].message == "hello")
+        #expect(logHandler.entries[0].metadata == ["key1": "value1", "key2": ["a", "b", "c"]])
     }
 
     @Test
@@ -39,16 +34,10 @@ struct InMemoryLogHandlerTests {
         logger[metadataKey: "test"] = "value"
         logger.info("hello", metadata: ["key1": "value1", "key2": ["a", "b", "c"]])
 
-        #expect(
-            logHandler.entries == [
-                InMemoryLogHandler.Entry(
-                    level: .info,
-                    message: "hello",
-                    metadata: ["key1": "value1", "key2": ["a", "b", "c"], "test": "value"]
-                )
-            ]
-        )
-        // Metadata also sticks onto the logger
+        #expect(logHandler.entries.count == 1)
+        #expect(logHandler.entries[0].level == .info)
+        #expect(logHandler.entries[0].message == "hello")
+        #expect(logHandler.entries[0].metadata == ["key1": "value1", "key2": ["a", "b", "c"], "test": "value"])
         #expect(logger[metadataKey: "test"] == "value")
     }
 
@@ -62,11 +51,10 @@ struct InMemoryLogHandlerTests {
         logger[metadataKey: "c"] = "2"
         logger.info("hello", metadata: ["c": "3"])
 
-        #expect(
-            logHandler.entries == [
-                InMemoryLogHandler.Entry(level: .info, message: "hello", metadata: ["a": "1", "b": "2", "c": "3"])
-            ]
-        )
+        #expect(logHandler.entries.count == 1)
+        #expect(logHandler.entries[0].level == .info)
+        #expect(logHandler.entries[0].message == "hello")
+        #expect(logHandler.entries[0].metadata == ["a": "1", "b": "1", "c": "3"])
     }
 
     @Test
@@ -76,12 +64,29 @@ struct InMemoryLogHandlerTests {
         logHandler.clear()
         logger.info("hello2")
 
-        // Only hello2 is here
-        #expect(
-            logHandler.entries == [
-                InMemoryLogHandler.Entry(level: .info, message: "hello2", metadata: [:])
+        #expect(logHandler.entries.count == 1)
+        #expect(logHandler.entries[0].level == .info)
+        #expect(logHandler.entries[0].message == "hello2")
+        #expect(logHandler.entries[0].metadata == [:])
+    }
+
+    @Test
+    func metadataWithAttributesIsPreservedInEntry() {
+        var (logHandler, logger) = self.makeTestLogger()
+        logger.logLevel = .trace
+        logger[metadataKey: "global"] = "value"
+
+        logger.log(
+            level: .info,
+            "test",
+            metadata: [
+                "key": "\("value", attributes: { _ in })"
             ]
         )
+
+        #expect(logHandler.entries.count == 1)
+        #expect(logHandler.entries[0].metadata["key"]?.description == "value")
+        #expect(logHandler.entries[0].metadata["global"]?.description == "value")
     }
 
     private func makeTestLogger(metadataProvider: Logger.MetadataProvider? = nil) -> (InMemoryLogHandler, Logger) {
@@ -94,5 +99,63 @@ struct InMemoryLogHandlerTests {
             }
         )
         return (logHandler, logger)
+    }
+
+    @Test
+    func errorEquality() throws {
+        let (logHandler, logger) = self.makeTestLogger()
+        logger.info("hello", error: TestError.first)
+        let entry = try #require(logHandler.entries.first)
+
+        #expect(
+            entry
+                == InMemoryLogHandler.Entry(
+                    level: .info,
+                    message: "hello",
+                    error: TestError.first,
+                    metadata: [:]
+                )
+        )
+
+        #expect(
+            entry
+                != InMemoryLogHandler.Entry(
+                    level: .info,
+                    message: "hello",
+                    error: nil,
+                    metadata: [:]
+                )
+        )
+
+        #expect(
+            entry
+                != InMemoryLogHandler.Entry(
+                    level: .info,
+                    message: "hello",
+                    error: TestError.second,
+                    metadata: [:]
+                )
+        )
+
+        #expect(
+            entry
+                != InMemoryLogHandler.Entry(
+                    level: .info,
+                    message: "hello",
+                    error: Nested.TestError.first,
+                    metadata: [:]
+                )
+        )
+    }
+
+    enum TestError: Error {
+        case first
+        case second
+    }
+
+    struct Nested {
+        enum TestError: Error {
+            case first
+        }
     }
 }

@@ -29,12 +29,14 @@ struct SendableTest {
         let message1 = Logger.Message(stringLiteral: "critical 1")
         let message2 = Logger.Message(stringLiteral: "critical 2")
         let metadata: Logger.Metadata = ["key": "value"]
+        let error = TestError()
 
         let task = Task.detached {
             logger.info("info")
             logger.critical(message1)
             logger.critical(message2)
             logger.warning(.init(stringLiteral: "warning"), metadata: metadata)
+            logger.warning("error", error: error)
         }
 
         await task.value
@@ -42,5 +44,8 @@ struct SendableTest {
         testLogging.history.assertExist(level: .critical, message: "critical 1", metadata: [:])
         testLogging.history.assertExist(level: .critical, message: "critical 2", metadata: [:])
         testLogging.history.assertExist(level: .warning, message: "warning", metadata: metadata)
+        testLogging.history.assertExist(level: .warning, message: "error", error: error)
     }
+
+    final class TestError: Error {}
 }

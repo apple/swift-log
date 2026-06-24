@@ -26,13 +26,13 @@ public struct LogEvent: Sendable {
     /// The message of this event.
     public var message: Logger.Message
 
-    /// The metadata associated with this event, if any.
-    public var metadata: Logger.Metadata? {
-        get { self._metadata }
-        set { self._metadata = newValue }
-    }
+    /// The error associated with this event, if any.
+    public var error: (any Error)?
 
-    private var _metadata: Logger.Metadata?
+    /// The metadata associated with this event, if any.
+    ///
+    /// Metadata values may carry attributes accessible via ``Logger/MetadataValue/attributes``.
+    public var metadata: Logger.Metadata?
 
     /// The source where this log event originated, for example the logging module.
     ///
@@ -76,9 +76,44 @@ public struct LogEvent: Sendable {
         function: String,
         line: UInt
     ) {
+        self.init(
+            level: level,
+            message: message,
+            error: nil,
+            metadata: metadata,
+            source: source,
+            file: file,
+            function: function,
+            line: line
+        )
+    }
+
+    /// Creates a new log event.
+    ///
+    /// - Parameters:
+    ///   - level: The log level of this event.
+    ///   - message: The message of this event.
+    ///   - error: The error associated with this event, if any.
+    ///   - metadata: The metadata associated with this event, if any.
+    ///   - source: The source where this log event originated. When `nil`, ``source`` is derived lazily
+    ///     from ``file`` on first access so handlers that never read it pay no allocation cost.
+    ///   - file: The file this log event originates from.
+    ///   - function: The function this log event originates from.
+    ///   - line: The line this log event originates from.
+    public init(
+        level: Logger.Level,
+        message: Logger.Message,
+        error: (any Error)?,
+        metadata: Logger.Metadata?,
+        source: String?,
+        file: String,
+        function: String,
+        line: UInt
+    ) {
         self.level = level
         self.message = message
-        self._metadata = metadata
+        self.error = error
+        self.metadata = metadata
         self._source = source
         self.file = file
         self.function = function

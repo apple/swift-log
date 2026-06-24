@@ -17,15 +17,10 @@ import Testing
 
 @testable import Logging
 
-#if canImport(Darwin)
-import Darwin
-#elseif os(Windows)
-import WinSDK
-#elseif canImport(Android)
-import Android
-#else
-import Glibc
-#endif
+private enum TestAttr: Int64, Logger.MetadataValueAttributes.Attribute {
+    case x = 1
+    case y = 2
+}
 
 extension LogHandler {
     fileprivate func with(logLevel: Logger.Level) -> any LogHandler {
@@ -387,6 +382,7 @@ struct LoggingTest {
 
     enum TestError: Error {
         case boom
+        case withMessage(String)
     }
 
     @Test func dictionaryMetadata() {
@@ -515,6 +511,7 @@ struct LoggingTest {
         logger.debug(self.dontEvaluateThisString())
         logger.info(self.dontEvaluateThisString())
         logger.warning(self.dontEvaluateThisString())
+        logger.warning(self.dontEvaluateThisString(), error: TestError.withMessage("\(self.dontEvaluateThisString())"))
         logger.log(level: .warning, self.dontEvaluateThisString())
     }
 
@@ -565,6 +562,19 @@ struct LoggingTest {
         #expect(!(logger1.handler is CustomHandler), "expected non-custom log handler")
         let logger2 = Logger(label: "foo", factory: { _ in CustomHandler() })
         #expect(logger2.handler is CustomHandler, "expected custom log handler")
+    }
+
+    @Test func errorParameter() {
+        let testLogging = TestLogging()
+
+        let logger = Logger(
+            label: "\(#function)",
+            factory: {
+                testLogging.make(label: $0)
+            }
+        )
+        logger.log(level: .info, "hello world!", error: TestError.boom)
+        testLogging.history.assertExist(level: .info, message: "hello world!", error: TestError.boom)
     }
 
     @Test func allLogLevelsExceptCriticalCanBeBlocked() {
@@ -623,7 +633,48 @@ struct LoggingTest {
         testLogging.history.assertExist(level: .critical, message: "yes: critical")
     }
 
-    @Test func allLogLevelByFunctionRefWithSource() {
+    @Test func allLogLevelByFunctionRefWithSourceAndError() {
+        let testLogging = TestLogging()
+
+        var logger = Logger(
+            label: "\(#function)",
+            factory: {
+                testLogging.make(label: $0)
+            }
+        )
+        logger.logLevel = .trace
+
+        let trace = logger.trace(_:error:metadata:source:file:function:line:)
+        let debug = logger.debug(_:error:metadata:source:file:function:line:)
+        let info = logger.info(_:error:metadata:source:file:function:line:)
+        let notice = logger.notice(_:error:metadata:source:file:function:line:)
+        let warning = logger.warning(_:error:metadata:source:file:function:line:)
+        let error = logger.error(_:error:metadata:source:file:function:line:)
+        let critical = logger.critical(_:error:metadata:source:file:function:line:)
+
+        trace("yes: trace", TestError.boom, [:], "foo", #file, #function, #line)
+        debug("yes: debug", TestError.boom, [:], "foo", #file, #function, #line)
+        info("yes: info", TestError.boom, [:], "foo", #file, #function, #line)
+        notice("yes: notice", TestError.boom, [:], "foo", #file, #function, #line)
+        warning("yes: warning", TestError.boom, [:], "foo", #file, #function, #line)
+        error("yes: error", TestError.boom, [:], "foo", #file, #function, #line)
+        critical("yes: critical", TestError.boom, [:], "foo", #file, #function, #line)
+
+        testLogging.history.assertExist(level: .trace, message: "yes: trace", error: TestError.boom, source: "foo")
+        testLogging.history.assertExist(level: .debug, message: "yes: debug", error: TestError.boom, source: "foo")
+        testLogging.history.assertExist(level: .info, message: "yes: info", error: TestError.boom, source: "foo")
+        testLogging.history.assertExist(level: .notice, message: "yes: notice", error: TestError.boom, source: "foo")
+        testLogging.history.assertExist(level: .warning, message: "yes: warning", error: TestError.boom, source: "foo")
+        testLogging.history.assertExist(level: .error, message: "yes: error", error: TestError.boom, source: "foo")
+        testLogging.history.assertExist(
+            level: .critical,
+            message: "yes: critical",
+            error: TestError.boom,
+            source: "foo"
+        )
+    }
+
+    @Test func allLogLevelByFunctionRefWithSourceWithoutError() {
         let testLogging = TestLogging()
 
         var logger = Logger(
@@ -659,7 +710,7 @@ struct LoggingTest {
         testLogging.history.assertExist(level: .critical, message: "yes: critical", source: "foo")
     }
 
-    @Test func allLogLevelByFunctionRefWithoutSource() {
+    @Test func allLogLevelByFunctionRefWithoutSourceOrError() {
         let testLogging = TestLogging()
 
         var logger = Logger(
@@ -804,6 +855,73 @@ struct LoggingTest {
         #expect("first" == logger1[metadataKey: "only-on"])
         #expect("second" == logger2[metadataKey: "only-on"])
         logger1.error("hey")
+    }
+
+    @Test func multiplexLogHandlerMetadataWithAttributes_settingAndReading() {
+        let logging1 = TestLogging()
+        let logging2 = TestLogging()
+
+        let logger1 = logging1.make(label: "1")
+        let logger2 = logging2.make(label: "2")
+
+        var multiplexLogger = Logger(
+            label: "test",
+            factory: { _ in
+                MultiplexLogHandler([logger1, logger2])
+            }
+        )
+
+        // Set metadata with attributes via string interpolation
+        multiplexLogger[metadataKey: "key1"] = "\("value1", attributes: { $0[TestAttr.self] = .x })"
+
+        // The value survives the round-trip
+        let retrieved = multiplexLogger[metadataKey: "key1"]
+        #expect(retrieved != nil)
+        #expect(retrieved?.description == "value1")
+
+        // Attributes are preserved inside .stringConvertible
+        #expect(retrieved?.attributes[TestAttr.self] == .x)
+    }
+
+    @Test func multiplexLogHandlerMetadataWithAttributes_forwardsEventWithAttributes() {
+        let logging1 = TestLogging()
+        let logging2 = TestLogging()
+
+        var logger = Logger(
+            label: "test",
+            factory: {
+                MultiplexLogHandler([logging1.make(label: $0), logging2.make(label: $0)])
+            }
+        )
+        logger.logLevel = .debug
+
+        // Log with metadata containing attributed values
+        logger.info("hello", metadata: ["request-id": "\("abc123")"])
+
+        // Both handlers should receive the message
+        logging1.history.assertExist(level: .info, message: "hello")
+        logging2.history.assertExist(level: .info, message: "hello")
+    }
+
+    @Test func metadataWithAttributes_flowsThroughHandler() {
+        let logging = TestLogging()
+
+        var logger = Logger(
+            label: "test",
+            factory: { logging.make(label: $0) }
+        )
+        logger.logLevel = .debug
+
+        // Log with metadata values that carry attributes
+        logger.info(
+            "attributed event",
+            metadata: [
+                "user-id": "\("12345", attributes: { $0[TestAttr.self] = .x })"
+            ]
+        )
+
+        // The handler should receive the message via LogEvent
+        logging.history.assertExist(level: .info, message: "attributed event")
     }
 
     /// Protects an object such that it can only be accessed while holding a lock.
@@ -951,327 +1069,6 @@ struct LoggingTest {
         #expect(Logger.Level(level.rawValue.uppercased()) == level)
     }
 
-    final class InterceptStream: TextOutputStream {
-        var interceptedText: String?
-        var strings = [String]()
-
-        func write(_ string: String) {
-            // This is a test implementation, a real implementation would include locking
-            self.strings.append(string)
-            self.interceptedText = (self.interceptedText ?? "") + string
-        }
-    }
-
-    @Test func streamLogHandlerWritesToAStream() {
-        let interceptStream = InterceptStream()
-        let log = Logger(
-            label: "test",
-            factory: {
-                StreamLogHandler(label: $0, stream: interceptStream)
-            }
-        )
-
-        let testString = "my message is better than yours"
-        log.critical("\(testString)")
-
-        let messageSucceeded = interceptStream.interceptedText?.trimmingCharacters(in: .whitespacesAndNewlines)
-            .hasSuffix(testString)
-
-        #expect(messageSucceeded ?? false)
-        #expect(interceptStream.strings.count == 1)
-    }
-
-    @Test func streamLogHandlerOutputFormat() {
-        let interceptStream = InterceptStream()
-        let label = "testLabel"
-        let source = "testSource"
-        let log = Logger(
-            label: label,
-            factory: {
-                StreamLogHandler(label: $0, stream: interceptStream)
-            }
-        )
-
-        let testString = "my message is better than yours"
-        log.critical("\(testString)", source: source)
-
-        let pattern =
-            "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\+|-)\\d{4}\\s\(Logger.Level.critical)\\s\(label):\\s\\[\(source)\\]\\s\(testString)$"
-
-        let messageSucceeded =
-            interceptStream.interceptedText?.trimmingCharacters(in: .whitespacesAndNewlines).range(
-                of: pattern,
-                options: .regularExpression
-            ) != nil
-
-        #expect(messageSucceeded)
-        #expect(interceptStream.strings.count == 1)
-    }
-
-    @Test func streamLogHandlerOutputFormatWithEmptyLabel() {
-        let interceptStream = InterceptStream()
-        let source = "testSource"
-        let log = Logger(
-            label: "",
-            factory: {
-                StreamLogHandler(label: $0, stream: interceptStream)
-            }
-        )
-
-        let testString = "my message is better than yours"
-        log.critical("\(testString)", source: source)
-
-        let pattern =
-            "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\+|-)\\d{4}\\s\(Logger.Level.critical):\\s\\[\(source)\\]\\s\(testString)$"
-
-        let messageSucceeded =
-            interceptStream.interceptedText?.trimmingCharacters(in: .whitespacesAndNewlines).range(
-                of: pattern,
-                options: .regularExpression
-            ) != nil
-
-        #expect(messageSucceeded)
-        #expect(interceptStream.strings.count == 1)
-    }
-
-    @Test func streamLogHandlerOutputFormatWithMetaData() {
-        let interceptStream = InterceptStream()
-        let label = "testLabel"
-        let source = "testSource"
-        let log = Logger(
-            label: label,
-            factory: {
-                StreamLogHandler(label: $0, stream: interceptStream)
-            }
-        )
-
-        let testString = "my message is better than yours"
-        log.critical("\(testString)", metadata: ["test": "test"], source: source)
-
-        let pattern =
-            "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\+|-)\\d{4}\\s\(Logger.Level.critical)\\s\(label):\\stest=test\\s\\[\(source)\\]\\s\(testString)$"
-
-        let messageSucceeded =
-            interceptStream.interceptedText?.trimmingCharacters(in: .whitespacesAndNewlines).range(
-                of: pattern,
-                options: .regularExpression
-            ) != nil
-
-        #expect(messageSucceeded)
-        #expect(interceptStream.strings.count == 1)
-    }
-
-    @Test func streamLogHandlerOutputFormatWithOrderedMetadata() {
-        let interceptStream = InterceptStream()
-        let log = Logger(
-            label: "testLabel",
-            factory: {
-                StreamLogHandler(label: $0, stream: interceptStream)
-            }
-        )
-
-        let testString = "my message is better than yours"
-        log.critical("\(testString)", metadata: ["a": "a0", "b": "b0"])
-        log.critical("\(testString)", metadata: ["b": "b1", "a": "a1"])
-
-        #expect(interceptStream.strings.count == 2)
-        guard interceptStream.strings.count == 2 else {
-            Issue.record("Intercepted \(interceptStream.strings.count) logs, expected 2")
-            return
-        }
-
-        #expect(interceptStream.strings[0].contains("a=a0 b=b0"), "LINES: \(interceptStream.strings[0])")
-        #expect(interceptStream.strings[1].contains("a=a1 b=b1"), "LINES: \(interceptStream.strings[1])")
-    }
-
-    @Test func streamLogHandlerWritesIncludeMetadataProviderMetadata() {
-        let interceptStream = InterceptStream()
-        let log = Logger(
-            label: "test",
-            factory: {
-                StreamLogHandler(label: $0, stream: interceptStream, metadataProvider: .exampleProvider)
-            }
-        )
-
-        let testString = "my message is better than yours"
-        log.critical("\(testString)")
-
-        let messageSucceeded = interceptStream.interceptedText?.trimmingCharacters(in: .whitespacesAndNewlines)
-            .hasSuffix(testString)
-
-        #expect(messageSucceeded ?? false)
-        #expect(interceptStream.strings.count == 1)
-        let message = interceptStream.strings.first!
-        #expect(message.contains("example=example-value"), "message must contain metadata, was: \(message)")
-    }
-
-    @Test func stdioOutputStreamWrite() {
-        self.withWriteReadFDsAndReadBuffer(flushMode: .always) { logStream, readFD, readBuffer in
-            let log = Logger(
-                label: "test",
-                factory: {
-                    StreamLogHandler(label: $0, stream: logStream)
-                }
-            )
-            let testString = "hello\u{0} world"
-            log.critical("\(testString)")
-
-            #if os(Windows)
-            let size = _read(readFD, readBuffer, 256)
-            #else
-            let size = read(readFD, readBuffer, 256)
-            #endif
-
-            let output = String(
-                decoding: UnsafeRawBufferPointer(start: UnsafeRawPointer(readBuffer), count: numericCast(size)),
-                as: UTF8.self
-            )
-            let messageSucceeded = output.trimmingCharacters(in: .whitespacesAndNewlines).hasSuffix(testString)
-            #expect(messageSucceeded)
-        }
-    }
-
-    @Test func stdioOutputStreamFlush() {
-        // flush on every statement
-        self.withWriteReadFDsAndReadBuffer(flushMode: .always) { logStream, readFD, readBuffer in
-            Logger(
-                label: "test",
-                factory: {
-                    StreamLogHandler(label: $0, stream: logStream)
-                }
-            ).critical("test")
-
-            #if os(Windows)
-            let size = _read(readFD, readBuffer, 256)
-            #else
-            let size = read(readFD, readBuffer, 256)
-            #endif
-            #expect(size > -1, "expected flush")
-
-            logStream.flush()
-
-            #if os(Windows)
-            let size2 = _read(readFD, readBuffer, 256)
-            #else
-            let size2 = read(readFD, readBuffer, 256)
-            #endif
-            #expect(size2 == -1, "expected no flush")
-        }
-        // default flushing
-        self.withWriteReadFDsAndReadBuffer(flushMode: .undefined) { logStream, readFD, readBuffer in
-            Logger(
-                label: "test",
-                factory: {
-                    StreamLogHandler(label: $0, stream: logStream)
-                }
-            ).critical("test")
-
-            #if os(Windows)
-            let size = _read(readFD, readBuffer, 256)
-            #else
-            let size = read(readFD, readBuffer, 256)
-            #endif
-            #expect(size == -1, "expected no flush")
-
-            logStream.flush()
-
-            #if os(Windows)
-            let size2 = _read(readFD, readBuffer, 256)
-            #else
-            let size2 = read(readFD, readBuffer, 256)
-            #endif
-            #expect(size2 > -1, "expected flush")
-        }
-    }
-
-    func withWriteReadFDsAndReadBuffer(
-        flushMode: StdioOutputStream.FlushMode,
-        _ body: (StdioOutputStream, CInt, UnsafeMutablePointer<Int8>) -> Void
-    ) {
-        var fds: [Int32] = [-1, -1]
-        #if os(Windows)
-        fds.withUnsafeMutableBufferPointer {
-            let err = _pipe($0.baseAddress, 256, _O_BINARY)
-            #expect(err == 0, "_pipe failed \(err)")
-        }
-        guard let writeFD = _fdopen(fds[1], "w") else {
-            Issue.record("Failed to open file")
-            return
-        }
-        #else
-        fds.withUnsafeMutableBufferPointer { ptr in
-            let err = pipe(ptr.baseAddress!)
-            #expect(err == 0, "pipe failed \(err)")
-        }
-        guard let writeFD = fdopen(fds[1], "w") else {
-            Issue.record("Failed to open file")
-            return
-        }
-        #endif
-
-        let writeBuffer = UnsafeMutablePointer<Int8>.allocate(capacity: 256)
-        defer {
-            writeBuffer.deinitialize(count: 256)
-            writeBuffer.deallocate()
-        }
-
-        var err = setvbuf(writeFD, writeBuffer, _IOFBF, 256)
-        #expect(err == 0, "setvbuf failed \(err)")
-
-        // Create the stream here while writeFD's concrete type is in scope.
-        // Type inference in the generic StdioOutputStream init picks the right
-        // C functions for whatever FILE representation this platform/API level uses.
-        #if os(Windows)
-        let stream = StdioOutputStream(
-            file: writeFD,
-            flushMode: flushMode,
-            lock: _lock_file,
-            unlock: _unlock_file,
-            write: fwrite,
-            flush: fflush
-        )
-        #else
-        let stream = StdioOutputStream(
-            file: writeFD,
-            flushMode: flushMode,
-            lock: flockfile,
-            unlock: funlockfile,
-            write: fwrite,
-            flush: fflush
-        )
-        #endif
-
-        let readFD = fds[0]
-        #if os(Windows)
-        let hPipe: HANDLE = HANDLE(bitPattern: _get_osfhandle(readFD))!
-        #expect(hPipe != INVALID_HANDLE_VALUE)
-
-        var dwMode: DWORD = DWORD(PIPE_NOWAIT)
-        let bSucceeded = SetNamedPipeHandleState(hPipe, &dwMode, nil, nil)
-        #expect(bSucceeded)
-        #else
-        err = fcntl(readFD, F_SETFL, fcntl(readFD, F_GETFL) | O_NONBLOCK)
-        #expect(err == 0, "fcntl failed \(err)")
-        #endif
-
-        let readBuffer = UnsafeMutablePointer<Int8>.allocate(capacity: 256)
-        defer {
-            readBuffer.deinitialize(count: 256)
-            readBuffer.deallocate()
-        }
-
-        // the actual test
-        body(stream, readFD, readBuffer)
-
-        for fd in fds {
-            #if os(Windows)
-            _close(fd)
-            #else
-            close(fd)
-            #endif
-        }
-    }
-
     @Test func overloadingError() {
         struct Dummy: Error, LocalizedError {
             var errorDescription: String? {
@@ -1370,12 +1167,8 @@ extension Logger.MetadataProvider {
     }
 }
 
-// Sendable
+// MARK: - Sendable
 
 // used to test logging metadata which requires Sendable conformance
 // @unchecked Sendable since manages it own state
 extension LoggingTest.LazyMetadataBox: @unchecked Sendable {}
-
-// used to test logging stream which requires Sendable conformance
-// @unchecked Sendable since manages it own state
-extension LoggingTest.InterceptStream: @unchecked Sendable {}

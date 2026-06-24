@@ -46,6 +46,8 @@ public struct InMemoryLogHandler: LogHandler {
         public var level: Logger.Level
         /// The message which was logged.
         public var message: Logger.Message
+        /// The error which was logged.
+        public var error: (any Error)?
         /// The metadata which was logged.
         public var metadata: Logger.Metadata
 
@@ -54,18 +56,54 @@ public struct InMemoryLogHandler: LogHandler {
             self.message = message
             self.metadata = metadata
         }
+
+        public init(
+            level: Logger.Level,
+            message: Logger.Message,
+            error: (any Error)?,
+            metadata: Logger.Metadata
+        ) {
+            self.level = level
+            self.message = message
+            self.error = error
+            self.metadata = metadata
+        }
+
+        public static func == (lhs: Entry, rhs: Entry) -> Bool {
+            lhs.level == rhs.level
+                && lhs.message == rhs.message
+                && lhs.metadata == rhs.metadata
+                && errorsEqual(lhs.error, rhs.error)
+        }
+
+        private static func errorsEqual(_ lhs: (any Error)?, _ rhs: (any Error)?) -> Bool {
+            switch (lhs, rhs) {
+            case (nil, nil):
+                return true
+            case let (l?, r?):
+                return "\(l)" == "\(r)" && String(reflecting: type(of: l)) == String(reflecting: type(of: r))
+            default:
+                return false
+            }
+        }
     }
 
     private final class LogStore: @unchecked Sendable {
         private var _entries: [Entry] = []
         private let lock = Lock()
 
-        fileprivate func append(level: Logger.Level, message: Logger.Message, metadata: Logger.Metadata) {
+        fileprivate func append(
+            level: Logger.Level,
+            message: Logger.Message,
+            error: (any Error)?,
+            metadata: Logger.Metadata
+        ) {
             self.lock.withLockVoid {
                 self._entries.append(
                     Entry(
                         level: level,
                         message: message,
+                        error: error,
                         metadata: metadata
                     )
                 )
@@ -93,14 +131,23 @@ public struct InMemoryLogHandler: LogHandler {
     }
 
     public func log(event: LogEvent) {
-        // Start with the metadata provider..
-        var mergedMetadata: Logger.Metadata = self.metadataProvider?.get() ?? [:]
-        // ..merge in self.metadata, overwriting existing keys
-        mergedMetadata = mergedMetadata.merging(self.metadata) { $1 }
-        // ..merge in metadata from this log call, overwriting existing keys
-        mergedMetadata = mergedMetadata.merging(event.metadata ?? [:]) { $1 }
+        var merged = self.metadata
 
-        self.logStore.append(level: event.level, message: event.message, metadata: mergedMetadata)
+        if let provider = self.metadataProvider {
+            let provided = provider.get()
+            merged.merge(provided, uniquingKeysWith: { _, rhs in rhs })
+        }
+
+        if let eventMetadata = event.metadata {
+            merged.merge(eventMetadata, uniquingKeysWith: { _, rhs in rhs })
+        }
+
+        self.logStore.append(
+            level: event.level,
+            message: event.message,
+            error: event.error,
+            metadata: merged
+        )
     }
 
     @available(*, deprecated, renamed: "log(event:)")
