@@ -13,8 +13,8 @@
 ### Task-local logger
 
 - ``current``
-- ``withLogger(_:_:)``
-- ``withLogger(mergingMetadata:_:)``
+- ``withLogger(_:_:)-(_,(Logger)(Failure)->Result)``
+- ``withLogger(mergingMetadata:_:)-(_,(Logger)(Failure)->Result)``
 - ``withLogger(logLevel:handler:metadata:_:)-(_,_,_,(Logger)(Failure)->Result)``
 
 ### Sending trace log messages
