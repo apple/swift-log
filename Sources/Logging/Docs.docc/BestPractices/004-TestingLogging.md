@@ -42,7 +42,6 @@ func stampsRequestID() {
 Each `Entry` is equatable and exposes `level`, `message`, `metadata`, and `error`.
 The handler log level defaults to ``Logger/Level/info``; set `handler.logLevel = .trace` before you use it to
 capture lower levels.
-Don't use `withLogger(logLevel:)` to adjust the log level, as the log level is overwritten when you also pass `handler`).
 
 ### Capture logs from code that reads `Logger.current`
 
