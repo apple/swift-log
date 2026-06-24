@@ -102,13 +102,24 @@ public struct StreamLogHandler: LogHandler {
         }
     }
 
-    // internal for testing only
-    internal init(label: String, stream: any _SendableTextOutputStream) {
+    /// Create a ``StreamLogHandler`` that directs its output to the stream you provide,
+    /// using the global metadata provider from ``LoggingSystem``.
+    ///
+    /// - parameters:
+    ///   - label: The label for this log handler.
+    ///   - stream: The stream to write log output to.
+    public init(label: String, stream: any TextOutputStream & Sendable) {
         self.init(label: label, stream: stream, metadataProvider: LoggingSystem.metadataProvider)
     }
 
-    // internal for testing only
-    internal init(label: String, stream: any _SendableTextOutputStream, metadataProvider: Logger.MetadataProvider?) {
+    /// Creates a ``StreamLogHandler`` that directs its output to the stream you provide,
+    /// using the metadata provider you provide.
+    ///
+    /// - parameters:
+    ///   - label: The label for this log handler.
+    ///   - stream: The stream to write log output to.
+    ///   - metadataProvider: The metadata provider to use, or `nil` for no provider.
+    public init(label: String, stream: any TextOutputStream & Sendable, metadataProvider: Logger.MetadataProvider?) {
         self.label = label
         self.stream = stream
         self.metadataProvider = metadataProvider
