@@ -13,6 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 import Testing
+import Foundation
 
 @testable import Logging
 
