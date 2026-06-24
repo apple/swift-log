@@ -13,12 +13,12 @@
 ### Task-local logger
 
 - ``current``
-- ``withLogger(_:_:)-(_,(Logger)->Result)``
-- ``withLogger(mergingMetadata:_:)-(_,(Logger)->Result)``
-- ``withLogger(_:_:)-(_,)``
-- ``withLogger(mergingMetadata:_:)-(_,)``
-- ``withLogger(logLevel:handler:metadata:_:)-(_,_,_,(Logger)->Result)``
-- ``withLogger(logLevel:handler:metadata:_:)-(_,_,_,)``
+- ``withLogger(_:_:)-3dt06``
+- ``withLogger(_:_:)-70nli``
+- ``withLogger(mergingMetadata:_:)-2c7dy``
+- ``withLogger(mergingMetadata:_:)-3eduo``
+- ``withLogger(logLevel:handler:metadata:_:)-2pd9p``
+- ``withLogger(logLevel:handler:metadata:_:)-5nmw6``
 
 ### Sending trace log messages
 
