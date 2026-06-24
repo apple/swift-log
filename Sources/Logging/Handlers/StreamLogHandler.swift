@@ -112,7 +112,7 @@ public struct StreamLogHandler: LogHandler {
         self.init(label: label, stream: stream, metadataProvider: LoggingSystem.metadataProvider)
     }
 
-    /// Creates a ``StreamLogHandler`` that directs its output to the stream you provide,
+    /// Create a ``StreamLogHandler`` that directs its output to the stream you provide,
     /// using the metadata provider you provide.
     ///
     /// - parameters:
