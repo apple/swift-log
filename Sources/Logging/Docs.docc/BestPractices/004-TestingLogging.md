@@ -1,15 +1,13 @@
 # 004: Testing code that logs
 
-Assert on what your code logged by capturing entries in memory, instead of bootstrapping
-a process-wide backend.
+Validate what you code logs by capturing entries in memory rather than bootstrapping a process-wide backend.
 
 ## Overview
 
-The `InMemoryLogging` product ships an `InMemoryLogHandler` that collects every emitted
-record into an array you can inspect with `#expect`. Keep it local to each test: a handler
-created in the test has no shared state, so tests stay isolated and parallel-safe — unlike
-``LoggingSystem/bootstrap(_:)``, which sets one process-wide backend and traps if called
-twice.
+Import and use `InMemoryLogging`, which provides an `InMemoryLogHandler` that collects every emitted record into an array you can inspect.
+Keep a handler you create local to each test.
+Each handler that you create in a test has no shared state, so the test stays isolated is safe to run on parallel with other tests.
+Don't use ``LoggingSystem/bootstrap(_:)`` in a test, it sets one process-wide backend and traps if called twice.
 
 Add the product to your test target:
 
@@ -20,7 +18,8 @@ Add the product to your test target:
 ### Capture logs from a logger you pass in
 
 When the code under test accepts a `Logger` (see <doc:003-AcceptingLoggers>), back it with
-an `InMemoryLogHandler` and assert on `entries`:
+an `InMemoryLogHandler` and validate the results on `entries`.
+The following code illustrates how to set up and validate a handler using `InMemoryLogging` to check the expected results:
 
 ```swift
 import InMemoryLogging
@@ -40,16 +39,15 @@ func stampsRequestID() {
 }
 ```
 
-Each `Entry` exposes `level`, `message`, `metadata`, and `error`, and is `Equatable`. The
-handler defaults to ``Logger/Level/info``; set `handler.logLevel = .trace` before use to
-capture lower levels (not via `withLogger(logLevel:)`, which is overwritten when you also
-pass `handler`).
+Each `Entry` is equatable and exposes `level`, `message`, `metadata`, and `error`.
+The handler log level defaults to ``Logger/Level/info``; set `handler.logLevel = .trace` before you use it to
+capture lower levels.
+Don't use `withLogger(logLevel:)` to adjust the log level, as the log level is overwritten when you also pass `handler`).
 
 ### Capture logs from code that reads `Logger.current`
 
-When the code reads the task-local ``Logger/current`` instead of taking a parameter, bind
-an `InMemoryLogHandler` for the scope with ``withLogger(logLevel:handler:metadata:_:)``. The
-handler shares its storage by reference, so the copy you hold sees what was logged:
+When the code you want to test reads the task-local ``Logger/current`` instead of taking a parameter, bind an `InMemoryLogHandler` for the scope of that by using ``withLogger(logLevel:handler:metadata:_:)``.
+The handler shares its storage by reference, so the copy you hold sees what was logged:
 
 ```swift
 import InMemoryLogging
