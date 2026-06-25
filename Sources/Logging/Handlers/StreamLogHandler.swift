@@ -38,8 +38,6 @@ import WASILibc
 /// 2. The handler's ``metadataProvider`` is invoked, overriding any existing keys.
 /// 3. The per-log-statement metadata is merged, overriding any previously set keys.
 public struct StreamLogHandler: LogHandler {
-    internal typealias _SendableTextOutputStream = TextOutputStream & Sendable
-
     /// Creates a stream log handler that directs its output to STDOUT.
     public static func standardOutput(label: String) -> StreamLogHandler {
         StreamLogHandler(
@@ -68,7 +66,7 @@ public struct StreamLogHandler: LogHandler {
         StreamLogHandler(label: label, stream: StdioOutputStream.stderr, metadataProvider: metadataProvider)
     }
 
-    private let stream: any _SendableTextOutputStream
+    private let stream: any TextOutputStream & Sendable
     private let label: String
 
     /// Get the log level configured for this `Logger`.
@@ -102,13 +100,24 @@ public struct StreamLogHandler: LogHandler {
         }
     }
 
-    // internal for testing only
-    internal init(label: String, stream: any _SendableTextOutputStream) {
+    /// Creates a ``StreamLogHandler`` that directs its output to the stream you provide,
+    /// using the global metadata provider from ``LoggingSystem``.
+    ///
+    /// - parameters:
+    ///   - label: The label for this log handler.
+    ///   - stream: The stream to write log output to.
+    public init(label: String, stream: any TextOutputStream & Sendable) {
         self.init(label: label, stream: stream, metadataProvider: LoggingSystem.metadataProvider)
     }
 
-    // internal for testing only
-    internal init(label: String, stream: any _SendableTextOutputStream, metadataProvider: Logger.MetadataProvider?) {
+    /// Creates a ``StreamLogHandler`` that directs its output to the stream you provide,
+    /// using the metadata provider you provide.
+    ///
+    /// - parameters:
+    ///   - label: The label for this log handler.
+    ///   - stream: The stream to write log output to.
+    ///   - metadataProvider: The metadata provider to use, or `nil` for no provider.
+    public init(label: String, stream: any TextOutputStream & Sendable, metadataProvider: Logger.MetadataProvider?) {
         self.label = label
         self.stream = stream
         self.metadataProvider = metadataProvider
