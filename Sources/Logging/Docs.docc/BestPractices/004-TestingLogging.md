@@ -52,7 +52,7 @@ capture lower levels.
 
 ### Capture logs from code that reads `Logger.current`
 
-When the code you want to test reads the task-local ``Logger/current`` instead of taking a parameter, bind an `InMemoryLogHandler` for the scope of that by using ``withLogger(logLevel:handler:metadata:_:)``.
+When the code you want to test reads the task-local ``Logger/current`` instead of taking a parameter, bind an `InMemoryLogHandler` for the scope of that by using ``withLogger(logLevel:handler:metadata:_:)-2pd9p``.
 The handler shares its storage by reference, so the copy you hold sees what was logged.
 
 Bind the handler for the scope of the call and validate the captured entry:
