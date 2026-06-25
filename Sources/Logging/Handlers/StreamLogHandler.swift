@@ -38,8 +38,6 @@ import WASILibc
 /// 2. The handler's ``metadataProvider`` is invoked, overriding any existing keys.
 /// 3. The per-log-statement metadata is merged, overriding any previously set keys.
 public struct StreamLogHandler: LogHandler {
-    internal typealias _SendableTextOutputStream = TextOutputStream & Sendable
-
     /// Creates a stream log handler that directs its output to STDOUT.
     public static func standardOutput(label: String) -> StreamLogHandler {
         StreamLogHandler(
@@ -68,7 +66,7 @@ public struct StreamLogHandler: LogHandler {
         StreamLogHandler(label: label, stream: StdioOutputStream.stderr, metadataProvider: metadataProvider)
     }
 
-    private let stream: any _SendableTextOutputStream
+    private let stream: any TextOutputStream & Sendable
     private let label: String
 
     /// Get the log level configured for this `Logger`.
