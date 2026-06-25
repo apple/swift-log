@@ -19,12 +19,19 @@ Add the product to your test target:
 
 When the code under test accepts a `Logger` (see <doc:003-AcceptingLoggers>), back it with
 an `InMemoryLogHandler` and validate the results on `entries`.
+
 The following code illustrates how to set up and validate a handler using `InMemoryLogging` to check the expected results:
 
 ```swift
 import InMemoryLogging
 import Logging
 import Testing
+
+struct RequestProcessor {
+    func handle(id: String, logger: Logger) {
+        logger.info("request received", metadata: ["request.id": "\(id)"])
+    }
+}
 
 @Test
 func stampsRequestID() {
@@ -46,12 +53,20 @@ capture lower levels.
 ### Capture logs from code that reads `Logger.current`
 
 When the code you want to test reads the task-local ``Logger/current`` instead of taking a parameter, bind an `InMemoryLogHandler` for the scope of that by using ``withLogger(logLevel:handler:metadata:_:)``.
-The handler shares its storage by reference, so the copy you hold sees what was logged:
+The handler shares its storage by reference, so the copy you hold sees what was logged.
+
+Bind the handler for the scope of the call and validate the captured entry:
 
 ```swift
 import InMemoryLogging
 import Logging
 import Testing
+
+struct AnalyticsClient {
+    func track(_ event: String) {
+        Logger.current.info("event", metadata: ["event.name": "\(event)"])
+    }
+}
 
 @Test
 func tracksEvent() {
