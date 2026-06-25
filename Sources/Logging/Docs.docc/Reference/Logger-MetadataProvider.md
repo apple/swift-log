@@ -4,7 +4,7 @@
 
 ### Creating a metadata provider
 
-- ``init(_:)-(()->Logger.Metadata)``
+- ``init(_:)``
 
 ### Invoking the provider
 
