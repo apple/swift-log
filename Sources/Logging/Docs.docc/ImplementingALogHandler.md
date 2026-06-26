@@ -102,6 +102,140 @@ public struct PrintLogHandler: LogHandler {
 
 ```
 
+### Constructing handlers that need more than a label
+
+Many backends need more than a `label` to build: a file path, a remote address, credentials, or
+a buffer. A handler is an ordinary value that you construct, so nothing constrains its
+initializer — it can take any parameters it needs, and it can `throw`. There is no
+protocol-required `init(label:)`. The single `label` argument on factory methods such as
+`StreamLogHandler.standardOutput(label:)` is a convention, not a requirement.
+
+Open expensive or fallible resources — a file, a socket — **up front**, in your own `throw`ing
+initializer, so failures surface at setup time. ``LogHandler/log(event:)`` cannot throw, so an
+error deferred to logging time has nowhere to go. Keep the handler `struct` cheap and copyable,
+and place the shared resource behind a thread-safe reference type: value semantics apply to a
+handler's *configuration* — its level and metadata — not its *destination*, so copies writing to
+the same file is correct and expected.
+
+The `FileLogHandler` below opens its file once, in a `throw`ing initializer on a shared
+`Destination`. The handler `struct` itself stays a cheap, copyable value:
+
+```swift
+import Foundation
+import Logging
+
+/// A log handler that appends formatted log lines to a file on disk.
+public struct FileLogHandler: LogHandler {
+    /// The shared, thread-safe destination. Open it once, then share it across handlers: being a
+    /// reference type, all those value-semantic handlers write through one locked file handle.
+    public final class Destination: @unchecked Sendable {
+        private let lock = NSLock()
+        private let fileHandle: FileHandle
+
+        /// Opens `url` for appending. All validation happens here, at setup time.
+        public init(writingTo url: URL) throws {
+            let fileManager = FileManager.default
+            if !fileManager.fileExists(atPath: url.path) {
+                guard fileManager.createFile(atPath: url.path, contents: nil) else {
+                    throw Failure.cannotCreateFile(url)
+                }
+            }
+            self.fileHandle = try FileHandle(forWritingTo: url)
+            try self.fileHandle.seekToEnd()
+        }
+
+        func write(_ line: String) {
+            self.lock.lock()
+            defer { self.lock.unlock() }
+            // `log(event:)` cannot throw, so a write failure is handled here, not propagated.
+            do {
+                try self.fileHandle.write(contentsOf: Data(line.utf8))
+            } catch {
+                // Surface the failure without crashing the application.
+                try? FileHandle.standardError.write(contentsOf: Data("FileLogHandler: \(error)\n".utf8))
+            }
+        }
+
+        /// Flushes and closes the file. Call this during shutdown.
+        public func close() {
+            self.lock.lock()
+            defer { self.lock.unlock() }
+            try? self.fileHandle.close()
+        }
+    }
+
+    /// Errors thrown while opening a ``Destination``.
+    public enum Failure: Error {
+        case cannotCreateFile(URL)
+    }
+
+    private let label: String
+    private let destination: Destination
+
+    // Per-logger configuration — this is what must carry value semantics.
+    public var logLevel: Logger.Level = .info
+    public var metadata: Logger.Metadata = [:]
+    public var metadataProvider: Logger.MetadataProvider?
+
+    /// Cheap and non-throwing, so it is safe to call from a bootstrap factory closure per label.
+    public init(label: String, destination: Destination, metadataProvider: Logger.MetadataProvider? = nil) {
+        self.label = label
+        self.destination = destination
+        self.metadataProvider = metadataProvider
+    }
+
+    public func log(event: LogEvent) {
+        var merged = self.metadata
+        if let provided = self.metadataProvider?.get() {
+            merged.merge(provided, uniquingKeysWith: { _, new in new })
+        }
+        if let explicit = event.metadata {
+            merged.merge(explicit, uniquingKeysWith: { _, new in new })
+        }
+        let renderedMetadata =
+            merged.isEmpty
+            ? ""
+            : " " + merged.sorted { $0.key < $1.key }.map { "\($0.key)=\($0.value)" }.joined(separator: " ")
+        self.destination.write("\(event.level) \(self.label):\(renderedMetadata) \(event.message)\n")
+    }
+
+    public subscript(metadataKey key: String) -> Logger.Metadata.Value? {
+        get { self.metadata[key] }
+        set { self.metadata[key] = newValue }
+    }
+}
+```
+
+#### Installing it
+
+Construct the destination where you can `try`, build a logger backed by the handler, and bind it
+as ``Logger/current`` for the application's lifetime with `withLogger`:
+
+```swift
+// Open the file once, where setup can throw.
+let destination = try FileLogHandler.Destination(writingTo: URL(fileURLWithPath: "/var/log/myapp.log"))
+defer { destination.close() }
+
+// Build a logger backed by the handler, then bind it for the scope.
+let logger = Logger(label: "app") { label in
+    FileLogHandler(label: label, destination: destination)
+}
+try await withLogger(logger) { logger in
+    logger.info("Application started")
+    // Code in this scope reads the handler through Logger.current.
+}
+```
+
+The `try` on `Destination` is where setup fails if the path is unwritable: validation happens
+before the logger is constructed, so you never need a throwing factory overload. The same pattern
+extends to handlers that reach a remote service — validate and connect up front, keep
+``LogHandler/log(event:)`` non-blocking by buffering onto a background task, and provide a
+`close()` or `shutdown()` (or a
+[Swift Service Lifecycle](https://github.com/swift-server/swift-service-lifecycle) service) to
+flush on shutdown. For runtime failures the handler cannot avoid — a full disk, a broken pipe —
+degrade gracefully inside `log(event:)` by dropping, retrying, or reporting to `stderr`. Never
+call `fatalError` on the logging path.
+
 ### Advanced features
 
 #### Metadata providers
