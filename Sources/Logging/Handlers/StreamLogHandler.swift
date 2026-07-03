@@ -220,18 +220,40 @@ public struct StreamLogHandler: LogHandler {
         _ = _localtime64_s(&localTime, &timestamp)
 
         _ = strftime(&buffer, buffer.count, "%Y-%m-%dT%H:%M:%S%z", &localTime)
-        #else
-        var timestamp = time(nil)
-        guard let localTime = localtime(&timestamp) else {
-            return "<unknown>"
-        }
-        strftime(&buffer, buffer.count, "%Y-%m-%dT%H:%M:%S%z", localTime)
-        #endif
         return buffer.withUnsafeBufferPointer {
             $0.withMemoryRebound(to: CChar.self) {
                 String(cString: $0.baseAddress!)
             }
         }
+        #else
+        // Use clock_gettime for sub-second precision (milliseconds).
+        var ts = timespec()
+        clock_gettime(CLOCK_REALTIME, &ts)
+        guard let localTime = localtime(&ts.tv_sec) else {
+            return "<unknown>"
+        }
+        // Format date+time and timezone separately so we can inject milliseconds.
+        strftime(&buffer, buffer.count, "%Y-%m-%dT%H:%M:%S", localTime)
+        var tzBuffer = [Int8](repeating: 0, count: 16)
+        strftime(&tzBuffer, tzBuffer.count, "%z", localTime)
+        let ms = Int(ts.tv_nsec) / 1_000_000
+        let dateStr = buffer.withUnsafeBufferPointer {
+            $0.withMemoryRebound(to: CChar.self) {
+                String(cString: $0.baseAddress!)
+            }
+        }
+        let tzStr = tzBuffer.withUnsafeBufferPointer {
+            $0.withMemoryRebound(to: CChar.self) {
+                String(cString: $0.baseAddress!)
+            }
+        }
+        // Zero-pad milliseconds to 3 digits without requiring Foundation.
+        let msStr: String
+        if ms < 10 { msStr = "00\(ms)" }
+        else if ms < 100 { msStr = "0\(ms)" }
+        else { msStr = "\(ms)" }
+        return "\(dateStr).\(msStr)\(tzStr)"
+        #endif
     }
 }
 
