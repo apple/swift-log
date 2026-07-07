@@ -247,9 +247,7 @@ public struct StreamLogHandler: LogHandler {
         }
         // Zero-pad milliseconds to 3 digits without requiring Foundation.
         let msStr: String
-        if ms < 10 { msStr = "00\(ms)" }
-        else if ms < 100 { msStr = "0\(ms)" }
-        else { msStr = "\(ms)" }
+        if ms < 10 { msStr = "00\(ms)" } else if ms < 100 { msStr = "0\(ms)" } else { msStr = "\(ms)" }
         return "\(dateStr).\(msStr)\(tzStr)"
     }
 }
