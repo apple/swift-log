@@ -13,6 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 import Testing
+
 @testable import Logging
 
 // A simple in-memory stream for capturing log output in tests.
@@ -30,8 +31,8 @@ struct StreamLogHandlerTimestampTests {
         var logger = Logger(label: "ts-test", factory: { _ in handler })
         logger.logLevel = .info
         logger.info("probe")
-        let firstLine = stream.output.components(separatedBy: "\n").first ?? ""
-        return firstLine.components(separatedBy: " ").first ?? ""
+        let firstLine = stream.output.split(separator: "\n", omittingEmptySubsequences: false).first ?? ""
+        return String(firstLine.split(separator: " ").first ?? "")
     }
 
     @Test("Timestamp includes a millisecond component")
@@ -80,11 +81,11 @@ struct StreamLogHandlerTimestampTests {
         logger.info("second")
         logger.info("third")
 
-        let lines = stream.output.components(separatedBy: "\n").filter { !$0.isEmpty }
+        let lines = stream.output.split(separator: "\n").filter { !$0.isEmpty }
         #expect(lines.count == 3, "expected exactly 3 log lines")
 
         for line in lines {
-            let ts = line.components(separatedBy: " ").first ?? ""
+            let ts = String(line.split(separator: " ").first ?? "")
             #expect(ts.contains("."), "timestamp '\(ts)' should have a millisecond separator")
             if let dotIdx = ts.firstIndex(of: ".") {
                 let msDigits = ts[ts.index(after: dotIdx)...].prefix(3)
@@ -99,12 +100,12 @@ struct StreamLogHandlerTimestampTests {
     @Test("Timestamp has expected ISO 8601 structure")
     func timestampStructureMatchesISO8601() {
         let ts = captureTimestamp()
-        let tParts = ts.components(separatedBy: "T")
+        let tParts = ts.split(separator: "T")
         #expect(tParts.count == 2, "timestamp '\(ts)' should contain exactly one 'T' separator")
         if tParts.count == 2 {
             let datePart = tParts[0]
             let timePart = tParts[1]
-            let dateSections = datePart.components(separatedBy: "-")
+            let dateSections = datePart.split(separator: "-")
             #expect(dateSections.count == 3, "date '\(datePart)' should have 3 dash-separated sections")
             #expect(timePart.contains(":"), "time '\(timePart)' should contain colons")
             #expect(timePart.contains("."), "time '\(timePart)' should contain a millisecond dot")
