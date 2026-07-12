@@ -7,6 +7,8 @@ project(swift-log
 option(BUILD_TESTING "Build testing targets" ON)
 option(BUILD_SHARED_LIBS "Build shared libraries by default" YES)
 
+set(CMAKE_Swift_LANGUAGE_VERSION 6)
+
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules)
 
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
