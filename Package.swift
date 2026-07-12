@@ -29,19 +29,23 @@ let package = Package(
     targets: [
         .target(
             name: "Logging",
-            dependencies: []
+            dependencies: [],
+            exclude: ["CMakeLists.txt"]
         ),
         .target(
             name: "InMemoryLogging",
-            dependencies: ["Logging"]
+            dependencies: ["Logging"],
+            exclude: ["CMakeLists.txt"]
         ),
         .testTarget(
             name: "LoggingTests",
-            dependencies: ["Logging"]
+            dependencies: ["Logging"],
+            exclude: ["CMakeLists.txt"]
         ),
         .testTarget(
             name: "InMemoryLoggingTests",
-            dependencies: ["InMemoryLogging", "Logging"]
+            dependencies: ["InMemoryLogging", "Logging"],
+            exclude: ["CMakeLists.txt"]
         ),
     ]
 )
