@@ -1,0 +1,2 @@
+add_subdirectory(LoggingTests)
+add_subdirectory(InMemoryLoggingTests)
