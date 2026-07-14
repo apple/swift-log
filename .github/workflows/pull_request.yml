@@ -87,3 +87,27 @@ jobs:
     uses: apple/swift-nio/.github/workflows/wasm_swift_sdk.yml@main
     with:
       nightly_next_enabled: false
+
+  cmake-build:
+    name: CMake Build
+    needs: [soundness]
+    runs-on: ubuntu-latest
+    container:
+      image: swift:6.1-jammy
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v7
+      - name: Install apt dependencies
+        run: apt-get -qq update && apt-get -qq -y install curl ninja-build
+      - name: Install CMake 3.30.2
+        run: |
+          ARCH=`uname -m`
+          curl -sL https://github.com/Kitware/CMake/releases/download/v3.30.2/cmake-3.30.2-linux-$ARCH.tar.gz -O
+          tar xzf cmake-3.30.2-linux-$ARCH.tar.gz
+          export PATH="`pwd`/cmake-3.30.2-linux-$ARCH/bin:$PATH"
+          echo "PATH=$PATH" >> $GITHUB_ENV
+          cmake --version
+      - name: Configure CMake
+        run: cmake -GNinja -S . -B .cmake-build -DBUILD_TESTING=1
+      - name: Build
+        run: cmake --build .cmake-build
