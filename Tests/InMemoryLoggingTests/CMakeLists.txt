@@ -10,12 +10,7 @@ else()
 endif()
 
 target_compile_options(InMemoryLoggingTests PRIVATE
-  "SHELL:-enable-upcoming-feature ExistentialAny"
-  "SHELL:-enable-upcoming-feature MemberImportVisibility"
-  "SHELL:-enable-upcoming-feature InternalImportsByDefault"
-  "SHELL:-enable-upcoming-feature NonisolatedNonsendingByDefault"
-  "SHELL:-Xfrontend -require-explicit-sendable"
-  "SHELL:-package-name swift_log"
+  ${SWIFT_LOG_COMMON_COMPILE_OPTIONS}
   "SHELL:-plugin-path /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing")
 
 if(APPLE)
