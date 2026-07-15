@@ -1,15 +1,16 @@
 add_library(Logging
-  Locks.swift
-  LogEvent.swift
-  LogHandler.swift
-  Logger+Attributes.swift
-  Logger+With.swift
-  Logger.swift
-  LoggingSystem.swift
-  MetadataProvider.swift
-  Handlers/MultiplexLogHandler.swift
-  Handlers/StreamLogHandler.swift
-  Handlers/SwiftLogNoOpLogHandler.swift)
+  "Handlers/MultiplexLogHandler.swift"
+  "Handlers/StreamLogHandler.swift"
+  "Handlers/SwiftLogNoOpLogHandler.swift"
+  "Locks.swift"
+  "LogEvent.swift"
+  "LogHandler.swift"
+  "Logger+Attributes.swift"
+  "Logger+With.swift"
+  "Logger.swift"
+  "LoggingSystem.swift"
+  "MetadataProvider.swift"
+)
 
 set_target_properties(Logging PROPERTIES
   INTERFACE_INCLUDE_DIRECTORIES "$<BUILD_INTERFACE:$<TARGET_PROPERTY:Swift_MODULE_DIRECTORY>>;$<BUILD_INTERFACE:$<TARGET_FILE_DIR:Logging>>")
