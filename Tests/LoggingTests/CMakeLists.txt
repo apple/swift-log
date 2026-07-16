@@ -1,3 +1,17 @@
+#===----------------------------------------------------------------------===#
+#
+# This source file is part of the Swift Logging API open source project
+#
+# Copyright (c) 2018-2026 Apple Inc. and the Swift Logging API project authors
+# Licensed under Apache License v2.0
+#
+# See LICENSE.txt for license information
+# See CONTRIBUTORS.txt for the list of Swift Logging API project authors
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+#===----------------------------------------------------------------------===#
+
 if(APPLE)
   add_library(LoggingTests MODULE
     CompatibilityTest.swift
@@ -40,8 +54,12 @@ else()
 endif()
 
 target_compile_options(LoggingTests PRIVATE
-  ${SWIFT_LOG_COMMON_COMPILE_OPTIONS}
-  "SHELL:-plugin-path /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing")
+  ${SWIFT_LOG_COMMON_COMPILE_OPTIONS})
+
+if(APPLE)
+  target_compile_options(LoggingTests PRIVATE
+    "SHELL:-plugin-path /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing")
+endif()
 
 if(APPLE)
   find_library(TESTING_FRAMEWORK Testing

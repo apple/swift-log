@@ -1,10 +1,24 @@
+#===----------------------------------------------------------------------===#
+#
+# This source file is part of the Swift Logging API open source project
+#
+# Copyright (c) 2018-2026 Apple Inc. and the Swift Logging API project authors
+# Licensed under Apache License v2.0
+#
+# See LICENSE.txt for license information
+# See CONTRIBUTORS.txt for the list of Swift Logging API project authors
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+#===----------------------------------------------------------------------===#
+
 cmake_minimum_required(VERSION 3.19)
 
 # Enable C and Swift languages
 project(swift-log
   LANGUAGES C Swift)
 
-option(BUILD_TESTING "Build testing targets" ON)
+option(BUILD_TESTING "Build testing targets" OFF)
 option(BUILD_SHARED_LIBS "Build shared libraries by default" YES)
 
 set(CMAKE_Swift_LANGUAGE_VERSION 6)
