@@ -89,7 +89,7 @@ jobs:
       nightly_next_enabled: false
 
   cmake-lists:
-    name: Check cmake lists
+    name: Check CMake Lists
     uses: apple/swift-nio/.github/workflows/cmake_tests.yml@main
     with:
       image: "swift:6.1-jammy"
