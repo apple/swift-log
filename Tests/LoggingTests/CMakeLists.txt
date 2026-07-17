@@ -12,46 +12,23 @@
 #
 #===----------------------------------------------------------------------===#
 
-if(APPLE)
-  add_library(LoggingTests MODULE
-    CompatibilityTest.swift
-    GlobalLoggingTest.swift
-    LocalLoggingTest.swift
-    LockTest.swift
-    LogEventTest.swift
-    LoggingTest.swift
-    MDCTest.swift
-    MetadataAttributesTest.swift
-    MetadataProviderTest.swift
-    MetadataValueInterpolationTest.swift
-    StreamLogHandlerTest.swift
-    SwiftLogNoOpLogHandlerTest.swift
-    TaskLocalLoggerTest.swift
-    TestLogger.swift
-    TestSendable.swift
-    SubDirectoryOfLoggingTests/EmitALogFromSubDirectory.swift)
-  set_target_properties(LoggingTests PROPERTIES
-    BUNDLE TRUE
-    BUNDLE_EXTENSION xctest)
-else()
-  add_executable(LoggingTests
-    CompatibilityTest.swift
-    GlobalLoggingTest.swift
-    LocalLoggingTest.swift
-    LockTest.swift
-    LogEventTest.swift
-    LoggingTest.swift
-    MDCTest.swift
-    MetadataAttributesTest.swift
-    MetadataProviderTest.swift
-    MetadataValueInterpolationTest.swift
-    StreamLogHandlerTest.swift
-    SwiftLogNoOpLogHandlerTest.swift
-    TaskLocalLoggerTest.swift
-    TestLogger.swift
-    TestSendable.swift
-    SubDirectoryOfLoggingTests/EmitALogFromSubDirectory.swift)
-endif()
+add_library(LoggingTests
+  CompatibilityTest.swift
+  GlobalLoggingTest.swift
+  LocalLoggingTest.swift
+  LockTest.swift
+  LogEventTest.swift
+  LoggingTest.swift
+  MDCTest.swift
+  MetadataAttributesTest.swift
+  MetadataProviderTest.swift
+  MetadataValueInterpolationTest.swift
+  StreamLogHandlerTest.swift
+  SwiftLogNoOpLogHandlerTest.swift
+  TaskLocalLoggerTest.swift
+  TestLogger.swift
+  TestSendable.swift
+  SubDirectoryOfLoggingTests/EmitALogFromSubDirectory.swift)
 
 target_compile_options(LoggingTests PRIVATE
   ${SWIFT_LOG_COMMON_COMPILE_OPTIONS})
@@ -70,5 +47,3 @@ if(APPLE)
 else()
   target_link_libraries(LoggingTests PRIVATE Logging Testing)
 endif()
-
-add_test(NAME LoggingTests COMMAND LoggingTests)

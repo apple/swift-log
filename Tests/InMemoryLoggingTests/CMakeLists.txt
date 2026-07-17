@@ -12,16 +12,8 @@
 #
 #===----------------------------------------------------------------------===#
 
-if(APPLE)
-  add_library(InMemoryLoggingTests MODULE
-    InMemoryLogHandlerTests.swift)
-  set_target_properties(InMemoryLoggingTests PROPERTIES
-    BUNDLE TRUE
-    BUNDLE_EXTENSION xctest)
-else()
-  add_executable(InMemoryLoggingTests
-    InMemoryLogHandlerTests.swift)
-endif()
+add_library(InMemoryLoggingTests
+  InMemoryLogHandlerTests.swift)
 
 target_compile_options(InMemoryLoggingTests PRIVATE
   ${SWIFT_LOG_COMMON_COMPILE_OPTIONS})
@@ -39,5 +31,3 @@ if(APPLE)
 else()
   target_link_libraries(InMemoryLoggingTests PRIVATE InMemoryLogging Logging Testing)
 endif()
-
-add_test(NAME InMemoryLoggingTests COMMAND InMemoryLoggingTests)
