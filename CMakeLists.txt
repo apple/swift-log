@@ -18,7 +18,6 @@ cmake_minimum_required(VERSION 3.19)
 project(swift-log
   LANGUAGES C Swift)
 
-option(BUILD_TESTING "Build testing targets" OFF)
 option(BUILD_SHARED_LIBS "Build shared libraries by default" YES)
 
 set(CMAKE_Swift_LANGUAGE_VERSION 6)
@@ -48,7 +47,6 @@ if(MSVC)
   set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
 endif()
 
-include(CTest)
 include(GNUInstallDirs)
 include(SwiftSupport)
 
@@ -58,8 +56,5 @@ if(NOT APPLE)
 endif()
 
 add_subdirectory(Sources)
-if(BUILD_TESTING)
-  add_subdirectory(Tests)
-endif()
 
 add_subdirectory(cmake/modules)
