@@ -30,8 +30,7 @@ set_target_properties(Logging PROPERTIES
   INTERFACE_INCLUDE_DIRECTORIES "$<BUILD_INTERFACE:$<TARGET_PROPERTY:Swift_MODULE_DIRECTORY>>;$<BUILD_INTERFACE:$<TARGET_FILE_DIR:Logging>>")
 
 target_compile_options(Logging PRIVATE
-  ${SWIFT_LOG_COMMON_COMPILE_OPTIONS}
-  "$<$<BOOL:${BUILD_TESTING}>:SHELL:-enable-testing>")
+  ${SWIFT_LOG_COMMON_COMPILE_OPTIONS})
 
 _install_target(Logging)
 set_property(GLOBAL APPEND PROPERTY SwiftLog_EXPORTS Logging)
