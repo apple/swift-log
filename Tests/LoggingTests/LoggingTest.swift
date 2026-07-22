@@ -281,6 +281,12 @@ struct LoggingTest {
                 "in": "in-2",
             ]
         )
+
+        // unlike the metadata property, the single-key subscript prefers the FIRST handler
+        // that has a value for the queried key
+        #expect(multiplexLogger.handler[metadataKey: "one"] == "111")
+        #expect(multiplexLogger.handler[metadataKey: "two"] == "222")
+        #expect(multiplexLogger.handler[metadataKey: "in"] == "in-1")
     }
 
     @Test func multiplexMetadataProviderSet() {
