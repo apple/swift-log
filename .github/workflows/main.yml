@@ -10,8 +10,16 @@ on:
     - cron: "0 8,20 * * *"
 
 jobs:
+  check-repository:
+    name: Check repository
+    runs-on: ubuntu-latest
+    if: github.event_name != 'schedule' || github.repository == 'apple/swift-log'
+    steps:
+      - run: exit 0
+
   unit-tests:
     name: Unit tests
+    needs: check-repository
     uses: apple/swift-nio/.github/workflows/unit_tests.yml@main
     with:
       linux_6_1_arguments_override: "-Xswiftc -warnings-as-errors --explicit-target-dependency-import-check error -Xswiftc -require-explicit-sendable"
@@ -32,6 +40,7 @@ jobs:
 
   macos-benchmarks:
     name: macOS benchmarks
+    needs: check-repository
     uses: apple/swift-nio/.github/workflows/macos_benchmarks.yml@main
     with:
       benchmark_package_paths: '["Benchmarks/NoTraits", "Benchmarks/MaxLogLevelWarning", "Benchmarks/MaxLogLevelNone"]'
@@ -39,15 +48,18 @@ jobs:
 
   cxx-interop:
     name: Cxx interop
+    needs: check-repository
     uses: apple/swift-nio/.github/workflows/cxx_interop.yml@main
 
   static-linux:
     name: Static Linux Swift SDK
+    needs: check-repository
     # Workaround https://github.com/nektos/act/issues/1875
     uses: apple/swift-nio/.github/workflows/static_sdk.yml@main
 
   macos-tests:
     name: macOS tests
+    needs: check-repository
     uses: apple/swift-nio/.github/workflows/macos_tests.yml@main
     with:
       runner_pool: nightly
@@ -63,17 +75,20 @@ jobs:
 
   wasm:
     name: Wasm Swift SDK
+    needs: check-repository
     uses: apple/swift-nio/.github/workflows/wasm_swift_sdk.yml@main
     with:
       nightly_next_enabled: false
 
   android:
     name: Android Swift SDK
+    needs: check-repository
     # Workaround https://github.com/nektos/act/issues/1875
     uses: apple/swift-nio/.github/workflows/android_swift_sdk.yml@main
 
   release-builds:
     name: Release builds
+    needs: check-repository
     uses: apple/swift-nio/.github/workflows/release_builds.yml@main
     with:
       windows_6_1_enabled: true
