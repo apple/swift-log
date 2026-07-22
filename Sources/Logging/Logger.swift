@@ -1374,9 +1374,12 @@ extension Logger {
 extension Logger {
     @inlinable
     internal static func currentModule(filePath: String = #file) -> String {
+        // `#file` paths use the platform's path separator, so on Windows the
+        // components are separated by backslashes rather than slashes.
+        let isPathSeparator: (UInt8) -> Bool = { $0 == UInt8(ascii: "/") || $0 == UInt8(ascii: "\\") }
         let utf8All = filePath.utf8
-        return filePath.utf8.lastIndex(of: UInt8(ascii: "/")).flatMap { lastSlash -> Substring? in
-            utf8All[..<lastSlash].lastIndex(of: UInt8(ascii: "/")).map { secondLastSlash -> Substring in
+        return utf8All.lastIndex(where: isPathSeparator).flatMap { lastSlash -> Substring? in
+            utf8All[..<lastSlash].lastIndex(where: isPathSeparator).map { secondLastSlash -> Substring in
                 filePath[utf8All.index(after: secondLastSlash)..<lastSlash]
             }
         }.map {
