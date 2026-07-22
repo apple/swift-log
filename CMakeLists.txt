@@ -14,9 +14,20 @@
 
 cmake_minimum_required(VERSION 3.19)
 
-# Enable C and Swift languages
-project(swift-log
-  LANGUAGES C Swift)
+# Initialize C language first to inspect the compiler environment
+project(swift-log LANGUAGES C)
+
+# Set Swift compiler target from C compiler target if not manually set for Windows
+if(WIN32 AND NOT CMAKE_Swift_COMPILER_TARGET)
+    if(CMAKE_C_COMPILER_ARCHITECTURE_ID MATCHES "(ARM64|arm64|aarch64)")
+        set(CMAKE_Swift_COMPILER_TARGET "aarch64-unknown-windows-msvc" CACHE STRING "Swift compiler target triple")
+    elseif(CMAKE_C_COMPILER_ARCHITECTURE_ID MATCHES "(X86|x64|AMD64|x86_64)")
+        set(CMAKE_Swift_COMPILER_TARGET "x86_64-unknown-windows-msvc" CACHE STRING "Swift compiler target triple")
+    endif()
+endif()
+
+# Enable Swift after C defines the architecture
+enable_language(Swift)
 
 option(BUILD_SHARED_LIBS "Build shared libraries by default" YES)
 
@@ -43,8 +54,9 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_Swift_MODULE_DIRECTORY ${CMAKE_BINARY_DIR}/swift)
 
 if(MSVC)
-  set(CMAKE_Swift_COMPILE_OPTIONS_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
+  message(STATUS "MSVC condition triggered successfully!")
   set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
+  set(CMAKE_Swift_COMPILE_OPTIONS_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
 endif()
 
 include(GNUInstallDirs)
