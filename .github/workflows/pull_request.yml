@@ -87,3 +87,16 @@ jobs:
     uses: apple/swift-nio/.github/workflows/wasm_swift_sdk.yml@main
     with:
       nightly_next_enabled: false
+
+  cmake-lists:
+    name: Check CMake Lists
+    uses: apple/swift-nio/.github/workflows/cmake_tests.yml@main
+    with:
+      image: "swift:6.1-jammy"
+      update_cmake_lists_config: >-
+        {
+          "targets": [
+            { "name": "Logging", "type": "source", "exceptions": [] },
+            { "name": "InMemoryLogging", "type": "source", "exceptions": [] }
+          ]
+        }
