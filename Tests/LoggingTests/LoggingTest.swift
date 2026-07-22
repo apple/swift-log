@@ -1143,6 +1143,21 @@ struct LoggingTest {
         #expect(.error == logger1.logLevel)
         #expect(.trace == logger2.logLevel)
     }
+
+    @Test func currentModuleFromFilePath() {
+        // POSIX-style paths, as produced by `#file` on Darwin and Linux
+        #expect(Logger.currentModule(filePath: "/home/user/project/Sources/MyModule/File.swift") == "MyModule")
+        #expect(Logger.currentModule(filePath: "Sources/MyModule/File.swift") == "MyModule")
+
+        // Windows-style paths, as produced by `#file` on Windows
+        #expect(Logger.currentModule(filePath: #"C:\Users\user\project\Sources\MyModule\File.swift"#) == "MyModule")
+        #expect(Logger.currentModule(filePath: #"Sources\MyModule\File.swift"#) == "MyModule")
+
+        // Not enough path components to determine a module
+        #expect(Logger.currentModule(filePath: "File.swift") == "n/a")
+        #expect(Logger.currentModule(filePath: "MyModule/File.swift") == "n/a")
+        #expect(Logger.currentModule(filePath: #"MyModule\File.swift"#) == "n/a")
+    }
 }
 
 extension Logger {
