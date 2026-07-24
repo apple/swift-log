@@ -115,7 +115,7 @@ initializer, so failures surface at setup time. ``LogHandler/log(event:)`` canno
 error deferred to logging time has nowhere to go. Keep the handler `struct` cheap and copyable,
 and place the shared resource behind a thread-safe reference type: value semantics apply to a
 handler's *configuration* — its level and metadata — not its *destination*, so copies writing to
-the same file is correct and expected.
+the same file are correct and expected.
 
 The `FileLogHandler` below opens its file once, in a `throw`ing initializer on a shared
 `Destination`. The handler `struct` itself stays a cheap, copyable value:
