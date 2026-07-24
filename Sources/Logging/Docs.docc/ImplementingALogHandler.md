@@ -104,21 +104,20 @@ public struct PrintLogHandler: LogHandler {
 
 ### Constructing handlers that need more than a label
 
-Many backends need more than a `label` to build: a file path, a remote address, credentials, or
+Many log handler backends need more than a `label` in order to construct them: a file path, a remote address, credentials, or
 a buffer. A handler is an ordinary value that you construct, so nothing constrains its
 initializer — it can take any parameters it needs, and it can `throw`. There is no
 protocol-required `init(label:)`. The single `label` argument on factory methods such as
 `StreamLogHandler.standardOutput(label:)` is a convention, not a requirement.
 
-Open expensive or fallible resources — a file, a socket — **up front**, in your own `throw`ing
-initializer, so failures surface at setup time. ``LogHandler/log(event:)`` cannot throw, so an
-error deferred to logging time has nowhere to go. Keep the handler `struct` cheap and copyable,
-and place the shared resource behind a thread-safe reference type: value semantics apply to a
-handler's *configuration* — its level and metadata — not its *destination*, so copies writing to
+Open expensive or fallible resources, such as a file, a socket, early and up front in your own initializer that can `throw`, so that failures surface at setup time.
+``LogHandler/log(event:)`` cannot throw, so an error deferred to logging time has nowhere to go.
+Keep the handler `struct` cheap and copyable by placing any shared resource behind a thread-safe reference type.
+Value semantics apply to a handler's *configuration* — its level and metadata — not its *destination*, so copies writing to
 the same file are correct and expected.
 
-The `FileLogHandler` below opens its file once, in a `throw`ing initializer on a shared
-`Destination`. The handler `struct` itself stays a cheap, copyable value:
+The `FileLogHandler` below opens its file once, in an initializer that throws and exception when you create it with an overlapping `Destination`.
+The handler `struct` itself stays a cheap, copyable value:
 
 ```swift
 import Foundation
@@ -127,8 +126,9 @@ import Synchronization
 
 /// A log handler that appends formatted log lines to a file on disk.
 public struct FileLogHandler: LogHandler {
-    /// The shared, thread-safe destination. Open it once, then share it across handlers: being a
-    /// reference type, all those value-semantic handlers write through one locked file handle.
+    /// The shared, thread-safe destination. Open it once, then share it across handlers: because 
+    /// the destination is a reference type, all those value-semantic handlers write through a single
+    /// locked file handle.
     public final class Destination: @unchecked Sendable {
         private let fileHandle: Mutex<FileHandle>
 
@@ -202,10 +202,10 @@ public struct FileLogHandler: LogHandler {
 }
 ```
 
-#### Installing it
+#### Using your log handler
 
-Construct the destination where you can `try`, build a logger backed by the handler, and bind it
-as ``Logger/current`` for the application's lifetime with `withLogger`:
+Construct the destination where you can use `try` to build a logger backed by your handler, then bind it
+as ``Logger/current`` for the application's lifetime using `withLogger`:
 
 ```swift
 // Open the file once, where setup can throw.
