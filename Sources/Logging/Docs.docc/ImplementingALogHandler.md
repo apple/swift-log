@@ -123,14 +123,14 @@ The `FileLogHandler` below opens its file once, in a `throw`ing initializer on a
 ```swift
 import Foundation
 import Logging
+import Synchronization
 
 /// A log handler that appends formatted log lines to a file on disk.
 public struct FileLogHandler: LogHandler {
     /// The shared, thread-safe destination. Open it once, then share it across handlers: being a
     /// reference type, all those value-semantic handlers write through one locked file handle.
     public final class Destination: @unchecked Sendable {
-        private let lock = NSLock()
-        private let fileHandle: FileHandle
+        private let fileHandle: Mutex<FileHandle>
 
         /// Opens `url` for appending. All validation happens here, at setup time.
         public init(writingTo url: URL) throws {
@@ -140,16 +140,14 @@ public struct FileLogHandler: LogHandler {
                     throw Failure.cannotCreateFile(url)
                 }
             }
-            self.fileHandle = try FileHandle(forWritingTo: url)
-            try self.fileHandle.seekToEnd()
+            self.fileHandle = .init(try FileHandle(forWritingTo: url))
+            _ = try self.fileHandle.withLock { try $0.seekToEnd() }
         }
 
         func write(_ line: String) {
-            self.lock.lock()
-            defer { self.lock.unlock() }
             // `log(event:)` cannot throw, so a write failure is handled here, not propagated.
             do {
-                try self.fileHandle.write(contentsOf: Data(line.utf8))
+                try self.fileHandle.withLock { try $0.write(contentsOf: Data(line.utf8)) }
             } catch {
                 // Surface the failure without crashing the application.
                 try? FileHandle.standardError.write(contentsOf: Data("FileLogHandler: \(error)\n".utf8))
@@ -158,9 +156,7 @@ public struct FileLogHandler: LogHandler {
 
         /// Flushes and closes the file. Call this during shutdown.
         public func close() {
-            self.lock.lock()
-            defer { self.lock.unlock() }
-            try? self.fileHandle.close()
+            self.fileHandle.withLock { try? $0.close() }
         }
     }
 
