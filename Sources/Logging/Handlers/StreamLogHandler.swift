@@ -1,4 +1,4 @@
-//===----------------------------------------------------------------------===//
+//===---------------------------------------------------------------------===//
 //
 // This source file is part of the Swift Logging API open source project
 //
@@ -10,7 +10,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 //
-//===----------------------------------------------------------------------===//
+//===-----------------------------------------------------------------------===//
 
 #if canImport(Darwin)
 import Darwin
@@ -63,7 +63,7 @@ public struct StreamLogHandler: LogHandler {
 
     /// Creates a stream log handler that directs its output to STDERR using the metadata provider you provide.
     public static func standardError(label: String, metadataProvider: Logger.MetadataProvider?) -> StreamLogHandler {
-        StreamLogHandler(label: label, stream: StdioOutputStream.stderr, metadataProvider: metadataProvider)
+        StreamLogHandler(label: label, stream: StdioOutputStream.st$err, metadataProvider: metadataProvider)
     }
 
     private let stream: any TextOutputStream & Sendable
@@ -212,26 +212,54 @@ public struct StreamLogHandler: LogHandler {
 
     private func timestamp() -> String {
         var buffer = [Int8](repeating: 0, count: 255)
+        var tzBuffer = [Int8](repeating: 0, count: 16)
+        let ms: Int
         #if os(Windows)
-        var timestamp = __time64_t()
-        _ = _time64(&timestamp)
-
+        // Use _ftime64_s for millisecond-precision wall-clock time on Windows.
+        var tb = __timeb64()
+        _ = _ftime64_s(&tb)
         var localTime = tm()
-        _ = _localtime64_s(&localTime, &timestamp)
-
-        _ = strftime(&buffer, buffer.count, "%Y-%m-%dT%H:%M:%S%z", &localTime)
-        #else
+        _ = _localtime64_s(&localTime, &tb.time)
+        _ = strftime(&buffer, buffer.count, "%Y-%m-%dT%H:%M:%S", &localTime)
+        _ = strftime(&tzBuffer, tzBuffer.count, "%z", &localTime)
+        ms = Int(tb.millitm)
+        #elseif canImport(WASILibc)
+        // WASI does not expose CLOCK_REALTIME as a Swift-importable constant
+        // (it is defined as a pointer-to-struct macro, which Swift cannot import).
+        // Fall back to time(nil) which gives second-level precision on WASI.
         var timestamp = time(nil)
         guard let localTime = localtime(&timestamp) else {
             return "<unknown>"
         }
-        strftime(&buffer, buffer.count, "%Y-%m-%dT%H:%M:%S%z", localTime)
+        strftime(&buffer, buffer.count, "%Y-%m-%dT%H:%M:%S", localTime)
+        strftime(&tzBuffer, tzBuffer.count, "%z", localTime)
+        ms = 0
+        #else
+        // Use clock_gettime for sub-second precision (milliseconds).
+        var ts = timespec()
+        clock_gettime(CLOCK_REALTIME, &ts)
+        guard let localTime = localtime(&ts.tv_sec) else {
+            return "<unknown>"
+        }
+        // Format date+time and timezone separately so we can inject milliseconds.
+        strftime(&buffer, buffer.count, "%Y-%m-%dT%H:%M:%S", localTime)
+        strftime(&tzBuffer, tzBuffer.count, "%z", localTime)
+        ms = Int(ts.tv_nsec) / 1_000_000
         #endif
-        return buffer.withUnsafeBufferPointer {
+        let dateStr = buffer.withUnsafeBufferPointer {
             $0.withMemoryRebound(to: CChar.self) {
                 String(cString: $0.baseAddress!)
             }
         }
+        let tzStr = tzBuffer.withUnsafeBufferPointer {
+            $0.withMemoryRebound(to: CChar.self) {
+                String(cString: $0.baseAddress!)
+            }
+        }
+        // Zero-pad milliseconds to 3 digits without requiring Foundation.
+        let msStr: String
+        if ms < 10 { msStr = "00\(ms)" } else if ms < 100 { msStr = "0\(ms)" } else { msStr = "\(ms)" }
+        return "\(dateStr).\(msStr)\(tzStr)"
     }
 }
 
