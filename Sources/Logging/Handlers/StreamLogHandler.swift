@@ -1,4 +1,4 @@
-//===----------------------------------------------------------------------===//
+//===---------------------------------------------------------------------===//
 //
 // This source file is part of the Swift Logging API open source project
 //
@@ -10,7 +10,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 //
-//===----------------------------------------------------------------------===//
+//===-----------------------------------------------------------------------===//
 
 #if canImport(Darwin)
 import Darwin
@@ -63,7 +63,7 @@ public struct StreamLogHandler: LogHandler {
 
     /// Creates a stream log handler that directs its output to STDERR using the metadata provider you provide.
     public static func standardError(label: String, metadataProvider: Logger.MetadataProvider?) -> StreamLogHandler {
-        StreamLogHandler(label: label, stream: StdioOutputStream.stderr, metadataProvider: metadataProvider)
+        StreamLogHandler(label: label, stream: StdioOutputStream.st$err, metadataProvider: metadataProvider)
     }
 
     private let stream: any TextOutputStream & Sendable
@@ -223,6 +223,17 @@ public struct StreamLogHandler: LogHandler {
         _ = strftime(&buffer, buffer.count, "%Y-%m-%dT%H:%M:%S", &localTime)
         _ = strftime(&tzBuffer, tzBuffer.count, "%z", &localTime)
         ms = Int(tb.millitm)
+        #elseif canImport(WASILibc)
+        // WASI does not expose CLOCK_REALTIME as a Swift-importable constant
+        // (it is defined as a pointer-to-struct macro, which Swift cannot import).
+        // Fall back to time(nil) which gives second-level precision on WASI.
+        var timestamp = time(nil)
+        guard let localTime = localtime(&timestamp) else {
+            return "<unknown>"
+        }
+        strftime(&buffer, buffer.count, "%Y-%m-%dT%H:%M:%S", localTime)
+        strftime(&tzBuffer, tzBuffer.count, "%z", localTime)
+        ms = 0
         #else
         // Use clock_gettime for sub-second precision (milliseconds).
         var ts = timespec()
