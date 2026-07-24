@@ -223,14 +223,14 @@ try await withLogger(logger) { logger in
 ```
 
 The `try` on `Destination` is where setup fails if the path is unwritable: validation happens
-before the logger is constructed, so you never need a throwing factory overload. The same pattern
-extends to handlers that reach a remote service — validate and connect up front, keep
-``LogHandler/log(event:)`` non-blocking by buffering onto a background task, and provide a
-`close()` or `shutdown()` (or a
-[Swift Service Lifecycle](https://github.com/swift-server/swift-service-lifecycle) service) to
-flush on shutdown. For runtime failures the handler cannot avoid — a full disk, a broken pipe —
-degrade gracefully inside `log(event:)` by dropping, retrying, or reporting to `stderr`. Never
-call `fatalError` on the logging path.
+before the logger is constructed, so you never need a throwing factory overload. 
+Use the same pattern for handlers that connect to a remote service:
+  - validate and connect up front
+  - keep ``LogHandler/log(event:)`` non-blocking by buffering onto a background task
+  - provide a `close()` or `shutdown()` (or use [Swift Service Lifecycle](https://github.com/swift-server/swift-service-lifecycle) service) to flush on shutdown
+
+For runtime failures the handler can't avoid, such as a full disk or a broken pipe, degrade gracefully inside `log(event:)` by dropping the log message, retrying, or reporting to `stderr`.
+Never call `fatalError` on the logging path.
 
 ### Advanced features
 
