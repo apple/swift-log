@@ -262,7 +262,9 @@ extension Logger.MetadataValue {
     ///
     /// **Setting:** Replaces the value with `.stringConvertible(AttributedStringCarrier(...))`
     /// carrying the given attributes. For `.string` and `.stringConvertible` cases the string
-    /// representation is preserved. For `.dictionary` and `.array` cases the setter is a no-op.
+    /// representation is preserved. Setting attributes on a `.dictionary` or `.array` value is a
+    /// programmer error: it triggers an assertion in debug builds and leaves the value unchanged in
+    /// release builds. Set attributes on the leaf values instead.
     ///
     /// Only handlers that inspect attributes pay the cost of the getter check.
     @inlinable
