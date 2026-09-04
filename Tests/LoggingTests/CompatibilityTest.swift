@@ -16,8 +16,6 @@
 import Logging
 import Testing
 
-import class Foundation.NSLock
-
 struct CompatibilityTest {
     @available(*, deprecated, message: "Testing deprecated functionality")
     @Test func allLogLevelsWorkWithOldSchoolLogHandlerWorks() {
@@ -116,17 +114,13 @@ struct CompatibilityTest {
 /// Implements `log(event:)` and nothing else.
 private struct EventOnlyLogHandler: LogHandler {
     private final class Store: @unchecked Sendable {
-        private let lock = NSLock()
+        private let lock = Lock()
         private var events: [LogEvent] = []
         func append(_ event: LogEvent) {
-            self.lock.lock()
-            defer { self.lock.unlock() }
-            self.events.append(event)
+            self.lock.withLock { self.events.append(event) }
         }
         var all: [LogEvent] {
-            self.lock.lock()
-            defer { self.lock.unlock() }
-            return self.events
+            self.lock.withLock { self.events }
         }
     }
 
