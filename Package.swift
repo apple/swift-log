@@ -39,14 +39,12 @@ let package = Package(
         ),
         .testTarget(
             name: "LoggingTests",
-            dependencies: ["Logging"],
-            exclude: ["CMakeLists.txt"]
+            dependencies: ["Logging"]
         ),
         .testTarget(
             name: "InMemoryLoggingTests",
-            dependencies: ["InMemoryLogging", "Logging"],
-            exclude: ["CMakeLists.txt"]
-        ),
+            dependencies: ["InMemoryLogging", "Logging"]
+        )
     ]
 )
 
