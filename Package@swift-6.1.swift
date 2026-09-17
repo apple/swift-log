@@ -44,7 +44,7 @@ let package = Package(
         .testTarget(
             name: "InMemoryLoggingTests",
             dependencies: ["InMemoryLogging", "Logging"]
-        )
+        ),
     ]
 )
 
