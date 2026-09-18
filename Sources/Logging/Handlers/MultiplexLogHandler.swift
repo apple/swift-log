@@ -45,20 +45,28 @@
 /// observe this change.
 ///
 /// Reading metadata from the multiplex log handler MAY need to pick one of conflicting values if the underlying log handlers
-/// were previously initiated with metadata before passing them into the multiplex handler. The multiplex handler uses
-/// the order in which the handlers were passed in during its initialization as a priority indicator - the first handler's
-/// values are more important than the next handlers values, etc.
+/// were previously initiated with metadata before passing them into the multiplex handler. Which value wins depends on how
+/// the metadata is queried.
+///
+/// When a single key is queried with `subscript(metadataKey:)`, the multiplex handler uses the order in which the handlers
+/// were passed in during its initialization as a priority indicator - the first handler that has a value for the queried
+/// key provides the value.
 ///
 /// Example:
 /// If the multiplex log handler was initiated with two handlers like this: `MultiplexLogHandler([handler1, handler2])`.
 /// The handlers each have some already set metadata: `handler1` has metadata values for keys `one` and `all`, and `handler2`
 /// has values for keys `two` and `all`.
 ///
-/// A query through the multiplex log handler the key `one` naturally returns `handler1`'s value, and a query for `two`
+/// A query through the multiplex log handler for the key `one` naturally returns `handler1`'s value, and a query for `two`
 /// naturally returns `handler2`'s value.
-/// Querying for the key `all` will return `handler1`'s value, as that handler has a high priority,
+/// Querying for the key `all` will return `handler1`'s value, as that handler has a higher priority,
 /// as indicated by its earlier position in the initialization, than the second handler.
-/// The same rule applies when querying for the `metadata` property of the multiplex log handler; it constructs `Metadata` uniquing values.
+///
+/// The opposite priority applies when reading the `metadata` property: the combined `Metadata` is built by merging the
+/// handlers' metadata in initialization order, with values from later handlers overriding values from earlier ones - in
+/// the example above, the `metadata` dictionary contains `handler2`'s value for the key `all`. Values obtained from the
+/// handlers' metadata providers override stored handler metadata, and the multiplex handler's own metadata provider, if
+/// set, is applied last.
 public struct MultiplexLogHandler: LogHandler {
     private var handlers: [any LogHandler]
     private var effectiveLogLevel: Logger.Level
