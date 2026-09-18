@@ -12,6 +12,8 @@
 //
 //===----------------------------------------------------------------------===//
 
+#if !os(Android)
+
 // MARK: - withLogger() free functions for task-local logger
 
 /// Runs `operation` with `logger` bound to the task-local context.
@@ -392,4 +394,6 @@ public func withLogger<Result, Failure: Error>(
         throw error as! Failure
     }
 }
+#endif
+
 #endif
