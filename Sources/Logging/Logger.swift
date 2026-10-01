@@ -1414,14 +1414,29 @@ extension Logger.MetadataValue: CustomStringConvertible {
     /// A string representation of the metadata value.
     public var description: String {
         switch self {
-        case .dictionary(let dict):
-            return dict.mapValues { $0.description }.description
-        case .array(let list):
-            return list.map { $0.description }.description
         case .string(let str):
             return str
         case .stringConvertible(let repr):
             return repr.description
+        case .array(let list):
+            let items = list.map { $0.quotedAsCollectionElement }
+            return "[\(items.joined(separator: ", "))]"
+        case .dictionary(let dict):
+            guard !dict.isEmpty else { return "[:]" }
+            let entries = dict.map { key, value in "\(key.debugDescription): \(value.quotedAsCollectionElement)" }
+            return "[\(entries.joined(separator: ", "))]"
+        }
+    }
+
+    /// Only qute the leaf
+    private var quotedAsCollectionElement: String {
+        switch self {
+        case .string(let str):
+            return str.debugDescription
+        case .stringConvertible(let repr):
+            return repr.description.debugDescription
+        case .array, .dictionary:
+            return self.description
         }
     }
 }

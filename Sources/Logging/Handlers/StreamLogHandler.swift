@@ -345,8 +345,13 @@ internal struct StdioOutputStream: TextOutputStream, @unchecked Sendable {
         )
         #elseif canImport(WASILibc)
         // no file locking on WASI
+        #if compiler(>=6.5)
+        let file = WASILibc.stderr
+        #else
+        let file = WASILibc.stderr!
+        #endif
         return StdioOutputStream(
-            file: WASILibc.stderr!,
+            file: file,
             flushMode: .always,
             lock: nil,
             unlock: nil,
@@ -417,8 +422,13 @@ internal struct StdioOutputStream: TextOutputStream, @unchecked Sendable {
         )
         #elseif canImport(WASILibc)
         // no file locking on WASI
+        #if compiler(>=6.5)
+        let file = WASILibc.stdout
+        #else
+        let file = WASILibc.stdout!
+        #endif
         return StdioOutputStream(
-            file: WASILibc.stdout!,
+            file: file,
             flushMode: .always,
             lock: nil,
             unlock: nil,

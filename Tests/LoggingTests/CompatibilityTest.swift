@@ -66,6 +66,79 @@ struct CompatibilityTest {
         testLogging.history.assertExist(level: .error, message: "yes: error", source: "yes: error source")
         testLogging.history.assertExist(level: .critical, message: "yes: critical", source: "yes: critical source")
     }
+
+    /// A handler implementing only `log(event:)` must survive a caller on the SwiftLog 1.0
+    /// entry point. Both deprecated defaults used to forward to each other.
+    @available(*, deprecated, message: "Testing deprecated functionality")
+    @Test func swiftLog1CompatibilityMethodReachesAnEventOnlyHandler() {
+        let handler = EventOnlyLogHandler()
+
+        handler.log(
+            level: .warning,
+            message: "compat",
+            metadata: ["k": "v"],
+            file: "/Sources/CompatModule/Caller.swift",
+            function: #function,
+            line: 42
+        )
+
+        let events = handler.recorded
+        #expect(events.count == 1)
+        #expect(events.first?.level == .warning)
+        #expect(events.first?.message == "compat")
+        #expect(events.first?.metadata == ["k": "v"])
+        #expect(events.first?.source == "CompatModule")
+        #expect(events.first?.line == 42)
+    }
+
+    /// The same entry point must still reach a handler implementing only the
+    /// source-carrying deprecated method.
+    @available(*, deprecated, message: "Testing deprecated functionality")
+    @Test func swiftLog1CompatibilityMethodReachesASourceOnlyHandler() {
+        let testLogging = NewerButStillOldTestLogging()
+        let handler = testLogging.make(label: "compat")
+
+        handler.log(
+            level: .error,
+            message: "compat",
+            metadata: nil,
+            file: "/Sources/CompatModule/Caller.swift",
+            function: #function,
+            line: 42
+        )
+
+        testLogging.history.assertExist(level: .error, message: "compat", source: "CompatModule")
+    }
+}
+
+/// Implements `log(event:)` and nothing else.
+private struct EventOnlyLogHandler: LogHandler {
+    private final class Store: @unchecked Sendable {
+        private let lock = Lock()
+        private var events: [LogEvent] = []
+        func append(_ event: LogEvent) {
+            self.lock.withLock { self.events.append(event) }
+        }
+        var all: [LogEvent] {
+            self.lock.withLock { self.events }
+        }
+    }
+
+    private let store = Store()
+
+    var metadata: Logger.Metadata = [:]
+    var logLevel: Logger.Level = .trace
+
+    subscript(metadataKey metadataKey: String) -> Logger.Metadata.Value? {
+        get { self.metadata[metadataKey] }
+        set { self.metadata[metadataKey] = newValue }
+    }
+
+    func log(event: LogEvent) {
+        self.store.append(event)
+    }
+
+    var recorded: [LogEvent] { self.store.all }
 }
 
 private struct OldSchoolTestLogging {

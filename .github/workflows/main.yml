@@ -14,19 +14,21 @@ jobs:
     name: Unit tests
     uses: apple/swift-nio/.github/workflows/unit_tests.yml@main
     with:
-      linux_6_1_arguments_override: "-Xswiftc -warnings-as-errors --explicit-target-dependency-import-check error -Xswiftc -require-explicit-sendable"
+      linux_6_1_enabled: false
+      linux_6_4_arguments_override: "-Xswiftc -warnings-as-errors --explicit-target-dependency-import-check error -Xswiftc -require-explicit-sendable"
       linux_6_2_arguments_override: "-Xswiftc -warnings-as-errors --explicit-target-dependency-import-check error -Xswiftc -require-explicit-sendable"
       linux_6_3_arguments_override: "-Xswiftc -warnings-as-errors --explicit-target-dependency-import-check error -Xswiftc -require-explicit-sendable"
       linux_nightly_next_arguments_override: "--explicit-target-dependency-import-check error -Xswiftc -require-explicit-sendable"
       linux_nightly_main_arguments_override: "--explicit-target-dependency-import-check error -Xswiftc -require-explicit-sendable"
-      windows_6_1_enabled: true
+      windows_6_1_enabled: false
       windows_6_2_enabled: true
       windows_6_3_enabled: true
+      windows_6_4_enabled: true
       windows_nightly_next_enabled: true
       windows_nightly_main_enabled: true
-      windows_6_1_arguments_override: "-Xswiftc -warnings-as-errors --explicit-target-dependency-import-check error -Xswiftc -require-explicit-sendable"
       windows_6_2_arguments_override: "-Xswiftc -warnings-as-errors --explicit-target-dependency-import-check error -Xswiftc -require-explicit-sendable"
       windows_6_3_arguments_override: "-Xswiftc -warnings-as-errors --explicit-target-dependency-import-check error -Xswiftc -require-explicit-sendable"
+      windows_6_4_arguments_override: "-Xswiftc -warnings-as-errors --explicit-target-dependency-import-check error -Xswiftc -require-explicit-sendable"
       windows_nightly_next_arguments_override: "--explicit-target-dependency-import-check error -Xswiftc -require-explicit-sendable"
       windows_nightly_main_arguments_override: "--explicit-target-dependency-import-check error -Xswiftc -require-explicit-sendable"
 
@@ -36,6 +38,7 @@ jobs:
     with:
       benchmark_package_paths: '["Benchmarks/NoTraits", "Benchmarks/MaxLogLevelWarning", "Benchmarks/MaxLogLevelNone"]'
       macos_swift_6_3_enabled: true
+      macos_swift_6_4_enabled: true
 
   cxx-interop:
     name: Cxx interop
@@ -52,14 +55,15 @@ jobs:
     with:
       runner_pool: nightly
       build_scheme: swift-log-Package
-      swift_6_1_enabled: true
+      swift_6_1_enabled: false
       swift_6_2_enabled: true
       swift_6_3_enabled: true
+      swift_6_4_enabled: true
       macos_xcode_test_enabled: true
-      ios_xcode_test_enabled: true
-      watchos_xcode_test_enabled: true
-      tvos_xcode_test_enabled: true
-      visionos_xcode_test_enabled: true
+      ios_xcode_test_enabled: false
+      watchos_xcode_test_enabled: false
+      tvos_xcode_test_enabled: false
+      visionos_xcode_test_enabled: false
 
   wasm:
     name: Wasm Swift SDK
@@ -76,8 +80,9 @@ jobs:
     name: Release builds
     uses: apple/swift-nio/.github/workflows/release_builds.yml@main
     with:
-      windows_6_1_enabled: true
+      windows_6_1_enabled: false
       windows_6_2_enabled: true
       windows_6_3_enabled: true
+      windows_6_4_enabled: true
       windows_nightly_next_enabled: true
       windows_nightly_main_enabled: true

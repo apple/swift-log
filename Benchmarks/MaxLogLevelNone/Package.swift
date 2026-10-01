@@ -19,19 +19,19 @@ let package = Package(
         ),
         // Parent Benchmarks
         .package(name: "Benchmarks", path: "../"),
-        .package(url: "https://github.com/ordo-one/package-benchmark.git", from: "1.29.6"),
+        .package(url: "https://github.com/ordo-one/benchmark.git", from: "1.29.6"),
     ],
     targets: [
         .executableTarget(
             name: "MaxLogLevelNone",
             dependencies: [
                 .product(name: "BenchmarksFactory", package: "Benchmarks"),
-                .product(name: "Benchmark", package: "package-benchmark"),
+                .product(name: "Benchmark", package: "benchmark"),
                 .product(name: "Logging", package: "swift-log"),
             ],
             path: "Benchmarks/MaxLogLevelNoneBenchmarks",
             plugins: [
-                .plugin(name: "BenchmarkPlugin", package: "package-benchmark")
+                .plugin(name: "BenchmarkPlugin", package: "benchmark")
             ]
         )
     ]
