@@ -61,7 +61,7 @@ package final class Lock {
     #elseif os(FreeBSD) || os(OpenBSD)
     fileprivate let mutex: UnsafeMutablePointer<pthread_mutex_t?> =
         UnsafeMutablePointer.allocate(capacity: 1)
-    #elseif (compiler(<6.1) && !os(WASI)) || (compiler(>=6.1) && _runtime(_multithreaded))
+    #elseif _runtime(_multithreaded)
     fileprivate let mutex: UnsafeMutablePointer<pthread_mutex_t> =
         UnsafeMutablePointer.allocate(capacity: 1)
     #endif
@@ -70,7 +70,7 @@ package final class Lock {
     package init() {
         #if os(Windows)
         InitializeSRWLock(self.mutex)
-        #elseif (compiler(<6.1) && !os(WASI)) || (compiler(>=6.1) && _runtime(_multithreaded))
+        #elseif _runtime(_multithreaded)
         #if os(FreeBSD) || os(OpenBSD)
         var attr = pthread_mutexattr_t(bitPattern: 0)
         #else
@@ -100,7 +100,7 @@ package final class Lock {
     deinit {
         #if os(Windows)
         mutex.deallocate()
-        #elseif (compiler(<6.1) && !os(WASI)) || (compiler(>=6.1) && _runtime(_multithreaded))
+        #elseif _runtime(_multithreaded)
         let err = pthread_mutex_destroy(self.mutex)
         precondition(err == 0, "\(#function) failed in pthread_mutex with error \(err)")
         mutex.deallocate()
@@ -114,7 +114,7 @@ package final class Lock {
     package func lock() {
         #if os(Windows)
         AcquireSRWLockExclusive(self.mutex)
-        #elseif (compiler(<6.1) && !os(WASI)) || (compiler(>=6.1) && _runtime(_multithreaded))
+        #elseif _runtime(_multithreaded)
         let err = pthread_mutex_lock(self.mutex)
         precondition(err == 0, "\(#function) failed in pthread_mutex with error \(err)")
         #endif
@@ -127,7 +127,7 @@ package final class Lock {
     package func unlock() {
         #if os(Windows)
         ReleaseSRWLockExclusive(self.mutex)
-        #elseif (compiler(<6.1) && !os(WASI)) || (compiler(>=6.1) && _runtime(_multithreaded))
+        #elseif _runtime(_multithreaded)
         let err = pthread_mutex_unlock(self.mutex)
         precondition(err == 0, "\(#function) failed in pthread_mutex with error \(err)")
         #endif
@@ -199,7 +199,7 @@ internal final class ReadWriteLock: @unchecked Sendable {
     init() {
         #if os(Windows)
         InitializeSRWLock(self.rwlock)
-        #elseif (compiler(<6.1) && !os(WASI)) || (compiler(>=6.1) && _runtime(_multithreaded))
+        #elseif _runtime(_multithreaded)
         let err = pthread_rwlock_init(self.rwlock, nil)
         precondition(err == 0, "\(#function) failed in pthread_rwlock with error \(err)")
         #endif
@@ -208,7 +208,7 @@ internal final class ReadWriteLock: @unchecked Sendable {
     deinit {
         #if os(Windows)
         self.rwlock.deallocate()
-        #elseif (compiler(<6.1) && !os(WASI)) || (compiler(>=6.1) && _runtime(_multithreaded))
+        #elseif _runtime(_multithreaded)
         let err = pthread_rwlock_destroy(self.rwlock)
         precondition(err == 0, "\(#function) failed in pthread_rwlock with error \(err)")
         self.rwlock.deallocate()
@@ -223,7 +223,7 @@ internal final class ReadWriteLock: @unchecked Sendable {
         #if os(Windows)
         AcquireSRWLockShared(self.rwlock)
         self.shared = true
-        #elseif (compiler(<6.1) && !os(WASI)) || (compiler(>=6.1) && _runtime(_multithreaded))
+        #elseif _runtime(_multithreaded)
         let err = pthread_rwlock_rdlock(self.rwlock)
         precondition(err == 0, "\(#function) failed in pthread_rwlock with error \(err)")
         #endif
@@ -237,7 +237,7 @@ internal final class ReadWriteLock: @unchecked Sendable {
         #if os(Windows)
         AcquireSRWLockExclusive(self.rwlock)
         self.shared = false
-        #elseif (compiler(<6.1) && !os(WASI)) || (compiler(>=6.1) && _runtime(_multithreaded))
+        #elseif _runtime(_multithreaded)
         let err = pthread_rwlock_wrlock(self.rwlock)
         precondition(err == 0, "\(#function) failed in pthread_rwlock with error \(err)")
         #endif
@@ -255,7 +255,7 @@ internal final class ReadWriteLock: @unchecked Sendable {
         } else {
             ReleaseSRWLockExclusive(self.rwlock)
         }
-        #elseif (compiler(<6.1) && !os(WASI)) || (compiler(>=6.1) && _runtime(_multithreaded))
+        #elseif _runtime(_multithreaded)
         let err = pthread_rwlock_unlock(self.rwlock)
         precondition(err == 0, "\(#function) failed in pthread_rwlock with error \(err)")
         #endif

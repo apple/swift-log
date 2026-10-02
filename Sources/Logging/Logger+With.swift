@@ -93,7 +93,6 @@ public func withLogger<Result, Failure: Error>(
 ///   - operation: The async closure to run with `logger` bound. Receives `logger` as a
 ///     parameter so the body does not need to re-read ``Logger/current``.
 /// - Returns: The value returned by `operation`.
-#if compiler(>=6.2)
 @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
 @inlinable
 public nonisolated(nonsending) func withLogger<Result, Failure: Error>(
@@ -108,23 +107,6 @@ public nonisolated(nonsending) func withLogger<Result, Failure: Error>(
         throw error as! Failure
     }
 }
-#else
-@available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
-@inlinable
-public func withLogger<Result, Failure: Error>(
-    _ logger: Logger,
-    isolation: isolated (any Actor)? = #isolation,
-    _ operation: (Logger) async throws(Failure) -> Result,
-) async throws(Failure) -> Result {
-    do {
-        return try await Logger.withTaskLocalLogger(logger, isolation: isolation) {
-            try await operation(logger)
-        }
-    } catch {
-        throw error as! Failure
-    }
-}
-#endif
 
 /// Runs `operation` with a copy of ``Logger/current`` that has `metadata` **layered on
 /// top of** the inherited base metadata. Keys present in `metadata` override existing
@@ -195,7 +177,6 @@ public func withLogger<Result, Failure: Error>(
 ///   - operation: The async closure to run with the merged logger bound. Receives the
 ///     merged logger as a parameter.
 /// - Returns: The value returned by `operation`.
-#if compiler(>=6.2)
 @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
 @inlinable
 public nonisolated(nonsending) func withLogger<Result, Failure: Error>(
@@ -214,27 +195,6 @@ public nonisolated(nonsending) func withLogger<Result, Failure: Error>(
         throw error as! Failure
     }
 }
-#else
-@available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
-@inlinable
-public func withLogger<Result, Failure: Error>(
-    mergingMetadata metadata: @autoclosure () -> Logger.Metadata,
-    isolation: isolated (any Actor)? = #isolation,
-    _ operation: (Logger) async throws(Failure) -> Result,
-) async throws(Failure) -> Result {
-    var logger = Logger.current
-    for (key, value) in metadata() {
-        logger[metadataKey: key] = value
-    }
-    do {
-        return try await Logger.withTaskLocalLogger(logger, isolation: isolation) {
-            try await operation(logger)
-        }
-    } catch {
-        throw error as! Failure
-    }
-}
-#endif
 
 /// Runs `operation` with a copy of ``Logger/current`` whose aspects are **replaced** by
 /// the provided arguments. `nil` parameters leave the corresponding aspect unchanged.
@@ -337,7 +297,6 @@ public func withLogger<Result, Failure: Error>(
 ///   - operation: The async closure to run with the modified logger bound. Receives the
 ///     modified logger as a parameter.
 /// - Returns: The value returned by `operation`.
-#if compiler(>=6.2)
 @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
 @inlinable
 public nonisolated(nonsending) func withLogger<Result, Failure: Error>(
@@ -364,32 +323,3 @@ public nonisolated(nonsending) func withLogger<Result, Failure: Error>(
         throw error as! Failure
     }
 }
-#else
-@available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
-@inlinable
-public func withLogger<Result, Failure: Error>(
-    logLevel: Logger.Level? = nil,
-    handler: (any LogHandler)? = nil,
-    metadata: @autoclosure () -> Logger.Metadata? = nil,
-    isolation: isolated (any Actor)? = #isolation,
-    _ operation: (Logger) async throws(Failure) -> Result
-) async throws(Failure) -> Result {
-    var logger = Logger.current
-    if let logLevel {
-        logger.logLevel = logLevel
-    }
-    if let handler {
-        logger.handler = handler
-    }
-    if let metadata = metadata() {
-        logger.handler.metadata = metadata
-    }
-    do {
-        return try await Logger.withTaskLocalLogger(logger, isolation: isolation) {
-            try await operation(logger)
-        }
-    } catch {
-        throw error as! Failure
-    }
-}
-#endif

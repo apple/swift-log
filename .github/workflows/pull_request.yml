@@ -97,7 +97,7 @@ jobs:
     name: Check CMake Lists
     uses: apple/swift-nio/.github/workflows/cmake_tests.yml@main
     with:
-      image: "swift:6.1-jammy"
+      image: "swift:6.2-jammy"
       update_cmake_lists_config: >-
         {
           "targets": [
