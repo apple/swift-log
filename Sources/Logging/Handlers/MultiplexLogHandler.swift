@@ -147,6 +147,16 @@ public struct MultiplexLogHandler: LogHandler {
     /// - parameters:
     ///    - event: The log event containing the level, message, metadata, and source location.
     public func log(event: LogEvent) {
+        var event = event
+        if let provider = self._metadataProvider {
+            var metadata = provider.get()
+            if let explicit = event.metadata {
+                metadata.merge(explicit, uniquingKeysWith: { _, explicit in explicit })
+            }
+            if !metadata.isEmpty {
+                event.metadata = metadata
+            }
+        }
         for handler in self.handlers where handler.logLevel <= event.level {
             handler.log(event: event)
         }
