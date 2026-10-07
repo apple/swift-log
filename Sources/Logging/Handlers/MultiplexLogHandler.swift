@@ -144,6 +144,10 @@ public struct MultiplexLogHandler: LogHandler {
 
     /// Log a message using the log level and source that you provide.
     ///
+    /// Metadata from this handler's metadata provider overrides metadata from
+    /// the underlying handlers and their providers. Explicit metadata in the
+    /// log event takes precedence over this handler's provider.
+    ///
     /// - parameters:
     ///    - event: The log event containing the level, message, metadata, and source location.
     public func log(event: LogEvent) {
