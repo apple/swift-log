@@ -242,11 +242,11 @@ public func withLogger<Result, Failure: Error>(
     _ operation: (Logger) throws(Failure) -> Result
 ) throws(Failure) -> Result {
     var logger = Logger.current
-    if let logLevel {
-        logger.logLevel = logLevel
-    }
     if let handler {
         logger.handler = handler
+    }
+    if let logLevel {
+        logger.logLevel = logLevel
     }
     if let metadata = metadata() {
         logger.handler.metadata = metadata
@@ -306,11 +306,11 @@ public nonisolated(nonsending) func withLogger<Result, Failure: Error>(
     _ operation: nonisolated(nonsending) (Logger) async throws(Failure) -> Result
 ) async throws(Failure) -> Result {
     var logger = Logger.current
-    if let logLevel {
-        logger.logLevel = logLevel
-    }
     if let handler {
         logger.handler = handler
+    }
+    if let logLevel {
+        logger.logLevel = logLevel
     }
     if let metadata = metadata() {
         logger.handler.metadata = metadata
