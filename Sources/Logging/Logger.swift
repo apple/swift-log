@@ -66,6 +66,13 @@ public struct Logger {
             }
             self._storage.handler = newValue
         }
+        // Yield the stored handler, so a metadata write does not copy the handler's metadata.
+        _modify {
+            if !isKnownUniquelyReferenced(&self._storage) {
+                self._storage = self._storage.copy()
+            }
+            yield &self._storage.handler
+        }
     }
 
     /// The metadata provider this logger was created with.
