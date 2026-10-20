@@ -57,14 +57,8 @@ public struct Logger {
     /// This computed property provides access to the `LogHandler`.
     @inlinable
     public var handler: any LogHandler {
-        get {
-            self._storage.handler
-        }
-        set {
-            if !isKnownUniquelyReferenced(&self._storage) {
-                self._storage = self._storage.copy()
-            }
-            self._storage.handler = newValue
+        _read {
+            yield self._storage.handler
         }
         // Yield the stored handler, so a metadata write does not copy the handler's metadata.
         _modify {
