@@ -190,6 +190,10 @@ public struct MultiplexLogHandler: LogHandler {
     }
 
     /// Get or set the entire metadata storage as a dictionary.
+    ///
+    /// When reading, the handlers are merged in the order they were passed in during initialization:
+    /// the first handler's values take priority over the later handlers' values on key conflicts,
+    /// matching the behavior of ``subscript(metadataKey:)`` and the documented priority semantics.
     public var metadata: Logger.Metadata {
         get {
             var effective: Logger.Metadata = [:]
@@ -199,14 +203,17 @@ public struct MultiplexLogHandler: LogHandler {
             // !-safe, we always have at least one handler
             effective.reserveCapacity(self.handlers.first!.metadata.count)
 
+            // Merge handlers in their initialization order, keeping the value
+            // that is already in the dictionary on conflicts — so the FIRST
+            // handler wins, matching the metadataKey subscript and docs.
             for handler in self.handlers {
-                effective.merge(handler.metadata, uniquingKeysWith: { _, handlerMetadata in handlerMetadata })
+                effective.merge(handler.metadata, uniquingKeysWith: { current, _ in current })
                 if let provider = handler.metadataProvider {
-                    effective.merge(provider.get(), uniquingKeysWith: { _, provided in provided })
+                    effective.merge(provider.get(), uniquingKeysWith: { current, _ in current })
                 }
             }
             if let provider = self._metadataProvider {
-                effective.merge(provider.get(), uniquingKeysWith: { _, provided in provided })
+                effective.merge(provider.get(), uniquingKeysWith: { provided, _ in provided })
             }
 
             return effective
