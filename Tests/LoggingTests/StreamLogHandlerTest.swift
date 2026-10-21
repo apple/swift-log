@@ -73,7 +73,7 @@ struct StreamLogHandlerTest {
         log.critical("\(testString)", source: source)
 
         let pattern =
-            "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\+|-)\\d{4}\\s\(Logger.Level.critical)\\s\(label):\\s\\[\(source)\\]\\s\(testString)$"
+            "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d{3})?(\\+|-)\\d{4}\\s\(Logger.Level.critical)\\s\(label):\\s\\[\(source)\\]\\s\(testString)$"
 
         let messageSucceeded =
             interceptStream.interceptedText?.trimmingCharacters(in: .whitespacesAndNewlines).range(
@@ -99,7 +99,7 @@ struct StreamLogHandlerTest {
         log.critical("\(testString)", source: source)
 
         let pattern =
-            "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\+|-)\\d{4}\\s\(Logger.Level.critical):\\s\\[\(source)\\]\\s\(testString)$"
+            "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d{3})?(\\+|-)\\d{4}\\s\(Logger.Level.critical):\\s\\[\(source)\\]\\s\(testString)$"
 
         let messageSucceeded =
             interceptStream.interceptedText?.trimmingCharacters(in: .whitespacesAndNewlines).range(
@@ -126,7 +126,7 @@ struct StreamLogHandlerTest {
         log.critical("\(testString)", metadata: ["test": "test"], source: source)
 
         let pattern =
-            "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\+|-)\\d{4}\\s\(Logger.Level.critical)\\s\(label):\\stest=test\\s\\[\(source)\\]\\s\(testString)$"
+            "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d{3})?(\\+|-)\\d{4}\\s\(Logger.Level.critical)\\s\(label):\\stest=test\\s\\[\(source)\\]\\s\(testString)$"
 
         let messageSucceeded =
             interceptStream.interceptedText?.trimmingCharacters(in: .whitespacesAndNewlines).range(
@@ -295,9 +295,6 @@ struct StreamLogHandlerTest {
         var err = setvbuf(writeFD, writeBuffer, _IOFBF, 256)
         #expect(err == 0, "setvbuf failed \(err)")
 
-        // Create the stream here while writeFD's concrete type is in scope.
-        // Type inference in the generic StdioOutputStream init picks the right
-        // C functions for whatever FILE representation this platform/API level uses.
         #if os(Windows)
         let stream = StdioOutputStream(
             file: writeFD,
