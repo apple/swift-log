@@ -86,4 +86,21 @@ public let benchmarks: @Sendable () -> Void = {
             ]
         )
     }
+
+    // MARK: - metadata serialization performance
+
+    func nestedArrayMetadataValue(depth: Int) -> Logger.MetadataValue {
+        var value: Logger.MetadataValue = .string("leaf")
+        for _ in 0..<depth {
+            value = .array([value])
+        }
+        return value
+    }
+
+    for depth in [1, 5, 20, 1_000] {
+        let nested = nestedArrayMetadataValue(depth: depth)
+        makeBenchmark(loggerLevel: .info, logLevel: .debug, "_metadata_nesting_depth_\(depth)") { _ in
+            blackHole(nested.description)
+        }
+    }
 }

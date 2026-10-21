@@ -22,7 +22,7 @@ choose from the many
 The following snippet shows how to add SwiftLog to your Swift Package:
 
 ```swift
-// swift-tools-version: 6.1
+// swift-tools-version: 6.2
 import PackageDescription
 
 let package = Package(
@@ -67,3 +67,8 @@ The community has built numerous specialized logging backends.
 A great way to discover available log backend implementations is searching the
 [Swift Package Index](https://swiftpackageindex.com/search?query=swift-log)
 for the `swift-log` keyword.
+
+## Building with CMake
+
+While Swift Package Manager (SPM) is the primary build system for development and testing, CMake build support is also available for integrated or mixed build environments if needed. Note that tests are not included in the CMake build, they are managed through Swift Package Manager with `swift test`.
+

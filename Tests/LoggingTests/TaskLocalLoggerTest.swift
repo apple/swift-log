@@ -191,6 +191,59 @@ struct TaskLocalLoggerTest {
         outer.history.assertNotExist(level: .info, message: "emitted under inner handler")
     }
 
+    @Test(arguments: [Logger.Level.debug, .warning])
+    func handlerSwapRespectsExplicitLogLevel(level: Logger.Level) {
+        let outer = TestLogging()
+        let inner = TestLogging()
+        var appLogger = Logger(label: "app", factory: { outer.make(label: $0) })
+        appLogger.logLevel = .critical
+        var replacement = inner.make(label: "captured")
+        replacement.logLevel = .info
+        let suppressedLevel: Logger.Level = level == .debug ? .trace : .info
+
+        withLogger(appLogger) { _ in
+            withLogger(logLevel: level, handler: replacement) { scoped in
+                #expect(scoped.logLevel == level)
+                #expect(Logger.current.logLevel == level)
+                scoped.log(level: level, "emitted")
+                Logger.current.log(level: suppressedLevel, "suppressed")
+            }
+            #expect(Logger.current.logLevel == .critical)
+        }
+
+        #expect(replacement.logLevel == .info)
+        inner.history.assertExist(level: level, message: "emitted")
+        inner.history.assertNotExist(level: suppressedLevel, message: "suppressed")
+        outer.history.assertNotExist(level: level, message: "emitted")
+    }
+
+    @Test(arguments: [Logger.Level.debug, .warning])
+    func asyncHandlerSwapRespectsExplicitLogLevel(level: Logger.Level) async {
+        let outer = TestLogging()
+        let inner = TestLogging()
+        var appLogger = Logger(label: "app", factory: { outer.make(label: $0) })
+        appLogger.logLevel = .critical
+        var replacement = inner.make(label: "captured")
+        replacement.logLevel = .info
+        let suppressedLevel: Logger.Level = level == .debug ? .trace : .info
+
+        await withLogger(appLogger) { _ in
+            await withLogger(logLevel: level, handler: replacement) { scoped in
+                await Task.yield()
+                #expect(scoped.logLevel == level)
+                #expect(Logger.current.logLevel == level)
+                scoped.log(level: level, "emitted")
+                Logger.current.log(level: suppressedLevel, "suppressed")
+            }
+            #expect(Logger.current.logLevel == .critical)
+        }
+
+        #expect(replacement.logLevel == .info)
+        inner.history.assertExist(level: level, message: "emitted")
+        inner.history.assertNotExist(level: suppressedLevel, message: "suppressed")
+        outer.history.assertNotExist(level: level, message: "emitted")
+    }
+
     @Test func siblingScopesAreIsolated() {
         let logging = TestLogging()
         let logger = Logger(label: "test", factory: { logging.make(label: $0) })

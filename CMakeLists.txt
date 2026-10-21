@@ -33,8 +33,8 @@ option(BUILD_SHARED_LIBS "Build shared libraries by default" YES)
 
 set(CMAKE_Swift_LANGUAGE_VERSION 6)
 
-if(CMAKE_Swift_COMPILER_VERSION VERSION_LESS "6.1")
-  message(FATAL_ERROR "swift-log requires Swift compiler version 6.1 or newer. Detected version: ${CMAKE_Swift_COMPILER_VERSION}")
+if(CMAKE_Swift_COMPILER_VERSION VERSION_LESS "6.2")
+  message(FATAL_ERROR "swift-log requires Swift compiler version 6.2 or newer. Detected version: ${CMAKE_Swift_COMPILER_VERSION}")
 endif()
 
 set(SWIFT_LOG_COMMON_COMPILE_OPTIONS

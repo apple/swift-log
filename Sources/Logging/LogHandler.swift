@@ -280,6 +280,10 @@ extension LogHandler {
     }
 
     /// A default implementation for the SwiftLog 1.0 log message handler.
+    ///
+    /// Forwards to ``log(event:)`` directly. Forwarding to the source-carrying deprecated
+    /// method closed a cycle with its own default, so a handler implementing only
+    /// ``log(event:)`` overflowed the stack when called through this entry point.
     @available(*, deprecated, renamed: "log(event:)")
     public func log(
         level: Logging.Logger.Level,
@@ -290,13 +294,15 @@ extension LogHandler {
         line: UInt
     ) {
         self.log(
-            level: level,
-            message: message,
-            metadata: metadata,
-            source: Logger.currentModule(filePath: file),
-            file: file,
-            function: function,
-            line: line
+            event: LogEvent(
+                level: level,
+                message: message,
+                metadata: metadata,
+                source: Logger.currentModule(filePath: file),
+                file: file,
+                function: function,
+                line: line
+            )
         )
     }
 }
