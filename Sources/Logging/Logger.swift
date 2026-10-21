@@ -60,6 +60,13 @@ public struct Logger {
         _read {
             yield self._storage.handler
         }
+        // Keep a setter for plain assignments, which is cheaper than going through `_modify`.
+        set {
+            if !isKnownUniquelyReferenced(&self._storage) {
+                self._storage = self._storage.copy()
+            }
+            self._storage.handler = newValue
+        }
         // Yield the stored handler, so a metadata write does not copy the handler's metadata.
         _modify {
             if !isKnownUniquelyReferenced(&self._storage) {
