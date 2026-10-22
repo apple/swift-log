@@ -194,6 +194,12 @@ public struct MultiplexLogHandler: LogHandler {
     /// When reading, the handlers are merged in the order they were passed in during initialization:
     /// the first handler's values take priority over the later handlers' values on key conflicts,
     /// matching the behavior of ``subscript(metadataKey:)`` and the documented priority semantics.
+    ///
+    /// Metadata providers are NOT merged into this dictionary: metadata providers take priority
+    /// over stored metadata when values are resolved (see ``Logger/metadataProvider`` and
+    /// https://github.com/apple/swift-log/issues/498), so materializing them here would change
+    /// that priority. To obtain the fully resolved metadata for a logger, use its
+    /// ``Logger/metadataProvider`` alongside the handler metadata as appropriate.
     public var metadata: Logger.Metadata {
         get {
             var effective: Logger.Metadata = [:]
@@ -206,14 +212,13 @@ public struct MultiplexLogHandler: LogHandler {
             // Merge handlers in their initialization order, keeping the value
             // that is already in the dictionary on conflicts — so the FIRST
             // handler wins, matching the metadataKey subscript and docs.
+            //
+            // NOTE: We deliberately do NOT merge `handler.metadataProvider` (or the
+            // multiplex handler's own provider) here. Providers take priority over
+            // stored metadata during resolution, and eagerly materializing them
+            // into the merged dictionary would invert that priority (see issue #498).
             for handler in self.handlers {
                 effective.merge(handler.metadata, uniquingKeysWith: { current, _ in current })
-                if let provider = handler.metadataProvider {
-                    effective.merge(provider.get(), uniquingKeysWith: { current, _ in current })
-                }
-            }
-            if let provider = self._metadataProvider {
-                effective.merge(provider.get(), uniquingKeysWith: { provided, _ in provided })
             }
 
             return effective

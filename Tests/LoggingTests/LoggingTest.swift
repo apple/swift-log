@@ -323,14 +323,15 @@ struct LoggingTest {
 
         // Reading the full `metadata` dictionary must follow the same priority:
         // the first handler's values win over later handlers on key conflicts.
+        //
+        // NOTE: metadata providers are intentionally NOT merged into `metadata`
+        // (see issue #498) — providers take priority over stored metadata during
+        // resolution, and must be accessed via `logger.metadataProvider` instead.
         #expect(
             multiplexLogger.handler.metadata == [
                 "one": "111",
                 "two": "222",
                 "in": "in-1",
-                "provider-1": "provided-111",
-                "provider-2": "provided-222",
-                "provider-overlap": "provided-111",
             ]
         )
     }
