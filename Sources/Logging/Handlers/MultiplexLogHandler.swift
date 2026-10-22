@@ -191,15 +191,9 @@ public struct MultiplexLogHandler: LogHandler {
 
     /// Get or set the entire metadata storage as a dictionary.
     ///
-    /// When reading, the handlers are merged in the order they were passed in during initialization:
-    /// the first handler's values take priority over the later handlers' values on key conflicts,
-    /// matching the behavior of ``subscript(metadataKey:)`` and the documented priority semantics.
-    ///
-    /// Metadata providers are NOT merged into this dictionary: metadata providers take priority
-    /// over stored metadata when values are resolved (see ``Logger/metadataProvider`` and
-    /// https://github.com/apple/swift-log/issues/498), so materializing them here would change
-    /// that priority. To obtain the fully resolved metadata for a logger, use its
-    /// ``Logger/metadataProvider`` alongside the handler metadata as appropriate.
+    /// The getter merges the metadata of the underlying handlers in initialization order.
+    /// On a key conflict, the first handler's value wins, as in ``subscript(metadataKey:)``.
+    /// The dictionary does not contain values from metadata providers.
     public var metadata: Logger.Metadata {
         get {
             var effective: Logger.Metadata = [:]
@@ -209,14 +203,7 @@ public struct MultiplexLogHandler: LogHandler {
             // !-safe, we always have at least one handler
             effective.reserveCapacity(self.handlers.first!.metadata.count)
 
-            // Merge handlers in their initialization order, keeping the value
-            // that is already in the dictionary on conflicts — so the FIRST
-            // handler wins, matching the metadataKey subscript and docs.
-            //
-            // NOTE: We deliberately do NOT merge `handler.metadataProvider` (or the
-            // multiplex handler's own provider) here. Providers take priority over
-            // stored metadata during resolution, and eagerly materializing them
-            // into the merged dictionary would invert that priority (see issue #498).
+            // Keep the existing value on a conflict, so the first handler wins.
             for handler in self.handlers {
                 effective.merge(handler.metadata, uniquingKeysWith: { current, _ in current })
             }

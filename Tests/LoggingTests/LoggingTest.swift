@@ -316,17 +316,12 @@ struct LoggingTest {
             }
         )
 
-        // Reading metadata via subscript: the FIRST handler wins (documented).
+        // The subscript and `metadata` agree on conflicting keys.
         #expect(multiplexLogger[metadataKey: "one"] == "111")
         #expect(multiplexLogger[metadataKey: "two"] == "222")
         #expect(multiplexLogger[metadataKey: "in"] == "in-1")
 
-        // Reading the full `metadata` dictionary must follow the same priority:
-        // the first handler's values win over later handlers on key conflicts.
-        //
-        // NOTE: metadata providers are intentionally NOT merged into `metadata`
-        // (see issue #498) — providers take priority over stored metadata during
-        // resolution, and must be accessed via `logger.metadataProvider` instead.
+        // Provider values are not part of `metadata`.
         #expect(
             multiplexLogger.handler.metadata == [
                 "one": "111",
