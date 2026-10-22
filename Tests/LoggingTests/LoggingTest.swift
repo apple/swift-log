@@ -1145,6 +1145,23 @@ struct LoggingTest {
         #expect(.error == logger1.logLevel)
         #expect(.trace == logger2.logLevel)
     }
+
+    @Test func loggerMetadataWriteMutatesHandlerInPlace() {
+        var logger1 = Logger(label: "foo", factory: { _ in CopyCountingLogHandler() })
+        for i in 0..<10 {
+            logger1[metadataKey: "key\(i)"] = "\(i)"
+        }
+        #expect(logger1.handlerCopies == 0)
+
+        // The first write to a copy copies the handler once, later writes reuse that copy.
+        var logger2 = logger1
+        for i in 0..<10 {
+            logger2[metadataKey: "key\(i)"] = "changed"
+        }
+        #expect(logger2.handlerCopies == 1)
+        #expect(logger1.handlerCopies == 0)
+        #expect(logger1[metadataKey: "key0"] == "0")
+    }
 }
 
 extension Logger {

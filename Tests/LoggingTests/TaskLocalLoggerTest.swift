@@ -79,6 +79,20 @@ struct TaskLocalLoggerTest {
         logging.history.assertExist(level: .info, message: "merged", metadata: ["key": "value"])
     }
 
+    @Test func mergeMetadataCopiesHandlerOnce() {
+        let logger = Logger(label: "test", factory: { _ in CopyCountingLogHandler() })
+        let metadata: Logger.Metadata = ["a": "1", "b": "2", "c": "3", "d": "4", "e": "5"]
+
+        withLogger(logger) { _ in
+            withLogger(mergingMetadata: metadata) { inner in
+                #expect(inner.handler.metadata == metadata)
+                #expect(inner.handlerCopies == 1)
+            }
+            #expect(Logger.current.handler.metadata.isEmpty)
+            #expect(Logger.current.handlerCopies == 0)
+        }
+    }
+
     @Test func overrideLogLevel() {
         let logging = TestLogging()
         let logger = Logger(label: "test", factory: { logging.make(label: $0) })
