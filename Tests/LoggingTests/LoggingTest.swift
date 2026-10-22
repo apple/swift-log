@@ -278,7 +278,8 @@ struct LoggingTest {
             multiplexLogger.handler.metadata == [
                 "one": "111",
                 "two": "222",
-                "in": "in-2",
+                // First handler wins on conflicting keys (see issue #498):
+                "in": "in-1",
             ]
         )
     }
@@ -315,21 +316,17 @@ struct LoggingTest {
             }
         )
 
+        // The subscript and `metadata` agree on conflicting keys.
+        #expect(multiplexLogger[metadataKey: "one"] == "111")
+        #expect(multiplexLogger[metadataKey: "two"] == "222")
+        #expect(multiplexLogger[metadataKey: "in"] == "in-1")
+
+        // Provider values are not part of `metadata`.
         #expect(
             multiplexLogger.handler.metadata == [
                 "one": "111",
                 "two": "222",
-                "in": "in-2",
-                "provider-1": "provided-111",
-                "provider-2": "provided-222",
-                "provider-overlap": "provided-222",
-            ]
-        )
-        #expect(
-            multiplexLogger.handler.metadataProvider?.get() == [
-                "provider-1": "provided-111",
-                "provider-2": "provided-222",
-                "provider-overlap": "provided-222",
+                "in": "in-1",
             ]
         )
     }
