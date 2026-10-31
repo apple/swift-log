@@ -80,6 +80,19 @@ public struct StreamLogHandler: LogHandler {
     /// The metadata provider.
     public var metadataProvider: Logger.MetadataProvider?
 
+    /// The precision of the timestamp written at the start of each log line.
+    ///
+    /// Defaults to ``TimestampPrecision/seconds``, which keeps the output format
+    /// that `StreamLogHandler` has always used, for example `2025-06-01T14:03:07+0000`.
+    /// Some tools parse this output, so the extra precision is opt-in rather than the default.
+    ///
+    /// Set it to ``TimestampPrecision/milliseconds`` to include milliseconds,
+    /// for example `2025-06-01T14:03:07.042+0000`.
+    ///
+    /// > Note: On WASI the wall clock is only read with second precision, so
+    /// > ``TimestampPrecision/milliseconds`` always prints `.000` there.
+    public var timestampPrecision: TimestampPrecision = .seconds
+
     private var prettyMetadata: String?
     /// Get or set the entire metadata storage as a dictionary.
     public var metadata = Logger.Metadata() {
@@ -144,7 +157,7 @@ public struct StreamLogHandler: LogHandler {
 
         var stream = self.stream
         stream.write(
-            "\(self.timestamp()) \(event.level)\(self.label.isEmpty ? "" : " ")\(self.label):\(prettyMetadata.map { " \($0)" } ?? "") [\(event.source)] \(event.message)\n"
+            "\(self.timestamp(precision: self.timestampPrecision)) \(event.level)\(self.label.isEmpty ? "" : " ")\(self.label):\(prettyMetadata.map { " \($0)" } ?? "") [\(event.source)] \(event.message)\n"
         )
     }
 
@@ -210,28 +223,83 @@ public struct StreamLogHandler: LogHandler {
         }
     }
 
-    private func timestamp() -> String {
+    private func timestamp(precision: TimestampPrecision) -> String {
         var buffer = [Int8](repeating: 0, count: 255)
+        var tzBuffer = [Int8](repeating: 0, count: 16)
+        let milliseconds: Int
         #if os(Windows)
-        var timestamp = __time64_t()
-        _ = _time64(&timestamp)
-
+        // _ftime64_s gives wall-clock time with millisecond resolution.
+        var timeBuffer = __timeb64()
+        _ = _ftime64_s(&timeBuffer)
         var localTime = tm()
-        _ = _localtime64_s(&localTime, &timestamp)
-
-        _ = strftime(&buffer, buffer.count, "%Y-%m-%dT%H:%M:%S%z", &localTime)
-        #else
+        _ = _localtime64_s(&localTime, &timeBuffer.time)
+        _ = strftime(&buffer, buffer.count, "%Y-%m-%dT%H:%M:%S", &localTime)
+        _ = strftime(&tzBuffer, tzBuffer.count, "%z", &localTime)
+        milliseconds = Int(timeBuffer.millitm)
+        #elseif canImport(WASILibc)
+        // CLOCK_REALTIME isn't importable on WASI (it's a pointer-to-struct macro),
+        // so fall back to time(nil), which only has second resolution.
         var timestamp = time(nil)
         guard let localTime = localtime(&timestamp) else {
             return "<unknown>"
         }
-        strftime(&buffer, buffer.count, "%Y-%m-%dT%H:%M:%S%z", localTime)
+        strftime(&buffer, buffer.count, "%Y-%m-%dT%H:%M:%S", localTime)
+        strftime(&tzBuffer, tzBuffer.count, "%z", localTime)
+        milliseconds = 0
+        #else
+        var timeSpec = timespec()
+        clock_gettime(CLOCK_REALTIME, &timeSpec)
+        guard let localTime = localtime(&timeSpec.tv_sec) else {
+            return "<unknown>"
+        }
+        strftime(&buffer, buffer.count, "%Y-%m-%dT%H:%M:%S", localTime)
+        strftime(&tzBuffer, tzBuffer.count, "%z", localTime)
+        milliseconds = Int(timeSpec.tv_nsec) / 1_000_000
         #endif
-        return buffer.withUnsafeBufferPointer {
+        let dateTime = buffer.withUnsafeBufferPointer {
             $0.withMemoryRebound(to: CChar.self) {
                 String(cString: $0.baseAddress!)
             }
         }
+        let timeZone = tzBuffer.withUnsafeBufferPointer {
+            $0.withMemoryRebound(to: CChar.self) {
+                String(cString: $0.baseAddress!)
+            }
+        }
+        switch precision {
+        case .seconds:
+            return "\(dateTime)\(timeZone)"
+        case .milliseconds:
+            return "\(dateTime).\(Self.zeroPadded(milliseconds))\(timeZone)"
+        }
+    }
+
+    /// Pads a millisecond value to three digits without pulling in Foundation.
+    internal static func zeroPadded(_ milliseconds: Int) -> String {
+        if milliseconds < 10 {
+            return "00\(milliseconds)"
+        } else if milliseconds < 100 {
+            return "0\(milliseconds)"
+        } else {
+            return "\(milliseconds)"
+        }
+    }
+}
+
+extension StreamLogHandler {
+    /// The precision of the timestamp that a ``StreamLogHandler`` writes at the start of each log line.
+    @nonexhaustive
+    public enum TimestampPrecision: Sendable, Hashable {
+        /// Whole seconds, for example `2025-06-01T14:03:07+0000`.
+        ///
+        /// This is the default, and matches the format `StreamLogHandler` has always produced.
+        case seconds
+
+        /// Milliseconds, for example `2025-06-01T14:03:07.042+0000`.
+        ///
+        /// > Note: On WASI the wall clock only has second resolution, so the
+        /// > millisecond field is always `.000`.
+        case milliseconds
     }
 }
 

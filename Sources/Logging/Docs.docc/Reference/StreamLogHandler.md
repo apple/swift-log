@@ -25,3 +25,8 @@
 - ``logLevel``
 - ``metadata``
 - ``metadataProvider``
+
+### Configuring the timestamp
+
+- ``timestampPrecision``
+- ``TimestampPrecision``
