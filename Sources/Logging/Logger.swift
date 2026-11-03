@@ -57,14 +57,22 @@ public struct Logger {
     /// This computed property provides access to the `LogHandler`.
     @inlinable
     public var handler: any LogHandler {
-        get {
-            self._storage.handler
+        _read {
+            yield self._storage.handler
         }
+        // Keep a setter for plain assignments, which is cheaper than going through `_modify`.
         set {
             if !isKnownUniquelyReferenced(&self._storage) {
                 self._storage = self._storage.copy()
             }
             self._storage.handler = newValue
+        }
+        // Yield the stored handler, so a metadata write does not copy the handler's metadata.
+        _modify {
+            if !isKnownUniquelyReferenced(&self._storage) {
+                self._storage = self._storage.copy()
+            }
+            yield &self._storage.handler
         }
     }
 
@@ -1414,14 +1422,29 @@ extension Logger.MetadataValue: CustomStringConvertible {
     /// A string representation of the metadata value.
     public var description: String {
         switch self {
-        case .dictionary(let dict):
-            return dict.mapValues { $0.description }.description
-        case .array(let list):
-            return list.map { $0.description }.description
         case .string(let str):
             return str
         case .stringConvertible(let repr):
             return repr.description
+        case .array(let list):
+            let items = list.map { $0.quotedAsCollectionElement }
+            return "[\(items.joined(separator: ", "))]"
+        case .dictionary(let dict):
+            guard !dict.isEmpty else { return "[:]" }
+            let entries = dict.map { key, value in "\(key.debugDescription): \(value.quotedAsCollectionElement)" }
+            return "[\(entries.joined(separator: ", "))]"
+        }
+    }
+
+    /// Only qute the leaf
+    private var quotedAsCollectionElement: String {
+        switch self {
+        case .string(let str):
+            return str.debugDescription
+        case .stringConvertible(let repr):
+            return repr.description.debugDescription
+        case .array, .dictionary:
+            return self.description
         }
     }
 }
@@ -1472,7 +1495,6 @@ extension Logger {
 
     /// Thin wrapper over `TaskLocal.withValue` so call sites don't need to reach into
     /// the task-local storage directly.
-    #if compiler(>=6.2)
     @inlinable
     nonisolated(nonsending) static func withTaskLocalLogger<Return, Failure: Error>(
         _ value: Logger,
@@ -1484,20 +1506,6 @@ extension Logger {
             throw error as! Failure
         }
     }
-    #else
-    @inlinable
-    static func withTaskLocalLogger<Return, Failure: Error>(
-        _ value: Logger,
-        isolation: isolated (any Actor)? = #isolation,
-        operation: () async throws(Failure) -> Return
-    ) async throws(Failure) -> Return {
-        do {
-            return try await Self.taskLocalLogger.withValue(value, operation: operation, isolation: isolation)
-        } catch {
-            throw error as! Failure
-        }
-    }
-    #endif
 
     @inlinable
     static func withTaskLocalLogger<Return, Failure: Error>(

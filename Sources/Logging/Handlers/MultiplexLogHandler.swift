@@ -144,9 +144,23 @@ public struct MultiplexLogHandler: LogHandler {
 
     /// Log a message using the log level and source that you provide.
     ///
+    /// Metadata from this handler's metadata provider overrides metadata from
+    /// the underlying handlers and their providers. Explicit metadata in the
+    /// log event takes precedence over this handler's provider.
+    ///
     /// - parameters:
     ///    - event: The log event containing the level, message, metadata, and source location.
     public func log(event: LogEvent) {
+        var event = event
+        if let provider = self._metadataProvider {
+            var metadata = provider.get()
+            if let explicit = event.metadata {
+                metadata.merge(explicit, uniquingKeysWith: { _, explicit in explicit })
+            }
+            if !metadata.isEmpty {
+                event.metadata = metadata
+            }
+        }
         for handler in self.handlers where handler.logLevel <= event.level {
             handler.log(event: event)
         }

@@ -12,14 +12,14 @@ let package = Package(
         .library(name: "BenchmarksFactory", targets: ["BenchmarksFactory"])
     ],
     dependencies: [
-        .package(url: "https://github.com/ordo-one/package-benchmark.git", from: "1.29.6"),
+        .package(url: "https://github.com/ordo-one/benchmark.git", from: "1.29.6"),
         .package(path: "../"),  // swift-log
     ],
     targets: [
         .target(
             name: "BenchmarksFactory",
             dependencies: [
-                .product(name: "Benchmark", package: "package-benchmark"),
+                .product(name: "Benchmark", package: "benchmark"),
                 .product(name: "Logging", package: "swift-log"),
             ]
         )

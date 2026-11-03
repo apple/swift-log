@@ -485,9 +485,64 @@ internal struct TestLibrary: Sendable {
     }
 }
 
+/// A log handler that keeps its metadata in a copy-on-write box and counts how often the box was copied.
+internal struct CopyCountingLogHandler: LogHandler {
+    final class Box {
+        var metadata: Logger.Metadata = [:]
+        var copies = 0
+    }
+
+    private var box = Box()
+
+    var logLevel: Logger.Level = .info
+
+    var copies: Int {
+        self.box.copies
+    }
+
+    var metadata: Logger.Metadata {
+        get {
+            self.box.metadata
+        }
+        set {
+            self.makeUnique()
+            self.box.metadata = newValue
+        }
+    }
+
+    subscript(metadataKey metadataKey: String) -> Logger.Metadata.Value? {
+        get {
+            self.box.metadata[metadataKey]
+        }
+        set {
+            self.makeUnique()
+            self.box.metadata[metadataKey] = newValue
+        }
+    }
+
+    func log(event: LogEvent) {}
+
+    private mutating func makeUnique() {
+        if !isKnownUniquelyReferenced(&self.box) {
+            let copy = Box()
+            copy.metadata = self.box.metadata
+            copy.copies = self.box.copies + 1
+            self.box = copy
+        }
+    }
+}
+
+extension Logger {
+    /// How often the `CopyCountingLogHandler` of this logger copied its box.
+    var handlerCopies: Int? {
+        (self.handler as? CopyCountingLogHandler)?.copies
+    }
+}
+
 // MARK: - Sendable
 
 extension TestLogHandler: @unchecked Sendable {}
+extension CopyCountingLogHandler.Box: @unchecked Sendable {}
 extension Recorder: @unchecked Sendable {}
 extension Config: @unchecked Sendable {}
 extension MDC: @unchecked Sendable {}
