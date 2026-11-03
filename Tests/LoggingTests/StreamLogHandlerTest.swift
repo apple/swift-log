@@ -85,6 +85,45 @@ struct StreamLogHandlerTest {
         #expect(interceptStream.strings.count == 1)
     }
 
+    @Test func streamLogHandlerTimestampPrecisionDefaultsToSeconds() {
+        let handler = StreamLogHandler(label: "testLabel", stream: InterceptStream())
+        #expect(handler.timestampPrecision == .seconds)
+    }
+
+    @Test func streamLogHandlerOutputFormatWithMillisecondPrecision() {
+        let interceptStream = InterceptStream()
+        let label = "testLabel"
+        let source = "testSource"
+        let log = Logger(
+            label: label,
+            factory: {
+                var handler = StreamLogHandler(label: $0, stream: interceptStream)
+                handler.timestampPrecision = .milliseconds
+                return handler
+            }
+        )
+
+        let testString = "my message is better than yours"
+        log.critical("\(testString)", source: source)
+
+        let pattern =
+            "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}(\\+|-)\\d{4}\\s\(Logger.Level.critical)\\s\(label):\\s\\[\(source)\\]\\s\(testString)$"
+
+        let messageSucceeded =
+            interceptStream.interceptedText?.trimmingCharacters(in: .whitespacesAndNewlines).range(
+                of: pattern,
+                options: .regularExpression
+            ) != nil
+
+        #expect(messageSucceeded)
+        #expect(interceptStream.strings.count == 1)
+    }
+
+    @Test(arguments: [(0, "000"), (7, "007"), (42, "042"), (999, "999")])
+    func streamLogHandlerMillisecondsAreZeroPadded(milliseconds: Int, expected: String) {
+        #expect(StreamLogHandler.zeroPadded(milliseconds) == expected)
+    }
+
     @Test func streamLogHandlerOutputFormatWithEmptyLabel() {
         let interceptStream = InterceptStream()
         let source = "testSource"
