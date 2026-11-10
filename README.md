@@ -22,7 +22,7 @@ choose from the many
 The following snippet shows how to add SwiftLog to your Swift Package:
 
 ```swift
-// swift-tools-version: 6.2
+// swift-tools-version: 6.2.3
 import PackageDescription
 
 let package = Package(
