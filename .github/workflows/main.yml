@@ -17,18 +17,19 @@ jobs:
       linux_command: |
         Debug-Test: swift test
         Release-Build: swift build -c release
+      windows_env_vars: '{"COMMON_SWIFT_FLAGS": "--explicit-target-dependency-import-check error -Xswiftc -require-explicit-sendable"}'
       windows_command: |
         Debug-Test:
-          command: swift test -Xswiftc -warnings-as-errors --explicit-target-dependency-import-check error -Xswiftc -require-explicit-sendable
+          command: swift test -Xswiftc -warnings-as-errors %COMMON_SWIFT_FLAGS%
           versions: ["current-2", "current-1", "current"]
         Release-Build:
-          command: swift build -c release -Xswiftc -warnings-as-errors --explicit-target-dependency-import-check error -Xswiftc -require-explicit-sendable
+          command: swift build -c release -Xswiftc -warnings-as-errors %COMMON_SWIFT_FLAGS%
           versions: ["current-2", "current-1", "current"]
         Debug-Test-Nightly:
-          command: swift test --explicit-target-dependency-import-check error -Xswiftc -require-explicit-sendable
+          command: swift test %COMMON_SWIFT_FLAGS%
           versions: ["nightly-release", "nightly-main"]
         Release-Build-Nightly:
-          command: swift build -c release --explicit-target-dependency-import-check error -Xswiftc -require-explicit-sendable
+          command: swift build -c release %COMMON_SWIFT_FLAGS%
           versions: ["nightly-release", "nightly-main"]
       # The Windows runner installs a pinned Swift patch release. The container image tracks the newest patch release.
       windows_use_docker: true
