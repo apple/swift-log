@@ -18,6 +18,12 @@ jobs:
     name: Tests
     uses: swiftlang/github-workflows/.github/workflows/package_test.yml@de9be1265c5295ff156804d313f100d1ca591628
     with:
+      linux_command: |
+        Debug-Test: swift test
+        Release-Build: swift build -c release
+      windows_command: |
+        Debug-Test: swift test
+        Release-Build: swift build -c release
       # Strict flags for the release toolchains. The nightly toolchains skip -warnings-as-errors.
       linux_version_overrides: |
         default: -Xswiftc -warnings-as-errors --explicit-target-dependency-import-check error -Xswiftc -require-explicit-sendable
@@ -36,22 +42,6 @@ jobs:
       wasm_sdk_versions: '["current", "nightly-main"]'
       enable_embedded_wasm_sdk_build: false
       enable_macos_swiftly: false
-      enable_freebsd: false
-
-  release-builds:
-    name: Release builds
-    uses: swiftlang/github-workflows/.github/workflows/package_test.yml@de9be1265c5295ff156804d313f100d1ca591628
-    with:
-      name: release-builds
-      linux_command: swift build -c release
-      windows_command: swift build -c release
-      enable_macos: false
-      enable_macos_swiftly: false
-      enable_linux_static_sdk_build: false
-      enable_wasm_sdk_build: false
-      enable_embedded_wasm_sdk_build: false
-      enable_android_sdk_build: false
-      enable_cxx_interop: false
       enable_freebsd: false
 
   macos-benchmarks:
