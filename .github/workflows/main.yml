@@ -20,6 +20,8 @@ jobs:
       windows_command: |
         Debug-Test: swift test
         Release-Build: swift build -c release
+      # The Windows runner installs a pinned Swift patch release. The container image tracks the newest patch release.
+      windows_use_docker: true
       # Strict flags for the release toolchains. The nightly toolchains skip -warnings-as-errors.
       linux_version_overrides: |
         default: -Xswiftc -warnings-as-errors --explicit-target-dependency-import-check error -Xswiftc -require-explicit-sendable
