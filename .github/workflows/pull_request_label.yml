@@ -2,6 +2,7 @@ name: PR label
 
 permissions:
   contents: read
+  pull-requests: read
 
 on:
   pull_request:
@@ -10,12 +11,4 @@ on:
 jobs:
   semver-label-check:
     name: Semantic version label check
-    runs-on: ubuntu-latest
-    timeout-minutes: 1
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v7
-        with:
-          persist-credentials: false
-      - name: Check for Semantic Version label
-        uses: apple/swift-nio/.github/actions/pull_request_semver_label_checker@main
+    uses: swiftlang/github-workflows/.github/workflows/pull_request_label.yml@de9be1265c5295ff156804d313f100d1ca591628
