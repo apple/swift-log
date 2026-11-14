@@ -45,4 +45,52 @@ struct MultiplexProviderRegressionTests {
         #expect(sink.entries.first?.metadata == ["child": "kept", "outer": "kept", "shared": "outer"])
         #expect(sink.entries.last?.metadata == ["child": "kept", "outer": "kept", "shared": "explicit"])
     }
+
+    @Test(arguments: [1, 2])
+    func settingProviderReplacesConstructorProvider(handlerCount: Int) {
+        let sinks = (0..<handlerCount).map { _ in InMemoryLogHandler() }
+        let handler = MultiplexLogHandler(sinks, metadataProvider: .init { ["trace-id": "constructor"] })
+        var logger = Logger(label: "test", factory: { _ in handler })
+
+        logger.handler.metadataProvider = .init { ["trace-id": "replaced"] }
+        #expect(logger.metadataProvider?.get() == ["trace-id": "replaced"])
+        logger.info("replaced")
+
+        logger.handler.metadataProvider = nil
+        #expect(logger.metadataProvider == nil)
+        logger.info("cleared")
+
+        for sink in sinks {
+            #expect(sink.entries.map(\.metadata) == [["trace-id": "replaced"], [:]])
+        }
+    }
+
+    @Test func settingProviderReachesHandlersWithoutProviderSupport() {
+        let sink = InMemoryLogHandler()
+        var handler = MultiplexLogHandler(
+            [HandlerWithoutProviderSupport(sink: sink)],
+            metadataProvider: .init { ["trace-id": "constructor"] }
+        )
+        handler.metadataProvider = .init { ["trace-id": "replaced"] }
+        let logger = Logger(label: "test", factory: { _ in handler })
+        logger.info("hello")
+        // Debug builds may also record a one-time warning about the unsupported provider.
+        #expect(sink.entries.filter { $0.message == "hello" }.map(\.metadata) == [["trace-id": "replaced"]])
+    }
+}
+
+/// Uses the default `metadataProvider` implementation, so it ignores providers set on it.
+private struct HandlerWithoutProviderSupport: LogHandler {
+    let sink: InMemoryLogHandler
+    var metadata: Logger.Metadata = [:]
+    var logLevel: Logger.Level = .info
+
+    subscript(metadataKey key: String) -> Logger.Metadata.Value? {
+        get { self.metadata[key] }
+        set { self.metadata[key] = newValue }
+    }
+
+    func log(event: LogEvent) {
+        self.sink.log(event: event)
+    }
 }
