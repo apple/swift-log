@@ -11,4 +11,4 @@ on:
 jobs:
   semver-label-check:
     name: Semantic version label check
-    uses: swiftlang/github-workflows/.github/workflows/pull_request_label.yml@de9be1265c5295ff156804d313f100d1ca591628
+    uses: swiftlang/github-workflows/.github/workflows/pull_request_label.yml@0.0.18

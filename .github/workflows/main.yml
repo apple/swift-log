@@ -12,7 +12,7 @@ on:
 jobs:
   tests:
     name: Tests
-    uses: swiftlang/github-workflows/.github/workflows/package_test.yml@de9be1265c5295ff156804d313f100d1ca591628
+    uses: swiftlang/github-workflows/.github/workflows/package_test.yml@0.0.18
     with:
       windows_env_vars: '{"COMMON_SWIFT_FLAGS": "--explicit-target-dependency-import-check error -Xswiftc -require-explicit-sendable"}'
       windows_command: |
@@ -49,7 +49,7 @@ jobs:
 
   macos-benchmarks:
     name: macOS benchmarks
-    uses: swiftlang/github-workflows/.github/workflows/benchmarks.yml@de9be1265c5295ff156804d313f100d1ca591628
+    uses: swiftlang/github-workflows/.github/workflows/benchmarks.yml@0.0.18
     with:
       benchmark_package_paths: '["Benchmarks/NoTraits", "Benchmarks/MaxLogLevelWarning", "Benchmarks/MaxLogLevelNone"]'
       enable_linux: false
@@ -59,7 +59,7 @@ jobs:
 
   cmake-build:
     name: CMake build
-    uses: swiftlang/github-workflows/.github/workflows/cmake_build.yml@de9be1265c5295ff156804d313f100d1ca591628
+    uses: swiftlang/github-workflows/.github/workflows/cmake_build.yml@0.0.18
     with:
       enable_windows_checks: false
       linux_pre_build_command: apt-get update && apt-get install -y ninja-build
