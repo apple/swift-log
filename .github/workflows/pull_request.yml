@@ -60,7 +60,7 @@ jobs:
       benchmark_package_paths: '["Benchmarks/NoTraits", "Benchmarks/MaxLogLevelWarning", "Benchmarks/MaxLogLevelNone"]'
       enable_linux: false
       enable_macos: true
-      macos_swift_versions: '["6.3", "6.4"]'
+      macos_swift_versions: '["current-1", "current"]'
       macos_runner_pool: general
 
   cmake-build:
