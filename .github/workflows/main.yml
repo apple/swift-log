@@ -60,4 +60,4 @@ jobs:
     name: CMake build
     uses: swiftlang/github-workflows/.github/workflows/cmake_build.yml@de9be1265c5295ff156804d313f100d1ca591628
     with:
-        enable_windows_checks: false
+      enable_windows_checks: false
