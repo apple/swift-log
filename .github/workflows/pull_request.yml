@@ -18,9 +18,6 @@ jobs:
     name: Tests
     uses: swiftlang/github-workflows/.github/workflows/package_test.yml@de9be1265c5295ff156804d313f100d1ca591628
     with:
-      linux_command: |
-        Debug-Test: swift test
-        Release-Build: swift build -c release
       windows_env_vars: '{"COMMON_SWIFT_FLAGS": "--explicit-target-dependency-import-check error -Xswiftc -require-explicit-sendable"}'
       windows_command: |
         Debug-Test:
