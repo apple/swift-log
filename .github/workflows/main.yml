@@ -58,3 +58,9 @@ jobs:
       enable_macos: true
       macos_swift_versions: '["current-1", "current"]'
       macos_runner_pool: nightly
+
+  cmake-build:
+    name: CMake build
+    uses: swiftlang/github-workflows/.github/workflows/cmake_build.yml@de9be1265c5295ff156804d313f100d1ca591628
+    with:
+        enable_windows_checks: false

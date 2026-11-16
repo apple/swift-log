@@ -68,4 +68,3 @@ jobs:
     uses: swiftlang/github-workflows/.github/workflows/cmake_build.yml@de9be1265c5295ff156804d313f100d1ca591628
     with:
       enable_windows_checks: false
-      linux_pre_build_command: apt-get update && apt-get install -y ninja-build
