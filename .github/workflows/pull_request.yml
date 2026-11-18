@@ -19,18 +19,8 @@ jobs:
     uses: swiftlang/github-workflows/.github/workflows/package_test.yml@0.0.18
     with:
       windows_command: |
-        Debug-Test:
-            command: swift test
-            versions: ["current-2", "current-1", "current"]
-        Release-Build:
-            command: swift build -c release
-            versions: ["current-2", "current-1", "current"]
-        Debug-Test-Nightly:
-            command: swift test
-            versions: ["nightly-release", "nightly-main"]
-        Release-Build-Nightly:
-            command: swift build -c release
-            versions: ["nightly-release", "nightly-main"]
+        Debug-Test: swift test
+        Release-Build: swift build -c release
       windows_version_overrides: |
         default: -Xswiftc -warnings-as-errors --explicit-target-dependency-import-check error -Xswiftc -require-explicit-sendable
         nightly-release: --explicit-target-dependency-import-check error -Xswiftc -require-explicit-sendable
