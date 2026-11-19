@@ -66,10 +66,32 @@ jobs:
       swift_6_3_enabled: true
       swift_6_4_enabled: true
       macos_xcode_test_enabled: true
-      ios_xcode_test_enabled: false
-      watchos_xcode_test_enabled: false
-      tvos_xcode_test_enabled: false
-      visionos_xcode_test_enabled: false
+      ios_xcode_test_enabled: true
+      watchos_xcode_test_enabled: true
+      tvos_xcode_test_enabled: true
+      visionos_xcode_test_enabled: true
+
+  # TEMPORARY: ru multiple jobs to see if it still fails, remove before merging
+  macos-tests-all-simulators-x10:
+    name: macOS tests, all simulators (${{ matrix.run }}/10)
+    strategy:
+      fail-fast: false
+      matrix:
+        run: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+    uses: apple/swift-nio/.github/workflows/macos_tests.yml@main
+    with:
+      runner_pool: general
+      build_scheme: swift-log-Package
+      swift_test_enabled: true
+      swift_6_1_enabled: false
+      swift_6_2_enabled: true
+      swift_6_3_enabled: true
+      swift_6_4_enabled: true
+      macos_xcode_test_enabled: true
+      ios_xcode_test_enabled: true
+      watchos_xcode_test_enabled: true
+      tvos_xcode_test_enabled: true
+      visionos_xcode_test_enabled: true
 
   android:
     name: Android Swift SDK
