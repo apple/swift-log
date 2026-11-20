@@ -36,6 +36,7 @@ public func makeBenchmark(
         "\(logLevel)_log_with_\(loggerLevel)_log_level\(suffix)",
         configuration: .init(
             metrics: metrics,
+            scalingFactor: .kilo,
             maxIterations: iterations,
             thresholds: [
                 .instructions: BenchmarkThresholds(
@@ -54,12 +55,16 @@ public func makeBenchmark(
         if setScopedLogger {
             withLogger(logger) { logger in
                 benchmark.startMeasurement()
-                body(logger)
+                for _ in benchmark.scaledIterations {
+                    body(logger)
+                }
                 benchmark.stopMeasurement()
             }
         } else {
             benchmark.startMeasurement()
-            body(logger)
+            for _ in benchmark.scaledIterations {
+                body(logger)
+            }
             benchmark.stopMeasurement()
         }
     }

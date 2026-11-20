@@ -105,6 +105,9 @@ public struct MultiplexLogHandler: LogHandler {
     }
 
     /// The metadata provider.
+    ///
+    /// Setting this property sets the provider on all underlying handlers and replaces
+    /// the provider passed to ``init(_:metadataProvider:)``.
     public var metadataProvider: Logger.MetadataProvider? {
         get {
             if self.handlers.count == 1 {
@@ -138,6 +141,9 @@ public struct MultiplexLogHandler: LogHandler {
             }
         }
         set {
+            // Also replace this handler's own provider, otherwise the provider passed to the
+            // initializer keeps overriding the new one, and setting `nil` would not remove it.
+            self._metadataProvider = newValue
             self.mutatingForEachHandler { $0.metadataProvider = newValue }
         }
     }

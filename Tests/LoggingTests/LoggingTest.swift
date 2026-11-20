@@ -1157,6 +1157,20 @@ struct LoggingTest {
         #expect(logger1.handlerCopies == 0)
         #expect(logger1[metadataKey: "key0"] == "0")
     }
+
+    @Test func currentModuleFileIDParsing() {
+        #expect(Logger.currentModule(fileID: "MyModule/MyFile.swift") == "MyModule")
+        #expect(Logger.currentModule(fileID: "MyModule/Subdir/MyFile.swift") == "MyModule")
+        #expect(Logger.currentModule(fileID: "`My.Module`/MyFile.swift") == "`My.Module`")
+        #expect(Logger.currentModule(fileID: "`My/Module`/MyFile.swift") == "`My/Module`")
+        #expect(Logger.currentModule(fileID: "`/a/b/c`/MyFile.swift") == "`/a/b/c`")
+        #expect(Logger.currentModule(fileID: "`/a/b/c`/Subdir/MyFile.swift") == "`/a/b/c`")
+        #expect(Logger.currentModule(fileID: "`Module With Spaces`/MyFile.swift") == "`Module With Spaces`")
+        #expect(Logger.currentModule(fileID: "`Unclosed/MyFile.swift") == "n/a")
+        #expect(Logger.currentModule(fileID: "`NoSlash`") == "n/a")
+        #expect(Logger.currentModule(fileID: "NoSlash.swift") == "n/a")
+        #expect(Logger.currentModule(fileID: "") == "n/a")
+    }
 }
 
 extension Logger {

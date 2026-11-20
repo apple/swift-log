@@ -1395,7 +1395,18 @@ extension Logger {
     @inlinable
     internal static func currentModule(fileID: String = #fileID) -> String {
         let utf8All = fileID.utf8
-        if let slashIndex = utf8All.firstIndex(of: UInt8(ascii: "/")) {
+        let searchStart: String.UTF8View.Index
+        if utf8All.first == UInt8(ascii: "`") {
+            guard let closingBacktickIndex = utf8All.dropFirst().firstIndex(of: UInt8(ascii: "`")) else {
+                // It should be impossible for a well-formed module to get here, so treat it as an "n/a" case.
+                return "n/a"
+            }
+            // Backticks are part of raw-identifier module names as written in source and mangled, so preserve them.
+            searchStart = utf8All.index(after: closingBacktickIndex)
+        } else {
+            searchStart = utf8All.startIndex
+        }
+        if let slashIndex = utf8All[searchStart...].firstIndex(of: UInt8(ascii: "/")) {
             return String(fileID[..<slashIndex])
         } else {
             return "n/a"
