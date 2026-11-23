@@ -71,7 +71,7 @@ jobs:
 
   cmake-build:
     name: CMake build
-    uses: swiftlang/github-workflows/.github/workflows/cmake_build.yml@0.0.18
+    uses: swiftlang/github-workflows/.github/workflows/cmake_build.yml@0.0.19
     with:
       enable_windows_checks: false
       linux_pre_build_command: apt-get update && apt-get install -y ninja-build
