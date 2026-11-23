@@ -57,7 +57,7 @@ jobs:
 
   macos-benchmarks:
     name: macOS benchmarks
-    uses: swiftlang/github-workflows/.github/workflows/benchmarks.yml@0.0.18
+    uses: swiftlang/github-workflows/.github/workflows/benchmarks.yml@0.0.19
     with:
       benchmark_package_paths: '["Benchmarks/NoTraits", "Benchmarks/MaxLogLevelWarning", "Benchmarks/MaxLogLevelNone"]'
       enable_linux: false
