@@ -6,3 +6,7 @@ updates:
       interval: "daily"
     labels:
       - "semver/none"
+    groups:
+      swiftlang-github-workflows:
+        patterns:
+          - "swiftlang/github-workflows*"
