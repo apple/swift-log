@@ -354,6 +354,32 @@ extension Logger {
         }
     }
 
+    /// Merges the provided metadata into this logger's metadata, prioritizing the provided values.
+    ///
+    /// For keys that already exist on the logger, the values in `metadata` overwrite the existing values.
+    /// Keys not present in `metadata` are left unchanged.
+    ///
+    /// ```swift
+    /// var logger = Logger(label: "app")
+    /// logger[metadataKey: "request.id"] = "r1"
+    /// logger.mergeMetadata(prioritizing: ["request.id": "r2", "user.id": "u1"])
+    /// // logger's metadata is now ["request.id": "r2", "user.id": "u1"]
+    /// ```
+    ///
+    /// This is equivalent to setting each key individually through ``subscript(metadataKey:)``,
+    /// so it changes only the metadata stored on this logger. Metadata from a ``metadataProvider``
+    /// and metadata passed to individual log calls are applied on top of it when a message is logged.
+    ///
+    /// > Note: Changing the logging metadata only affects the instance of the `Logger` where you change it.
+    ///
+    /// - Parameter metadata: The metadata to merge. Its values take precedence over existing values for the same keys.
+    @inlinable
+    public mutating func mergeMetadata(prioritizing metadata: Logger.Metadata) {
+        for (key, value) in metadata {
+            self[metadataKey: key] = value
+        }
+    }
+
     /// Get or set the log level configured for this `Logger`.
     ///
     /// > Note: Changing the log level threshold for a logger only affects the instance of the `Logger` where you change it.

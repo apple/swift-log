@@ -74,6 +74,7 @@
 ### Adjusting logger metadata
 
 - ``subscript(metadataKey:)``
+- ``mergeMetadata(prioritizing:)``
 - ``MetadataValue``
 
 ### Metadata attribute types
