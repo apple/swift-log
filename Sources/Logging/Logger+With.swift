@@ -140,9 +140,7 @@ public func withLogger<Result, Failure: Error>(
     _ operation: (Logger) throws(Failure) -> Result
 ) throws(Failure) -> Result {
     var logger = Logger.current
-    for (key, value) in metadata() {
-        logger[metadataKey: key] = value
-    }
+    logger.mergeMetadata(prioritizing: metadata())
     do {
         return try Logger.withTaskLocalLogger(logger) {
             try operation(logger)
@@ -184,9 +182,7 @@ public nonisolated(nonsending) func withLogger<Result, Failure: Error>(
     _ operation: nonisolated(nonsending) (Logger) async throws(Failure) -> Result
 ) async throws(Failure) -> Result {
     var logger = Logger.current
-    for (key, value) in metadata() {
-        logger[metadataKey: key] = value
-    }
+    logger.mergeMetadata(prioritizing: metadata())
     do {
         return try await Logger.withTaskLocalLogger(logger) {
             try await operation(logger)

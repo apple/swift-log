@@ -406,6 +406,49 @@ struct LoggingTest {
         )
     }
 
+    @Test func mergeMetadataPrioritizesProvidedValues() {
+        let testLogging = TestLogging()
+
+        var logger = Logger(
+            label: "\(#function)",
+            factory: {
+                testLogging.make(label: $0)
+            }
+        )
+        logger[metadataKey: "kept"] = "original"
+        logger[metadataKey: "overwritten"] = "original"
+        logger.mergeMetadata(prioritizing: ["overwritten": "new", "added": "new"])
+        logger.info("hello world!")
+        testLogging.history.assertExist(
+            level: .info,
+            message: "hello world!",
+            metadata: [
+                "kept": "original",
+                "overwritten": "new",
+                "added": "new",
+            ]
+        )
+    }
+
+    @Test func mergeMetadataWithEmptyMetadataIsNoOp() {
+        let testLogging = TestLogging()
+
+        var logger = Logger(
+            label: "\(#function)",
+            factory: {
+                testLogging.make(label: $0)
+            }
+        )
+        logger[metadataKey: "kept"] = "original"
+        logger.mergeMetadata(prioritizing: [:])
+        logger.info("hello world!")
+        testLogging.history.assertExist(
+            level: .info,
+            message: "hello world!",
+            metadata: ["kept": "original"]
+        )
+    }
+
     @Test func listMetadata() {
         let testLogging = TestLogging()
 
